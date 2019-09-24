@@ -5,7 +5,7 @@
 #include "sys/param.h"
 
 .set header_len, header_end-header_start
-.set checksum, -(MULTIBOOT2_HEADER_MAGIC + MULTIBOOT_ARCHITECTURE_I386 + HEADER_LENGTH)
+.set checksum, -(MULTIBOOT2_HEADER_MAGIC + MULTIBOOT_ARCHITECTURE_I386 + header_len)
 
 .section .multiboot
 header_start:
@@ -35,8 +35,8 @@ header_end:
 // Bootstrap GDT
 .p2align 2                                // force 4 byte alignment
 gdt:
-  SEG_NULLASM                             // null seg
-  SEG_ASM(0 , 0  ,GDT_FLAG_64BIT , GDT_ACCESS_PRESENT | GDT_ACCESS_PR_RING0 | GDT_ACCESS_EXECUTABLE)
+  .8byte BOOTGHT_FIRST_ENTRY                             // null seg
+  .8byte BOOTGHT_SECOND_ENTRY
 
 gdtdesc:
   .word   (gdtdesc - gdt - 1)             // sizeof(gdt) - 1
@@ -94,7 +94,7 @@ pdt_setup:
     or $MSR_EFER_LME,%eax
     wrmsr
 
-    movl $(CR0_PAGING|CR0_PM|CR0_EXTTYPE),%eax
+    movl $BOOTCR0,%eax
     movl %eax,%cr0
 
     lgdt gdtdesc
@@ -109,7 +109,7 @@ pdt_setup:
 .global _start64
 .type _start64,@function
 _start64:
-    movw %0,%ax
+    movw $0,%ax
     movw %ax, %ds
     movw %ax, %es
     movw %ax, %fs

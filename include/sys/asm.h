@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-22 13:11:01
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-09-23 12:34:56
+ * @ Modified time: 2019-09-24 23:19:08
  * @ Description:
  */
 
@@ -30,20 +30,20 @@
 #define GDT_ACCESS_DIRECTION_DOWN (1 << 2)
 #define GDT_ACCESS_READABLE_WRITABLE (1 << 1)
 
-#define SEG_NULLASM \
-    .word 0, 0;     \
-    .byte 0, 0, 0, 0
+#define SEG_NULLASM 0
 
-#define SEG_ASM(base, limit, flags, access)        \
-    (                                                   \
-        (((((base)) >> 24) & 0xFF) << 56) |             \
-        ((((flags)) & 0xF) << 52) |                     \
-        (((((limit)) >> 16) & 0xF) << 48) |             \
-        (((((access) | (1 << 4))) & 0xFF) << 40) |      \
-        ((((base)) & 0xFFF) << 16) |                    \
-        (((limit)) & 0xFFFF)
-    )
+#define SEG_ASM(base, limit, flags, access)           \
+  (                                                   \
+      (((((base)) >> 24) & 0xFF) << 56) |             \
+      ((((flags)) & 0xF) << 52) |                     \
+      (((((limit)) >> 16) & 0xF) << 48) |             \
+      (((((access) | (1 << 4))) & 0xFF) << 40) |      \
+      ((((base)) & 0xFFF) << 16) |                    \
+      (((limit)) & 0xFFFF))
 
+
+#define BOOTGHT_FIRST_ENTRY     SEG_NULLASM
+#define BOOTGHT_SECOND_ENTRY    SEG_ASM(0,0,GDT_FLAG_64BITLM,GDT_ACCESS_PRESENT|GDT_ACCESS_PR_RING0|GDT_ACCESS_EXECUTABLE)
 #else
 
 #endif //__cplusplus
