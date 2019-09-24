@@ -1,0 +1,2 @@
+kern/init/boot.o
+kern/init/main.o

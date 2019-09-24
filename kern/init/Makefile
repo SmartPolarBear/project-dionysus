@@ -1,7 +1,7 @@
-TOP_SRC=../..
+TOP_SRC= ../..
 KERN_SRC = ..
 
-OUTDIR=$(BUILDDIR)/kern/init
+OUTDIR = $(BUILD)/kern/init
 
 OBJS = boot.o main.o
 

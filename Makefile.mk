@@ -5,8 +5,7 @@ endif
 BUILD = $(TOP_SRC)/build
 INCLUDE = $(TOP_SRC)/include
 
-TOOLPREFIX =
-OUTDIR =
+TOOLPREFIX = 
 
 CC = $(TOOLPREFIX)clang
 CXX = $(TOOLPREFIX)clang++
