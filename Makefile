@@ -4,6 +4,7 @@ include $(TOP_SRC)/Makefile.mk
 SETS=$(TOP_SRC)/distrib/sets
 SUBDIRS = tools kern
 
+BUILD=./build
 BASELIST = $(shell cat $(SETS)/base.list)
 BASEOBJS = $(addprefix $(BUILD)/,$(BASELIST))
 
@@ -18,7 +19,7 @@ clean:
 	@rm -rf $(BUILD)
 
 $(BUILD)/kernel: $(BASEOBJS)
-	$(LD) -z max-page-size=0x1000 -no-pie -Tkern/kernel.ld -o $@ $^
+	$(LD) $(LDFLAGS) -o $@ $^
 
 $(SUBDIRS):
 	$(MAKE) -C $@ $(MFLAGS) all

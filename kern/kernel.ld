@@ -1,3 +1,12 @@
+/**
+ * @ Author: SmartPolarBear
+ * @ Create Time: 2019-09-25 23:45:39
+ * @ Modified by: SmartPolarBear
+ * @ Modified time: 2019-09-26 23:20:25
+ * @ Description:
+ */
+
+
 ENTRY(_start)
 
 SECTIONS
@@ -5,30 +14,30 @@ SECTIONS
     . = 4M;
     _kernel_physical_start = .;
 
-    .boottext:
+    .boottext :
     {
-        boot.o (.multiboot)
-        boot.o (.text)
+        build/kern/init/boot.o (.multiboot)
+        build/kern/init/boot.o (.text)
     }
 
-    .bootrodata:
+    .bootrodata :
     {
-        boot.o (.rodata)
+        build/kern/init/boot.o (.rodata)
     }
 
-    .bootdata:
+    .bootdata :
     {
-        boot.o (.data)
+        build/kern/init/boot.o (.data)
     }
 
     .bootbss :
     {
-        boot.o (.bss)
-        boot.o (COMMON)
+        build/kern/init/boot.o (.bss)
+        build/kern/init/boot.o (COMMON)
     }
 
     . = ALIGN(0x1000);
-    _boot_end= .;
+    _boot_end = .;
 
     . += 0xFFFFFFFF80000000;
     _kernel_virtual_start = .;

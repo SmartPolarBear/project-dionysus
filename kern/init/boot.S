@@ -3,6 +3,8 @@
 #include "sys/memlayout.h"
 #include "sys/mmu.h"
 #include "sys/param.h"
+#include "sys/msr.h"
+#include "sys/cr.h"
 
 .set header_len, header_end-header_start
 .set checksum, -(MULTIBOOT2_HEADER_MAGIC + MULTIBOOT_ARCHITECTURE_I386 + header_len)
