@@ -3,9 +3,13 @@ TOP_SRC = .
 endif
 
 BUILD = $(TOP_SRC)/build
+MOUNTPOINT=$(BUILD)/mount/
 INCLUDE = $(TOP_SRC)/include
 
 TOOLPREFIX = 
+
+HOST_CXX = clang++
+HOST_CC = clang
 
 CC = $(TOOLPREFIX)clang
 CXX = $(TOOLPREFIX)clang++

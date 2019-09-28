@@ -11,7 +11,7 @@ BASEOBJS = $(addprefix $(BUILD)/,$(BASELIST))
 BINLIST = $(shell cat $(SETS)/bin.list)
 BINOBJS =  $(addprefix $(BUILD)/bin/,$(BINLIST))
 
-all: $(BUILD) $(SUBDIRS) $(BUILD)/kernel
+all: $(BUILD) $(SUBDIRS) $(BUILD)/kernel $(BUILD)/disk.img
 
 clean:
 	for dir in $(SUBDIRS); do $(MAKE) -C $$dir clean; done
@@ -20,6 +20,12 @@ clean:
 
 $(BUILD)/kernel: $(BASEOBJS)
 	$(LD) $(LDFLAGS) -o $@ $^
+	$(OBJDUMP) -S $@ > $(BUILD)/kernel.asm
+	$(OBJDUMP) -t $@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $(BUILD)/kernel.sym
+
+
+$(BUILD)/disk.img: $(TOP_SRC)/disk.img $(BUILD)/kernel $(MOUNTPOINT)
+
 
 $(SUBDIRS):
 	$(MAKE) -C $@ $(MFLAGS) all
@@ -28,4 +34,8 @@ $(BUILD):
 	@echo "[MKDIR] $(BUILD)" 
 	@mkdir -p $@
 
-.PHONY: all clean $(SUBDIRS) $(BUILD)
+$(MOUNTPOINT): 
+	@echo "[MKDIR] $(MOUNTPOINT)" 
+	@mkdir -p $@
+
+.PHONY: all clean $(SUBDIRS) $(BUILD) $(MOUNTPOINT)
