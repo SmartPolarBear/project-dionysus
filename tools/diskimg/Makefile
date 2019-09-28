@@ -3,25 +3,19 @@ KERN_SRCDIR= ..
 include $(TOP_SRC)/Makefile.mk
 
 OUTDIR=$(BUILD)/tools/diskimg
-TARGETNAME=diskimg
+TARGETNAME=diskimg.py
 TARGET=$(OUTDIR)/$(TARGETNAME)
 
-OBJS = diskimg.o
+OBJS = diskimg.py
 _OBJS = $(addprefix $(OUTDIR)/,$(OBJS))
 
 all: $(TARGET)
 
 $(TARGET): $(_OBJS)
-	@echo "[LINKER]" $^ "->" $@
-	@$(HOST_CXX) $(_OBJS) -o $@
 
-$(OUTDIR)/%.o: %.c | $(OUTDIR)
-	@echo "[HOST CC]" $< "->" $@
-	@($(HOST_CC) $< $(HOST_CFLAGS) -c -o $@)
-
-$(OUTDIR)/%.o: %.cc | $(OUTDIR)
-	@echo "[HOST CXX]" $< "->" $@
-	@($(HOST_CXX) $< $(HOST_CXXFLAGS) -c -o $@)
+$(OUTDIR)/%.py: %.py | $(OUTDIR)
+	@echo "[CP]" $< "->" $@
+	@(cp -f $< $@)
 
 clean: 
 	@for o in $(_OBJS); do echo "REMOVE" $$o; rm -f $$o; done

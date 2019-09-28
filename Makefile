@@ -24,8 +24,8 @@ $(BUILD)/kernel: $(BASEOBJS)
 	$(OBJDUMP) -t $@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $(BUILD)/kernel.sym
 
 
-$(BUILD)/disk.img: $(TOP_SRC)/disk.img $(BUILD)/kernel $(MOUNTPOINT)
-
+$(BUILD)/disk.img: $(TOP_SRC)/disk.img $(BUILD)/kernel $(BUILD)/tools/diskimg/diskimg.py
+	python3 $(BUILD)/tools/diskimg/diskimg.py $(TOP_SRC) $(SETS)/hdimage.list
 
 $(SUBDIRS):
 	$(MAKE) -C $@ $(MFLAGS) all
