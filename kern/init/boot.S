@@ -31,7 +31,7 @@ header_end:
 .comm hi_pdpt   , PDPT_SIZE         , PDPT_ALIGN
 .comm lo_pdt    , PD_SIZE           , PD_ALIGN
 .comm hi_pdt    , PD_SIZE           , PD_ALIGN
-.comm stack     , BOOT_STACK_SIZE   , BOOT_STACK_ALIGN
+.comm tstack     , BOOT_STACK_SIZE   , BOOT_STACK_ALIGN
 
 .data
 // Bootstrap GDT
@@ -50,10 +50,10 @@ gdtdesc:
 .type _start, @function
 
 _start:
-    movl stack+BOOT_STACK_SIZE,%esp
+    movl $tstack + BOOT_STACK_SIZE, %esp
     
     movl $lo_pdpt,%eax
-    or (PG_P|PG_W),%eax
+    or $(PG_P|PG_W),%eax
     movl %eax,pml4+(PML4_ADDR2ENTRYID(KPHYSICAL)*PML4_ENTRY_SIZE)
 
     movl $hi_pdpt,%eax
@@ -99,7 +99,6 @@ pdt_setup:
 
     movl $BOOTCR0,%eax
     movl %eax,%cr0
-
 
     lgdt gdtdesc
 
