@@ -74,6 +74,7 @@ _start:
     shrl $21, %esi //Set 2MB bit
     addl $1,%esi
 
+
 pdt_setup:
     movl $(1<<21),%eax
     mul %ecx
@@ -86,11 +87,11 @@ pdt_setup:
     jne pdt_setup  //loop until %esi==%ecx
 
     movl $pml4,%eax
-    movl %eax,%cr3  //install paging
+    movl %eax,%cr3  //install page
 
     movl $(1<<5),%eax
     movl %eax,%cr4  //set PAE enable
-
+    
     movl $MSR_EFER,%ecx
     rdmsr
     or $MSR_EFER_LME,%eax
@@ -98,6 +99,7 @@ pdt_setup:
 
     movl $BOOTCR0,%eax
     movl %eax,%cr0
+
 
     lgdt gdtdesc
 

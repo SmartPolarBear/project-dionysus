@@ -18,6 +18,9 @@ clean:
 	@echo "[RM] $(BUILD)" 
 	@rm -rf $(BUILD)
 
+qemu: all 
+	$(QEMU) -serial mon:stdio $(QEMUOPTS)
+
 $(BUILD)/kernel: $(BASEOBJS)
 	$(LD) $(LDFLAGS) -o $@ $^
 	$(OBJDUMP) -S $@ > $(BUILD)/kernel.asm
@@ -38,4 +41,4 @@ $(MOUNTPOINT):
 	@echo "[MKDIR] $(MOUNTPOINT)" 
 	@mkdir -p $@
 
-.PHONY: all clean $(SUBDIRS) $(BUILD) $(MOUNTPOINT)
+.PHONY: all clean qemu $(SUBDIRS) $(BUILD) $(MOUNTPOINT)
