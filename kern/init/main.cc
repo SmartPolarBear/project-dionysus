@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-09-29 23:10:12
+ * @ Modified time: 2019-09-29 23:29:16
  * @ Description: the entry point for kernel in C++
  */
 
@@ -21,7 +21,7 @@ static void PrintString(const char *str)
 }
 
 extern "C" [[noreturn]] void kmain() {
-    PrintString("Hello World!");
+    PrintString("Hello World! fuckfuckfuck");
     for (;;)
         ;
 }

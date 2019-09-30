@@ -1,10 +1,7 @@
-#include "sys/multiboot2.h"
-#include "sys/asm.h"
+#include "boot/multiboot2.h"
+#include "boot/asm.h"
 #include "sys/memlayout.h"
 #include "sys/mmu.h"
-#include "sys/param.h"
-#include "sys/msr.h"
-#include "sys/cr.h"
 
 .set header_len, header_end-header_start
 .set checksum, -(MULTIBOOT2_HEADER_MAGIC + MULTIBOOT_ARCHITECTURE_I386 + header_len)
@@ -31,14 +28,15 @@ header_end:
 .comm hi_pdpt   , PDPT_SIZE         , PDPT_ALIGN
 .comm lo_pdt    , PD_SIZE           , PD_ALIGN
 .comm hi_pdt    , PD_SIZE           , PD_ALIGN
-.comm tstack     , BOOT_STACK_SIZE   , BOOT_STACK_ALIGN
+.comm tstack    , BOOT_STACK_SIZE   , BOOT_STACK_ALIGN
 
-.data
+.section .data
+
 // Bootstrap GDT
 .p2align 2                                // force 4 byte alignment
 gdt:
-  .8byte BOOTGHT_FIRST_ENTRY                             // null seg
-  .8byte BOOTGHT_SECOND_ENTRY
+  .8byte BOOTGDT_FIRST_ENTRY              // null seg
+  .8byte BOOTGDT_SECOND_ENTRY
 
 gdtdesc:
   .word   (gdtdesc - gdt - 1)             // sizeof(gdt) - 1
@@ -71,12 +69,12 @@ _start:
     mov $0,%ecx
 
     movl $_kernel_physical_end,%esi
-    shrl $21, %esi //Set 2MB bit
+    shrl $SHIFT_2MB, %esi //Set 2MB bit
     addl $1,%esi
 
 
 pdt_setup:
-    movl $(1<<21),%eax
+    movl $VALUE_2MB,%eax
     mul %ecx
     or $(PG_P|PG_W|PG_2MB),%eax
     movl %eax,lo_pdt(,%ecx,PD_ENTRY_SIZE)
@@ -85,6 +83,7 @@ pdt_setup:
     inc %ecx
     cmp %esi,%ecx
     jne pdt_setup  //loop until %esi==%ecx
+
 
     movl $pml4,%eax
     movl %eax,%cr3  //install page
@@ -124,5 +123,6 @@ _start64:
     //main should never return
     cli
     hlt
+
 spin:
     jmp spin
