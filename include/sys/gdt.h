@@ -17,6 +17,7 @@
 #define GDT_ACCESS_DIRECTION_DOWN (1 << 2)
 #define GDT_ACCESS_READABLE_WRITABLE (1 << 1)
 #else
+
 #endif
 
 #endif // __INCLUDE_SYS_GDT_H

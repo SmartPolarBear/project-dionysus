@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-25 23:45:39
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-09-26 23:20:25
+ * @ Modified time: 2019-10-01 15:24:05
  * @ Description:
  */
 
@@ -58,6 +58,12 @@ SECTIONS
   
     .data : AT ( (LOADADDR (.rodata) + SIZEOF (.rodata) + 0xFFF) & 0xFFFFFFFFFFFFF000 )
     {
+      start_ctors = .;
+      *(.ctor*)
+      end_ctors = .;
+      start_dtors = .;
+      *(.dtor*)
+      end_dtors = .;
       *(.data)
     }
   

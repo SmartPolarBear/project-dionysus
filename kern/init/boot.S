@@ -29,7 +29,7 @@ header_end:
 .comm lo_pdt    , PD_SIZE           , PD_ALIGN
 .comm hi_pdt    , PD_SIZE           , PD_ALIGN
 .comm initstack , BOOT_STACK_SIZE   , BOOT_STACK_ALIGN
-.comm mboot_ptr , 4                 , 1
+.comm mboot_addr , 4                 , 1
 
 .section .data
 // Bootstrap GDT
@@ -47,7 +47,7 @@ gdtdesc:
 .type _start, @function
 _start:
     movl $initstack + BOOT_STACK_SIZE, %esp
-    movl %eax, mboot_ptr
+    movl %eax, mboot_addr
 
     movl $lo_pdpt,%eax
     or $(PG_P|PG_W),%eax
@@ -116,6 +116,8 @@ _start64:
     movw %ax, %fs
     movw %ax, %gs
     movw %ax, %ss
+
+    call call_ctors
 
     call kmain //transfer control to the kernel
 
