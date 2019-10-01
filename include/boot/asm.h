@@ -2,20 +2,18 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-22 13:11:01
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-09-30 21:33:23
+ * @ Modified time: 2019-10-01 20:00:11
  * @ Description:
  */
 
 #if !defined(__INCLUDE_SYS_ASM_H)
 #define __INCLUDE_SYS_ASM_H
 
+#if !defined(__cplusplus)
+
 #include "sys/cr.h"
 #include "sys/gdt.h"
 #include "sys/msr.h"
-
-#if defined(__cplusplus)
-#error Only allow for asm
-#endif //__cplusplus
 
 //kernel stack
 #define BOOT_STACK_SIZE (0x4000)
@@ -47,5 +45,7 @@
 //2mb paging
 #define SHIFT_2MB (21)
 #define VALUE_2MB (1 << SHIFT_2MB)
+
+#endif //__cplusplus
 
 #endif // __INCLUDE_SYS_ASM_H
