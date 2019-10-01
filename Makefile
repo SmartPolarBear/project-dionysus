@@ -13,9 +13,12 @@ BINOBJS =  $(addprefix $(BUILD)/bin/,$(BINLIST))
 
 all: $(BUILD) $(SUBDIRS) $(BUILD)/kernel $(BUILD)/disk.img
 
+BUILDDISTDIRS = $(shell ls -d $(BUILD)/*/)
 clean:
 	for dir in $(SUBDIRS); do $(MAKE) -C $$dir clean; done
-	@echo "[RM] $(BUILD)" 
+
+	for dir in $(BUILDDISTDIRS); do rm -rf $$dir; done
+	@rm -f $(BUILD)/kernel*
 	#@rm -rf $(BUILD)
 
 qemu: all 
