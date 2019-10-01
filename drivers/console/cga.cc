@@ -1,5 +1,6 @@
 #include "drivers/console/cga.h"
 #include "arch/amd64/x86.h"
+#include "lib/libc/string.h"
 #include "sys/memlayout.h"
 #include "sys/types.h"
 
@@ -56,7 +57,13 @@ void console::cga_putc(char c)
 
     if ((pos / 80) >= 24)
     {
-        //TODO: scroll up the screen
+        //scroll up the screen
+        memmove((void *)(cga_mem),
+                (void *)(cga_mem + 80),
+                sizeof(cga_mem[0]) * 23 * 80);
+
+        pos -= 80;
+        memset((void *)(cga_mem), 0, sizeof(cga_mem[0]) * (24 + 80 - pos));
     }
 
     set_cur_pos(pos);
