@@ -2,17 +2,29 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-22 13:11:14
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-09-29 22:39:20
+ * @ Modified time: 2019-10-01 19:34:18
  * @ Description:
  */
 #if !defined(__INCLUDE_SYS_MEMLAYOUT_H)
 #define __INCLUDE_SYS_MEMLAYOUT_H
 
 #if !defined(__cplusplus)
+
 #define KPHYSICAL (0x0000000000400000)
 #define KVIRTUAL (0xFFFFFFFF80400000)
 
 #else
+
+#include "sys/types.h"
+
+constexpr uint64_t KERNEL_VIRTUALBASE = 0xFFFFFFFF80000000;
+constexpr uint64_t KERNEL_VIRTUALLINK = 0xFFFFFFFF80400000;
+
+template <typename P>
+static inline constexpr P *V2P(P *a) { return (P *)(((uint64_t)(a)) - KERNEL_VIRTUALBASE); }
+
+template <typename P>
+static inline constexpr P *P2V(P *a) { return (P *)(((void *)(((char *)(a)) + KERNEL_VIRTUALBASE))); }
 
 #endif
 

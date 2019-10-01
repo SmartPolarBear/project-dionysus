@@ -117,7 +117,7 @@ _start64:
     movw %ax, %gs
     movw %ax, %ss
 
-    call call_ctors
+    call call_ctors //call global constructors
 
     call kmain //transfer control to the kernel
 

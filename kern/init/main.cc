@@ -2,11 +2,12 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-01 15:21:57
+ * @ Modified time: 2019-10-01 19:16:21
  * @ Description: the entry point for kernel in C++
  */
 
 #include "boot/multiboot2.h"
+#include "sys/memlayout.h"
 #include "sys/param.h"
 
 #define VIDEO_START 0xb8000
@@ -21,7 +22,8 @@ struct mboot_info
 static void
 puts(const char *str)
 {
-    unsigned char *video = ((unsigned char *)VIDEO_START);
+    // unsigned char *video = ((unsigned char *)VIDEO_START + KVIRTUAL);
+    uint8_t *video = P2V<uint8_t>((uint8_t *)VIDEO_START);
     while (*str != '\0')
     {
         *(video++) = *str++;
@@ -29,7 +31,7 @@ puts(const char *str)
     }
 }
 
-//C++ ctors and dtors
+//C++ ctors
 extern "C"
 {
     using constructor_type = void (*)();

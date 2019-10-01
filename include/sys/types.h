@@ -1,7 +1,7 @@
 #if !defined(__INCLUDE_SYS_TYPES_H)
 #define __INCLUDE_SYS_TYPES_H
 
-#include <cstdint>
-#include <cstddef>
+#include <stddef.h>
+#include <stdint.h>
 
 #endif // __INCLUDE_SYS_TYPES_H

@@ -16,7 +16,7 @@ all: $(BUILD) $(SUBDIRS) $(BUILD)/kernel $(BUILD)/disk.img
 clean:
 	for dir in $(SUBDIRS); do $(MAKE) -C $$dir clean; done
 	@echo "[RM] $(BUILD)" 
-	@rm -rf $(BUILD)
+	#@rm -rf $(BUILD)
 
 qemu: all 
 	$(QEMU) -serial mon:stdio $(QEMUOPTS)

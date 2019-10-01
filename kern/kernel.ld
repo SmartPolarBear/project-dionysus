@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-25 23:45:39
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-01 15:24:05
+ * @ Modified time: 2019-10-01 19:06:44
  * @ Description:
  */
 
@@ -51,7 +51,7 @@ SECTIONS
   
     .rodata : AT ( (LOADADDR (.text) + SIZEOF (.text) + 0xFFF) & 0xFFFFFFFFFFFFF000 )
     {
-      *(.rodata)
+     *(.rodata .rodata.* .gnu.linkonce.r.*)
     }
   
     . = ALIGN(0x1000);
@@ -59,12 +59,16 @@ SECTIONS
     .data : AT ( (LOADADDR (.rodata) + SIZEOF (.rodata) + 0xFFF) & 0xFFFFFFFFFFFFF000 )
     {
       start_ctors = .;
+      KEEP(*( .init_array ));
+      KEEP(*(SORT_BY_INIT_PRIORITY( .init_array.* )));
       *(.ctor*)
       end_ctors = .;
+      
       start_dtors = .;
       *(.dtor*)
       end_dtors = .;
-      *(.data)
+
+      *(.data .data.* .gnu.linkonce.d.*)
     }
   
     . = ALIGN(0x1000);
@@ -72,7 +76,7 @@ SECTIONS
     .bss : AT ( (LOADADDR (.data) + SIZEOF (.data) + 0xFFF) & 0xFFFFFFFFFFFFF000 )
     {
       *(COMMON)
-      *(.bss)
+      *(.bss .bss.* .gnu.linkonce.b.*)
     }
   
     _kernel_virtual_end = .;
