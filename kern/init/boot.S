@@ -28,10 +28,10 @@ header_end:
 .comm hi_pdpt   , PDPT_SIZE         , PDPT_ALIGN
 .comm lo_pdt    , PD_SIZE           , PD_ALIGN
 .comm hi_pdt    , PD_SIZE           , PD_ALIGN
-.comm tstack    , BOOT_STACK_SIZE   , BOOT_STACK_ALIGN
+.comm initstack , BOOT_STACK_SIZE   , BOOT_STACK_ALIGN
+.comm mboot_ptr , 4                 , 1
 
 .section .data
-
 // Bootstrap GDT
 .p2align 2                                // force 4 byte alignment
 gdt:
@@ -43,13 +43,12 @@ gdtdesc:
   .long   gdt                             // address gdt
 
 .section .text
-
 .global _start
 .type _start, @function
-
 _start:
-    movl $tstack + BOOT_STACK_SIZE, %esp
-    
+    movl $initstack + BOOT_STACK_SIZE, %esp
+    movl %eax, mboot_ptr
+
     movl $lo_pdpt,%eax
     or $(PG_P|PG_W),%eax
     movl %eax,pml4+(PML4_ADDR2ENTRYID(KPHYSICAL)*PML4_ENTRY_SIZE)
@@ -88,7 +87,7 @@ pdt_setup:
     movl $pml4,%eax
     movl %eax,%cr3  //install page
 
-    movl $(1<<5),%eax
+    movl $BOOTCR4,%eax
     movl %eax,%cr4  //set PAE enable
     
     movl $MSR_EFER,%ecx

@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-24 23:22:18
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-09-30 21:23:47
+ * @ Modified time: 2019-09-30 21:36:05
  * @ Description:
  */
 
@@ -14,6 +14,8 @@
 #define CR0_EXTTYPE (1 << 4)
 #define CR0_PAGING (1 << 31)
 
+#define CR4_PSE (1 << 4)
+#define CR4_PAE (1 << 5)
 #else
 #endif
 

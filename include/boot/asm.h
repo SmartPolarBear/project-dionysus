@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-22 13:11:01
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-09-30 21:31:13
+ * @ Modified time: 2019-09-30 21:33:23
  * @ Description:
  */
 
@@ -40,6 +40,9 @@
 
 //cr0 value
 #define BOOTCR0 (CR0_PAGING | CR0_PM | CR0_EXTTYPE)
+
+//cr4 value
+#define BOOTCR4 (CR4_PAE)
 
 //2mb paging
 #define SHIFT_2MB (21)
