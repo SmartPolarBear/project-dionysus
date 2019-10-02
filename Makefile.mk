@@ -11,16 +11,17 @@ TOOLPREFIX =
 HOST_CXX = g++
 HOST_CC = gcc
 
-CC = $(TOOLPREFIX)clang
-CXX = $(TOOLPREFIX)clang++
+CC = $(TOOLPREFIX)gcc
+CXX = $(TOOLPREFIX)g++
 LD = $(TOOLPREFIX)ld
 OBJCOPY = $(TOOLPREFIX)objcopy
 OBJDUMP = $(TOOLPREFIX)objdump
 
 LDFLAGS=-z max-page-size=0x1000 -no-pie -nostdlib -Tkern/kernel.ld 
 
-SHAREDFLAGS = -fno-builtin -O0 -nostdlib -ffreestanding -g -Wall -Wextra \
- -Werror -I$(TOP_SRC)/include -MMD -mno-red-zone -mcmodel=kernel -fno-pie
+SHAREDFLAGS = -fno-builtin -O0 -nostdlib -ffreestanding -g -Wall -Wextra -MMD -mno-red-zone -mcmodel=kernel -fno-pie
+SHAREDFLAGS += -I$(TOP_SRC)/include
+#SHAREDFLAGS += -Werror 
 
 CFLAGS = -std=gnu17 $(SHAREDFLAGS)
 ASFLAGS = $(SHAREDFLAGS)

@@ -5,6 +5,8 @@
 #error Only available for C++
 #endif
 
+#include "sys/types.h"
+
 static inline uint8_t inb(uint16_t port)
 {
     uint8_t data = 0;

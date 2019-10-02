@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-25 23:45:39
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-02 16:17:11
+ * @ Modified time: 2019-10-02 21:01:29
  * @ Description:
  */
 
@@ -38,6 +38,8 @@ SECTIONS
 
     . = ALIGN(0x1000);
     _boot_end = .;
+
+    
 
     . += 0xFFFFFFFF80000000;
     _kernel_virtual_start = .;

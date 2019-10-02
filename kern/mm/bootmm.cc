@@ -18,7 +18,7 @@ extern char *_kernel_virtual_end; //kernel.ld
 static void
 freerange(void *vstart, void *vend)
 {
-    char *p = new ((char *)PGROUNDUP((size_t)vstart)) char();
+    char *p = new ((char *)PGROUNDUP((size_t)vstart)) char;
     for (; p + PGSIZE <= (char *)vend; p += PGSIZE)
     {
         bootmm_free(p);

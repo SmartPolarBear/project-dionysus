@@ -2,11 +2,16 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-02 16:33:05
+ * @ Modified time: 2019-10-02 21:00:55
  * @ Description: the entry point for kernel in C++
  */
 
+#include "arch/amd64/x86.h"
 #include "boot/multiboot2.h"
+#include "drivers/console/cga.h"
+#include "drivers/console/console.h"
+#include "lib/libc/string.h"
+#include "sys/bootmm.h"
 #include "sys/memlayout.h"
 #include "sys/param.h"
 
@@ -18,18 +23,6 @@ extern "C" void *mboot_addr; //boot.S
 struct mboot_info
 {
 };
-
-static void
-puts(const char *str)
-{
-    // unsigned char *video = ((unsigned char *)VIDEO_START + KVIRTUAL);
-    uint8_t *video = P2V<uint8_t>((uint8_t *)VIDEO_START);
-    while (*str != '\0')
-    {
-        *(video++) = *str++;
-        *(video++) = VGA_LIGHT_GRAY;
-    }
-}
 
 //C++ ctors
 extern "C"
@@ -46,9 +39,14 @@ extern "C"
         }
     }
 }
+extern char _kernel_virtual_end[]; //kernel.ld
+extern char _kernel_virtual_start[]; //kernel.ld
 
 extern "C" [[noreturn]] void kmain() {
-    puts("Hello World! fucker!12");
+    console::printf("start=0x%x\n", _kernel_virtual_start);
+    console::printf("s=0x%x\ne=0x%x\n", _kernel_virtual_end, P2V<char>((char *)(4 * 1024 * 1024)));
+    bootmm_init(_kernel_virtual_end, P2V<char>((char *)(4 * 1024 * 1024)));
+    console::puts("Hello world!\n");
     for (;;)
         ;
 }

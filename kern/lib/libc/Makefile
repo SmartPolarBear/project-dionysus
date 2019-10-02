@@ -3,6 +3,6 @@ KERN_SRC = ../..
 
 OUTDIR = $(BUILD)/kern/libc
 
-OBJS = string.o
+OBJS = string.o itoa.o
 
 include $(KERN_SRC)/Makefile.kern.mk

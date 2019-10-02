@@ -1,15 +1,16 @@
 #include "drivers/console/cga.h"
 #include "arch/amd64/x86.h"
 #include "lib/libc/string.h"
+#include "lib/libcxx/new.h"
 #include "sys/memlayout.h"
 #include "sys/types.h"
 
-constexpr void *cga_addr = reinterpret_cast<void *>(0xB8000);
 constexpr uint16_t cga_lightgray = 7;
 
 constexpr uint16_t backsp = 0x100;
 constexpr uint16_t crt_port = 0x3d4;
 
+void *cga_addr = (void *)(0xB8000);
 volatile uint16_t *cga_mem = new (P2V<void>(cga_addr)) uint16_t;
 
 static size_t get_cur_pos(void)
@@ -21,7 +22,7 @@ static size_t get_cur_pos(void)
     return pos;
 }
 
-static size_t set_cur_pos(size_t pos)
+static void set_cur_pos(size_t pos)
 {
     outb(crt_port, 14);
     outb(crt_port + 1, pos >> 8);
@@ -29,7 +30,7 @@ static size_t set_cur_pos(size_t pos)
     outb(crt_port + 1, pos);
 }
 
-void console::cga_putc(char c)
+void console::cga_putc(uint32_t c)
 {
     auto pos = get_cur_pos();
     uint16_t attrib = (0 << 4) | (cga_lightgray & 0x0F); //no background, lightgray foreground

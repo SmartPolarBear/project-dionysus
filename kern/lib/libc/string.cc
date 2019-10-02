@@ -6,14 +6,19 @@ extern "C"
 {
     void *memset(void *dst, size_t c, size_t n)
     {
-        if ((size_t)dst % 4ul == 0 && n % 4ul == 0ul)
+        // if ((size_t)dst % 4ul == 0 && n % 4ul == 0ul)
+        // {
+        //     c &= 0xFFul;
+        //     stosl(dst, (c << 24ul) | (c << 16ul) | (c << 8ul) | c, n / 4ul);
+        // }
+        // else
+        // {
+        //     stosb(dst, c, n);
+        // }
+        char *d = (char *)dst;
+        for (size_t i = 0; i < n; i++)
         {
-            c &= 0xFFul;
-            stosl(dst, (c << 24ul) | (c << 16ul) | (c << 8ul) | c, n / 4ul);
-        }
-        else
-        {
-            stosb(dst, c, n);
+            d[i] = c;
         }
         return dst;
     }

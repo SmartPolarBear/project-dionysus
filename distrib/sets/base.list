@@ -1,7 +1,11 @@
 kern/init/boot.o
 kern/init/main.o
 kern/libc/string.o
+kern/libc/itoa.o
 kern/libcxxrt/cxxbase.o
 kern/libcxxrt/new.o
 kern/mm/bootmm.o
 kern/mm/vm.o
+drivers/console/cga.o
+drivers/console/console.o
+

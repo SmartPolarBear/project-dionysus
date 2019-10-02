@@ -2,7 +2,7 @@ TOP_SRC = .
 include $(TOP_SRC)/Makefile.mk
 
 SETS=$(TOP_SRC)/distrib/sets
-SUBDIRS = tools kern
+SUBDIRS = tools kern drivers
 
 BUILD=./build
 BASELIST = $(shell cat $(SETS)/base.list)
