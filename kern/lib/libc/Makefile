@@ -1,7 +1,7 @@
 TOP_SRC= ../../..
 KERN_SRC = ../..
 
-OUTDIR = $(BUILD)/libc
+OUTDIR = $(BUILD)/kern/libc
 
 OBJS = string.o
 

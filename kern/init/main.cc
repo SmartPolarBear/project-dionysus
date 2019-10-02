@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-01 19:16:21
+ * @ Modified time: 2019-10-02 16:33:05
  * @ Description: the entry point for kernel in C++
  */
 
@@ -48,7 +48,7 @@ extern "C"
 }
 
 extern "C" [[noreturn]] void kmain() {
-    puts("Hello World! fucker!");
+    puts("Hello World! fucker!12");
     for (;;)
         ;
 }

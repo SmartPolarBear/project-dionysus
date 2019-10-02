@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-25 23:45:39
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-01 19:06:44
+ * @ Modified time: 2019-10-02 16:17:11
  * @ Description:
  */
 
@@ -78,6 +78,8 @@ SECTIONS
       *(COMMON)
       *(.bss .bss.* .gnu.linkonce.b.*)
     }
+
+    . = ALIGN(0x1000);
   
     _kernel_virtual_end = .;
   

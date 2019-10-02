@@ -1,7 +1,7 @@
 TOP_SRC= ../../..
 KERN_SRC = ../..
 
-OUTDIR = $(BUILD)/libcxxrt
+OUTDIR = $(BUILD)/kern/libcxxrt
 
 OBJS = cxxbase.o
 

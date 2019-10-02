@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-22 13:11:10
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-09-23 12:26:03
+ * @ Modified time: 2019-10-02 16:23:37
  * @ Description:
  */
 
@@ -33,6 +33,15 @@
 #define PG_U (1 << 2)
 #define PG_2MB (1 << 7)
 #else
+
+#include "sys/types.h"
+
+constexpr size_t PGSIZE = 4096;
+
+static inline constexpr size_t PGROUNDUP(size_t sz)
+{
+    return (((sz) + ((size_t)PGSIZE - 1ul)) & ~((size_t)(PGSIZE - 1ul)));
+}
 
 #endif //__cplusplus
 
