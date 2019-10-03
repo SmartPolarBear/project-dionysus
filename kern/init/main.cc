@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-02 21:00:55
+ * @ Modified time: 2019-10-03 12:26:36
  * @ Description: the entry point for kernel in C++
  */
 
@@ -14,9 +14,6 @@
 #include "sys/bootmm.h"
 #include "sys/memlayout.h"
 #include "sys/param.h"
-
-#define VIDEO_START 0xb8000
-#define VGA_LIGHT_GRAY 7
 
 extern "C" void *mboot_addr; //boot.S
 
@@ -39,13 +36,12 @@ extern "C"
         }
     }
 }
-extern char _kernel_virtual_end[]; //kernel.ld
+
 extern char _kernel_virtual_start[]; //kernel.ld
+extern char _kernel_virtual_end[];   //kernel.ld
 
 extern "C" [[noreturn]] void kmain() {
-    console::printf("start=0x%x\n", _kernel_virtual_start);
-    console::printf("s=0x%x\ne=0x%x\n", _kernel_virtual_end, P2V<char>((char *)(4 * 1024 * 1024)));
-    bootmm_init(_kernel_virtual_end, P2V<char>((char *)(4 * 1024 * 1024)));
+    bootmm_init(_kernel_virtual_end, _kernel_virtual_end + 0x100000);
     console::puts("Hello world!\n");
     for (;;)
         ;
