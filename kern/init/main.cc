@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-03 12:34:02
+ * @ Modified time: 2019-10-03 13:13:40
  * @ Description: the entry point for kernel in C++
  */
 
@@ -37,7 +37,7 @@ extern "C"
 
 extern "C" [[noreturn]] void kmain() {
     bootmm_init(_kernel_virtual_end, _kernel_virtual_end + 0x100000);
-    console::puts("Hello world!\n");
+    console::printf("Hello world! %d\n",121);
     for (;;)
         ;
 }

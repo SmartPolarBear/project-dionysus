@@ -11,15 +11,15 @@ TOOLPREFIX =
 HOST_CXX = g++
 HOST_CC = gcc
 
-CC = $(TOOLPREFIX)gcc
-CXX = $(TOOLPREFIX)g++
+CC = $(TOOLPREFIX)clang
+CXX = $(TOOLPREFIX)clang++
 LD = $(TOOLPREFIX)ld
 OBJCOPY = $(TOOLPREFIX)objcopy
 OBJDUMP = $(TOOLPREFIX)objdump
 
 LDFLAGS=-z max-page-size=0x1000 -no-pie -nostdlib -Tkern/kernel.ld 
 
-SHAREDFLAGS = -fno-builtin -O0 -nostdlib -ffreestanding -g -Wall -Wextra -MMD -mno-red-zone -mcmodel=kernel -fno-pie
+SHAREDFLAGS = --target=x86_64-none-elf -g3 -ggdb3 -mno-sse -fno-exceptions -fno-rtti -ffreestanding -nostdlib -fno-builtin -Wall -Wextra -Werror -mcmodel=kernel -mcmodel=large -mno-red-zone
 SHAREDFLAGS += -I$(TOP_SRC)/include
 #SHAREDFLAGS += -Werror 
 

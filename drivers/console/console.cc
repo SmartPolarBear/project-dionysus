@@ -97,6 +97,8 @@ void console::printf(const char *fmt, ...)
         }
     }
 
+    va_end(ap);
+
     //TODO : release the lock
 }
 
