@@ -69,6 +69,7 @@ _start:
 
     movl $_kernel_physical_end,%esi
     addl $0x100000,%esi   //Map 4MB more than _kernel_physical_end
+    
     shrl $SHIFT_2MB, %esi //Set 2MB bit
     addl $1,%esi
 
