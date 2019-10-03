@@ -4,6 +4,7 @@
 #include "sys/mmu.h"
 
 .set header_len, header_end-header_start
+.set tag_len, tag_end-tag_start
 .set checksum, -(MULTIBOOT2_HEADER_MAGIC + MULTIBOOT_ARCHITECTURE_I386 + header_len)
 
 .section .multiboot
@@ -13,7 +14,14 @@ header_start:
     .long header_len
     .long checksum
 
-    //current no multiboot tags
+    //multiboot tags
+tag_start:
+    .short MULTIBOOT_HEADER_TAG_INFORMATION_REQUEST
+    .short MULTIBOOT_HEADER_TAG_OPTIONAL
+    .long tag_len
+    .long MULTIBOOT_TAG_TYPE_MMAP
+    .long MULTIBOOT_TAG_TYPE_ACPI_NEW
+tag_end:
 
     .short MULTIBOOT_HEADER_TAG_END
     .short 8    //no flags set
@@ -47,7 +55,7 @@ gdtdesc:
 .type _start, @function
 _start:
     movl $initstack + BOOT_STACK_SIZE, %esp
-    movl %eax, mboot_addr
+    movl %ebx, mboot_addr
 
     movl $lo_pdpt,%eax
     or $(PG_P|PG_W),%eax
@@ -69,7 +77,7 @@ _start:
 
     movl $_kernel_physical_end,%esi
     addl $0x100000,%esi   //Map 4MB more than _kernel_physical_end
-    
+
     shrl $SHIFT_2MB, %esi //Set 2MB bit
     addl $1,%esi
 

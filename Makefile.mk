@@ -19,13 +19,13 @@ OBJDUMP = $(TOOLPREFIX)objdump
 
 LDFLAGS=-z max-page-size=0x1000 -no-pie -nostdlib -Tkern/kernel.ld 
 
-SHAREDFLAGS = --target=x86_64-none-elf -g3 -ggdb3 -mno-sse -fno-exceptions -fno-rtti -ffreestanding -nostdlib -fno-builtin -Wall -Wextra -Werror -mcmodel=kernel -mcmodel=large -mno-red-zone
+SHAREDFLAGS = --target=x86_64-none-elf -g3 -ggdb3 -mno-sse -fno-exceptions -fno-rtti -ffreestanding -nostdlib -fno-builtin -Wall -Wextra -mcmodel=kernel -mcmodel=large -mno-red-zone
 SHAREDFLAGS += -I$(TOP_SRC)/include
 #SHAREDFLAGS += -Werror 
 
-CFLAGS = -std=gnu17 $(SHAREDFLAGS)
+CFLAGS = -std=c17 $(SHAREDFLAGS)
 ASFLAGS = $(SHAREDFLAGS)
-CXXFLAGS = -std=gnu++17 $(SHAREDFLAGS)
+CXXFLAGS = -std=c++17 $(SHAREDFLAGS)
 
 # If the makefile can't find QEMU, specify its path here
 # QEMU = qemu-system-i386

@@ -21,16 +21,16 @@ freerange(void *vstart, void *vend)
     char *p = new ((char *)PGROUNDUP((size_t)vstart)) char;
     for (; p + PGSIZE <= (char *)vend; p += PGSIZE)
     {
-        bootmm_free(p);
+        vm::bootmm_free(p);
     }
 }
 
-void bootmm_init(void *vstart, void *vend)
+void vm::bootmm_init(void *vstart, void *vend)
 {
     freerange(vstart, vend);
 }
 
-void bootmm_free(char *v)
+void vm::bootmm_free(char *v)
 {
     //TODO: add verification such as v >= physical_mem_end
     if (((size_t)v) % PGSIZE || v < _kernel_virtual_end)
@@ -45,7 +45,7 @@ void bootmm_free(char *v)
     bootmem.freelist = r;
 }
 
-char *bootmm_alloc(void)
+char *vm::bootmm_alloc(void)
 {
     auto r = bootmem.freelist;
     if (r)

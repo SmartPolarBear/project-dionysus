@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-22 13:11:14
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-02 21:03:49
+ * @ Modified time: 2019-10-03 16:46:21
  * @ Description:
  */
 #if !defined(__INCLUDE_SYS_MEMLAYOUT_H)
@@ -24,7 +24,7 @@ template <typename P>
 static inline constexpr P *V2P(P *a) { return (P *)(((uint64_t)(a)) - KERNEL_VIRTUALBASE); }
 
 template <typename P>
-static inline constexpr P *P2V(P *a) { return (P *)(((void *)(((char *)(a)) + KERNEL_VIRTUALBASE))); }
+static inline constexpr P *P2V(void *a) { return (P *)(((void *)(((char *)(a)) + KERNEL_VIRTUALBASE))); }
 
 #endif
 

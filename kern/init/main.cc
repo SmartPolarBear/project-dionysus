@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-03 13:13:40
+ * @ Modified time: 2019-10-03 17:40:30
  * @ Description: the entry point for kernel in C++
  */
 
@@ -15,9 +15,54 @@
 #include "sys/memlayout.h"
 #include "sys/param.h"
 
+//The boot header defined by Multiboot2 , aligned 8 bytes
+struct alignas(8) multiboot2_boot_info
+{
+    multiboot_uint32_t total_size;
+    multiboot_uint32_t reserved;
+    multiboot_tag tags[0];
+};
+
+//the *PHYSICAL* address for multiboot2_boot_info
 extern "C" void *mboot_addr; //boot.S
+//the pointer storing the *VIRTUAL* address for multiboot
+multiboot2_boot_info *mboot_info;
+
+//multiboot_tags maps TAG_TYPE -> the pointer to the tag
+using multiboot_tag_ptr = multiboot_tag *;
+constexpr size_t TAGS_COUNT_MAX = 24;
+multiboot_tag_ptr multiboot_tags[TAGS_COUNT_MAX];
+
+static inline void parse_multiboot_tags()
+{
+    for (multiboot_tag *tag = mboot_info->tags;
+         tag->type != MULTIBOOT_TAG_TYPE_END;
+         tag = (multiboot_tag *)((multiboot_uint8_t *)tag + ((tag->size + 7) & ~7)))
+    {
+        multiboot_tags[tag->type] = tag;
+    }
+}
+
 extern char _kernel_virtual_start[]; //kernel.ld
 extern char _kernel_virtual_end[];   //kernel.ld
+
+extern "C" [[noreturn]] void kmain() {
+    mboot_info = P2V<multiboot2_boot_info>(mboot_addr);
+    vm::bootmm_init(_kernel_virtual_end, _kernel_virtual_end + 0x100000);
+
+    parse_multiboot_tags();
+
+    multiboot_tag_mmap *mmap = reinterpret_cast<multiboot_tag_mmap *>(multiboot_tags[MULTIBOOT_TAG_TYPE_MMAP]);
+    size_t entry_cnt = (mmap->size - mmap->entry_size - sizeof(*mmap)) / mmap->entry_size;
+    console::printf("mmap->size=%d,cnt=%d\n", mmap->size, entry_cnt);
+    for (int i = 0; i < entry_cnt; i++)
+    {
+        console::printf("add=0x%x,len=0x%x,type=%d\n", mmap->entries[i].addr, mmap->entries[i].len, mmap->entries[i].type);
+    }
+    console::printf("Hello world! %d\n", 122);
+    for (;;)
+        ;
+}
 
 //C++ ctors
 extern "C"
@@ -33,11 +78,4 @@ extern "C"
             (*ctor)();
         }
     }
-}
-
-extern "C" [[noreturn]] void kmain() {
-    bootmm_init(_kernel_virtual_end, _kernel_virtual_end + 0x100000);
-    console::printf("Hello world! %d\n",121);
-    for (;;)
-        ;
 }
