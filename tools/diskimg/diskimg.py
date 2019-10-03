@@ -62,6 +62,11 @@ def main(argv):
                 "sudo cp -f "+lhs+" "+rhs, check=True, shell=True)
             print("sudo cp "+builddir+"/"+lhs+" "+mountpoint+"/"+rhs)
 
+    subprocess.run("sudo cp -f grub.cfg " + mountpoint +
+                   "/boot/grub/grub.cfg", check=True, shell=True)
+    print("sudo cp -f grub.cfg " + mountpoint +
+                   "/boot/grub/grub.cfg")
+
     subprocess.run("sudo umount"+" "+mountpoint, check=True, shell=True)
     print("sudo umount"+" "+mountpoint)
     subprocess.run("sudo losetup"+" " + "-d "+lo1,
