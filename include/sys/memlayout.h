@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-22 13:11:14
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-03 16:46:21
+ * @ Modified time: 2019-10-03 23:03:53
  * @ Description:
  */
 #if !defined(__INCLUDE_SYS_MEMLAYOUT_H)
@@ -17,11 +17,14 @@
 
 #include "sys/types.h"
 
-constexpr uint64_t KERNEL_VIRTUALBASE = 0xFFFFFFFF80000000;
-constexpr uint64_t KERNEL_VIRTUALLINK = 0xFFFFFFFF80400000;
+constexpr uintptr_t EXTMEM_PHYSICAL = 0x100000;
+constexpr uintptr_t DEVICE_PHYSICAL = 0xFE000000;
+
+constexpr uintptr_t DEVICE_VIRTUALBASE = 0xFFFFFFFF40000000;
+constexpr uintptr_t KERNEL_VIRTUALBASE = 0xFFFFFFFF80000000;
 
 template <typename P>
-static inline constexpr P *V2P(P *a) { return (P *)(((uint64_t)(a)) - KERNEL_VIRTUALBASE); }
+static inline constexpr P *V2P(P *a) { return (P *)(((uintptr_t)(a)) - KERNEL_VIRTUALBASE); }
 
 template <typename P>
 static inline constexpr P *P2V(void *a) { return (P *)(((void *)(((char *)(a)) + KERNEL_VIRTUALBASE))); }

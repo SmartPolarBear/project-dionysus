@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-22 13:11:10
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-02 16:23:37
+ * @ Modified time: 2019-10-03 23:02:17
  * @ Description:
  */
 
@@ -36,12 +36,34 @@
 
 #include "sys/types.h"
 
+constexpr size_t PDT_ENTRY_COUNT = 512;
+constexpr size_t PTE_ENTRY_COUNT = 512;
 constexpr size_t PGSIZE = 4096;
 
 static inline constexpr size_t PGROUNDUP(size_t sz)
 {
     return (((sz) + ((size_t)PGSIZE - 1ul)) & ~((size_t)(PGSIZE - 1ul)));
 }
+
+enum PageShift
+{
+    PGSHIFT = 12,  // log2(PGSIZE)
+    PTXSHIFT = 12, // offset of PTX in a linear address
+    PDXSHIFT = 22, // offset of PDX in a linear address
+};
+
+enum PageFlags
+{
+    PTE_P = 0x001,   // Present
+    PTE_W = 0x002,   // Writeable
+    PTE_U = 0x004,   // User
+    PTE_PWT = 0x008, // Write-Through
+    PTE_PCD = 0x010, // Cache-Disable
+    PTE_A = 0x020,   // Accessed
+    PTE_D = 0x040,   // Dirty
+    PTE_PS = 0x080,  // Page Size
+    PTE_MBZ = 0x180, // Bits must be zero
+};
 
 #endif //__cplusplus
 

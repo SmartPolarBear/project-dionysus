@@ -66,4 +66,19 @@ stosl(void *addr, int data, int cnt)
                  : "memory", "cc");
 }
 
+static inline uintptr_t rcr2(void)
+{
+    uintptr_t val;
+    asm volatile("mov %%cr2,%0"
+                 : "=r"(val));
+    return val;
+}
+
+static inline void lcr3(uintptr_t val)
+{
+    asm volatile("mov %0,%%cr3"
+                 :
+                 : "r"(val));
+}
+
 #endif // __INCLUDE_ARCH_X86_H
