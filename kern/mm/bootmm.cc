@@ -3,6 +3,15 @@
 #include "lib/libcxx/new.h"
 #include "sys/mmu.h"
 
+static inline constexpr size_t PGROUNDUP(size_t sz)
+{
+    constexpr size_t PGSIZE = 4096;
+    return (((sz) + ((size_t)PGSIZE - 1ul)) & ~((size_t)(PGSIZE - 1ul)));
+}
+
+constexpr size_t PGSIZE = 4096;
+
+
 struct run
 {
     run *next;
@@ -25,11 +34,13 @@ freerange(void *vstart, void *vend)
     }
 }
 
+//Ininialzie the boot mem manager
 void vm::bootmm_init(void *vstart, void *vend)
 {
     freerange(vstart, vend);
 }
 
+//Free a block
 void vm::bootmm_free(char *v)
 {
     //TODO: add verification such as v >= physical_mem_end
@@ -45,6 +56,7 @@ void vm::bootmm_free(char *v)
     bootmem.freelist = r;
 }
 
+// Allocate a block sized 4096 bytes
 char *vm::bootmm_alloc(void)
 {
     auto r = bootmem.freelist;

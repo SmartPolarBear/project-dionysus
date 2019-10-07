@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-22 13:11:10
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-03 23:02:17
+ * @ Modified time: 2019-10-07 14:45:09
  * @ Description:
  */
 
@@ -24,6 +24,7 @@
 #define PD_ALIGN (0x1000)
 #define PD_ENTRY_SIZE (8)
 
+//Unused: we use 2MB page
 #define PT_SIZE (0x1000)
 #define PT_ALIGN (0x1000)
 #define PT_ENTRY_SIZE (8)
@@ -36,34 +37,34 @@
 
 #include "sys/types.h"
 
-constexpr size_t PDT_ENTRY_COUNT = 512;
-constexpr size_t PTE_ENTRY_COUNT = 512;
-constexpr size_t PGSIZE = 4096;
+constexpr size_t PML4T_SIZE = 0x1000;
+constexpr size_t PML4T_ALIGN = 0x1000;
+constexpr size_t PML4T_ENTRY_SIZE = 8;
 
-static inline constexpr size_t PGROUNDUP(size_t sz)
+constexpr size_t PDPT_SIZE = 0x1000;
+constexpr size_t PDPT_ALIGN = 0x1000;
+constexpr size_t PDPT_ENTRY_SIZE = 8;
+
+constexpr size_t PD_SIZE = 0x1000;
+constexpr size_t PD_ALIGN = 0x1000;
+constexpr size_t PD_ENTRY_SIZE = 8;
+
+constexpr size_t PG_P = (1 << 0);  //Present
+constexpr size_t PG_W = (1 << 1);  //Writable
+constexpr size_t PG_U = (1 << 2);  //User
+constexpr size_t PG_PS = (1 << 7); //2MB pages
+
+constexpr size_t PML4_BASE(uintptr_t base) { (((uint64_t)(base) >> 39) & 0x1FF); }
+constexpr size_t PDPT_BASE(uintptr_t base) { (((uint64_t)(base) >> 30) & 0x1FF); }
+constexpr size_t PDIR_BASE(uintptr_t base) { (((uint64_t)(base) >> 21) & 0x1FF); }
+constexpr size_t PTABLE_BASE(uintptr_t base) { (((uint64_t)(base) >> 12) & 0x1FF); }
+constexpr uintptr_t PTE_ADDR(uintptr_t pte)
 {
-    return (((sz) + ((size_t)PGSIZE - 1ul)) & ~((size_t)(PGSIZE - 1ul)));
+    return ((size_t)(pte) & ~0xFFF);
 }
 
-enum PageShift
-{
-    PGSHIFT = 12,  // log2(PGSIZE)
-    PTXSHIFT = 12, // offset of PTX in a linear address
-    PDXSHIFT = 22, // offset of PDX in a linear address
-};
 
-enum PageFlags
-{
-    PTE_P = 0x001,   // Present
-    PTE_W = 0x002,   // Writeable
-    PTE_U = 0x004,   // User
-    PTE_PWT = 0x008, // Write-Through
-    PTE_PCD = 0x010, // Cache-Disable
-    PTE_A = 0x020,   // Accessed
-    PTE_D = 0x040,   // Dirty
-    PTE_PS = 0x080,  // Page Size
-    PTE_MBZ = 0x180, // Bits must be zero
-};
+//As we don't use 4K pages, we have no need to define things for PTE here.
 
 #endif //__cplusplus
 

@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-22 13:11:14
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-03 23:03:53
+ * @ Modified time: 2019-10-05 23:04:35
  * @ Description:
  */
 #if !defined(__INCLUDE_SYS_MEMLAYOUT_H)
@@ -17,17 +17,43 @@
 
 #include "sys/types.h"
 
-constexpr uintptr_t EXTMEM_PHYSICAL = 0x100000;
-constexpr uintptr_t DEVICE_PHYSICAL = 0xFE000000;
-
-constexpr uintptr_t DEVICE_VIRTUALBASE = 0xFFFFFFFF40000000;
 constexpr uintptr_t KERNEL_VIRTUALBASE = 0xFFFFFFFF80000000;
 
-template <typename P>
-static inline constexpr P *V2P(P *a) { return (P *)(((uintptr_t)(a)) - KERNEL_VIRTUALBASE); }
+constexpr size_t PDENTRY_COUNT = 512;
+constexpr size_t PTENTRY_COUNT = 512;
+constexpr size_t PAGE_SIZE = 4096;
+
+constexpr size_t PAGE_ROUNDDOWN(size_t sz)
+{
+    return (((sz) + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1));
+}
+
+constexpr size_t PAGE_ROUNDUP(size_t sz)
+{
+    return (((sz) + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1));
+}
 
 template <typename P>
-static inline constexpr P *P2V(void *a) { return (P *)(((void *)(((char *)(a)) + KERNEL_VIRTUALBASE))); }
+static inline constexpr P *V2P(P *a)
+{
+    return (P *)(((uintptr_t)(a)) - KERNEL_VIRTUALBASE);
+}
+
+template <typename P>
+static inline constexpr P *P2V(void *a)
+{
+    return (P *)(((void *)(((char *)(a)) + KERNEL_VIRTUALBASE)));
+}
+
+static inline constexpr uintptr_t V2P(uintptr_t x)
+{
+    return ((x)-KERNEL_VIRTUALBASE);
+}
+
+static inline constexpr uintptr_t P2V(uintptr_t x)
+{
+    return ((x) + KERNEL_VIRTUALBASE);
+}
 
 #endif
 

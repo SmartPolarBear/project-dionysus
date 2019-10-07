@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-03 23:26:29
+ * @ Modified time: 2019-10-04 22:59:53
  * @ Description: the entry point for kernel in C++
  */
 
@@ -58,8 +58,6 @@ extern "C" [[noreturn]] void kmain() {
     
     // char *c = _kernel_virtual_end + 0x100000 + 0x100000;
     // *c = 0x12345;
-
-
 
     console::printf("Hello world! %d\n", 122);
     for (;;)
