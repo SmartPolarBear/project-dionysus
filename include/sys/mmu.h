@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-22 13:11:10
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-07 14:45:09
+ * @ Modified time: 2019-10-07 19:34:13
  * @ Description:
  */
 
@@ -54,17 +54,30 @@ constexpr size_t PG_W = (1 << 1);  //Writable
 constexpr size_t PG_U = (1 << 2);  //User
 constexpr size_t PG_PS = (1 << 7); //2MB pages
 
-constexpr size_t PML4_BASE(uintptr_t base) { (((uint64_t)(base) >> 39) & 0x1FF); }
-constexpr size_t PDPT_BASE(uintptr_t base) { (((uint64_t)(base) >> 30) & 0x1FF); }
-constexpr size_t PDIR_BASE(uintptr_t base) { (((uint64_t)(base) >> 21) & 0x1FF); }
-constexpr size_t PTABLE_BASE(uintptr_t base) { (((uint64_t)(base) >> 12) & 0x1FF); }
+constexpr size_t PML4_BASE(uintptr_t base)
+{
+    return (((uint64_t)(base) >> 39) & 0x1FF);
+}
+
+constexpr size_t PDPT_BASE(uintptr_t base)
+{
+    return (((uint64_t)(base) >> 30) & 0x1FF);
+}
+
+constexpr size_t PDIR_BASE(uintptr_t base)
+{
+    return (((uint64_t)(base) >> 21) & 0x1FF);
+}
+
+constexpr size_t PTABLE_BASE(uintptr_t base)
+{
+    return (((uint64_t)(base) >> 12) & 0x1FF);
+}
+
 constexpr uintptr_t PTE_ADDR(uintptr_t pte)
 {
     return ((size_t)(pte) & ~0xFFF);
 }
-
-
-//As we don't use 4K pages, we have no need to define things for PTE here.
 
 #endif //__cplusplus
 

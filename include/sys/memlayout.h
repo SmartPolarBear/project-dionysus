@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-22 13:11:14
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-05 23:04:35
+ * @ Modified time: 2019-10-07 20:20:41
  * @ Description:
  */
 #if !defined(__INCLUDE_SYS_MEMLAYOUT_H)
@@ -22,6 +22,8 @@ constexpr uintptr_t KERNEL_VIRTUALBASE = 0xFFFFFFFF80000000;
 constexpr size_t PDENTRY_COUNT = 512;
 constexpr size_t PTENTRY_COUNT = 512;
 constexpr size_t PAGE_SIZE = 4096;
+
+constexpr size_t DEVSPACE_SIZE = (1 << 28);
 
 constexpr size_t PAGE_ROUNDDOWN(size_t sz)
 {

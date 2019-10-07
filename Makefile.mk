@@ -39,6 +39,6 @@ QEMUGDB = $(shell if $(QEMU) -help | grep -q '^-gdb'; \
 CPUS = 4
 
 QEMUOPTS =  -drive file=$(BUILD)/disk.img,index=0,media=disk,format=raw -cpu max
-QEMUOPTS += -smp $(CPUS) -m 4096 $(QEMUEXTRA)
+QEMUOPTS += -smp $(CPUS) -m 2G $(QEMUEXTRA)
 #QEMUOPTS +=  -accel whpx
 

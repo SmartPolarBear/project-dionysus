@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-04 22:59:53
+ * @ Modified time: 2019-10-07 20:23:00
  * @ Description: the entry point for kernel in C++
  */
 
@@ -11,10 +11,10 @@
 #include "drivers/console/cga.h"
 #include "drivers/console/console.h"
 #include "lib/libc/string.h"
-#include "sys/vm.h"
 #include "sys/bootmm.h"
 #include "sys/memlayout.h"
 #include "sys/param.h"
+#include "sys/vm.h"
 
 //The boot header defined by Multiboot2 , aligned 8 bytes
 struct alignas(8) multiboot2_boot_info
@@ -44,8 +44,12 @@ static inline void parse_multiboot_tags()
     }
 }
 
-extern char _kernel_virtual_start[]; //kernel.ld
-extern char _kernel_virtual_end[];   //kernel.ld
+extern char _kernel_virtual_start[];  //kernel.ld
+extern char _kernel_virtual_end[];    //kernel.ld
+extern char data[];                   //kernel.ld
+extern char edata[];                  //kernel.ld
+extern char _kernel_physical_start[]; //kernel.ld
+extern char _kernel_physical_end[];   //kernel.ld
 
 extern "C" [[noreturn]] void kmain() {
     mboot_info = P2V<multiboot2_boot_info>(mboot_addr);
@@ -54,12 +58,21 @@ extern "C" [[noreturn]] void kmain() {
     size_t entry_cnt = (mmap->size - mmap->entry_size - sizeof(*mmap)) / mmap->entry_size;
 
     vm::bootmm_init(_kernel_virtual_end, _kernel_virtual_end + 0x100000);
-    vm::kvm_setup(entry_cnt, mmap->entries);
-    
+    vm::kvm_init(entry_cnt, mmap->entries);
+
     // char *c = _kernel_virtual_end + 0x100000 + 0x100000;
     // *c = 0x12345;
 
     console::printf("Hello world! %d\n", 122);
+    console::printf("pkstart=0x%x\npkend=0x%x\n",
+                    _kernel_physical_start,
+                    _kernel_physical_end);
+    console::printf("vkstart=0x%x\nvdata=0x%x\nvedata=0x%x\nvkend=0x%x\n",
+                    _kernel_virtual_start,
+                    data,
+                    edata,
+                    _kernel_virtual_end);
+
     for (;;)
         ;
 }

@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-25 23:45:39
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-02 21:01:29
+ * @ Modified time: 2019-10-07 20:40:39
  * @ Description:
  */
 
@@ -46,7 +46,7 @@ SECTIONS
     .text : AT(_boot_end)
     {
       *(.multiboot)
-      *(.text)
+      *(.text .stub .text.* .gnu.linkonce.t.*)
     }
   
     . = ALIGN(0x1000);
@@ -58,6 +58,7 @@ SECTIONS
   
     . = ALIGN(0x1000);
   
+    data = .;
     .data : AT ( (LOADADDR (.rodata) + SIZEOF (.rodata) + 0xFFF) & 0xFFFFFFFFFFFFF000 )
     {
       start_ctors = .;
@@ -72,6 +73,7 @@ SECTIONS
 
       *(.data .data.* .gnu.linkonce.d.*)
     }
+    edata = .;
   
     . = ALIGN(0x1000);
   
