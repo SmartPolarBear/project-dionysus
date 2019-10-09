@@ -77,9 +77,6 @@ static pte_t *walk_pml4t(pde_t *pml4t, const void *va, bool alloc)
         *pml4e = V2P((uintptr_t)pdpe) | PG_P | PG_W | PG_U;
     }
 
-    // auto a = *pdpe;
-    console::puts("fuck!");
-    return nullptr;
     if (*pdpe & PG_P)
     {
         pde = (pde_t *)P2V(PTE_ADDR(*pdpe));
@@ -128,11 +125,13 @@ static int map_pages(pde_t *kpml4t, void *va, size_t size, uintptr_t pa, size_t 
             return -1;
         }
 
-        if (*pte & PG_P)
-        {
-            //TODO: panic the kernel for remapping
-            return -2;
-        }
+        // if (*pte & PG_P)
+        // {
+        //     //TODO: panic the kernel for remapping
+        //     console::printf("remap!!\n");
+        //     console::printf(":%d\n", (int)*pte);
+        //     return -2;
+        // }
 
         *pte = pa | flags | PG_P;
 
@@ -154,34 +153,36 @@ static void fill_kmap(void)
         (void *)KERNEL_VIRTUALBASE,
         0,
         kmap.min_available_phyaddr,
-        PG_W,
+        PG_W | PG_U | PG_P,
         true};
 
     kmap.entries[1] = (kmap_entry){
         (void *)(KERNEL_VIRTUALBASE + kmap.min_available_phyaddr),
         kmap.min_available_phyaddr,
         V2P((uintptr_t)data),
-        0,
+        PG_W | PG_U | PG_P,
         true};
 
     kmap.entries[2] = (kmap_entry){
-        (void *)data,
-        V2P((uintptr_t)data),
-        kmap.max_available_phyaddr - DEVSPACE_SIZE,
-        PG_W,
-        true};
+        0,
+        0,
+        kmap.min_available_phyaddr,
+        PG_W | PG_U | PG_P,
+        false};
 
     kmap.entries[3] = (kmap_entry){
         (void *)P2V(kmap.max_available_phyaddr - DEVSPACE_SIZE),
         kmap.max_available_phyaddr - DEVSPACE_SIZE,
         kmap.max_available_phyaddr,
-        PG_W,
-        true};
+        PG_W | PG_U | PG_P,
+        false}; //Attention
 }
 
 void vm::kvm_switch(pde_t *kpml4t)
 {
-    lcr3(V2P((uintptr_t)kpml4t));
+    lcr3((uintptr_t)V2P(kpml4t));
+
+    // console::printf("kvm_switch\n");
 }
 
 pde_t *vm::kvm_setup(void)
@@ -192,7 +193,7 @@ pde_t *vm::kvm_setup(void)
         return nullptr;
     }
 
-    memset(kpml4t, 0, sizeof(kpml4t));
+    memset(kpml4t, 0, PAGE_SIZE);
 
     for (auto e : kmap.entries)
     {
@@ -200,8 +201,7 @@ pde_t *vm::kvm_setup(void)
                       e.paddr_end - e.paddr_start,
                       e.paddr_start, e.flags) < 0)
         {
-            //TODO: FUCK!
-            return nullptr;
+            console::printf("fuck! 0x%x\n", e.paddr_start);
             kvm_freevm(kpml4t);
             return nullptr;
         }
@@ -228,6 +228,42 @@ void vm::kvm_init(size_t entrycnt, multiboot_mmap_entry entries[])
 
     kernel_pml4t = kvm_setup();
     // kvm_switch(kernel_pml4t);
+
+    int test = 0;
+    int error = 0;
+    for (int i = KERNEL_VIRTUALBASE + 0xabcde; i < KERNEL_VIRTUALBASE + 0xedcba; i++)
+    {
+        test = i;
+        int *ptest = &test;
+
+        pte_t *pte = walk_pml4t(kernel_pml4t, (void *)ptest, false);
+        // console::printf("looking up 0x%x\n", (void *)ptest);
+        // break;
+        if (pte == nullptr)
+        {
+            console::printf("No mapping!\n");
+            error++;
+        }
+        else
+        {
+            int offset = ((uintptr_t)ptest) & 0b111111111111;
+            int page = PTABLE_BASE(*pte);
+            int addr = (page << 12) | offset;
+            if (addr != (uintptr_t)V2P(ptest))
+            {
+                console::printf("WRONG! page=0x%x off=0x%x  v2p=0x%x trans=0x%x\n", page, offset, (uintptr_t)ptest, addr);
+                error++;
+            }
+            else
+            {
+                console::printf("right! 0x%x 0x%x | 0x%x 0x%x\n", page, offset, (uintptr_t)V2P(ptest), addr);
+                error++;
+            }
+        }
+
+        if (error >= 8)
+            return;
+    }
 }
 
 void vm::kvm_freevm(pde_t *pgdir)
