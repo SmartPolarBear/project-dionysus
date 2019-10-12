@@ -22,7 +22,7 @@ struct
     run *freelist;
 } bootmem;
 
-extern char *_kernel_virtual_end; //kernel.ld
+extern char end[]; //kernel.ld
 
 static void
 freerange(void *vstart, void *vend)
@@ -44,7 +44,7 @@ void vm::bootmm_init(void *vstart, void *vend)
 void vm::bootmm_free(char *v)
 {
     //TODO: add verification such as v >= physical_mem_end
-    if (((size_t)v) % PGSIZE || v < _kernel_virtual_end)
+    if (((size_t)v) % PGSIZE || v < end)
     {
         //TODO: panic the kernel for invalid free
         return;

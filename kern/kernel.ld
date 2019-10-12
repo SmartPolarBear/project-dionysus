@@ -1,91 +1,75 @@
-/**
- * @ Author: SmartPolarBear
- * @ Create Time: 2019-09-25 23:45:39
- * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-07 20:40:39
- * @ Description:
- */
+/* Simple linker script for the JOS kernel.
+   See the GNU ld 'info' manual ("info ld") to learn the syntax. */
 
-
+/* OUTPUT_FORMAT("elf32-i386", "elf32-i386", "elf32-i386") */
+OUTPUT_FORMAT("elf64-x86-64", "elf64-x86-64", "elf64-x86-64")
+OUTPUT_ARCH(i386:x86-64)
 ENTRY(_start)
+
+mboot_load_addr = 0x00100000;
 
 SECTIONS
 {
-    . = 4M;
-    _kernel_physical_start = .;
+	/* Link the kernel at this address: "." means the current address */
+        /* Must be equal to KERNLINK */
+	. = 0xFFFFFFFF80100000; 
 
-    .boottext :
-    {
-        build/kern/init/boot.o (.multiboot)
-        build/kern/init/boot.o (.text)
-    }
+	PROVIDE(begin = .);
 
-    .bootrodata :
-    {
-        build/kern/init/boot.o (.rodata)
-    }
+	.text : AT(mboot_load_addr) {
+		*(.text .rela.text .stub .text.* .gnu.linkonce.t.*)
+	}
 
-    .bootdata :
-    {
-        build/kern/init/boot.o (.data)
-    }
+	PROVIDE(etext = .);	/* Define the 'etext' symbol to this value */
 
-    .bootbss :
-    {
-        build/kern/init/boot.o (.bss)
-        build/kern/init/boot.o (COMMON)
-    }
+	.rodata : {
+		*(.rodata .rodata.* .gnu.linkonce.r.*)
+	}
 
-    . = ALIGN(0x1000);
-    _boot_end = .;
+	/* Adjust the address for the data segment to the next page */
+	. = ALIGN(0x1000);
 
+	/* Conventionally, Unix linkers provide pseudo-symbols
+	 * etext, edata, and end, at the end of the text, data, and bss.
+	 * For the kernel mapping, we need the address at the beginning
+	 * of the data section, but that's not one of the conventional
+	 * symbols, because the convention started before there was a
+	 * read-only rodata section between text and data. */
+	PROVIDE(data = .);
+
+	/* The data segment */
+	.data : {
+    start_ctors = .;
+    KEEP(*( .init_array ));
+    KEEP(*(SORT_BY_INIT_PRIORITY( .init_array.* )));
+    *(.ctor*)
+    end_ctors = .;
     
+    start_dtors = .;
+    *(.dtor*)
+    end_dtors = .;
 
-    . += 0xFFFFFFFF80000000;
-    _kernel_virtual_start = .;
-    .text : AT(_boot_end)
-    {
-      *(.multiboot)
-      *(.text .stub .text.* .gnu.linkonce.t.*)
-    }
-  
-    . = ALIGN(0x1000);
-  
-    .rodata : AT ( (LOADADDR (.text) + SIZEOF (.text) + 0xFFF) & 0xFFFFFFFFFFFFF000 )
-    {
-     *(.rodata .rodata.* .gnu.linkonce.r.*)
-    }
-  
-    . = ALIGN(0x1000);
-  
-    data = .;
-    .data : AT ( (LOADADDR (.rodata) + SIZEOF (.rodata) + 0xFFF) & 0xFFFFFFFFFFFFF000 )
-    {
-      start_ctors = .;
-      KEEP(*( .init_array ));
-      KEEP(*(SORT_BY_INIT_PRIORITY( .init_array.* )));
-      *(.ctor*)
-      end_ctors = .;
-      
-      start_dtors = .;
-      *(.dtor*)
-      end_dtors = .;
+		*(.data)
+	}
 
-      *(.data .data.* .gnu.linkonce.d.*)
-    }
-    edata = .;
-  
-    . = ALIGN(0x1000);
-  
-    .bss : AT ( (LOADADDR (.data) + SIZEOF (.data) + 0xFFF) & 0xFFFFFFFFFFFFF000 )
-    {
-      *(COMMON)
-      *(.bss .bss.* .gnu.linkonce.b.*)
-    }
+	. = ALIGN(0x1000);
 
-    . = ALIGN(0x1000);
-  
-    _kernel_virtual_end = .;
-  
-    _kernel_physical_end = (LOADADDR (.bss) + SIZEOF (.bss) + 0xFFF) & 0xFFFFFFFFFFFFF000;
-}  
+	PROVIDE(edata = .);
+
+	.bss : {
+		*(.bss)
+		*(COMMON)
+	}
+
+	. = ALIGN(0x1000);
+
+	PROVIDE(end = .);
+
+	/DISCARD/ : {
+		*(.eh_frame .rela.eh_frame .note.GNU-stack)
+	}
+}
+
+mboot_load_end = mboot_load_addr + (edata - begin);
+mboot_bss_end = mboot_load_addr + (end - begin);
+mboot_entry_addr = mboot_load_addr + (mboot_entry - begin);

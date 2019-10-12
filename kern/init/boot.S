@@ -1,139 +1,184 @@
 #include "boot/multiboot2.h"
-#include "boot/asm.h"
-#include "sys/memlayout.h"
-#include "sys/mmu.h"
 
-.set header_len, header_end-header_start
-.set tag_len, tag_end-tag_start
+.code32
+.global mboot_header
+.global mboot_entry
+
+.set header_len, mboot_header_end-mboot_header
 .set checksum, -(MULTIBOOT2_HEADER_MAGIC + MULTIBOOT_ARCHITECTURE_I386 + header_len)
+.set req_tag_len, req_tag_end-req_tag_start
+.set entry_tag_len, entry_tag_end-entry_tag_start
+.set addr_tag_len, addr_tag_end-addr_tag_start
 
-.section .multiboot
-header_start:
+.align 8
+mboot_header:
     .long MULTIBOOT2_HEADER_MAGIC
     .long MULTIBOOT_ARCHITECTURE_I386
     .long header_len
     .long checksum
 
     //multiboot tags
-tag_start:
+.align 8
+entry_tag_start:
+    .short MULTIBOOT_HEADER_TAG_ENTRY_ADDRESS
+    .short MULTIBOOT_HEADER_TAG_OPTIONAL
+    .long entry_tag_len
+    .long mboot_entry_addr
+entry_tag_end:
+
+.align 8
+addr_tag_start:
+    .short MULTIBOOT_HEADER_TAG_ADDRESS
+    .short MULTIBOOT_HEADER_TAG_OPTIONAL
+    .long addr_tag_len
+    .long mboot_load_addr
+    .long mboot_load_addr
+    .long mboot_load_end
+    .long mboot_bss_end
+addr_tag_end:
+
+.align 8
+req_tag_start:
     .short MULTIBOOT_HEADER_TAG_INFORMATION_REQUEST
     .short MULTIBOOT_HEADER_TAG_OPTIONAL
-    .long tag_len
+    .long req_tag_len
     .long MULTIBOOT_TAG_TYPE_MMAP
     .long MULTIBOOT_TAG_TYPE_ACPI_NEW
-tag_end:
+req_tag_end:
 
+.align 8
     .short MULTIBOOT_HEADER_TAG_END
     .short 8    //no flags set
     .long 8     //self-containing size
-header_end:
+mboot_header_end:
 
-.code32
+mboot_entry:
+# zero 4 pages for our bootstrap page tables
+    xor %eax, %eax
+    mov $0x1000, %edi
+    mov $0x5000, %ecx
+    rep stosb
 
-.section .bss
-.comm pml4      , PML4_SIZE         , PML4_ALIGN
-.comm lo_pdpt   , PDPT_SIZE         , PDPT_ALIGN
-.comm hi_pdpt   , PDPT_SIZE         , PDPT_ALIGN
-.comm lo_pdt    , PD_SIZE           , PD_ALIGN
-.comm hi_pdt    , PD_SIZE           , PD_ALIGN
-.comm initstack , BOOT_STACK_SIZE   , BOOT_STACK_ALIGN
-.comm mboot_addr , 4                 , 1
+# P4ML[0] -> 0x2000 (PDPT-A)
+    mov $(0x2000 | 3), %eax
+    mov %eax, 0x1000
 
-.section .data
-// Bootstrap GDT
-.p2align 2                                // force 4 byte alignment
-gdt:
-  .8byte BOOTGDT_FIRST_ENTRY              // null seg
-  .8byte BOOTGDT_SECOND_ENTRY
+# P4ML[511] -> 0x3000 (PDPT-B)
+    mov $(0x3000 | 3), %eax
+    mov %eax, 0x1FF8
 
-gdtdesc:
-  .word   (gdtdesc - gdt - 1)             // sizeof(gdt) - 1
-  .long   gdt                             // address gdt
+# PDPT-A[0] -> 0x4000 (PD)
+    mov $(0x4000 | 3), %eax
+    mov %eax, 0x2000
 
-.section .text
-.global _start
-.type _start, @function
-_start:
-    movl $initstack + BOOT_STACK_SIZE, %esp
-    movl %ebx, mboot_addr
+# PDPT-B[510] -> 0x4000 (PD)
+    mov $(0x4000 | 3), %eax
+    mov %eax, 0x3FF0
 
-    movl $lo_pdpt,%eax
-    or $(PG_P|PG_W),%eax
-    movl %eax,pml4+(PML4_ADDR2ENTRYID(KPHYSICAL)*PML4_ENTRY_SIZE)
+# PD[0..511] -> 0..1022MB
+    mov $0x83, %eax
+    mov $0x4000, %ebx
+    mov $512, %ecx
+ptbl_loop:
+    mov %eax, (%ebx)
+    add $0x200000, %eax
+    add $0x8, %ebx
+    dec %ecx
+    jnz ptbl_loop
 
-    movl $hi_pdpt,%eax
-    or $(PG_P|PG_W),%eax
-    movl %eax,pml4+(PML4_ADDR2ENTRYID(KVIRTUAL)*PML4_ENTRY_SIZE)
+# Clear ebx for initial processor boot.
+# When secondary processors boot, they'll call through
+# entry32mp (from entryother), but with a nonzero ebx.
+# We'll reuse these bootstrap pagetables and GDT.
+    xor %ebx, %ebx
 
-    movl $lo_pdt,%eax
-    or $(PG_P|PG_W),%eax
-    movl %eax,lo_pdpt+(PDPT_ADDR2ENTRYID(KPHYSICAL)*PDPT_ENTRY_SIZE)
+.global entry32mp
+entry32mp:
+# CR3 -> 0x1000 (P4ML)
+    mov $0x1000, %eax
+    mov %eax, %cr3
 
-    movl $hi_pdt,%eax
-    or $(PG_P|PG_W),%eax
-    movl %eax,hi_pdpt+(PDPT_ADDR2ENTRYID(KVIRTUAL)*PDPT_ENTRY_SIZE)
+    lgdt (gdtr64 - mboot_header + mboot_load_addr)
 
-    mov $0,%ecx
+# Enable PAE - CR4.PAE=1
+    mov %cr4, %eax
+    bts $5, %eax
+    mov %eax, %cr4
 
-    movl $_kernel_physical_end,%esi
-    addl $0x100000,%esi   //Map 4MB more than _kernel_physical_end
-
-    shrl $SHIFT_2MB, %esi //Set 2MB bit
-    addl $1,%esi
-
-
-pdt_setup:
-    movl $VALUE_2MB,%eax
-    mul %ecx
-    or $(PG_P|PG_W|PG_2MB),%eax
-    movl %eax,lo_pdt(,%ecx,PD_ENTRY_SIZE)
-    movl %eax,hi_pdt(,%ecx,PD_ENTRY_SIZE)
-
-    inc %ecx
-    cmp %esi,%ecx
-    jne pdt_setup  //loop until %esi==%ecx
-
-
-    movl $pml4,%eax
-    movl %eax,%cr3  //install page
-
-    movl $BOOTCR4,%eax
-    movl %eax,%cr4  //set PAE enable
-    
-    movl $MSR_EFER,%ecx
+# enable long mode - EFER.LME=1
+    mov $0xc0000080, %ecx
     rdmsr
-    or $MSR_EFER_LME,%eax
+    bts $8, %eax
     wrmsr
 
-    movl $BOOTCR0,%eax
-    movl %eax,%cr0
+# enable paging
+    mov %cr0, %eax
+    bts $31, %eax
+    mov %eax, %cr0
 
-    lgdt gdtdesc
+# shift to 64bit segment
+    ljmp $8,$(entry64low - mboot_header + mboot_load_addr)
 
-    ljmp $(KGDT_ENTRY*GDT_ENTRY_SIZE),$_start64
+.align 16
+gdtr64:
+    .word gdt64_end - gdt64_begin - 1;
+    .quad gdt64_begin - mboot_header + mboot_load_addr
 
-    cli
-    hlt
+.align 16
+gdt64_begin:
+    .long 0x00000000 # 0: null desc
+    .long 0x00000000
+    .long 0x00000000 # 1: Code, R/X, Nonconforming
+    .long 0x00209800
+    .long 0x00000000 # 2: Data, R/W, Expand Down
+    .long 0x00009000
+gdt64_end:
 
+.align 16
 .code64
+entry64low:
+    movq $entry64high, %rax
+    jmp *%rax
 
-.global _start64
-.type _start64,@function
-_start64:
-    movw $0,%ax
-    movw %ax, %ds
-    movw %ax, %es
-    movw %ax, %fs
-    movw %ax, %gs
-    movw %ax, %ss
+.global _start
+_start:
+entry64high:
 
-    call call_ctors //call global constructors
+# ensure data segment registers are sane
+    xor %rax, %rax
+    mov %ax, %ss
+    mov %ax, %ds
+    mov %ax, %es
+    mov %ax, %fs
+    mov %ax, %gs
 
-    call kmain //transfer control to the kernel
+# check to see if we're booting a secondary core
+    test %ebx, %ebx
+    jnz entry64mp
 
-    //main should never return
-    cli
-    hlt
+# setup initial stack
+    mov $0xFFFFFFFF80010000, %rax
+    mov %rax, %rsp
 
+# enter main()
+    jmp kmain
+
+# kernel shouldn't return here normally
 spin:
-    jmp spin
+  jmp spin
+
+entry64mp:
+# obtain kstack from data block before entryother
+    #mov $0x7000, %rax
+    #mov -16(%rax), %rsp
+    #jmp mpenter
+
+.global wrmsr
+wrmsr:
+    mov %rdi, %rcx     # arg0 -> msrnum
+    mov %rsi, %rax     # val.low -> eax
+    shr $32, %rsi
+    mov %rsi, %rdx     # val.high -> edx
+    wrmsr
+    retq
+

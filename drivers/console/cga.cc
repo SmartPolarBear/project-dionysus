@@ -10,8 +10,8 @@ constexpr uint16_t cga_lightgray = 7;
 constexpr uint16_t backsp = 0x100;
 constexpr uint16_t crt_port = 0x3d4;
 
-void *cga_addr = (void *)(0xB8000);
-volatile uint16_t *cga_mem = new (P2V<void>(cga_addr)) uint16_t;
+// void *cga_addr = (void *)();
+volatile uint16_t *cga_mem = (uint16_t*)(0xB8000+KERNEL_VIRTUALBASE);
 
 static size_t get_cur_pos(void)
 {

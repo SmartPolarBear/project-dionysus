@@ -19,9 +19,9 @@ OBJDUMP = $(TOOLPREFIX)objdump
 
 LDFLAGS=-z max-page-size=0x1000 -no-pie -nostdlib -Tkern/kernel.ld 
 
-SHAREDFLAGS = --target=x86_64-none-elf -g3 -ggdb3 -mno-sse -fno-exceptions -fno-rtti -ffreestanding -nostdlib -fno-builtin -Wall -Wextra -mcmodel=kernel -mcmodel=large -mno-red-zone
+SHAREDFLAGS = -mno-sse -fno-exceptions -fno-rtti -ffreestanding -nostdlib -fno-builtin -Wall -Wextra -mcmodel=kernel -mno-red-zone
 SHAREDFLAGS += -I$(TOP_SRC)/include
-#SHAREDFLAGS += -Werror 
+SHAREDFLAGS += --target=x86_64-none-elf -gdwarf-2  -fno-pie
 
 CFLAGS = -std=c17 $(SHAREDFLAGS)
 ASFLAGS = $(SHAREDFLAGS)

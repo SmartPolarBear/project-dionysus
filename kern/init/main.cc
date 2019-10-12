@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-08 23:25:26
+ * @ Modified time: 2019-10-11 23:25:40
  * @ Description: the entry point for kernel in C++
  */
 
@@ -25,7 +25,7 @@ struct alignas(8) multiboot2_boot_info
 };
 
 //the *PHYSICAL* address for multiboot2_boot_info
-extern "C" void *mboot_addr; //boot.S
+// extern "C" void *mboot_addr; //boot.S
 //the pointer storing the *VIRTUAL* address for multiboot
 multiboot2_boot_info *mboot_info;
 
@@ -44,34 +44,39 @@ static inline void parse_multiboot_tags()
     }
 }
 
-extern char _kernel_virtual_start[];  //kernel.ld
-extern char _kernel_virtual_end[];    //kernel.ld
-extern char data[];                   //kernel.ld
-extern char edata[];                  //kernel.ld
-extern char _kernel_physical_start[]; //kernel.ld
-extern char _kernel_physical_end[];   //kernel.ld
+// extern char _kernel_virtual_start[];  //kernel.ld
+// extern char _kernel_virtual_end[];    //kernel.ld
+// extern char data[];                   //kernel.ld
+// extern char edata[];                  //kernel.ld
+// extern char _kernel_physical_start[]; //kernel.ld
+// extern char _kernel_physical_end[];   //kernel.ld
+extern char end[];
 
 extern "C" [[noreturn]] void kmain() {
-    mboot_info = P2V<multiboot2_boot_info>(mboot_addr);
-    parse_multiboot_tags();
-    multiboot_tag_mmap *mmap = reinterpret_cast<multiboot_tag_mmap *>(multiboot_tags[MULTIBOOT_TAG_TYPE_MMAP]);
-    size_t entry_cnt = (mmap->size - mmap->entry_size - sizeof(*mmap)) / mmap->entry_size;
+    int size = 123;
+    console::printf("=0x%p\n", &size);
 
-    vm::bootmm_init(_kernel_virtual_end, _kernel_virtual_end + 0x100000);
-    vm::kvm_init(entry_cnt, mmap->entries);
+
+    // mboot_info = P2V<multiboot2_boot_info>(mboot_addr);
+    // parse_multiboot_tags();
+    // multiboot_tag_mmap *mmap = reinterpret_cast<multiboot_tag_mmap *>(multiboot_tags[MULTIBOOT_TAG_TYPE_MMAP]);
+    // size_t entry_cnt = (mmap->size - mmap->entry_size - sizeof(*mmap)) / mmap->entry_size;
+
+    // vm::bootmm_init(end, end + 0x100000);
+    // vm::kvm_init(entry_cnt, mmap->entries);
 
     // char *c = _kernel_virtual_end + 0x100000 + 0x100000;
     // *c = 0x12345;
 
     console::printf("Hello world! %d\n", 122);
-    console::printf("pkstart=0x%x\npkend=0x%x\n",
-                    _kernel_physical_start,
-                    _kernel_physical_end);
-    console::printf("vkstart=0x%x\nvdata=0x%x\nvedata=0x%x\nvkend=0x%x\n",
-                    _kernel_virtual_start,
-                    data,
-                    edata,
-                    _kernel_virtual_end);
+    // console::printf("pkstart=0x%x\npkend=0x%x\n",
+    //                 _kernel_physical_start,
+    //                 _kernel_physical_end);
+    // console::printf("vkstart=0x%x\nvdata=0x%x\nvedata=0x%x\nvkend=0x%x\n",
+    //                 _kernel_virtual_start,
+    //                 data,
+    //                 edata,
+    //                 _kernel_virtual_end);
 
     for (;;)
         ;
