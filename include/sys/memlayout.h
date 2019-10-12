@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-22 13:11:14
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-12 22:25:09
+ * @ Modified time: 2019-10-12 22:56:32
  * @ Description:
  */
 #if !defined(__INCLUDE_SYS_MEMLAYOUT_H)
@@ -18,6 +18,7 @@
 #include "sys/types.h"
 
 constexpr uintptr_t KERNEL_VIRTUALBASE = 0xFFFFFFFF80000000;
+constexpr uintptr_t KERNEL_VIRTUALLINK = 0xFFFFFFFF80100000;
 
 constexpr size_t PDENTRY_COUNT = 512;
 constexpr size_t PTENTRY_COUNT = 512;

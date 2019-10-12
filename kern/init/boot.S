@@ -177,8 +177,14 @@ entry64high:
     mov $0xFFFFFFFF80010000, %rax
     mov %rax, %rsp
 
+# call global constructors
+    call call_ctors
+
 # enter main()
-    jmp kmain
+    call kmain
+
+# call global destructors
+    call call_dtors
 
 # kernel shouldn't return here normally
 spin:

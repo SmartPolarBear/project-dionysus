@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-12 22:55:50
+ * @ Modified time: 2019-10-13 00:23:16
  * @ Description: the entry point for kernel in C++
  */
 
@@ -77,7 +77,7 @@ extern "C" [[noreturn]] void kmain() {
     }
 
     vm::bootmm_init(end, (void*)P2V(4 * 1024 * 1024));
-    // vm::kvm_init(entry_cnt, mmap->entries);
+    // vm::kvm_init(entry_cnt, memtag->entries);
 
     // char *c = _kernel_virtual_end + 0x100000 + 0x100000;
     // *c = 0x12345;
@@ -88,7 +88,7 @@ extern "C" [[noreturn]] void kmain() {
         ;
 }
 
-//C++ ctors
+//C++ ctors and dtors
 extern "C"
 {
     using constructor_type = void (*)();
@@ -101,5 +101,10 @@ extern "C"
         {
             (*ctor)();
         }
+    }
+
+    void call_dtors(void)
+    {
+        
     }
 }

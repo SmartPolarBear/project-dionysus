@@ -227,7 +227,7 @@ void vm::kvm_init(size_t entrycnt, multiboot_mmap_entry entries[])
     fill_kmap();
 
     kernel_pml4t = kvm_setup();
-    // kvm_switch(kernel_pml4t);
+    kvm_switch(kernel_pml4t);
 
     // int test = 0;
     // int error = 0;
