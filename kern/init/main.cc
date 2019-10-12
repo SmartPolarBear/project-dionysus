@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-12 22:22:10
+ * @ Modified time: 2019-10-12 22:55:50
  * @ Description: the entry point for kernel in C++
  */
 
@@ -27,11 +27,10 @@ struct alignas(8) multiboot2_boot_info
 
 // the *PHYSICAL* address for multiboot2_boot_info and the magic number
 extern "C" void *mbi_structptr = nullptr;
-extern "C" void *mbi_magicptr = nullptr;
-// the pointer storing the *VIRTUAL* address for multiboot2_boot_info
+extern "C" uint32_t mbi_magicnum = 0;
+
+// the pointer storing the *VIRTUAL* address for multiboot2_boot_info and the magic number
 multiboot2_boot_info *mboot_info = nullptr;
-// the magic number
-uint32_t magic_number = 0;
 
 // multiboot_tags maps TAG_TYPE -> the pointer to the tag
 namespace multiboot
@@ -60,31 +59,30 @@ static inline void parse_multiboot_tags()
 extern char end[];
 
 extern "C" [[noreturn]] void kmain() {
-    int size = 123;
-    console::printf("&size=0x%p\n", &size);
-    mboot_info = new (P2V((mbi_structptr)));
-    console::printf("mboot_info=0x%p,size=%d\n", mboot_info, mboot_info->total_size);
+    mboot_info = P2V<multiboot2_boot_info>(mbi_structptr);
+    if (mbi_magicnum == MULTIBOOT2_BOOTLOADER_MAGIC)
+    {
+        console::printf("Verified the magic number.\n");
+    }
 
-    // mboot_info = P2V<multiboot2_boot_info>(mboot_addr);
-    // parse_multiboot_tags();
-    // multiboot_tag_mmap *mmap = reinterpret_cast<multiboot_tag_mmap *>(multiboot_tags[MULTIBOOT_TAG_TYPE_MMAP]);
-    // size_t entry_cnt = (mmap->size - mmap->entry_size - sizeof(*mmap)) / mmap->entry_size;
+    multiboot::parse_multiboot_tags();
+    multiboot_tag_mmap *memtag = (multiboot_tag_mmap *)multiboot::multiboot_tags[MULTIBOOT_TAG_TYPE_MMAP];
 
-    // vm::bootmm_init(end, end + 0x100000);
+    size_t entry_cnt = (memtag->size - memtag->entry_size - sizeof(*memtag)) / memtag->entry_size;
+    for (size_t i = 0ul; i < entry_cnt; i++)
+    {
+        console::printf("addr=0x%x (%d), len=%x (%d), type=%d\n",
+                        memtag->entries[i].addr, memtag->entries[i].addr, memtag->entries[i].len,
+                        memtag->entries[i].len, memtag->entries[i].type);
+    }
+
+    vm::bootmm_init(end, (void*)P2V(4 * 1024 * 1024));
     // vm::kvm_init(entry_cnt, mmap->entries);
 
     // char *c = _kernel_virtual_end + 0x100000 + 0x100000;
     // *c = 0x12345;
 
-    console::printf("Hello world! %d\n", 122);
-    // console::printf("pkstart=0x%x\npkend=0x%x\n",
-    //                 _kernel_physical_start,
-    //                 _kernel_physical_end);
-    // console::printf("vkstart=0x%x\nvdata=0x%x\nvedata=0x%x\nvkend=0x%x\n",
-    //                 _kernel_virtual_start,
-    //                 data,
-    //                 edata,
-    //                 _kernel_virtual_end);
+    console::printf("Hello world! build=%d\n", 3);
 
     for (;;)
         ;

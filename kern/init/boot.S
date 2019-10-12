@@ -54,7 +54,9 @@ mboot_header_end:
 
 
 mboot_entry:
-    movl 0x10000,%esp
+# temporary stack for mbi
+    movl $0x10000,%esp
+# push mbi address
     pushl %ebx
     pushl %eax
 
@@ -117,7 +119,8 @@ entry32mp:
     bts $8, %eax
     wrmsr
 
-    popl %eax
+# push mbi & magic number
+    popl %ecx
     popl %ebx
 
 # enable paging
@@ -147,8 +150,10 @@ gdt64_end:
 .align 16
 .code64
 entry64low:
-    movq %rax, mbi_magicptr 
+# save the mbi & the magic number
     movq %rbx, mbi_structptr
+    movq %rcx, mbi_magicnum
+
     movq $entry64high, %rax
     jmp *%rax
 

@@ -180,7 +180,7 @@ static void fill_kmap(void)
 
 void vm::kvm_switch(pde_t *kpml4t)
 {
-    lcr3((uintptr_t)V2P(kpml4t));
+    lcr3((uintptr_t)V2P<void>(kpml4t));
 
     // console::printf("kvm_switch\n");
 }
@@ -229,41 +229,41 @@ void vm::kvm_init(size_t entrycnt, multiboot_mmap_entry entries[])
     kernel_pml4t = kvm_setup();
     // kvm_switch(kernel_pml4t);
 
-    int test = 0;
-    int error = 0;
-    for (int i = KERNEL_VIRTUALBASE + 0xabcde; i < KERNEL_VIRTUALBASE + 0xedcba; i++)
-    {
-        test = i;
-        int *ptest = &test;
+    // int test = 0;
+    // int error = 0;
+    // for (int i = KERNEL_VIRTUALBASE + 0xabcde; i < KERNEL_VIRTUALBASE + 0xedcba; i++)
+    // {
+    //     test = i;
+    //     int *ptest = &test;
 
-        pte_t *pte = walk_pml4t(kernel_pml4t, (void *)ptest, false);
-        // console::printf("looking up 0x%x\n", (void *)ptest);
-        // break;
-        if (pte == nullptr)
-        {
-            console::printf("No mapping!\n");
-            error++;
-        }
-        else
-        {
-            int offset = ((uintptr_t)ptest) & 0b111111111111;
-            int page = PTABLE_BASE(*pte);
-            int addr = (page << 12) | offset;
-            if (addr != (uintptr_t)V2P(ptest))
-            {
-                console::printf("WRONG! page=0x%x off=0x%x  v2p=0x%x trans=0x%x\n", page, offset, (uintptr_t)ptest, addr);
-                error++;
-            }
-            else
-            {
-                console::printf("right! 0x%x 0x%x | 0x%x 0x%x\n", page, offset, (uintptr_t)V2P(ptest), addr);
-                error++;
-            }
-        }
+    //     pte_t *pte = walk_pml4t(kernel_pml4t, (void *)ptest, false);
+    //     // console::printf("looking up 0x%x\n", (void *)ptest);
+    //     // break;
+    //     if (pte == nullptr)
+    //     {
+    //         console::printf("No mapping!\n");
+    //         error++;
+    //     }
+    //     else
+    //     {
+    //         int offset = ((uintptr_t)ptest) & 0b111111111111;
+    //         int page = PTABLE_BASE(*pte);
+    //         int addr = (page << 12) | offset;
+    //         if (addr != (uintptr_t)V2P(ptest))
+    //         {
+    //             console::printf("WRONG! page=0x%x off=0x%x  v2p=0x%x trans=0x%x\n", page, offset, (uintptr_t)ptest, addr);
+    //             error++;
+    //         }
+    //         else
+    //         {
+    //             console::printf("right! 0x%x 0x%x | 0x%x 0x%x\n", page, offset, (uintptr_t)V2P(ptest), addr);
+    //             error++;
+    //         }
+    //     }
 
-        if (error >= 8)
-            return;
-    }
+    //     if (error >= 8)
+    //         return;
+    // }
 }
 
 void vm::kvm_freevm(pde_t *pgdir)
