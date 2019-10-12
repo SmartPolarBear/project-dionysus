@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-22 13:11:14
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-07 20:20:41
+ * @ Modified time: 2019-10-12 22:21:54
  * @ Description:
  */
 #if !defined(__INCLUDE_SYS_MEMLAYOUT_H)
@@ -36,7 +36,7 @@ constexpr size_t PAGE_ROUNDUP(size_t sz)
 }
 
 template <typename P>
-static inline constexpr P *V2P(P *a)
+static inline constexpr P *V2P(void *a)
 {
     return (P *)(((uintptr_t)(a)) - KERNEL_VIRTUALBASE);
 }
@@ -47,15 +47,25 @@ static inline constexpr P *P2V(void *a)
     return (P *)(((void *)(((char *)(a)) + KERNEL_VIRTUALBASE)));
 }
 
-static inline constexpr uintptr_t V2P(uintptr_t x)
+static inline constexpr uintptr_t V2P(void* x)
 {
-    return ((x)-KERNEL_VIRTUALBASE);
+    return (((uintptr_t)x)-KERNEL_VIRTUALBASE);
 }
 
-static inline constexpr uintptr_t P2V(uintptr_t x)
+static inline constexpr uintptr_t P2V(void* x)
 {
-    return ((x) + KERNEL_VIRTUALBASE);
+    return (((uintptr_t)x) + KERNEL_VIRTUALBASE);
 }
+
+// static inline constexpr uintptr_t V2P(uintptr_t x)
+// {
+//     return ((x)-KERNEL_VIRTUALBASE);
+// }
+
+// static inline constexpr uintptr_t P2V(uintptr_t x)
+// {
+//     return ((x) + KERNEL_VIRTUALBASE);
+// }
 
 #endif
 

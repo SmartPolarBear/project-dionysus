@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-11 23:25:40
+ * @ Modified time: 2019-10-12 22:22:10
  * @ Description: the entry point for kernel in C++
  */
 
@@ -11,12 +11,13 @@
 #include "drivers/console/cga.h"
 #include "drivers/console/console.h"
 #include "lib/libc/string.h"
+#include "lib/libcxx/new.h"
 #include "sys/bootmm.h"
 #include "sys/memlayout.h"
 #include "sys/param.h"
 #include "sys/vm.h"
 
-//The boot header defined by Multiboot2 , aligned 8 bytes
+// the boot header defined by Multiboot2 , aligned 8 bytes
 struct alignas(8) multiboot2_boot_info
 {
     multiboot_uint32_t total_size;
@@ -24,12 +25,17 @@ struct alignas(8) multiboot2_boot_info
     multiboot_tag tags[0];
 };
 
-//the *PHYSICAL* address for multiboot2_boot_info
-// extern "C" void *mboot_addr; //boot.S
-//the pointer storing the *VIRTUAL* address for multiboot
-multiboot2_boot_info *mboot_info;
+// the *PHYSICAL* address for multiboot2_boot_info and the magic number
+extern "C" void *mbi_structptr = nullptr;
+extern "C" void *mbi_magicptr = nullptr;
+// the pointer storing the *VIRTUAL* address for multiboot2_boot_info
+multiboot2_boot_info *mboot_info = nullptr;
+// the magic number
+uint32_t magic_number = 0;
 
-//multiboot_tags maps TAG_TYPE -> the pointer to the tag
+// multiboot_tags maps TAG_TYPE -> the pointer to the tag
+namespace multiboot
+{
 using multiboot_tag_ptr = multiboot_tag *;
 constexpr size_t TAGS_COUNT_MAX = 24;
 multiboot_tag_ptr multiboot_tags[TAGS_COUNT_MAX];
@@ -43,6 +49,7 @@ static inline void parse_multiboot_tags()
         multiboot_tags[tag->type] = tag;
     }
 }
+} // namespace multiboot
 
 // extern char _kernel_virtual_start[];  //kernel.ld
 // extern char _kernel_virtual_end[];    //kernel.ld
@@ -54,8 +61,9 @@ extern char end[];
 
 extern "C" [[noreturn]] void kmain() {
     int size = 123;
-    console::printf("=0x%p\n", &size);
-
+    console::printf("&size=0x%p\n", &size);
+    mboot_info = new (P2V((mbi_structptr)));
+    console::printf("mboot_info=0x%p,size=%d\n", mboot_info, mboot_info->total_size);
 
     // mboot_info = P2V<multiboot2_boot_info>(mboot_addr);
     // parse_multiboot_tags();

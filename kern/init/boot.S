@@ -52,7 +52,12 @@ req_tag_end:
     .long 8     //self-containing size
 mboot_header_end:
 
+
 mboot_entry:
+    movl 0x10000,%esp
+    pushl %ebx
+    pushl %eax
+
 # zero 4 pages for our bootstrap page tables
     xor %eax, %eax
     mov $0x1000, %edi
@@ -94,6 +99,7 @@ ptbl_loop:
 
 .global entry32mp
 entry32mp:
+
 # CR3 -> 0x1000 (P4ML)
     mov $0x1000, %eax
     mov %eax, %cr3
@@ -111,10 +117,14 @@ entry32mp:
     bts $8, %eax
     wrmsr
 
+    popl %eax
+    popl %ebx
+
 # enable paging
     mov %cr0, %eax
     bts $31, %eax
     mov %eax, %cr0
+
 
 # shift to 64bit segment
     ljmp $8,$(entry64low - mboot_header + mboot_load_addr)
@@ -137,6 +147,8 @@ gdt64_end:
 .align 16
 .code64
 entry64low:
+    movq %rax, mbi_magicptr 
+    movq %rbx, mbi_structptr
     movq $entry64high, %rax
     jmp *%rax
 
@@ -153,8 +165,8 @@ entry64high:
     mov %ax, %gs
 
 # check to see if we're booting a secondary core
-    test %ebx, %ebx
-    jnz entry64mp
+    #test %ebx, %ebx
+    #jnz entry64mp
 
 # setup initial stack
     mov $0xFFFFFFFF80010000, %rax
