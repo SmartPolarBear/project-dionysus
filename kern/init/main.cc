@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-13 13:27:00
+ * @ Modified time: 2019-10-13 22:51:05
  * @ Description: the entry point for kernel in C++
  */
 
@@ -28,8 +28,8 @@ extern "C" [[noreturn]] void kmain() {
     // process the multiboot information
     init_mbi();
     parse_multiboot_tags();
-    
-    const multiboot_tag_mmap *memtag = reinterpret_cast<multiboot_tag_mmap*>(aquire_tag(MULTIBOOT_TAG_TYPE_MMAP));
+
+    const multiboot_tag_mmap *memtag = reinterpret_cast<multiboot_tag_mmap *>(aquire_tag(MULTIBOOT_TAG_TYPE_MMAP));
     if (memtag == nullptr)
     {
         //TODO: panic;
@@ -45,12 +45,9 @@ extern "C" [[noreturn]] void kmain() {
     }
 
     vm::bootmm_init(end, (void *)P2V(4 * 1024 * 1024));
-    // vm::kvm_init(entry_cnt, memtag->entries);
+    vm::kvm_init();
 
-    // char *c = _kernel_virtual_end + 0x100000 + 0x100000;
-    // *c = 0x12345;
-
-    console::printf("Hello world! build=%d\n", 3);
+    console::printf("Hello world! build=%d\n", 4);
 
     for (;;)
         ;

@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-22 13:11:14
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-12 22:56:32
+ * @ Modified time: 2019-10-13 22:44:49
  * @ Description:
  */
 #if !defined(__INCLUDE_SYS_MEMLAYOUT_H)
@@ -16,25 +16,14 @@
 #else
 
 #include "sys/types.h"
+#include "sys/mmu.h"
 
 constexpr uintptr_t KERNEL_VIRTUALBASE = 0xFFFFFFFF80000000;
 constexpr uintptr_t KERNEL_VIRTUALLINK = 0xFFFFFFFF80100000;
+constexpr uintptr_t DEVICE_VIRTUALBASE = 0xFFFFFFFF40000000;
 
-constexpr size_t PDENTRY_COUNT = 512;
-constexpr size_t PTENTRY_COUNT = 512;
-constexpr size_t PAGE_SIZE = 4096;
+constexpr uintptr_t DEVICE_PHYSICALBASE = 0xFE000000;
 
-constexpr size_t DEVSPACE_SIZE = (1 << 28);
-
-constexpr size_t PAGE_ROUNDDOWN(size_t sz)
-{
-    return (((sz) + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1));
-}
-
-constexpr size_t PAGE_ROUNDUP(size_t sz)
-{
-    return (((sz) + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1));
-}
 
 template <typename P>
 static inline P *V2P(void *a)
