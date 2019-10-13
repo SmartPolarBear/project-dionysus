@@ -1,5 +1,6 @@
 kern/init/boot.o
 kern/init/main.o
+kern/init/multiboot.o
 kern/libc/string.o
 kern/libc/itoa.o
 kern/libcxxrt/cxxbase.o
@@ -8,4 +9,5 @@ kern/mm/bootmm.o
 kern/mm/vm.o
 drivers/console/cga.o
 drivers/console/console.o
+
 
