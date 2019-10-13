@@ -5,7 +5,7 @@
 
 namespace vm
 {
-// we use 2MB page
+// we use 2MB page, so there's in fact nothing as PTE, only PDE
 using pde_t = size_t;
 using pde_ptr_t = pde_t *;
 

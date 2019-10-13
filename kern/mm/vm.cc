@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-10-13 22:46:26
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-13 22:48:53
+ * @ Modified time: 2019-10-13 22:54:33
  * @ Description:
  */
 
@@ -65,13 +65,13 @@ void vm::kvm_init(void)
 
     for (size_t n = 0; n < PDENTRIES_COUNT; n++)
     {
-        kpgdir0[n] = (n << PD_SHIFT) | PG_PS | PG_P | PG_W;
-        kpgdir1[n] = ((n + 512) << PD_SHIFT) | PG_PS | PG_P | PG_W;
+        kpgdir0[n] = (n << PDX_SHIFT) | PG_PS | PG_P | PG_W;
+        kpgdir1[n] = ((n + 512) << PDX_SHIFT) | PG_PS | PG_P | PG_W;
     }
 
     for (size_t n = 0; n < 16; n++)
     {
-        iopgdir[n] = (DEVICE_PHYSICALBASE + (n << PD_SHIFT)) | PG_PS | PG_P | PG_W | PG_PWT | PG_PCD;
+        iopgdir[n] = (DEVICE_PHYSICALBASE + (n << PDX_SHIFT)) | PG_PS | PG_P | PG_W | PG_PWT | PG_PCD;
     }
 
     kvm_switch(kpml4t);
