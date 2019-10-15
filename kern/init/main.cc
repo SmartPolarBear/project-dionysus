@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-13 22:51:05
+ * @ Modified time: 2019-10-15 19:49:34
  * @ Description: the entry point for kernel in C++
  */
 
@@ -18,36 +18,19 @@
 #include "sys/param.h"
 #include "sys/vm.h"
 
-using multiboot::aquire_tag;
-using multiboot::init_mbi;
-using multiboot::parse_multiboot_tags;
+extern char end[];  // kernel.ld
 
-extern char end[];
 
+// global entry of the kernel
 extern "C" [[noreturn]] void kmain() {
     // process the multiboot information
-    init_mbi();
-    parse_multiboot_tags();
-
-    const multiboot_tag_mmap *memtag = reinterpret_cast<multiboot_tag_mmap *>(aquire_tag(MULTIBOOT_TAG_TYPE_MMAP));
-    if (memtag == nullptr)
-    {
-        //TODO: panic;
-        console::printf("Can't find multiboot_tag_mmap.\n");
-    }
-
-    size_t entry_cnt = (memtag->size - memtag->entry_size - sizeof(*memtag)) / memtag->entry_size;
-    for (size_t i = 0ul; i < entry_cnt; i++)
-    {
-        console::printf("addr=0x%x (%d), len=%x (%d), type=%d\n",
-                        memtag->entries[i].addr, memtag->entries[i].addr, memtag->entries[i].len,
-                        memtag->entries[i].len, memtag->entries[i].type);
-    }
+    multiboot::init_mbi();
+    multiboot::parse_multiboot_tags();
 
     vm::bootmm_init(end, (void *)P2V(4 * 1024 * 1024));
-    vm::kvm_init();
+    vm::init_kernelvm();
 
-    console::printf("Hello world! build=%d\n", 4);
+    console::printf("Hello world! build=%d\n", 5);
 
     for (;;)
         ;

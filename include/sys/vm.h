@@ -9,10 +9,11 @@ namespace vm
 using pde_t = size_t;
 using pde_ptr_t = pde_t *;
 
-void kvm_switch(pde_t *kpml4t);
-pde_t *kvm_setup(void);
-void kvm_freevm(pde_t *pgdir);
-void kvm_init(void);
+void freevm(pde_t *pgdir);
+
+void switch_kernelvm(void);
+pde_t *setup_kernelvm(void);
+void init_kernelvm(void);
 } // namespace vm
 
 #endif // __INCLUDE_SYS_VM_H

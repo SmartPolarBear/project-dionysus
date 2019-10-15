@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-10-13 22:46:26
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-13 22:54:33
+ * @ Modified time: 2019-10-15 19:48:56
  * @ Description:
  */
 
@@ -36,17 +36,16 @@ static pde_ptr_t kpml4t, kpdpt,
     iopgdir, kpgdir0,
     kpgdir1;
 
-void vm::kvm_switch(pde_t *kpml4t)
+void vm::switch_kernelvm()
 {
     lcr3((uintptr_t)V2P<void>(kpml4t));
-    console::printf("Switched to the new pml4t.\n");
 }
 
-pde_t *vm::kvm_setup(void)
+pde_t *vm::setup_kernelvm(void)
 {
 }
 
-void vm::kvm_init(void)
+void vm::init_kernelvm(void)
 {
     kpml4t = reinterpret_cast<pde_ptr_t>(bootmm_alloc());
     kpdpt = reinterpret_cast<pde_ptr_t>(bootmm_alloc());
@@ -59,6 +58,7 @@ void vm::kvm_init(void)
     memset(iopgdir, 0, PAGE_SIZE);
 
     kpml4t[511] = V2P((uintptr_t)kpdpt) | PG_P | PG_W;
+
     kpdpt[511] = V2P((uintptr_t)kpgdir1) | PG_P | PG_W;
     kpdpt[510] = V2P((uintptr_t)kpgdir0) | PG_P | PG_W;
     kpdpt[509] = V2P((uintptr_t)iopgdir) | PG_P | PG_W;
@@ -74,9 +74,9 @@ void vm::kvm_init(void)
         iopgdir[n] = (DEVICE_PHYSICALBASE + (n << PDX_SHIFT)) | PG_PS | PG_P | PG_W | PG_PWT | PG_PCD;
     }
 
-    kvm_switch(kpml4t);
+    switch_kernelvm();
 }
 
-void vm::kvm_freevm(pde_t *pgdir)
+void vm::freevm(pde_t *pgdir)
 {
 }
