@@ -5,6 +5,13 @@
 
 namespace vm
 {
+
+namespace segment
+{
+// run once for each core.
+void init_segment(void);
+} // namespace segmentation
+
 // we use 2MB page, so there's in fact nothing as PTE, only PDE
 using pde_t = size_t;
 using pde_ptr_t = pde_t *;

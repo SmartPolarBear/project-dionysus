@@ -3,6 +3,6 @@ KERN_SRC = ..
 
 OUTDIR = $(BUILD)/kern/mm
 
-OBJS = bootmm.o vm.o
+OBJS = bootmm.o vm.o vm_seg.o
 
 include $(KERN_SRC)/Makefile.kern.mk

@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-10-13 22:46:26
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-15 19:48:56
+ * @ Modified time: 2019-10-15 20:04:36
  * @ Description:
  */
 
@@ -43,6 +43,7 @@ void vm::switch_kernelvm()
 
 pde_t *vm::setup_kernelvm(void)
 {
+    
 }
 
 void vm::init_kernelvm(void)
@@ -57,10 +58,16 @@ void vm::init_kernelvm(void)
     memset(kpdpt, 0, PAGE_SIZE);
     memset(iopgdir, 0, PAGE_SIZE);
 
+    // Map [0,2GB) to -2GB from the top virtual address.
+
     kpml4t[511] = V2P((uintptr_t)kpdpt) | PG_P | PG_W;
 
+    // kpgdir1 is for [0,-1GB)
     kpdpt[511] = V2P((uintptr_t)kpgdir1) | PG_P | PG_W;
+    // kpgdir0 is for [-1GB,-2GB)
     kpdpt[510] = V2P((uintptr_t)kpgdir0) | PG_P | PG_W;
+
+
     kpdpt[509] = V2P((uintptr_t)iopgdir) | PG_P | PG_W;
 
     for (size_t n = 0; n < PDENTRIES_COUNT; n++)

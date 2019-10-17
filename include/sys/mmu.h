@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-22 13:11:10
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-13 22:54:28
+ * @ Modified time: 2019-10-15 20:13:14
  * @ Description:
  */
 
@@ -34,5 +34,26 @@ enum PageEntryFlags
     PG_MBZ = 0x180, // Bits must be zero
 };
 
+enum ExceptionType : uint32_t
+{
+    IT_TRAP = 0x8F00,
+    IT_INTERRUPT = 0x8E00
+};
+
+enum DescriptorPrivilegeLevel
+{
+    DPL_KERNEL = 0x0,
+    DPL_USER = 0x3
+};
+
+enum Segment
+{
+    SEG_KCODE = 1,
+    SEG_KDATA = 2,
+    SEG_KCPU = 3,
+    SEG_UCODE = 4,
+    SEG_UDATA = 5,
+    SEG_TSS = 6,
+};
 
 #endif // __INCLUDE_SYS_MMU_H
