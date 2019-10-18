@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-17 22:49:10
+ * @ Modified time: 2019-10-18 22:22:58
  * @ Description: the entry point for kernel in C++
  */
 
@@ -27,14 +27,11 @@ extern "C" [[noreturn]] void kmain() {
     multiboot::init_mbi();
     multiboot::parse_multiboot_tags();
 
-    // initialize the paging
     vm::bootmm_init(end, (void *)P2V(4 * 1024 * 1024));
+    // initialize the paging
     vm::init_kernelvm();
 
-    for(;;)
-    {
-        console::printf("qwertyuiop\n");
-    }
+    
 
     console::printf("Hello world! build=%d\n", 5);
 

@@ -11,7 +11,7 @@ constexpr uint16_t backsp = 0x100;
 constexpr uint16_t crt_port = 0x3d4;
 
 // void *cga_addr = (void *)();
-volatile uint16_t *cga_mem = (uint16_t*)(0xB8000+KERNEL_VIRTUALBASE);
+volatile uint16_t *cga_mem = (uint16_t *)(0xB8000 + KERNEL_VIRTUALBASE);
 
 static size_t get_cur_pos(void)
 {
@@ -64,7 +64,7 @@ void console::cga_putc(uint32_t c)
                 sizeof(cga_mem[0]) * 23 * 80);
 
         pos -= 80;
-        memset((void *)(cga_mem), 0, sizeof(cga_mem[0]) * (24 + 80 - pos));
+        memset((void *)(cga_mem+pos), 0, sizeof(cga_mem[0]) * (24 + 80 - pos));
     }
 
     set_cur_pos(pos);
