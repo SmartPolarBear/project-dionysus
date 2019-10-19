@@ -49,7 +49,7 @@ void multiboot::parse_multiboot_tags(void)
     }
 }
 
-const multiboot_tag_ptr multiboot::aquire_tag(size_t type)
+multiboot_tag_ptr multiboot::aquire_tag(size_t type)
 {
     return multiboot_tags[type];
 }

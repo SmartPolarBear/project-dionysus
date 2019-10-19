@@ -1,0 +1,36 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "all"
+            ],
+            "problemMatcher": "$gcc",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+            
+        },
+        {
+            "label": "Rebuild",
+            "type": "shell",
+            "command": "make clean all",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "Run",
+            "type": "shell",
+            "command": "make",
+            "args": ["qemu"],
+            "problemMatcher": []
+        }
+    ]
+}

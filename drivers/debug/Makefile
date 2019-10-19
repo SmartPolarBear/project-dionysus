@@ -1,8 +1,8 @@
 TOP_SRC= ../..
 KERN_SRC = ..
 
-OUTDIR = $(BUILD)/drivers/console
+OUTDIR = $(BUILD)/drivers/debug
 
-OBJS = cga.o console.o uart.o
+OBJS = kdebug.o
 
 include $(KERN_SRC)/Makefile.drivers.mk

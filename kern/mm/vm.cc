@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-10-13 22:46:26
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-15 20:04:36
+ * @ Modified time: 2019-10-18 22:47:11
  * @ Description:
  */
 
@@ -43,7 +43,7 @@ void vm::switch_kernelvm()
 
 pde_t *vm::setup_kernelvm(void)
 {
-    
+    return nullptr;
 }
 
 void vm::init_kernelvm(void)

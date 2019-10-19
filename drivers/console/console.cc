@@ -1,5 +1,6 @@
 #include "drivers/console/console.h"
 #include "drivers/console/cga.h"
+#include "drivers/debug/kdebug.h"
 #include "lib/libc/stdlib.h"
 #include "lib/libc/string.h"
 #include "sys/types.h"
@@ -7,14 +8,62 @@
 #include <stdarg.h>
 
 using putc_function_type = void (*)(uint32_t);
+using setpos_function_type = void (*)(size_t);
+using setcolor_function_type = void (*)(uint8_t fr, uint8_t bk);
 
-putc_function_type putc_funcs[] = {console::cga_putc};
-
-static inline void putc(uint32_t c)
+const size_t COLORTABLE_LEN = 8;
+struct console_dev
 {
-    for (auto func : putc_funcs)
+    putc_function_type putc;
+    setpos_function_type setpos;
+    setcolor_function_type setcolor;
+    // R G B
+    uint8_t colortable[16];
+} console_devs[] = {
+    [0] = {
+        //CGA
+        console::cga_putc,
+        console::cga_setpos,
+        reinterpret_cast<setcolor_function_type>(console::cga_setcolor),
+        {[0] = console::CGACOLOR_RED,
+         [1] = console::CGACOLOR_GREEN,
+         [2] = console::CGACOLOR_BLUE,
+         [3] = console::CGACOLOR_LIGHT_BROWN,
+         [4] = console::CGACOLOR_MAGENTA,
+         [5] = console::CGACOLOR_CYAN,
+         [6] = console::CGACOLOR_LIGHT_GREY,
+         [7] = console::CGACOLOR_BLACK}}};
+
+static inline void console_putc_impl(uint32_t c)
+{
+    for (auto dev : console_devs)
     {
-        func(c);
+        if (dev.putc)
+        {
+            dev.putc(c);
+        }
+    }
+}
+
+static inline void console_setpos_impl(size_t pos)
+{
+    for (auto dev : console_devs)
+    {
+        if (dev.setpos)
+        {
+            dev.setpos(pos);
+        }
+    }
+}
+
+static inline void console_setcolor_impl(uint8_t fridx, uint8_t bkidx)
+{
+    for (auto dev : console_devs)
+    {
+        if (dev.setcolor)
+        {
+            dev.setcolor(dev.colortable[fridx], dev.colortable[bkidx]);
+        }
     }
 }
 
@@ -22,12 +71,15 @@ void console::puts(const char *str)
 {
     while (*str != '\0')
     {
-        putc(*str);
+        console_putc_impl(*str);
         ++str;
     }
 }
 
-char nbuf[64] = {};
+// buffer for converting ints with itoa
+constexpr size_t MAXNUMBER_LEN = 128;
+char nbuf[MAXNUMBER_LEN] = {};
+
 void console::printf(const char *fmt, ...)
 {
     va_list ap;
@@ -37,18 +89,17 @@ void console::printf(const char *fmt, ...)
     va_start(ap, fmt);
 
     //TODO: acquire the lock
+
     if (fmt == 0)
     {
-        //TODO : panic the kernel
-        return;
+        KDEBUG_GENERALPANIC("Invalid format strings");
     }
-
 
     for (i = 0; (c = fmt[i] & 0xff) != 0; i++)
     {
         if (c != '%')
         {
-            putc(c);
+            console_putc_impl(c);
             continue;
         }
         c = fmt[++i] & 0xff;
@@ -56,12 +107,13 @@ void console::printf(const char *fmt, ...)
             break;
         switch (c)
         {
+        case 'c':
         case 'd':
             memset(nbuf, 0, sizeof(nbuf));
             itoa(nbuf, va_arg(ap, int), 10);
             for (size_t i = 0; nbuf[i]; i++)
             {
-                putc(nbuf[i]);
+                console_putc_impl(nbuf[i]);
             }
             break;
         case 'x':
@@ -69,7 +121,7 @@ void console::printf(const char *fmt, ...)
             itoa(nbuf, va_arg(ap, int), 16);
             for (size_t i = 0; nbuf[i]; i++)
             {
-                putc(nbuf[i]);
+                console_putc_impl(nbuf[i]);
             }
             break;
         case 'p':
@@ -77,22 +129,22 @@ void console::printf(const char *fmt, ...)
             itoa(nbuf, va_arg(ap, size_t), 16);
             for (size_t i = 0; nbuf[i]; i++)
             {
-                putc(nbuf[i]);
+                console_putc_impl(nbuf[i]);
             }
             break;
         case 's':
             if ((s = va_arg(ap, char *)) == 0)
                 s = "(null)";
             for (; *s; s++)
-                putc(*s);
+                console_putc_impl(*s);
             break;
         case '%':
-            putc('%');
+            console_putc_impl('%');
             break;
         default:
             // Print unknown % sequence to draw attention.
-            putc('%');
-            putc(c);
+            console_putc_impl('%');
+            console_putc_impl(c);
             break;
         }
     }
@@ -104,4 +156,38 @@ void console::printf(const char *fmt, ...)
 
 void console::console_init(void)
 {
+}
+
+void console::console_setpos(size_t pos)
+{
+    console_setpos_impl(pos);
+}
+
+void console::console_settextattrib(size_t attribs)
+{
+    // color flags are ranged from 1<<0 to 1<<5
+    if ((0b111111) & attribs) //check if any color flags
+    {
+        uint8_t fridx = 0, bkidx = 0;
+        for (uint8_t i = 0; i < 3; i++) // from 0 to 2, test foreground
+        {
+            if ((1 << i) & attribs)
+            {
+                fridx = i;
+                break;
+            }
+        }
+
+        for (uint8_t i = 3; i < 6; i++) // from 3 to 5, test background
+        {
+            if ((1 << i) & attribs)
+            {
+                bkidx = i;
+                break;
+            }
+        }
+
+        //set
+        console_setcolor_impl(fridx % COLORTABLE_LEN, bkidx % COLORTABLE_LEN);
+    }
 }

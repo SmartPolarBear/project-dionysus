@@ -10,5 +10,8 @@ kern/mm/vm.o
 kern/mm/vm_seg.o
 drivers/console/cga.o
 drivers/console/console.o
+drivers/console/uart.o
+drivers/debug/kdebug.o
+
 
 

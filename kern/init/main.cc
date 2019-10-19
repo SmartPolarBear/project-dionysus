@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-18 22:22:58
+ * @ Modified time: 2019-10-19 23:45:20
  * @ Description: the entry point for kernel in C++
  */
 
@@ -18,8 +18,7 @@
 #include "sys/param.h"
 #include "sys/vm.h"
 
-extern char end[];  // kernel.ld
-
+extern char end[]; // kernel.ld
 
 // global entry of the kernel
 extern "C" [[noreturn]] void kmain() {
@@ -31,9 +30,10 @@ extern "C" [[noreturn]] void kmain() {
     // initialize the paging
     vm::init_kernelvm();
 
-    
-
     console::printf("Hello world! build=%d\n", 5);
+
+    console::console_settextattrib(console::TATTR_BKBLUE | console::TATTR_FRYELLOW);
+    console::puts("colored text\n");
 
     for (;;)
         ;
