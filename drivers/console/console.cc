@@ -169,7 +169,7 @@ void console::console_settextattrib(size_t attribs)
     if ((0b111111) & attribs) //check if any color flags
     {
         uint8_t fridx = 0, bkidx = 0;
-        for (uint8_t i = 0; i < 3; i++) // from 0 to 2, test foreground
+        for (uint8_t i = 0; i < uint8_t(COLORTABLE_LEN); i++) // from 0 to COLORTABLE_LEN, test foreground
         {
             if ((1 << i) & attribs)
             {
@@ -178,7 +178,9 @@ void console::console_settextattrib(size_t attribs)
             }
         }
 
-        for (uint8_t i = 3; i < 6; i++) // from 3 to 5, test background
+        for (uint8_t i = uint8_t(COLORTABLE_LEN);
+             i < uint8_t(COLORTABLE_LEN) + uint8_t(COLORTABLE_LEN);
+             i++) // from COLORTABLE_LEN to 2*COLORTABLE_LEN-1, test background
         {
             if ((1 << i) & attribs)
             {
