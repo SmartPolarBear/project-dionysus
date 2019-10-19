@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-19 23:45:20
+ * @ Modified time: 2019-10-19 23:54:27
  * @ Description: the entry point for kernel in C++
  */
 
@@ -32,8 +32,10 @@ extern "C" [[noreturn]] void kmain() {
 
     console::printf("Hello world! build=%d\n", 5);
 
-    console::console_settextattrib(console::TATTR_BKBLUE | console::TATTR_FRYELLOW);
+    console::console_settextattrib(console::TATTR_BKMAGENTA | console::TATTR_FRYELLOW);
     console::puts("colored text\n");
+    console::console_settextattrib(console::TATTR_BKBLACK | console::TATTR_FRLTGRAY);
+    console::puts("noncolored text\n");
 
     for (;;)
         ;

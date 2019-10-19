@@ -165,9 +165,8 @@ void console::console_setpos(size_t pos)
 
 void console::console_settextattrib(size_t attribs)
 {
-    constexpr size_t a = (SIZE_MAX >> (SIZE_WIDTH - COLORTABLE_LEN));
     // color flags are ranged from 1<<0 to 1<<(COLORTABLE_LEN-1)
-    if (((SIZE_MAX >> (SIZE_WIDTH - COLORTABLE_LEN)) << 0) & attribs) //check if any color flags
+    if (((SIZE_MAX >> (64 - COLORTABLE_LEN)) << 0) & attribs) //check if any color flags
     {
         uint8_t fridx = 0, bkidx = 0;
         for (uint8_t i = 0;

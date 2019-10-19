@@ -11,7 +11,7 @@ void console_setpos(size_t pos);
 enum text_attributes
 {
     //0
-    
+
     TATTR_FRRED = 1 << 0,
     TATTR_FRGREEN = 1 << 1,
     TATTR_FRBLUE = 1 << 2,
@@ -19,7 +19,7 @@ enum text_attributes
     TATTR_FRMAGENTA = 1 << 4,
     TATTR_FRCYAN = 1 << 5,
     TATTR_FRLTGRAY = 1 << 6,
-    TATTR_FRBBLACK = 1 << 7,
+    TATTR_FRBLACK = 1 << 7,
     //8
 
     TATTR_BKRED = 1 << (0 + 8),
@@ -29,7 +29,7 @@ enum text_attributes
     TATTR_BKMAGENTA = 1 << (4 + 8),
     TATTR_BKCYAN = 1 << (5 + 8),
     TATTR_BKLTGRAY = 1 << (6 + 8),
-    TATTR_BKBBLACK = 1 << (7 + 8),
+    TATTR_BKBLACK = 1 << (7 + 8),
 
     //16
 };
