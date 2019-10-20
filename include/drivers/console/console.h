@@ -4,6 +4,7 @@
 namespace console
 {
 void printf(const char *fmt, ...);
+void putc(char c);
 void puts(const char *str);
 void console_init(void);
 

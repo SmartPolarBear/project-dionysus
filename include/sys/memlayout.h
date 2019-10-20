@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-22 13:11:14
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-13 22:53:41
+ * @ Modified time: 2019-10-20 21:45:02
  * @ Description:
  */
 #if !defined(__INCLUDE_SYS_MEMLAYOUT_H)
@@ -13,6 +13,8 @@
 #endif //__cplusplus
 
 #include "sys/types.h"
+
+constexpr uintptr_t VIRTUALADDR_LIMIT = 0xFFFFFFFFFFFFFFFF;
 
 constexpr uintptr_t KERNEL_VIRTUALBASE = 0xFFFFFFFF80000000;
 constexpr uintptr_t KERNEL_VIRTUALLINK = 0xFFFFFFFF80100000;

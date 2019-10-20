@@ -14,8 +14,15 @@
             "group": {
                 "kind": "build",
                 "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
             }
-            
         },
         {
             "label": "Rebuild",
@@ -23,14 +30,30 @@
             "command": "make clean all",
             "problemMatcher": [
                 "$gcc"
-            ]
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            }
         },
         {
             "label": "Run",
             "type": "shell",
             "command": "make",
             "args": ["qemu"],
-            "problemMatcher": []
+            "problemMatcher": [],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            }
         }
     ]
 }

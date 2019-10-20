@@ -76,6 +76,11 @@ void console::puts(const char *str)
     }
 }
 
+void console::putc(char c)
+{
+    console_putc_impl(c);
+}
+
 // buffer for converting ints with itoa
 constexpr size_t MAXNUMBER_LEN = 128;
 char nbuf[MAXNUMBER_LEN] = {};
@@ -84,6 +89,7 @@ void console::printf(const char *fmt, ...)
 {
     va_list ap;
     int i, c; //, locking;
+    char ch = 0;
     const char *s;
 
     va_start(ap, fmt);
@@ -108,6 +114,8 @@ void console::printf(const char *fmt, ...)
         switch (c)
         {
         case 'c':
+            ch = va_arg(ap, char);
+            console_putc_impl(ch & 0xFF);
         case 'd':
             memset(nbuf, 0, sizeof(nbuf));
             itoa(nbuf, va_arg(ap, int), 10);
@@ -156,6 +164,7 @@ void console::printf(const char *fmt, ...)
 
 void console::console_init(void)
 {
+    console_setpos(0);
 }
 
 void console::console_setpos(size_t pos)
@@ -173,7 +182,7 @@ void console::console_settextattrib(size_t attribs)
              i < uint8_t(COLORTABLE_LEN);
              i++) // from 0 to COLORTABLE_LEN, test foreground
         {
-            if ((1 << i) & attribs)
+            if ((1 << i) & attribs) // find first foreground bit
             {
                 fridx = i;
                 break;
@@ -184,14 +193,16 @@ void console::console_settextattrib(size_t attribs)
              i < uint8_t(COLORTABLE_LEN) + uint8_t(COLORTABLE_LEN);
              i++) // from COLORTABLE_LEN to 2*COLORTABLE_LEN-1, test background
         {
-            if ((1 << i) & attribs)
+            if ((1 << i) & attribs) //find first background bit
             {
                 bkidx = i;
                 break;
             }
         }
 
-        //set
+        // set color. the background is within [COLORTABLE_LEN,2*COLORTABLE_LEN)
+        // so the bkidex modulo COLORTABLE_LEN should be with in [0,COLORTABLE_LEN)
+        // and therefore be valid for a index to color tables
         console_setcolor_impl(fridx % COLORTABLE_LEN, bkidx % COLORTABLE_LEN);
     }
 }
