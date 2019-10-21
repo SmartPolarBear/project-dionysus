@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-21 23:14:32
+ * @ Modified time: 2019-10-21 23:18:49
  * @ Description: the entry point for kernel in C++
  */
 
@@ -45,7 +45,6 @@ extern "C" [[noreturn]] void kmain() {
     console::console_settextattrib(console::TATTR_BKBLACK | console::TATTR_FRLTGRAY);
     console::puts("noncolored text\n");
 
-    KDEBUG_GENERALPANIC("Test panic.");
 
     int condition = 10;
     condition -= 100;

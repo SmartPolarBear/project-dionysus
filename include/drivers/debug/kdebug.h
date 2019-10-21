@@ -6,7 +6,7 @@
 namespace kdebug
 {
 void kdebug_panic(const char *fmt, ...);
-void kdebug_getcallerpcs(void *addr, size_t buflen, uintptr_t pcs[]);
+void kdebug_getcallerpcs(size_t buflen, uintptr_t pcs[]);
 
 // panic with line number and file name
 // to make __FILE__ and __LINE__ macros works right, this must be a macro as well.

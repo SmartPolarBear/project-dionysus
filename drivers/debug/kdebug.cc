@@ -8,7 +8,8 @@
 
 static bool panicked = false;
 
-void kdebug::kdebug_getcallerpcs(void *addr, size_t buflen, uintptr_t pcs[])
+// read information from %rbp and retrive pcs
+void kdebug::kdebug_getcallerpcs(size_t buflen, uintptr_t pcs[])
 {
     uintptr_t *ebp = nullptr;
     asm volatile("mov %%rbp, %0"
@@ -45,7 +46,6 @@ void kdebug::kdebug_panic(const char *fmt, ...)
     // first, print the given imformation.
     va_list ap;
     int c;
-    const char *s;
 
     va_start(ap, fmt);
 
@@ -65,7 +65,7 @@ void kdebug::kdebug_panic(const char *fmt, ...)
             switch (c)
             {
             case 'c':
-                console::printf("%c", va_arg(ap, char));
+                console::printf("%c", va_arg(ap, int));
                 break;
             case 'd':
                 console::printf("%d", va_arg(ap, int));
@@ -95,7 +95,7 @@ void kdebug::kdebug_panic(const char *fmt, ...)
 
     constexpr size_t PCS_BUFLEN = 16;
     uintptr_t pcs[PCS_BUFLEN] = {0};
-    kdebug_getcallerpcs(&fmt, PCS_BUFLEN, pcs);
+    kdebug_getcallerpcs(PCS_BUFLEN, pcs);
 
     console::printf("\n");
     for (auto pc : pcs)

@@ -114,7 +114,10 @@ void console::printf(const char *fmt, ...)
         switch (c)
         {
         case 'c':
-            ch = va_arg(ap, char);
+            // this va_arg uses int
+            // otherwise, a warning will be given, saying
+            // warning: second argument to 'va_arg' is of promotable type 'char'; this va_arg has undefined behavior because arguments will be promoted to 'int
+            ch = va_arg(ap, int);
             console_putc_impl(ch & 0xFF);
         case 'd':
             memset(nbuf, 0, sizeof(nbuf));
