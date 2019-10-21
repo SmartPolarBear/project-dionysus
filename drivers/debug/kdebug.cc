@@ -10,7 +10,9 @@ static bool panicked = false;
 
 void kdebug::kdebug_getcallerpcs(void *addr, size_t buflen, uintptr_t pcs[])
 {
-    uintptr_t *ebp = (uintptr_t *)addr - 2;
+    uintptr_t *ebp = nullptr;
+    asm volatile("mov %%rbp, %0"
+                 : "=r"(ebp));
     size_t i = 0;
     for (; i < buflen; i++)
     {
@@ -39,7 +41,6 @@ void kdebug::kdebug_panic(const char *fmt, ...)
     constexpr auto panicked_screencolor = console::TATTR_BKBLUE | console::TATTR_FRYELLOW;
     console::console_settextattrib(panicked_screencolor);
     console::console_setpos(0);
-    
 
     // first, print the given imformation.
     va_list ap;
@@ -92,8 +93,9 @@ void kdebug::kdebug_panic(const char *fmt, ...)
 
     va_end(ap);
 
-    uintptr_t pcs[32] = {0};
-    kdebug_getcallerpcs(&fmt, 32, pcs);
+    constexpr size_t PCS_BUFLEN = 16;
+    uintptr_t pcs[PCS_BUFLEN] = {0};
+    kdebug_getcallerpcs(&fmt, PCS_BUFLEN, pcs);
 
     console::printf("\n");
     for (auto pc : pcs)

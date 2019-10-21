@@ -1,3 +1,4 @@
+#include "drivers/debug/kdebug.h"
 #include "sys/types.h"
 
 extern "C"
@@ -56,8 +57,7 @@ struct IntRegs;
 
 void __attribute__((noreturn)) __stack_chk_fail()
 {
-    //TODO: Implement later: a error message
-    // io.print("Buffer Overflow (SSP Signal)\n");
+    KDEBUG_GENERALPANIC("Buffer Overflow (SSP Signal)\n");
     for (;;)
         ;
 }

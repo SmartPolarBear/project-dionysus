@@ -1,4 +1,5 @@
 #include "sys/bootmm.h"
+#include "drivers/debug/kdebug.h"
 #include "lib/libc/string.h"
 #include "lib/libcxx/new.h"
 #include "sys/mmu.h"
@@ -10,7 +11,6 @@ static inline constexpr size_t PGROUNDUP(size_t sz)
 }
 
 constexpr size_t PGSIZE = 4096;
-
 
 struct run
 {
@@ -46,8 +46,7 @@ void vm::bootmm_free(char *v)
     //TODO: add verification such as v >= physical_mem_end
     if (((size_t)v) % PGSIZE || v < end)
     {
-        //TODO: panic the kernel for invalid free
-        return;
+        KDEBUG_GENERALPANIC("Unable to free a pointer that is out of range.");
     }
 
     memset(v, 1, PGSIZE);

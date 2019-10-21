@@ -14,7 +14,7 @@ void kdebug_getcallerpcs(void *addr, size_t buflen, uintptr_t pcs[]);
     kdebug::kdebug_panic("KDEBUG_GENERALPANIC:\nIn file: %s, line: %d\n%s", __FILE__, __LINE__, str)
 
 // panic the kernel if the condition isn't equal to 1
-#define ASSERT(cond)                                                                                                       \
+#define KDEBUG_ASSERT(cond)                                                                                                       \
     do                                                                                                                     \
     {                                                                                                                      \
         if (!(cond))                                                                                                       \

@@ -3,6 +3,8 @@
 #include "drivers/console/console.h"
 #include "sys/memlayout.h"
 
+#include "drivers/debug/kdebug.h"
+
 using namespace multiboot;
 
 // the boot header defined by Multiboot2 , aligned 8 bytes
@@ -28,8 +30,7 @@ void multiboot::init_mbi(void)
     mboot_info = P2V<multiboot2_boot_info>(mbi_structptr);
     if (mbi_magicnum != MULTIBOOT2_BOOTLOADER_MAGIC)
     {
-        //TODO : panic
-        console::printf("Can't verify the magic number.\n");
+        KDEBUG_GENERALPANIC("Can't verify the magic number.\n");
     }
 
     for (auto ptr : multiboot_tags)
