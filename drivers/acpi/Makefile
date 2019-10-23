@@ -1,8 +1,8 @@
 TOP_SRC= ../..
 KERN_SRC = ..
 
-OUTDIR = $(BUILD)/drivers/apic
+OUTDIR = $(BUILD)/drivers/acpi
 
-OBJS = apic.o
+OBJS = acpi.o
 
 include $(KERN_SRC)/Makefile.drivers.mk

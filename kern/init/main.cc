@@ -2,14 +2,14 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-21 23:18:49
+ * @ Modified time: 2019-10-21 23:31:28
  * @ Description: the entry point for kernel in C++
  */
 
 #include "arch/amd64/x86.h"
 #include "boot/multiboot2.h"
 
-#include "drivers/apic/apic.h"
+#include "drivers/acpi/acpi.h"
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 
@@ -34,8 +34,8 @@ extern "C" [[noreturn]] void kmain() {
     vm::bootmm_init(end, (void *)P2V(4 * 1024 * 1024));
     // initialize the paging
     vm::init_kernelvm();
-    // apic initialization
-    apic::apic_init();
+    // acpi initialization
+    acpi::acpi_init();
 
     console::printf("Hello world! build=%d\n", 5);
 
