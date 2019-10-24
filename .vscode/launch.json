@@ -1,0 +1,44 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        
+        {
+            "name": "(gdb) Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/kernel",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "targetArchitecture": "x64",
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "text": "set architecture i386:x86-64:intel",
+                    "ignoreFailures": false
+                },
+                {
+                    "description": "target remote localhost:32678",
+                    "text": "target remote localhost:32678",
+                    "ignoreFailures": false
+                },
+                {
+                    "description": "symbol-file build/kernel",
+                    "text": "symbol-file ${workspaceFolder}/build/kernel",
+                    "ignoreFailures": false
+                },
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+            ],
+
+        }
+    ]
+}

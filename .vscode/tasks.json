@@ -44,7 +44,9 @@
             "label": "Run",
             "type": "shell",
             "command": "make",
-            "args": ["qemu"],
+            "args": [
+                "qemu"
+            ],
             "problemMatcher": [],
             "presentation": {
                 "echo": true,
@@ -54,6 +56,6 @@
                 "showReuseMessage": true,
                 "clear": false
             }
-        }
+        },
     ]
 }

@@ -24,6 +24,14 @@ clean:
 qemu: all 
 	$(QEMU) -serial mon:stdio $(QEMUOPTS)
 
+debug: all
+	@$(QEMU) -serial mon:stdio $(QEMUOPTS) -S $(QEMUGDB) &
+	@sleep 2
+	@$(GDB) -q -x ./gdbinit
+
+debug4vsc: all
+	@$(QEMU) -serial mon:stdio $(QEMUOPTS) -S $(QEMUGDB) &
+
 $(BUILD)/kernel: $(BASEOBJS)
 	$(LD) $(LDFLAGS) -o $@ $^
 	$(OBJDUMP) -S $@ > $(BUILD)/kernel.asm
@@ -44,4 +52,4 @@ $(MOUNTPOINT):
 	@echo "[MKDIR] $(MOUNTPOINT)" 
 	@mkdir -p $@
 
-.PHONY: all clean qemu $(SUBDIRS) $(BUILD) $(MOUNTPOINT)
+.PHONY: all clean qemu debug debug4vsc $(SUBDIRS) $(BUILD) $(MOUNTPOINT)
