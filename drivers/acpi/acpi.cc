@@ -24,8 +24,6 @@ static inline size_t arr_cmp(TA *ita, TB *itb, size_t len)
     return true;
 }
 
-
-
 void acpi::acpi_init(void)
 {
     auto acpi_new_tag = reinterpret_cast<multiboot_tag_new_acpi *>(multiboot::aquire_tag(MULTIBOOT_TAG_TYPE_ACPI_NEW));
@@ -40,7 +38,12 @@ void acpi::acpi_init(void)
                           ? rsdp = reinterpret_cast<decltype(rsdp)>(acpi_new_tag->rsdp)
                           : rsdp = reinterpret_cast<decltype(rsdp)>(acpi_old_tag->rsdp);
 
-    // KDEBUG_ASSERT(rsdp != nullptr);
+    if(!arr_cmp(rsdp->signature,SIGNATURE_RSDP,8))
+    {
+        KDEBUG_GENERALPANIC("Invalid ACPI RSDP: failed to check signature.");
+    }
+
+    KDEBUG_ASSERT(rsdp != nullptr);
 
     console::printf("acpi rsdp is at 0x%x\n", rsdp);
 }

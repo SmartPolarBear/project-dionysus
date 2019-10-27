@@ -9,6 +9,9 @@ namespace multiboot
 using multiboot_tag_ptr = multiboot_tag *;
 constexpr size_t TAGS_COUNT_MAX = 24;
 
+//This can be increase if the required info become more.
+constexpr size_t BOOT_INFO_MAX_EXPECTED_SIZE = 0x1000;
+
 void init_mbi(void);
 void parse_multiboot_tags(void);
 

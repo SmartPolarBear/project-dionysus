@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-10-13 22:46:26
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-27 23:21:53
+ * @ Modified time: 2019-10-27 23:26:52
  * @ Description:
  */
 
@@ -72,7 +72,6 @@ void vm::init_kernelvm(void)
     }
 
     switch_kernelvm();
-    // auto acpi_old_tag = reinterpret_cast<multiboot_tag_old_acpi *>(multiboot::aquire_tag(MULTIBOOT_TAG_TYPE_ACPI_OLD));
 }
 
 void vm::freevm(pde_t *pgdir)

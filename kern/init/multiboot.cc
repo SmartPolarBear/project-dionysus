@@ -51,9 +51,7 @@ void multiboot::init_mbi(void)
 
 //Map the tag type to the corresponding pointer
 void multiboot::parse_multiboot_tags(void)
-{
-    auto test = reinterpret_cast<multiboot2_boot_info *>(mbi_structptr);
-    
+{    
     for (multiboot_tag *tag = mboot_info->tags;
          tag->type != MULTIBOOT_TAG_TYPE_END;
          tag = (multiboot_tag *)((multiboot_uint8_t *)tag + ((tag->size + 7) & ~7)))

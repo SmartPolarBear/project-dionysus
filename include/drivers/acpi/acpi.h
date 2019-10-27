@@ -8,20 +8,15 @@ namespace acpi
 {
 
 constexpr const char *SIGNATURE_RSDP = "RSD PTR ";
-constexpr int a = 'R';
-struct acpi_rsdp_basic
-{
-    char signature[8];
-    uint8_t checksum;
-    char oem_id[6];
-    uint8_t revision;
-    uint32_t rsdt_addr_phys;
-} __attribute__((packed));
 
 // root system description pointer
 struct acpi_rsdp
 {
-    acpi_rsdp_basic basic;
+    uint8_t signature[8];
+    uint8_t checksum;
+    uint8_t oem_id[6];
+    uint8_t revision;
+    uint32_t rsdt_addr_phys;
 
     uint32_t length;
     uint64_t xsdt_addr_phys;
@@ -60,7 +55,7 @@ enum rsdt_entry_type
     RSDT_ENTRY_TYPE_LAPIC_NMI = 4,
 };
 
-// 5.2.12 
+// 5.2.12
 // multiple APIC description table
 constexpr const char *SIGNATURE_MADT = "APIC";
 struct acpi_madt
