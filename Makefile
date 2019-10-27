@@ -24,6 +24,9 @@ clean:
 qemu: all 
 	$(QEMU) -serial mon:stdio $(QEMUOPTS)
 
+vbox: all $(BUILD)/disk.qcow2
+	$(VBOXMANAGE) $(VBOXMANAGE_FALGS) $(VBOX_MACHINENAME)
+
 debug: all
 	@$(QEMU) -serial mon:stdio $(QEMUOPTS) -S $(QEMUGDB) &
 	@sleep 2
@@ -40,6 +43,9 @@ $(BUILD)/kernel: $(BASEOBJS)
 
 $(BUILD)/disk.img: $(TOP_SRC)/disk.img $(BUILD)/kernel $(BUILD)/tools/diskimg/diskimg.py
 	python3 $(BUILD)/tools/diskimg/diskimg.py update $(TOP_SRC) $(SETS)/hdimage.list
+
+$(BUILD)/disk.qcow2: $(BUILD)/disk.img $(BUILD)/tools/diskimg/diskimg.py
+	python3 $(BUILD)/tools/diskimg/diskimg.py convert $(TOP_SRC) qcow2 $< $@
 
 $(SUBDIRS):
 	$(MAKE) -C $@ $(MFLAGS) all

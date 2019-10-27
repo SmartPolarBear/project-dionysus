@@ -125,7 +125,7 @@ def func_convert_diskimage(main_argv):
     src: str = main_argv[get_argidx(argidx_st, 2)]
     dest: str = main_argv[get_argidx(argidx_st, 3)]
 
-    if(any(target_type == "qcow2", target_type == "vhd")):
+    if any({target_type == "qcow2", target_type == "vhd"}):
         print("Convert from raw to " + target_type)
     else:
         print("Target type should only be qcow2 and vhd, but " +
@@ -144,8 +144,8 @@ def main(argv):
 
     funcname: str = argv[get_argidx(argidx_st, -1)]
 
-    if (funcname != "update" and funcname != "cqcow2"):
-        print("Only update and cqcow2 is available, but " + funcname+"is given.")
+    if (funcname != "update" and funcname != "convert"):
+        print("Only update and cqcow2 is available, but " + funcname+" is given.")
         exit(-1)
 
     if os.path.exists(argv[get_argidx(argidx_st, 0)]) != True:
@@ -158,7 +158,7 @@ def main(argv):
         func_update_diskimage(argv)
         exit(0)
 
-    if funcname == "covert":
+    if funcname == "convert":
         func_convert_diskimage(argv)
         exit(0)
 

@@ -43,3 +43,7 @@ QEMUOPTS =  -drive file=$(BUILD)/disk.img,index=0,media=disk,format=raw -cpu max
 #QEMUOPTS +=  -accel whpx
 QEMUOPTS += -smp $(CPUS) -m 4G $(QEMUEXTRA)
 
+
+VBOX_MACHINENAME = Test
+VBOXMANAGE = VBoxManage.exe
+VBOXMANAGE_FALGS = startvm --putenv VBOX_GUI_DBG_ENABLED=true 
