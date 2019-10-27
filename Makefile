@@ -30,7 +30,7 @@ debug: all
 	@$(GDB) -q -x ./gdbinit
 
 debug4vsc: all
-	@$(QEMU) -s -parallel stdio -serial mon:stdio $(QEMUOPTS) -S $(QEMUGDB) &
+	@$(QEMU) -serial mon:stdio $(QEMUOPTS) -S $(QEMUGDB) &
 
 $(BUILD)/kernel: $(BASEOBJS)
 	$(LD) $(LDFLAGS) -o $@ $^

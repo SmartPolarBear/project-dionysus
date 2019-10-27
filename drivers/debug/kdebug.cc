@@ -41,6 +41,8 @@ void kdebug::kdebug_panic(const char *fmt, ...)
     // change cga color and reset cursor to draw attention
     constexpr auto panicked_screencolor = console::TATTR_BKBLUE | console::TATTR_FRYELLOW;
     console::console_settextattrib(panicked_screencolor);
+
+    // panic message must be on the left-top of the console
     console::console_setpos(0);
 
     // first, print the given imformation.

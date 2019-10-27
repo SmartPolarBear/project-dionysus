@@ -44,6 +44,7 @@ req_tag_start:
     .long req_tag_len
     .long MULTIBOOT_TAG_TYPE_MMAP
     .long MULTIBOOT_TAG_TYPE_ACPI_NEW
+    .long MULTIBOOT_TAG_TYPE_ACPI_OLD
 req_tag_end:
 
 .align 8

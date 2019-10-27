@@ -20,7 +20,7 @@ GDB=gdb
 
 LDFLAGS=-z max-page-size=0x1000 -no-pie -nostdlib -Tkern/kernel.ld 
 
-SHAREDFLAGS = -mno-sse -fno-exceptions -fno-rtti -ffreestanding -nostdlib -fno-builtin -Wall -Wextra -mcmodel=kernel -mno-red-zone
+SHAREDFLAGS = -mno-sse -fno-exceptions -fno-rtti -ffreestanding -nostdlib -fno-builtin -Wall -Wextra -mcmodel=large -mno-red-zone
 SHAREDFLAGS += -I$(TOP_SRC)/include
 SHAREDFLAGS += --target=x86_64-none-elf -gdwarf-2  -fno-pie
 
@@ -31,6 +31,8 @@ CXXFLAGS = -std=c++17 $(SHAREDFLAGS)
 # If the makefile can't find QEMU, specify its path here
 # QEMU = qemu-system-i386
 QEMU = qemu-system-x86_64
+#QEMU = qemu-system-x86_64.exe
+
 
 GDBPORT = 32678
 QEMUGDB = -gdb tcp::$(GDBPORT)
