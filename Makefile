@@ -39,7 +39,7 @@ $(BUILD)/kernel: $(BASEOBJS)
 
 
 $(BUILD)/disk.img: $(TOP_SRC)/disk.img $(BUILD)/kernel $(BUILD)/tools/diskimg/diskimg.py
-	python3 $(BUILD)/tools/diskimg/diskimg.py $(TOP_SRC) $(SETS)/hdimage.list
+	python3 $(BUILD)/tools/diskimg/diskimg.py update $(TOP_SRC) $(SETS)/hdimage.list
 
 $(SUBDIRS):
 	$(MAKE) -C $@ $(MFLAGS) all
