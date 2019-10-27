@@ -3,14 +3,13 @@
 #include "lib/libc/string.h"
 #include "lib/libcxx/new.h"
 #include "sys/mmu.h"
+constexpr size_t PGSIZE = 4096;
 
 static inline constexpr size_t PGROUNDUP(size_t sz)
 {
-    constexpr size_t PGSIZE = 4096;
     return (((sz) + ((size_t)PGSIZE - 1ul)) & ~((size_t)(PGSIZE - 1ul)));
 }
 
-constexpr size_t PGSIZE = 4096;
 
 struct run
 {
@@ -27,7 +26,7 @@ extern char end[]; //kernel.ld
 static void
 freerange(void *vstart, void *vend)
 {
-    char *p = new ((char *)PGROUNDUP((size_t)vstart)) char;
+    char *p = (char *)PGROUNDUP((uintptr_t)vstart);
     for (; p + PGSIZE <= (char *)vend; p += PGSIZE)
     {
         vm::bootmm_free(p);

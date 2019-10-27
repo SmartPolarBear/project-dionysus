@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-22 13:11:10
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-15 20:13:14
+ * @ Modified time: 2019-10-27 23:20:57
  * @ Description:
  */
 
@@ -16,7 +16,13 @@
 #include "sys/types.h"
 
 constexpr size_t PDENTRIES_COUNT = 512;
-constexpr size_t PDX_SHIFT = 22;
+constexpr size_t PTENTRIES_COUNT = 512;
+
+constexpr size_t PDX_SHIFT = 21;
+constexpr size_t PAGE_SHIFT = 12;
+constexpr size_t PTX_SHIFT = 12;
+
+constexpr size_t PX_MASK = 0x1FF;
 
 constexpr size_t PAGE_SIZE = 4096;
 

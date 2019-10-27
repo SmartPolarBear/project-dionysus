@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-10-13 22:46:26
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-18 22:47:11
+ * @ Modified time: 2019-10-27 23:21:53
  * @ Description:
  */
 
@@ -13,6 +13,7 @@
 #include "sys/bootmm.h"
 #include "sys/memlayout.h"
 #include "sys/mmu.h"
+#include "sys/multiboot.h"
 #include "sys/types.h"
 
 #include "drivers/console/console.h"
@@ -20,25 +21,13 @@
 using vm::pde_ptr_t;
 using vm::pde_t;
 
-template <typename T>
-static inline auto max(T a, T b) -> T
-{
-    return a < b ? b : a;
-}
-
-template <typename T>
-static inline auto min(T a, T b) -> T
-{
-    return a < b ? a : b;
-}
-
 static pde_ptr_t kpml4t, kpdpt,
     iopgdir, kpgdir0,
     kpgdir1;
 
 void vm::switch_kernelvm()
 {
-    lcr3((uintptr_t)V2P<void>(kpml4t));
+    lcr3(V2P((uintptr_t)kpml4t));
 }
 
 pde_t *vm::setup_kernelvm(void)
@@ -56,6 +45,8 @@ void vm::init_kernelvm(void)
 
     memset(kpml4t, 0, PAGE_SIZE);
     memset(kpdpt, 0, PAGE_SIZE);
+    memset(kpgdir0, 0, PAGE_SIZE);
+    memset(kpgdir1, 0, PAGE_SIZE);
     memset(iopgdir, 0, PAGE_SIZE);
 
     // Map [0,2GB) to -2GB from the top virtual address.
@@ -66,7 +57,6 @@ void vm::init_kernelvm(void)
     kpdpt[511] = V2P((uintptr_t)kpgdir1) | PG_P | PG_W;
     // kpgdir0 is for [-1GB,-2GB)
     kpdpt[510] = V2P((uintptr_t)kpgdir0) | PG_P | PG_W;
-
 
     kpdpt[509] = V2P((uintptr_t)iopgdir) | PG_P | PG_W;
 
@@ -82,6 +72,7 @@ void vm::init_kernelvm(void)
     }
 
     switch_kernelvm();
+    // auto acpi_old_tag = reinterpret_cast<multiboot_tag_old_acpi *>(multiboot::aquire_tag(MULTIBOOT_TAG_TYPE_ACPI_OLD));
 }
 
 void vm::freevm(pde_t *pgdir)

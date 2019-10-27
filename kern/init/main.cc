@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-25 23:20:31
+ * @ Modified time: 2019-10-27 23:00:34
  * @ Description: the entry point for kernel in C++
  */
 
@@ -23,17 +23,24 @@
 #include "sys/vm.h"
 
 extern char end[]; // kernel.ld
+int a = 12345;
 
 // global entry of the kernel
 extern "C" [[noreturn]] void kmain() {
+    // memory allocator at boot time
+    vm::bootmm_init(end + 0x1000, (void *)P2V(4 * 1024 * 1024));
+
     // process the multiboot information
     multiboot::init_mbi();
     multiboot::parse_multiboot_tags();
 
-    // memory allocator at boot time
-    vm::bootmm_init(end, (void *)P2V(4 * 1024 * 1024));
+    int *a = (int *)vm::bootmm_alloc();
+    *a = 1100;
+    console::printf("*a=%d\n", *a);
+
     // initialize the paging
     vm::init_kernelvm();
+    console::printf("*a=%d\n", *a);
     // acpi initialization
     acpi::acpi_init();
 
@@ -44,7 +51,6 @@ extern "C" [[noreturn]] void kmain() {
 
     console::console_settextattrib(console::TATTR_BKBLACK | console::TATTR_FRLTGRAY);
     console::puts("noncolored text\n");
-
 
     int condition = 10;
     condition -= 100;

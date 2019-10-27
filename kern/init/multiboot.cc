@@ -1,8 +1,13 @@
 #include "sys/multiboot.h"
 #include "arch/amd64/x86.h"
-#include "drivers/console/console.h"
+#include "sys/bootmm.h"
 #include "sys/memlayout.h"
+#include "sys/mmu.h"
+#include "sys/vm.h"
 
+#include "lib/libc/string.h"
+
+#include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 
 using namespace multiboot;
@@ -27,11 +32,16 @@ multiboot_tag_ptr multiboot_tags[TAGS_COUNT_MAX];
 //May panic the kernel if magic number checking failes
 void multiboot::init_mbi(void)
 {
-    mboot_info = P2V<multiboot2_boot_info>(mbi_structptr);
     if (mbi_magicnum != MULTIBOOT2_BOOTLOADER_MAGIC)
     {
         KDEBUG_GENERALPANIC("Can't verify the magic number.\n");
     }
+
+    auto primitive = P2V<multiboot2_boot_info>(mbi_structptr);
+    KDEBUG_ASSERT(primitive->total_size < PAGE_SIZE);
+
+    mboot_info = reinterpret_cast<decltype(mboot_info)>(vm::bootmm_alloc());
+    memmove(mboot_info, mbi_structptr, primitive->total_size);
 
     for (auto ptr : multiboot_tags)
     {
@@ -42,6 +52,8 @@ void multiboot::init_mbi(void)
 //Map the tag type to the corresponding pointer
 void multiboot::parse_multiboot_tags(void)
 {
+    auto test = reinterpret_cast<multiboot2_boot_info *>(mbi_structptr);
+    
     for (multiboot_tag *tag = mboot_info->tags;
          tag->type != MULTIBOOT_TAG_TYPE_END;
          tag = (multiboot_tag *)((multiboot_uint8_t *)tag + ((tag->size + 7) & ~7)))

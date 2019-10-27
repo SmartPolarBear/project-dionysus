@@ -16,7 +16,7 @@ static inline size_t arr_cmp(TA *ita, TB *itb, size_t len)
     {
         if (*(ita + i) != *(itb + i))
         {
-            console::printf("i=%d\n", i);
+            console::printf("i=%d(*ita=%d,*itb=%d)\n", i, (int)*ita, (int)*itb);
             return false;
         }
     }
@@ -24,31 +24,23 @@ static inline size_t arr_cmp(TA *ita, TB *itb, size_t len)
     return true;
 }
 
+
+
 void acpi::acpi_init(void)
 {
-    acpi_rsdp *rsdp = nullptr;
-    acpi_madt *madt = nullptr;
-    acpi_rsdt *rsdt = nullptr;
-
     auto acpi_new_tag = reinterpret_cast<multiboot_tag_new_acpi *>(multiboot::aquire_tag(MULTIBOOT_TAG_TYPE_ACPI_NEW));
     auto acpi_old_tag = reinterpret_cast<multiboot_tag_old_acpi *>(multiboot::aquire_tag(MULTIBOOT_TAG_TYPE_ACPI_OLD));
 
-    console::printf("acpi_new_tag is at 0x%x,acpi_old_tag is at 0x%x\n", (uintptr_t)acpi_new_tag, (uintptr_t)acpi_old_tag);
-    rsdp = reinterpret_cast<decltype(rsdp)>(acpi_old_tag->rsdp);
-
-    return;
-    if (acpi_new_tag != nullptr && (rsdp = reinterpret_cast<decltype(rsdp)>(acpi_new_tag->rsdp), arr_cmp(rsdp->signature, SIGNATURE_RSDP, 8)))
+    if (acpi_new_tag == nullptr && acpi_old_tag == nullptr)
     {
-    }
-    else if (acpi_old_tag != nullptr && (rsdp = reinterpret_cast<decltype(rsdp)>(acpi_old_tag->rsdp), arr_cmp(rsdp->signature, SIGNATURE_RSDP, 8)))
-    {
-    }
-    else
-    {
-        KDEBUG_GENERALPANIC("Both new ACPI and old ACPI can't be obtain.\nThe hardware is obsoluted.");
+        KDEBUG_GENERALPANIC("ACPI is not compatible with the machine.");
     }
 
-    KDEBUG_ASSERT(rsdp != nullptr);
+    acpi_rsdp *rsdp = (acpi_new_tag != nullptr)
+                          ? rsdp = reinterpret_cast<decltype(rsdp)>(acpi_new_tag->rsdp)
+                          : rsdp = reinterpret_cast<decltype(rsdp)>(acpi_old_tag->rsdp);
+
+    // KDEBUG_ASSERT(rsdp != nullptr);
 
     console::printf("acpi rsdp is at 0x%x\n", rsdp);
 }
