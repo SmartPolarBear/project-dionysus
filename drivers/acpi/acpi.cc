@@ -8,6 +8,7 @@
 using acpi::acpi_madt;
 using acpi::acpi_rsdp;
 using acpi::acpi_rsdt;
+using acpi::acpi_xsdt;
 
 template <typename TA, typename TB>
 static inline size_t arr_cmp(TA *ita, TB *itb, size_t len)
@@ -24,6 +25,36 @@ static inline size_t arr_cmp(TA *ita, TB *itb, size_t len)
     return true;
 }
 
+static inline bool acpi_sdt_checksum(acpi::acpi_desc_header *header)
+{
+    uint8_t sum = 0;
+    for (size_t i = 0; i < header->length; i++)
+    {
+        sum += ((char *)header)[i];
+    }
+    return sum == 0;
+}
+
+static void acpi_init_v1(const acpi_rsdp *rsdp)
+{
+    acpi_rsdt *rsdt = reinterpret_cast<acpi_rsdt *>(P2V(rsdp->rsdt_addr_phys));
+    size_t entrycnt = (rsdt->header.length - sizeof(*rsdt)) / 4;
+
+    // KDEBUG_ASSERT(acpi_sdt_checksum(&rsdt->header) == true);
+
+    console::printf("Init acpi v1 entries %d\n", entrycnt);
+}
+
+static void acpi_init_v2(const acpi_rsdp *rsdp)
+{
+    acpi_xsdt *xsdt = reinterpret_cast<acpi_xsdt *>(P2V(rsdp->xsdt_addr_phys));
+    size_t entrycnt = (xsdt->header.length - sizeof(*xsdt)) / 8;
+
+    // KDEBUG_ASSERT(acpi_sdt_checksum(&xsdt->header) == true);
+    console::printf("Init acpi v2 entries %d\n", entrycnt);
+
+}
+
 void acpi::acpi_init(void)
 {
     auto acpi_new_tag = reinterpret_cast<multiboot_tag_new_acpi *>(multiboot::aquire_tag(MULTIBOOT_TAG_TYPE_ACPI_NEW));
@@ -38,12 +69,19 @@ void acpi::acpi_init(void)
                           ? rsdp = reinterpret_cast<decltype(rsdp)>(acpi_new_tag->rsdp)
                           : rsdp = reinterpret_cast<decltype(rsdp)>(acpi_old_tag->rsdp);
 
-    if(!arr_cmp(rsdp->signature,SIGNATURE_RSDP,8))
+    if (!arr_cmp(rsdp->signature, SIGNATURE_RSDP, 8))
     {
         KDEBUG_GENERALPANIC("Invalid ACPI RSDP: failed to check signature.");
     }
 
     KDEBUG_ASSERT(rsdp != nullptr);
 
-    console::printf("acpi rsdp is at 0x%x\n", rsdp);
+    if (rsdp->revision == RSDP_REV1)
+    {
+        acpi_init_v1(rsdp);
+    }
+    else
+    {
+        acpi_init_v2(rsdp);
+    }
 }

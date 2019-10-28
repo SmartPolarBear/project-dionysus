@@ -9,6 +9,11 @@ namespace acpi
 
 constexpr const char *SIGNATURE_RSDP = "RSD PTR ";
 
+enum rsdp_reversion : uint8_t
+{
+    RSDP_REV1 = 0,
+    RSDP_REV2 = 2
+};
 // root system description pointer
 struct acpi_rsdp
 {
@@ -44,6 +49,14 @@ struct acpi_rsdt
 {
     acpi_desc_header header;
     uint32_t entry[0];
+} __attribute__((__packed__));
+
+// 5.2.7
+// eXtended system descriptor table
+struct acpi_xsdt
+{
+    acpi_desc_header header;
+    uintptr_t entry[0];
 } __attribute__((__packed__));
 
 enum rsdt_entry_type

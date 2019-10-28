@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-22 13:11:14
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-27 23:11:34
+ * @ Modified time: 2019-10-27 23:42:00
  * @ Description:
  */
 #if !defined(__INCLUDE_SYS_MEMLAYOUT_H)
@@ -17,11 +17,12 @@
 constexpr uintptr_t VIRTUALADDR_LIMIT = 0xFFFFFFFFFFFFFFFF;
 
 constexpr uintptr_t KERNEL_VIRTUALBASE = 0xFFFFFFFF80000000;
+// Note that the multiboot info will be placed just after kernel
+// Be greatly cautious not to overwrite it !!!!
 constexpr uintptr_t KERNEL_VIRTUALLINK = 0xFFFFFFFF80100000;
+
 constexpr uintptr_t DEVICE_VIRTUALBASE = 0xFFFFFFFF40000000;
-
 constexpr uintptr_t DEVICE_PHYSICALBASE = 0xFE000000;
-
 
 template <typename P>
 static inline P *V2P(void *a)
@@ -44,6 +45,5 @@ static inline constexpr uintptr_t P2V(uintptr_t x)
 {
     return ((x) + KERNEL_VIRTUALBASE);
 }
-
 
 #endif // __INCLUDE_SYS_MEMLAYOUT_H
