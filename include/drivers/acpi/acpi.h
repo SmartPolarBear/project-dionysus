@@ -14,6 +14,8 @@ enum rsdp_reversion : uint8_t
     RSDP_REV1 = 0,
     RSDP_REV2 = 2
 };
+
+
 // root system description pointer
 struct acpi_rsdp
 {

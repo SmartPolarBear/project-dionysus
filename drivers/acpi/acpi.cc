@@ -5,6 +5,8 @@
 #include "sys/mmu.h"
 #include "sys/multiboot.h"
 
+#include "lib/libcxx/new.h"
+
 using acpi::acpi_madt;
 using acpi::acpi_rsdp;
 using acpi::acpi_rsdt;
@@ -37,7 +39,9 @@ static inline bool acpi_sdt_checksum(acpi::acpi_desc_header *header)
 
 static void acpi_init_v1(const acpi_rsdp *rsdp)
 {
-    acpi_rsdt *rsdt = reinterpret_cast<acpi_rsdt *>(P2V(rsdp->rsdt_addr_phys));
+    KDEBUG_ASSERT(rsdp->rsdt_addr_phys < KERNEL_PHYLIMIT);
+    acpi_rsdt *rsdt = reinterpret_cast<acpi_rsdt *>(rsdp->rsdt_addr_phys);
+    int k = sizeof(acpi_rsdp);
     size_t entrycnt = (rsdt->header.length - sizeof(*rsdt)) / 4;
 
     // KDEBUG_ASSERT(acpi_sdt_checksum(&rsdt->header) == true);
@@ -47,12 +51,28 @@ static void acpi_init_v1(const acpi_rsdp *rsdp)
 
 static void acpi_init_v2(const acpi_rsdp *rsdp)
 {
+    KDEBUG_ASSERT(rsdp->xsdt_addr_phys < KERNEL_PHYLIMIT);
+
     acpi_xsdt *xsdt = reinterpret_cast<acpi_xsdt *>(P2V(rsdp->xsdt_addr_phys));
     size_t entrycnt = (xsdt->header.length - sizeof(*xsdt)) / 8;
 
     // KDEBUG_ASSERT(acpi_sdt_checksum(&xsdt->header) == true);
     console::printf("Init acpi v2 entries %d\n", entrycnt);
+}
 
+static acpi_rsdp *scan_rsdp(const char *start, const char *end)
+{
+}
+
+static acpi_rsdp *find_rsdp(void)
+{
+    const char *ebda_phy = new ((void *)0x40E) char; //extended BIOS data area
+    const char *mainbios_phy = new ((void *)0x000E0000) char;
+
+    constexpr size_t ebda_size = 1024;
+    constexpr size_t mainbios_size = 0x000FFFFF - 0x000E0000;
+
+    auto rdsp1 = scan_rsdp(P2V_WO(ebda_phy), P2V_WO(ebda_phy + ebda_size));
 }
 
 void acpi::acpi_init(void)
