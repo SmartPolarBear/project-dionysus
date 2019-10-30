@@ -19,7 +19,6 @@ static inline size_t arr_cmp(TA *ita, TB *itb, size_t len)
     {
         if (*(ita + i) != *(itb + i))
         {
-            console::printf("i=%d(*ita=%d,*itb=%d)\n", i, (int)*ita, (int)*itb);
             return false;
         }
     }
@@ -62,6 +61,36 @@ static void acpi_init_v2(const acpi_rsdp *rsdp)
 
 static acpi_rsdp *scan_rsdp(const char *start, const char *end)
 {
+    // for (char *p = p2v(base); len >= sizeof(struct acpi_rdsp); len -= 4, p += 4)
+    // {
+    //     if (memcmp(p, SIG_RDSP, 8) == 0)
+    //     {
+    //         uint sum, n;
+    //         for (sum = 0, n = 0; n < 20; n++)
+    //             sum += p[n];
+    //         if ((sum & 0xff) == 0)
+    //             return (struct acpi_rdsp *)p;
+    //     }
+    // }
+    // return (struct acpi_rdsp *)0;
+
+    for (char *p = const_cast<char *>(start); p != end; p++)
+    {
+        if (arr_cmp(p, acpi::SIGNATURE_RSDP, 8))
+        {
+            size_t checksum = 0;
+            for (size_t i = 0; i < 20; i++)
+            {
+                checksum += p[i];
+            }
+
+            if ((checksum & 0XFF) == 0)
+            {
+                return reinterpret_cast<acpi_rsdp *>(p);
+            }
+        }
+    }
+    return nullptr;
 }
 
 static acpi_rsdp *find_rsdp(void)
@@ -72,7 +101,12 @@ static acpi_rsdp *find_rsdp(void)
     constexpr size_t ebda_size = 1024;
     constexpr size_t mainbios_size = 0x000FFFFF - 0x000E0000;
 
-    auto rdsp1 = scan_rsdp(P2V_WO(ebda_phy), P2V_WO(ebda_phy + ebda_size));
+    auto rsdp = scan_rsdp(P2V_WO(ebda_phy), P2V_WO(ebda_phy + ebda_size));
+    rsdp = rsdp != nullptr ? rsdp : scan_rsdp(P2V_WO(mainbios_phy), P2V_WO(mainbios_phy + mainbios_size));
+
+    KDEBUG_ASSERT(rsdp != nullptr);
+
+    return rsdp;
 }
 
 void acpi::acpi_init(void)
@@ -88,6 +122,8 @@ void acpi::acpi_init(void)
     acpi_rsdp *rsdp = (acpi_new_tag != nullptr)
                           ? rsdp = reinterpret_cast<decltype(rsdp)>(acpi_new_tag->rsdp)
                           : rsdp = reinterpret_cast<decltype(rsdp)>(acpi_old_tag->rsdp);
+
+    auto rsdp2 = find_rsdp();
 
     if (!arr_cmp(rsdp->signature, SIGNATURE_RSDP, 8))
     {

@@ -13,7 +13,7 @@ initcode.out
 kernel
 kernelmemfs
 build
-
+~$*.docx
 .gdbinit
 
 .vscode/*

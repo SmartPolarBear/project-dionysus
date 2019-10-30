@@ -37,10 +37,11 @@ void multiboot::init_mbi(void)
         KDEBUG_GENERALPANIC("Can't verify the magic number.\n");
     }
 
-    auto primitive = P2V<multiboot2_boot_info>(mbi_structptr);
+    auto primitive = P2V<decltype(mboot_info)>(mbi_structptr);
     KDEBUG_ASSERT(primitive->total_size < PAGE_SIZE);
 
     mboot_info = reinterpret_cast<decltype(mboot_info)>(vm::bootmm_alloc());
+    memset(mboot_info, 0, PAGE_SIZE);
     memmove(mboot_info, mbi_structptr, primitive->total_size);
 
     for (auto ptr : multiboot_tags)

@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-10-13 22:46:26
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-27 23:26:52
+ * @ Modified time: 2019-10-29 22:57:41
  * @ Description:
  */
 
@@ -45,8 +45,6 @@ void vm::init_kernelvm(void)
 
     memset(kpml4t, 0, PAGE_SIZE);
     memset(kpdpt, 0, PAGE_SIZE);
-    memset(kpgdir0, 0, PAGE_SIZE);
-    memset(kpgdir1, 0, PAGE_SIZE);
     memset(iopgdir, 0, PAGE_SIZE);
 
     // Map [0,2GB) to -2GB from the top virtual address.
