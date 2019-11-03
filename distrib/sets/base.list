@@ -8,6 +8,7 @@ kern/libcxxrt/new.o
 kern/mm/bootmm.o
 kern/mm/vm.o
 kern/mm/vm_seg.o
+kern/mm/buddy.o
 drivers/console/cga.o
 drivers/console/console.o
 drivers/console/uart.o

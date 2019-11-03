@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-30 23:04:00
+ * @ Modified time: 2019-11-03 20:46:20
  * @ Description: the entry point for kernel in C++
  */
 
@@ -41,7 +41,7 @@ extern "C" [[noreturn]] void kmain() {
     vm::init_kernelvm();
 
     // acpi initialization
-    acpi::acpi_init();
+    // acpi::acpi_init();
 
     console::printf("Hello world! build=%d\n", 5);
 

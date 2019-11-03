@@ -16,6 +16,8 @@ build
 ~$*.docx
 .gdbinit
 
+compile_commands.json
+
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
