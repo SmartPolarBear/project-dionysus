@@ -38,7 +38,8 @@ static inline bool acpi_sdt_checksum(acpi::acpi_desc_header *header)
 
 static void acpi_init_v1(const acpi_rsdp *rsdp)
 {
-    KDEBUG_ASSERT(rsdp->rsdt_addr_phys < KERNEL_PHYLIMIT);
+    KDEBUG_ASSERT(rsdp->xsdt_addr_phys < V2P(KERNEL_VIRTUALBASE));
+    
     acpi_rsdt *rsdt = reinterpret_cast<acpi_rsdt *>(rsdp->rsdt_addr_phys);
     int k = sizeof(acpi_rsdp);
     size_t entrycnt = (rsdt->header.length - sizeof(*rsdt)) / 4;
@@ -50,7 +51,7 @@ static void acpi_init_v1(const acpi_rsdp *rsdp)
 
 static void acpi_init_v2(const acpi_rsdp *rsdp)
 {
-    KDEBUG_ASSERT(rsdp->xsdt_addr_phys < KERNEL_PHYLIMIT);
+    KDEBUG_ASSERT(rsdp->xsdt_addr_phys < V2P(KERNEL_VIRTUALBASE));
 
     acpi_xsdt *xsdt = reinterpret_cast<acpi_xsdt *>(P2V(rsdp->xsdt_addr_phys));
     size_t entrycnt = (xsdt->header.length - sizeof(*xsdt)) / 8;
@@ -123,8 +124,9 @@ void acpi::acpi_init(void)
                           ? rsdp = reinterpret_cast<decltype(rsdp)>(acpi_new_tag->rsdp)
                           : rsdp = reinterpret_cast<decltype(rsdp)>(acpi_old_tag->rsdp);
 
-    auto rsdp2 = find_rsdp();
+    console::printf("acpi=%d\n", rsdp->rsdt_addr_phys);
 
+    return;
     if (!arr_cmp(rsdp->signature, SIGNATURE_RSDP, 8))
     {
         KDEBUG_GENERALPANIC("Invalid ACPI RSDP: failed to check signature.");

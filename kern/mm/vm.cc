@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-10-13 22:46:26
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-29 22:57:41
+ * @ Modified time: 2019-11-08 23:27:00
  * @ Description:
  */
 
@@ -18,33 +18,35 @@
 
 #include "drivers/console/console.h"
 
+#include "drivers/debug/kdebug.h"
+
 using vm::pde_ptr_t;
 using vm::pde_t;
 
-static pde_ptr_t kpml4t, kpdpt,
-    iopgdir, kpgdir0,
-    kpgdir1;
+static pde_ptr_t g_kpml4t;
 
 void vm::switch_kernelvm()
 {
-    lcr3(V2P((uintptr_t)kpml4t));
+    lcr3(V2P((uintptr_t)g_kpml4t));
 }
 
 pde_t *vm::setup_kernelvm(void)
 {
-    return nullptr;
+    KDEBUG_NOT_IMPLEMENTED;
 }
 
-void vm::init_kernelvm(void)
+void map_kernel_text(const pde_ptr_t kpml4t)
 {
-    kpml4t = reinterpret_cast<pde_ptr_t>(bootmm_alloc());
-    kpdpt = reinterpret_cast<pde_ptr_t>(bootmm_alloc());
-    kpgdir0 = reinterpret_cast<pde_ptr_t>(bootmm_alloc());
-    kpgdir1 = reinterpret_cast<pde_ptr_t>(bootmm_alloc());
-    iopgdir = reinterpret_cast<pde_ptr_t>(bootmm_alloc());
+    using vm::bootmm_alloc;
 
-    memset(kpml4t, 0, PAGE_SIZE);
+    pde_ptr_t kpdpt = reinterpret_cast<pde_ptr_t>(bootmm_alloc()),
+              kpgdir0 = reinterpret_cast<pde_ptr_t>(bootmm_alloc()),
+              kpgdir1 = reinterpret_cast<pde_ptr_t>(bootmm_alloc()),
+              iopgdir = reinterpret_cast<pde_ptr_t>(bootmm_alloc());
+
     memset(kpdpt, 0, PAGE_SIZE);
+    memset(kpgdir0, 0, PAGE_SIZE);
+    memset(kpgdir1, 0, PAGE_SIZE);
     memset(iopgdir, 0, PAGE_SIZE);
 
     // Map [0,2GB) to -2GB from the top virtual address.
@@ -68,6 +70,40 @@ void vm::init_kernelvm(void)
     {
         iopgdir[n] = (DEVICE_PHYSICALBASE + (n << PDX_SHIFT)) | PG_PS | PG_P | PG_W | PG_PWT | PG_PCD;
     }
+}
+
+void map_whole_physical(const pde_ptr_t kpml4t)
+{
+    auto memtag = (multiboot_tag_mmap *)multiboot::aquire_tag(MULTIBOOT_TAG_TYPE_MMAP);
+    size_t entry_count = (memtag->size - sizeof(multiboot_uint32_t) * 4ul - sizeof(memtag->entry_size)) / memtag->entry_size;
+
+    uintptr_t end_addr = 0;
+
+    for (size_t i = 0; i < entry_count; i++)
+    {
+        auto entry = memtag->entries + i;
+    }
+}
+
+void vm::init_kernelvm(void)
+{
+    // allocate pml4t and initialize it with 0
+    g_kpml4t = reinterpret_cast<pde_ptr_t>(bootmm_alloc());
+    memset(g_kpml4t, 0, PAGE_SIZE);
+
+    // map kernel from address 0 to KERNEL_VIRTUALBASE
+    map_kernel_text(g_kpml4t);
+
+    // map whole physical memory again to PHYREMAP_VIRTUALBASE
+    map_whole_physical(g_kpml4t);
+
+    // install the PML4T to CR3
+    switch_kernelvm();
+}
+
+static size_t next_iopgdir_idx = 511;
+uintptr_t vm::map_io_addr(uintptr_t addrst, size_t sz)
+{
 
     switch_kernelvm();
 }

@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-03 20:46:20
+ * @ Modified time: 2019-11-08 23:27:15
  * @ Description: the entry point for kernel in C++
  */
 
@@ -40,19 +40,21 @@ extern "C" [[noreturn]] void kmain() {
     // initialize the paging
     vm::init_kernelvm();
 
+    vm::setup_kernelvm();
+
     // acpi initialization
-    // acpi::acpi_init();
+    acpi::acpi_init();
+
+    auto memtag = (multiboot_tag_mmap *)multiboot::aquire_tag(MULTIBOOT_TAG_TYPE_MMAP);
+    size_t entry_count = (memtag->size - sizeof(multiboot_uint32_t) * 4ul - sizeof(memtag->entry_size)) / memtag->entry_size;
+
+    for (size_t i = 0; i < entry_count; i++)
+    {
+        auto entry = memtag->entries + i;
+        console::printf("addr=%d,len=0x%x,type=%d\n", entry->addr, entry->len, entry->type);
+    }
 
     console::printf("Hello world! build=%d\n", 5);
-
-    console::console_settextattrib(console::TATTR_BKMAGENTA | console::TATTR_FRYELLOW);
-    console::puts("colored text\n");
-
-    console::console_settextattrib(console::TATTR_BKBLACK | console::TATTR_FRLTGRAY);
-    console::puts("noncolored text\n");
-
-    int condition = 10;
-    condition -= 100;
 
     for (;;)
         ;

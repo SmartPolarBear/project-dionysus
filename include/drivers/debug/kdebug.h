@@ -13,8 +13,12 @@ void kdebug_getcallerpcs(size_t buflen, uintptr_t pcs[]);
 #define KDEBUG_GENERALPANIC(str) \
     kdebug::kdebug_panic("KDEBUG_GENERALPANIC:\nIn file: %s, line: %d\n%s", __FILE__, __LINE__, str)
 
+// panic for not implemented functions
+#define KDEBUG_NOT_IMPLEMENTED \
+    kdebug::kdebug_panic("KDEBUG_NOT_IMPLEMENTED:\nIn file: %s, line: %d\nThe function \"%s\" is not implemented.", __FILE__, __LINE__, __FUNCTION__)
+
 // panic the kernel if the condition isn't equal to 1
-#define KDEBUG_ASSERT(cond)                                                                                                       \
+#define KDEBUG_ASSERT(cond)                                                                                                \
     do                                                                                                                     \
     {                                                                                                                      \
         if (!(cond))                                                                                                       \
