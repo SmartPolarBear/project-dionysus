@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-08 23:27:15
+ * @ Modified time: 2019-11-11 23:28:02
  * @ Description: the entry point for kernel in C++
  */
 
@@ -14,7 +14,7 @@
 #include "drivers/debug/kdebug.h"
 
 #include "lib/libc/string.h"
-#include "lib/libcxx/new.h"
+#include "lib/libcxx/new"
 
 #include "sys/bootmm.h"
 #include "sys/memlayout.h"
@@ -39,8 +39,6 @@ extern "C" [[noreturn]] void kmain() {
 
     // initialize the paging
     vm::init_kernelvm();
-
-    vm::setup_kernelvm();
 
     // acpi initialization
     acpi::acpi_init();

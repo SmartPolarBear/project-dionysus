@@ -1,4 +1,4 @@
-#include "lib/libcxx/new.h"
+#include "lib/libcxx/new"
 #include "sys/types.h"
 
 //Exceptions aren't supported in kernel, so we mark these operations noexcept

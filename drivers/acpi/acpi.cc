@@ -5,7 +5,7 @@
 #include "sys/mmu.h"
 #include "sys/multiboot.h"
 
-#include "lib/libcxx/new.h"
+#include "lib/libcxx/new"
 
 using acpi::acpi_madt;
 using acpi::acpi_rsdp;

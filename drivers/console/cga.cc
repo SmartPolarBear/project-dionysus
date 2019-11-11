@@ -2,7 +2,7 @@
 #include "arch/amd64/x86.h"
 #include "drivers/debug/kdebug.h"
 #include "lib/libc/string.h"
-#include "lib/libcxx/new.h"
+#include "lib/libcxx/new"
 #include "sys/memlayout.h"
 #include "sys/types.h"
 

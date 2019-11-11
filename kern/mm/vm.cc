@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-10-13 22:46:26
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-08 23:27:00
+ * @ Modified time: 2019-11-11 23:29:02
  * @ Description:
  */
 
@@ -23,6 +23,7 @@
 using vm::pde_ptr_t;
 using vm::pde_t;
 
+// global kmpl4t ptr for convenience
 static pde_ptr_t g_kpml4t;
 
 void vm::switch_kernelvm()
@@ -78,10 +79,12 @@ void map_whole_physical(const pde_ptr_t kpml4t)
     size_t entry_count = (memtag->size - sizeof(multiboot_uint32_t) * 4ul - sizeof(memtag->entry_size)) / memtag->entry_size;
 
     uintptr_t end_addr = 0;
+    size_t max_size = 0;
 
     for (size_t i = 0; i < entry_count; i++)
     {
         auto entry = memtag->entries + i;
+
     }
 }
 

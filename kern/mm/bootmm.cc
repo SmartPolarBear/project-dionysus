@@ -1,7 +1,7 @@
 #include "sys/bootmm.h"
 #include "drivers/debug/kdebug.h"
 #include "lib/libc/string.h"
-#include "lib/libcxx/new.h"
+#include "lib/libcxx/new"
 #include "sys/mmu.h"
 constexpr size_t PGSIZE = 4096;
 

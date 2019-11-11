@@ -22,7 +22,7 @@ clean:
 	#@rm -rf $(BUILD)
 
 qemu: all 
-	$(QEMU) -serial mon:stdio $(QEMUOPTS)
+	$(QEMU_EXE) -serial mon:stdio $(QEMUOPTS)
 
 vbox: all $(BUILD)/disk.qcow2
 	$(VBOXMANAGE) $(VBOXMANAGE_FALGS) $(VBOX_MACHINENAME)
