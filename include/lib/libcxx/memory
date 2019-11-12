@@ -1,0 +1,17 @@
+#if !defined(__INCLUDE_LIBCXX_MEMORY)
+#define __INCLUDE_LIBCXX_MEMORY
+
+#include "lib/libcxx/type_traits"
+
+
+namespace sysstd
+{
+template <typename T>
+typename remove_reference<T>::type &&move(T &&arg)
+{
+    return static_cast<typename remove_reference<T>::type &&>(arg);
+}
+
+} // namespace sysstd
+
+#endif // __INCLUDE_LIBCXX_MEMORY

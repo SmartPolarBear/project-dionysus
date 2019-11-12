@@ -2,14 +2,13 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-10-13 22:46:26
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-11 23:29:02
+ * @ Modified time: 2019-11-12 23:19:13
  * @ Description:
  */
 
 #include "sys/vm.h"
 #include "arch/amd64/x86.h"
 #include "boot/multiboot2.h"
-#include "lib/libc/string.h"
 #include "sys/bootmm.h"
 #include "sys/memlayout.h"
 #include "sys/mmu.h"
@@ -20,23 +19,16 @@
 
 #include "drivers/debug/kdebug.h"
 
+#include "lib/libc/string.h"
+#include "lib/libcxx/algorithm"
+
 using vm::pde_ptr_t;
 using vm::pde_t;
 
 // global kmpl4t ptr for convenience
 static pde_ptr_t g_kpml4t;
 
-void vm::switch_kernelvm()
-{
-    lcr3(V2P((uintptr_t)g_kpml4t));
-}
-
-pde_t *vm::setup_kernelvm(void)
-{
-    KDEBUG_NOT_IMPLEMENTED;
-}
-
-void map_kernel_text(const pde_ptr_t kpml4t)
+static inline void map_kernel_text(const pde_ptr_t kpml4t)
 {
     using vm::bootmm_alloc;
 
@@ -73,19 +65,45 @@ void map_kernel_text(const pde_ptr_t kpml4t)
     }
 }
 
-void map_whole_physical(const pde_ptr_t kpml4t)
+static inline void map_addr(uintptr_t vaddr, uintptr_t paddr)
 {
+}
+
+static inline void map_whole_physical(const pde_ptr_t kpml4t)
+{
+    // get mmap tag from multiboot info and find the limit of physical memory
     auto memtag = (multiboot_tag_mmap *)multiboot::aquire_tag(MULTIBOOT_TAG_TYPE_MMAP);
     size_t entry_count = (memtag->size - sizeof(multiboot_uint32_t) * 4ul - sizeof(memtag->entry_size)) / memtag->entry_size;
 
     uintptr_t end_addr = 0;
-    size_t max_size = 0;
+    auto max_size = 0ull;
 
     for (size_t i = 0; i < entry_count; i++)
     {
         auto entry = memtag->entries + i;
-
+        max_size = sysstd::max(max_size, sysstd::min(entry->addr + entry->len, (unsigned long long)PHYMEMORY_SIZE));
     }
+
+    max_size = PGROUNDDOWN(max_size);
+    KDEBUG_ASSERT(max_size > 0 && max_size < PHYMEMORY_SIZE);
+
+    // the physical memory address is between [0,maxsize]
+
+    for (uintptr_t addr = 0; addr <= max_size; addr += PAGE_SIZE)
+    {
+        uintptr_t virtual_addr = addr + PHYREMAP_VIRTUALBASE;
+        KDEBUG_ASSERT(virtual_addr < PHYREMAP_VIRTUALEND);
+    }
+}
+
+void vm::switch_kernelvm()
+{
+    lcr3(V2P((uintptr_t)g_kpml4t));
+}
+
+pde_t *vm::setup_kernelvm(void)
+{
+    KDEBUG_NOT_IMPLEMENTED;
 }
 
 void vm::init_kernelvm(void)

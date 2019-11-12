@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-22 13:11:10
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-27 23:20:57
+ * @ Modified time: 2019-11-12 23:18:49
  * @ Description:
  */
 
@@ -61,5 +61,14 @@ enum Segment
     SEG_UDATA = 5,
     SEG_TSS = 6,
 };
+
+constexpr size_t PGROUNDUP(size_t sz)
+{
+    return (((sz) + ((size_t)PAGE_SIZE - 1)) & ~((size_t)(PAGE_SIZE - 1)));
+}
+constexpr size_t PGROUNDDOWN(size_t a)
+{
+    return (((a)) & ~((size_t)(PAGE_SIZE - 1)));
+}
 
 #endif // __INCLUDE_SYS_MMU_H
