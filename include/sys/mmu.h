@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-22 13:11:10
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-12 23:18:49
+ * @ Modified time: 2019-11-13 23:34:00
  * @ Description:
  */
 
@@ -18,13 +18,29 @@
 constexpr size_t PDENTRIES_COUNT = 512;
 constexpr size_t PTENTRIES_COUNT = 512;
 
-constexpr size_t PDX_SHIFT = 21;
-constexpr size_t PAGE_SHIFT = 12;
-constexpr size_t PTX_SHIFT = 12;
+constexpr size_t P4_SHIFT = 39;
+constexpr size_t P3_SHIFT = 30;
+constexpr size_t P2_SHIFT = 21;   // for 2mb paging, this is the lowest level.
+constexpr size_t PX_MASK = 0x1FF; //9bit
 
-constexpr size_t PX_MASK = 0x1FF;
 
-constexpr size_t PAGE_SIZE = 4096;
+static inline constexpr size_t P4X(size_t addr)
+{
+    return (addr >> P4_SHIFT) & PX_MASK;
+}
+
+static inline constexpr size_t P3X(size_t addr)
+{
+    return (addr >> P3_SHIFT) & PX_MASK;
+}
+
+static inline constexpr size_t P2X(size_t addr)
+{
+    return (addr >> P2_SHIFT) & PX_MASK;
+}
+
+constexpr size_t PAGE_SIZE = 4_KB;
+constexpr size_t PG_PS_SIZE = 2_MB;
 
 // Page table/directory entry flags
 enum PageEntryFlags
@@ -62,11 +78,12 @@ enum Segment
     SEG_TSS = 6,
 };
 
-constexpr size_t PGROUNDUP(size_t sz)
+static inline constexpr size_t PGROUNDUP(size_t sz)
 {
     return (((sz) + ((size_t)PAGE_SIZE - 1)) & ~((size_t)(PAGE_SIZE - 1)));
 }
-constexpr size_t PGROUNDDOWN(size_t a)
+
+static inline constexpr size_t PGROUNDDOWN(size_t a)
 {
     return (((a)) & ~((size_t)(PAGE_SIZE - 1)));
 }

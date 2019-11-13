@@ -5,11 +5,6 @@
 #include "sys/mmu.h"
 constexpr size_t PGSIZE = 4096;
 
-static inline constexpr size_t PGROUNDUP(size_t sz)
-{
-    return (((sz) + ((size_t)PGSIZE - 1ul)) & ~((size_t)(PGSIZE - 1ul)));
-}
-
 
 struct run
 {

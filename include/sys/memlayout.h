@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-22 13:11:14
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-07 23:27:54
+ * @ Modified time: 2019-11-13 23:29:36
  * @ Description:
  */
 #if !defined(__INCLUDE_SYS_MEMLAYOUT_H)
@@ -13,29 +13,6 @@
 #endif //__cplusplus
 
 #include "sys/types.h"
-
-constexpr auto STORAGE_UNIT = 1024E1L;
-using ldbl = long double;
-
-static inline constexpr ldbl operator"" KB(ldbl sz)
-{
-    return sz * STORAGE_UNIT;
-}
-
-static inline constexpr ldbl operator"" MB(ldbl sz)
-{
-    return sz * STORAGE_UNIT * STORAGE_UNIT;
-}
-
-static inline constexpr ldbl operator"" GB(ldbl sz)
-{
-    return sz * STORAGE_UNIT * STORAGE_UNIT * STORAGE_UNIT;
-}
-
-static inline constexpr ldbl operator"" TB(ldbl sz)
-{
-    return sz * STORAGE_UNIT * STORAGE_UNIT * STORAGE_UNIT * STORAGE_UNIT;
-}
 
 // the max value for a valid address
 constexpr uintptr_t VIRTUALADDR_LIMIT = 0xFFFFFFFFFFFFFFFF;

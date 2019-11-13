@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-10-13 22:46:26
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-12 23:19:13
+ * @ Modified time: 2019-11-13 23:25:43
  * @ Description:
  */
 
@@ -25,6 +25,8 @@
 using vm::pde_ptr_t;
 using vm::pde_t;
 
+using vm::bootmm_alloc;
+
 // global kmpl4t ptr for convenience
 static pde_ptr_t g_kpml4t;
 
@@ -36,6 +38,8 @@ static inline void map_kernel_text(const pde_ptr_t kpml4t)
               kpgdir0 = reinterpret_cast<pde_ptr_t>(bootmm_alloc()),
               kpgdir1 = reinterpret_cast<pde_ptr_t>(bootmm_alloc()),
               iopgdir = reinterpret_cast<pde_ptr_t>(bootmm_alloc());
+
+    KDEBUG_ASSERT(kpdpt != nullptr && kpgdir0 != nullptr && kpgdir1 != nullptr && iopgdir != nullptr);
 
     memset(kpdpt, 0, PAGE_SIZE);
     memset(kpgdir0, 0, PAGE_SIZE);
@@ -55,18 +59,48 @@ static inline void map_kernel_text(const pde_ptr_t kpml4t)
 
     for (size_t n = 0; n < PDENTRIES_COUNT; n++)
     {
-        kpgdir0[n] = (n << PDX_SHIFT) | PG_PS | PG_P | PG_W;
-        kpgdir1[n] = ((n + 512) << PDX_SHIFT) | PG_PS | PG_P | PG_W;
+        kpgdir0[n] = (n << P2_SHIFT) | PG_PS | PG_P | PG_W;
+        kpgdir1[n] = ((n + 512) << P2_SHIFT) | PG_PS | PG_P | PG_W;
     }
 
     for (size_t n = 0; n < 16; n++)
     {
-        iopgdir[n] = (DEVICE_PHYSICALBASE + (n << PDX_SHIFT)) | PG_PS | PG_P | PG_W | PG_PWT | PG_PCD;
+        iopgdir[n] = (DEVICE_PHYSICALBASE + (n << P2_SHIFT)) | PG_PS | PG_P | PG_W | PG_PWT | PG_PCD;
     }
 }
 
 static inline void map_addr(uintptr_t vaddr, uintptr_t paddr)
 {
+    pde_ptr_t p3 = &g_kpml4t[P4X(vaddr)];
+
+    if (!(*p3 & PG_P))
+    {
+        auto pdpt = reinterpret_cast<pde_ptr_t>(bootmm_alloc());
+        KDEBUG_ASSERT(pdpt != nullptr);
+        memset(pdpt, 0, PAGE_SIZE);
+
+        *p3 = V2P((uintptr_t)pdpt) | PG_P | PG_W;
+    }
+
+    pde_ptr_t p2 = &p3[P3X(vaddr)];
+    if (!(*p2 & PG_P))
+    {
+        auto pgdir = reinterpret_cast<pde_ptr_t>(bootmm_alloc());
+        KDEBUG_ASSERT(pgdir != nullptr);
+        memset(pgdir, 0, PAGE_SIZE);
+
+        *p2 = V2P((uintptr_t)pgdir) | PG_P | PG_W;
+    }
+
+    pde_ptr_t p1 = &p2[P2X(vaddr)];
+    if (!(*p2 & PG_P))
+    {
+        auto pg = reinterpret_cast<pde_ptr_t>(bootmm_alloc());
+        KDEBUG_ASSERT(pg != nullptr);
+        memset(pg, 0, PAGE_SIZE);
+
+        *p2 = V2P(paddr) | PG_PS | PG_P | PG_W;
+    }
 }
 
 static inline void map_whole_physical(const pde_ptr_t kpml4t)
@@ -93,6 +127,7 @@ static inline void map_whole_physical(const pde_ptr_t kpml4t)
     {
         uintptr_t virtual_addr = addr + PHYREMAP_VIRTUALBASE;
         KDEBUG_ASSERT(virtual_addr < PHYREMAP_VIRTUALEND);
+        map_addr(virtual_addr, addr);
     }
 }
 
