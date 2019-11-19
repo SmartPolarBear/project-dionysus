@@ -2,9 +2,9 @@
 #include "drivers/debug/kdebug.h"
 #include "lib/libc/string.h"
 #include "lib/libcxx/new"
+#include "sys/memlayout.h"
 #include "sys/mmu.h"
 constexpr size_t PGSIZE = 4096;
-
 
 struct run
 {
@@ -37,10 +37,9 @@ void vm::bootmm_init(void *vstart, void *vend)
 //Free a block
 void vm::bootmm_free(char *v)
 {
-    //TODO: add verification such as v >= physical_mem_end
-    if (((size_t)v) % PGSIZE || v < end)
+    if (((size_t)v) % PGSIZE || v < end || V2P((uintptr_t)v) >= PHYMEMORY_SIZE)
     {
-        KDEBUG_GENERALPANIC("Unable to free a pointer that is out of range.");
+        KDEBUG_GENERALPANIC("Unable to free an invalid pointer.\n");
     }
 
     memset(v, 1, PGSIZE);

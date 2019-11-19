@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-11 23:28:02
+ * @ Modified time: 2019-11-19 22:46:37
  * @ Description: the entry point for kernel in C++
  */
 
@@ -31,7 +31,7 @@ extern "C" [[noreturn]] void kmain() {
     // which is put *right* after the kernel by grub.
     // the size of which is expected to be less than 4K.
     vm::bootmm_init(end + multiboot::BOOT_INFO_MAX_EXPECTED_SIZE,
-                    (void *)P2V(4 * 1024 * 1024));
+                    (void *)P2V(32_MB));
 
     // process the multiboot information
     multiboot::init_mbi();
@@ -43,13 +43,26 @@ extern "C" [[noreturn]] void kmain() {
     // acpi initialization
     acpi::acpi_init();
 
+    // for (uintptr_t a = 0; a < 2048_MB; a += 4_KB)
+    // {
+    //     if (memcmp((void *)P2V(a), (void *)(a + PHYREMAP_VIRTUALBASE), 4_KB) != 0)
+    //     {
+    //         console::printf("fuck!!!");
+    //     }
+    // }
+
+    // if (memcmp((void *)P2V(0x1000), (void *)(0x1000 + PHYREMAP_VIRTUALBASE), 4_KB) != 0)
+    // {
+    //     console::printf("fuck!!!");
+    // }
+
     auto memtag = (multiboot_tag_mmap *)multiboot::aquire_tag(MULTIBOOT_TAG_TYPE_MMAP);
     size_t entry_count = (memtag->size - sizeof(multiboot_uint32_t) * 4ul - sizeof(memtag->entry_size)) / memtag->entry_size;
 
     for (size_t i = 0; i < entry_count; i++)
     {
         auto entry = memtag->entries + i;
-        console::printf("addr=%d,len=0x%x,type=%d\n", entry->addr, entry->len, entry->type);
+        console::printf("addr=0x%x,len=0x%x,type=%d\n", entry->addr, entry->len, entry->type);
     }
 
     console::printf("Hello world! build=%d\n", 5);

@@ -2,21 +2,24 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-10-13 22:46:26
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-13 23:25:43
+ * @ Modified time: 2019-11-17 21:38:23
  * @ Description:
  */
 
 #include "sys/vm.h"
-#include "arch/amd64/x86.h"
+
 #include "boot/multiboot2.h"
+
 #include "sys/bootmm.h"
+#include "sys/error.h"
 #include "sys/memlayout.h"
 #include "sys/mmu.h"
 #include "sys/multiboot.h"
 #include "sys/types.h"
 
-#include "drivers/console/console.h"
+#include "arch/amd64/x86.h"
 
+#include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 
 #include "lib/libc/string.h"
@@ -69,38 +72,52 @@ static inline void map_kernel_text(const pde_ptr_t kpml4t)
     }
 }
 
-static inline void map_addr(uintptr_t vaddr, uintptr_t paddr)
+static inline RESULT map_addr(uintptr_t vaddr, uintptr_t paddr)
 {
+    int a = P4X(vaddr), b = P3X(vaddr), v = P2X(vaddr);
+
+    // the kpml4, which's the content of CR3, is held in g_kpml4t
+    // find the 3rd page directory (PDPT) from it.
     pde_ptr_t p3 = &g_kpml4t[P4X(vaddr)];
 
     if (!(*p3 & PG_P))
     {
         auto pdpt = reinterpret_cast<pde_ptr_t>(bootmm_alloc());
         KDEBUG_ASSERT(pdpt != nullptr);
+        if (pdpt == nullptr)
+        {
+            return ERROR_MEMORY_ALLOC;
+        }
         memset(pdpt, 0, PAGE_SIZE);
 
         *p3 = V2P((uintptr_t)pdpt) | PG_P | PG_W;
     }
 
+    // find the 2nd page directory from PGPT
     pde_ptr_t p2 = &p3[P3X(vaddr)];
     if (!(*p2 & PG_P))
     {
         auto pgdir = reinterpret_cast<pde_ptr_t>(bootmm_alloc());
         KDEBUG_ASSERT(pgdir != nullptr);
+        if (pgdir == nullptr)
+        {
+            return ERROR_MEMORY_ALLOC;
+        }
         memset(pgdir, 0, PAGE_SIZE);
 
         *p2 = V2P((uintptr_t)pgdir) | PG_P | PG_W;
     }
 
+    // find the page from 2nd page directory.
+    // because we use page size extension (2mb pages)
+    // this is the last level.
     pde_ptr_t p1 = &p2[P2X(vaddr)];
-    if (!(*p2 & PG_P))
+    if (!(*p1 & PG_P))
     {
-        auto pg = reinterpret_cast<pde_ptr_t>(bootmm_alloc());
-        KDEBUG_ASSERT(pg != nullptr);
-        memset(pg, 0, PAGE_SIZE);
-
-        *p2 = V2P(paddr) | PG_PS | PG_P | PG_W;
+        *p1 = paddr | PG_PS | PG_P | PG_W;
     }
+
+    return ERROR_SUCCESS;
 }
 
 static inline void map_whole_physical(const pde_ptr_t kpml4t)
@@ -127,7 +144,10 @@ static inline void map_whole_physical(const pde_ptr_t kpml4t)
     {
         uintptr_t virtual_addr = addr + PHYREMAP_VIRTUALBASE;
         KDEBUG_ASSERT(virtual_addr < PHYREMAP_VIRTUALEND);
-        map_addr(virtual_addr, addr);
+        if (map_addr(virtual_addr, addr) != ERROR_SUCCESS)
+        {
+            KDEBUG_GENERALPANIC("Can't allocate enough space for paging.\n");
+        }
     }
 }
 
