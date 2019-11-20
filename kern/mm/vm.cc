@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-10-13 22:46:26
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-17 21:38:23
+ * @ Modified time: 2019-11-20 23:20:11
  * @ Description:
  */
 
@@ -72,17 +72,19 @@ static inline void map_kernel_text(const pde_ptr_t kpml4t)
     }
 }
 
-static inline RESULT map_addr(uintptr_t vaddr, uintptr_t paddr)
+static inline RESULT map_addr(const pde_ptr_t kpml4t, uintptr_t vaddr, uintptr_t paddr)
 {
-    int a = P4X(vaddr), b = P3X(vaddr), v = P2X(vaddr);
-
-    // the kpml4, which's the content of CR3, is held in g_kpml4t
+    // the kpml4, which's the content of CR3, is held in kpml4t
     // find the 3rd page directory (PDPT) from it.
-    pde_ptr_t p3 = &g_kpml4t[P4X(vaddr)];
+    pde_ptr_t pml4e = &kpml4t[P4X(vaddr)],
+              pdpt = nullptr,
+              pdpte = nullptr,
+              pgdir = nullptr,
+              pde = nullptr;
 
-    if (!(*p3 & PG_P))
+    if (!(*pml4e & PG_P))
     {
-        auto pdpt = reinterpret_cast<pde_ptr_t>(bootmm_alloc());
+        pdpt = reinterpret_cast<pde_ptr_t>(bootmm_alloc());
         KDEBUG_ASSERT(pdpt != nullptr);
         if (pdpt == nullptr)
         {
@@ -90,14 +92,18 @@ static inline RESULT map_addr(uintptr_t vaddr, uintptr_t paddr)
         }
         memset(pdpt, 0, PAGE_SIZE);
 
-        *p3 = V2P((uintptr_t)pdpt) | PG_P | PG_W;
+        *pml4e = ((V2P((uintptr_t)pdpt) << 12) | PG_P | PG_W);
+    }
+    else
+    {
+        pdpt = reinterpret_cast<decltype(pdpt)>(P2V((*pml4e) >> 12));
     }
 
     // find the 2nd page directory from PGPT
-    pde_ptr_t p2 = &p3[P3X(vaddr)];
-    if (!(*p2 & PG_P))
+    pdpte = &pdpt[P3X(vaddr)];
+    if (!(*pdpte & PG_P))
     {
-        auto pgdir = reinterpret_cast<pde_ptr_t>(bootmm_alloc());
+        pgdir = reinterpret_cast<pde_ptr_t>(bootmm_alloc());
         KDEBUG_ASSERT(pgdir != nullptr);
         if (pgdir == nullptr)
         {
@@ -105,16 +111,20 @@ static inline RESULT map_addr(uintptr_t vaddr, uintptr_t paddr)
         }
         memset(pgdir, 0, PAGE_SIZE);
 
-        *p2 = V2P((uintptr_t)pgdir) | PG_P | PG_W;
+        *pdpte = ((V2P((uintptr_t)pgdir) << 12) | PG_P | PG_W);
+    }
+    else
+    {
+        pgdir = reinterpret_cast<decltype(pgdir)>(P2V((*pdpte) >> 12));
     }
 
     // find the page from 2nd page directory.
     // because we use page size extension (2mb pages)
     // this is the last level.
-    pde_ptr_t p1 = &p2[P2X(vaddr)];
-    if (!(*p1 & PG_P))
+    pde = &pgdir[P2X(vaddr)];
+    if (!(*pde & PG_P))
     {
-        *p1 = paddr | PG_PS | PG_P | PG_W;
+        *pde = ((paddr << 21) | PG_PS | PG_P | PG_W);
     }
 
     return ERROR_SUCCESS;
@@ -140,11 +150,11 @@ static inline void map_whole_physical(const pde_ptr_t kpml4t)
 
     // the physical memory address is between [0,maxsize]
 
-    for (uintptr_t addr = 0; addr <= max_size; addr += PAGE_SIZE)
+    for (uintptr_t addr = 0; (addr + 2_MB) <= max_size; addr += 2_MB)
     {
         uintptr_t virtual_addr = addr + PHYREMAP_VIRTUALBASE;
         KDEBUG_ASSERT(virtual_addr < PHYREMAP_VIRTUALEND);
-        if (map_addr(virtual_addr, addr) != ERROR_SUCCESS)
+        if (map_addr(kpml4t, virtual_addr, addr) != ERROR_SUCCESS)
         {
             KDEBUG_GENERALPANIC("Can't allocate enough space for paging.\n");
         }

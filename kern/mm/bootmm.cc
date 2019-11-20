@@ -22,7 +22,7 @@ static void
 freerange(void *vstart, void *vend)
 {
     char *p = (char *)PGROUNDUP((uintptr_t)vstart);
-    for (; p + PGSIZE <= (char *)vend; p += PGSIZE)
+    for (; p + PGSIZE <= reinterpret_cast<char *>(PGROUNDDOWN((uintptr_t)vend)); p += PGSIZE)
     {
         vm::bootmm_free(p);
     }

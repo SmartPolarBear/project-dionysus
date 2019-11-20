@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-22 13:11:14
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-19 22:41:41
+ * @ Modified time: 2019-11-20 22:55:01
  * @ Description:
  */
 #if !defined(__INCLUDE_SYS_MEMLAYOUT_H)
@@ -16,8 +16,6 @@
 
 // the max value for a valid address
 constexpr uintptr_t VIRTUALADDR_LIMIT = 0xFFFFFFFFFFFFFFFF;
-// first address for kernel
-constexpr uintptr_t KERNADDRSPACE_BASE = 0xFFFF800000000000;
 
 
 // remap of physical memory
