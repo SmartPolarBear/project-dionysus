@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-10-13 22:46:26
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-20 23:20:11
+ * @ Modified time: 2019-11-21 23:46:51
  * @ Description:
  */
 
@@ -74,6 +74,11 @@ static inline void map_kernel_text(const pde_ptr_t kpml4t)
 
 static inline RESULT map_addr(const pde_ptr_t kpml4t, uintptr_t vaddr, uintptr_t paddr)
 {
+    auto remove_flags = [](size_t pde) {
+        constexpr size_t FLAGS_SHIFT = 8;
+        return (pde >> FLAGS_SHIFT) << FLAGS_SHIFT;
+    };
+
     // the kpml4, which's the content of CR3, is held in kpml4t
     // find the 3rd page directory (PDPT) from it.
     pde_ptr_t pml4e = &kpml4t[P4X(vaddr)],
@@ -92,11 +97,11 @@ static inline RESULT map_addr(const pde_ptr_t kpml4t, uintptr_t vaddr, uintptr_t
         }
         memset(pdpt, 0, PAGE_SIZE);
 
-        *pml4e = ((V2P((uintptr_t)pdpt) << 12) | PG_P | PG_W);
+        *pml4e = ((V2P((uintptr_t)pdpt)) | PG_P | PG_W);
     }
     else
     {
-        pdpt = reinterpret_cast<decltype(pdpt)>(P2V((*pml4e) >> 12));
+        pdpt = reinterpret_cast<decltype(pdpt)>(P2V(remove_flags(*pml4e)));
     }
 
     // find the 2nd page directory from PGPT
@@ -111,11 +116,11 @@ static inline RESULT map_addr(const pde_ptr_t kpml4t, uintptr_t vaddr, uintptr_t
         }
         memset(pgdir, 0, PAGE_SIZE);
 
-        *pdpte = ((V2P((uintptr_t)pgdir) << 12) | PG_P | PG_W);
+        *pdpte = ((V2P((uintptr_t)pgdir)) | PG_P | PG_W);
     }
     else
     {
-        pgdir = reinterpret_cast<decltype(pgdir)>(P2V((*pdpte) >> 12));
+        pgdir = reinterpret_cast<decltype(pgdir)>(P2V(remove_flags(*pdpte)));
     }
 
     // find the page from 2nd page directory.
@@ -124,7 +129,7 @@ static inline RESULT map_addr(const pde_ptr_t kpml4t, uintptr_t vaddr, uintptr_t
     pde = &pgdir[P2X(vaddr)];
     if (!(*pde & PG_P))
     {
-        *pde = ((paddr << 21) | PG_PS | PG_P | PG_W);
+        *pde = ((paddr) | PG_PS | PG_P | PG_W);
     }
 
     return ERROR_SUCCESS;
