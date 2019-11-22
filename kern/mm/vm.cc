@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-10-13 22:46:26
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-23 00:19:24
+ * @ Modified time: 2019-11-23 00:26:17
  * @ Description: Implement Intel's 4-level paging and the modification of page tables, etc.
  */
 
@@ -80,18 +80,19 @@ struct
     } memmap;
 } phy_mem_info;
 
-// global kmpl4t ptr for convenience
+// global kmpl4t ptr for the convenience of access
 static pde_ptr_t g_kpml4t;
 
 static inline RESULT map_addr(const pde_ptr_t kpml4t, uintptr_t vaddr, uintptr_t paddr, size_t permissions)
 {
+    // the lambda removes all flags in entries to expose the address of the next level
     auto remove_flags = [](size_t pde) {
         constexpr size_t FLAGS_SHIFT = 8;
         return (pde >> FLAGS_SHIFT) << FLAGS_SHIFT;
     };
 
     // the kpml4, which's the content of CR3, is held in kpml4t
-    // find the 3rd page directory (PDPT) from it.
+    // firstly find the 3rd page directory (PDPT) from it.
     pde_ptr_t pml4e = &kpml4t[P4X(vaddr)],
               pdpt = nullptr,
               pdpte = nullptr,
@@ -106,8 +107,8 @@ static inline RESULT map_addr(const pde_ptr_t kpml4t, uintptr_t vaddr, uintptr_t
         {
             return ERROR_MEMORY_ALLOC;
         }
-        memset(pdpt, 0, PAGE_SIZE);
 
+        memset(pdpt, 0, PAGE_SIZE);
         *pml4e = ((V2P((uintptr_t)pdpt)) | PG_P | permissions);
     }
     else
@@ -125,8 +126,8 @@ static inline RESULT map_addr(const pde_ptr_t kpml4t, uintptr_t vaddr, uintptr_t
         {
             return ERROR_MEMORY_ALLOC;
         }
+        
         memset(pgdir, 0, PAGE_SIZE);
-
         *pdpte = ((V2P((uintptr_t)pgdir)) | PG_P | permissions);
     }
     else
@@ -191,7 +192,6 @@ void vm::init_kernelvm(void)
     g_kpml4t = reinterpret_cast<pde_ptr_t>(bootmm_alloc());
     memset(g_kpml4t, 0, PAGE_SIZE);
     
-
     // map all the definition in kmem_map
     for (auto kmmap_entry : kmem_map)
     {
@@ -206,7 +206,7 @@ void vm::init_kernelvm(void)
         }
     }
 
-    // install the PML4T to CR3
+    // install the PML4T to the CR3 register.
     switch_kernelvm();
 }
 
