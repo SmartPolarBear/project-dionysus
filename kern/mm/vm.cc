@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-10-13 22:46:26
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-22 23:33:39
+ * @ Modified time: 2019-11-23 00:11:46
  * @ Description: Implement Intel's 4-level paging and the modification of page tables, etc.
  */
 
@@ -15,6 +15,7 @@
 #include "sys/memlayout.h"
 #include "sys/mmu.h"
 #include "sys/multiboot.h"
+#include "sys/param.h"
 #include "sys/types.h"
 
 #include "arch/amd64/x86.h"
@@ -32,19 +33,42 @@ using vm::bootmm_alloc;
 
 /*TODO: kernel text should be specially mapped for the sake of safety
     this should be done after we have user processes to prevent their attempt to change kernel code*/
-const struct
+enum kmem_map_index
+{
+    KMMAP_KERNEL,
+    KMMAP_DEV,
+    KMMAP_PHYREMAP
+};
+
+struct
 {
     uintptr_t pstart, pend, vstart;
-    uint64_t permissions;
+    size_t permissions;
 } kmem_map[] =
     {
-        [0] = {
-            .pstart = 0,
-            .pend = KERNEL_SIZE,
-            .vstart = KERNEL_VIRTUALBASE},
-        [1] = {.pstart = 0,
-               .pend = 0, //to be filled in initialize_phymem_parameters,
-               .vstart = PHYREMAP_VIRTUALBASE}};
+        // map kernel from address 0 to KERNEL_VIRTUALBASE
+        [KMMAP_KERNEL] =
+            {
+                .pstart = 0,
+                .pend = KERNEL_SIZE,
+                .vstart = KERNEL_VIRTUALBASE,
+                .permissions = PG_W},
+        // map memory for memory-mapped I/O
+        [KMMAP_DEV] =
+            {
+                .pstart = DEVICE_PHYSICALBASE,
+                .pend = 32_MB,
+                .vstart = DEVICE_VIRTUALBASE,
+                .permissions = PG_W | PG_PWT | PG_PCD},
+        // map whole physical memory again to PHYREMAP_VIRTUALBASE
+        [KMMAP_PHYREMAP] =
+            {
+                .pstart = 0,
+                .pend = 0, //to be filled in initialize_phymem_parameters,
+                .vstart = PHYREMAP_VIRTUALBASE,
+                .permissions = PG_W}};
+
+constexpr auto kmem_map_size = (sizeof(kmem_map) / sizeof(kmem_map[0]));
 
 struct
 {
@@ -59,7 +83,7 @@ struct
 // global kmpl4t ptr for convenience
 static pde_ptr_t g_kpml4t;
 
-static inline RESULT map_addr(const pde_ptr_t kpml4t, uintptr_t vaddr, uintptr_t paddr)
+static inline RESULT map_addr(const pde_ptr_t kpml4t, uintptr_t vaddr, uintptr_t paddr, size_t permissions)
 {
     auto remove_flags = [](size_t pde) {
         constexpr size_t FLAGS_SHIFT = 8;
@@ -84,7 +108,7 @@ static inline RESULT map_addr(const pde_ptr_t kpml4t, uintptr_t vaddr, uintptr_t
         }
         memset(pdpt, 0, PAGE_SIZE);
 
-        *pml4e = ((V2P((uintptr_t)pdpt)) | PG_P | PG_W);
+        *pml4e = ((V2P((uintptr_t)pdpt)) | PG_P | permissions);
     }
     else
     {
@@ -103,7 +127,7 @@ static inline RESULT map_addr(const pde_ptr_t kpml4t, uintptr_t vaddr, uintptr_t
         }
         memset(pgdir, 0, PAGE_SIZE);
 
-        *pdpte = ((V2P((uintptr_t)pgdir)) | PG_P | PG_W);
+        *pdpte = ((V2P((uintptr_t)pgdir)) | PG_P | permissions);
     }
     else
     {
@@ -116,7 +140,7 @@ static inline RESULT map_addr(const pde_ptr_t kpml4t, uintptr_t vaddr, uintptr_t
     pde = &pgdir[P2X(vaddr)];
     if (!(*pde & PG_P))
     {
-        *pde = ((paddr) | PG_PS | PG_P | PG_W);
+        *pde = ((paddr) | PG_PS | PG_P | permissions);
     }
 
     return ERROR_SUCCESS;
@@ -164,12 +188,12 @@ static inline void map_kernel_text(const pde_ptr_t kpml4t)
 static inline void map_whole_physical(const pde_ptr_t kpml4t)
 {
     // the physical memory address is between [0,maxsize]
-    for (uintptr_t addr = 0; (addr + 2_MB) <= phy_mem_info.physize; addr += 2_MB)
+    for (uintptr_t addr = 0; addr <= phy_mem_info.physize; addr += 2_MB)
     {
         uintptr_t virtual_addr = addr + PHYREMAP_VIRTUALBASE;
         KDEBUG_ASSERT(virtual_addr < PHYREMAP_VIRTUALEND);
 
-        if (map_addr(kpml4t, virtual_addr, addr) != ERROR_SUCCESS)
+        if (map_addr(kpml4t, virtual_addr, addr, PG_W) != ERROR_SUCCESS)
         {
             KDEBUG_GENERALPANIC("Can't allocate enough space for paging.\n");
         }
@@ -199,6 +223,7 @@ static inline void initialize_phymem_parameters(void)
     phy_mem_info.physize = physize;
 
     //complete the memory map
+    kmem_map[KMMAP_PHYREMAP].pend = physize;
 }
 
 void vm::switch_kernelvm()
@@ -220,11 +245,25 @@ void vm::init_kernelvm(void)
     g_kpml4t = reinterpret_cast<pde_ptr_t>(bootmm_alloc());
     memset(g_kpml4t, 0, PAGE_SIZE);
 
-    // map kernel from address 0 to KERNEL_VIRTUALBASE
-    map_kernel_text(g_kpml4t);
+    // // map kernel from address 0 to KERNEL_VIRTUALBASE
+    // map_kernel_text(g_kpml4t);
 
-    // map whole physical memory again to PHYREMAP_VIRTUALBASE
-    map_whole_physical(g_kpml4t);
+    // // map whole physical memory again to PHYREMAP_VIRTUALBASE
+    // map_whole_physical(g_kpml4t);
+    for (size_t i = 0; i < kmem_map_size; i++)
+    {
+        auto kmmap_entry = kmem_map[i];
+
+        for (uintptr_t addr = kmem_map[i].pstart, virtual_addr = kmem_map[i].vstart;
+             addr <= kmem_map[i].pend;
+             addr += 2_MB, virtual_addr += 2_MB)
+        {
+            if (map_addr(g_kpml4t, virtual_addr, addr, kmem_map[i].permissions) != ERROR_SUCCESS)
+            {
+                KDEBUG_GENERALPANIC("Can't allocate enough space for paging.\n");
+            }
+        }
+    }
 
     // install the PML4T to CR3
     switch_kernelvm();
