@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-21 23:05:10
+ * @ Modified time: 2019-11-22 22:58:54
  * @ Description: the entry point for kernel in C++
  */
 
@@ -45,9 +45,9 @@ extern "C" [[noreturn]] void kmain() {
 
     char *first = (char *)(PHYREMAP_VIRTUALBASE);
     char *sample = (char *)(KERNEL_VIRTUALBASE);
-    for (uintptr_t offset = 0; offset < 2_GB; offset++)
+    for (; first != (char *)(PHYREMAP_VIRTUALBASE + 1_GB); first++, sample++)
     {
-        KDEBUG_ASSERT((*(first + offset)) == (*(sample + offset)));
+        KDEBUG_ASSERT((*(first)) == (*(sample)));
     }
 
     console::printf("Successfully verified.\n");
