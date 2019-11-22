@@ -21,8 +21,6 @@ void freevm(pde_t *pgdir);
 void switch_kernelvm(void);
 pde_t *setup_kernelvm(void);
 void init_kernelvm(void);
-
-uintptr_t map_io_addr(uintptr_t addrst, size_t sz);
 } // namespace vm
 
 #endif // __INCLUDE_SYS_VM_H

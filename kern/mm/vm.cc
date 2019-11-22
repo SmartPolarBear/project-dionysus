@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-10-13 22:46:26
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-23 00:11:46
+ * @ Modified time: 2019-11-23 00:19:24
  * @ Description: Implement Intel's 4-level paging and the modification of page tables, etc.
  */
 
@@ -146,60 +146,6 @@ static inline RESULT map_addr(const pde_ptr_t kpml4t, uintptr_t vaddr, uintptr_t
     return ERROR_SUCCESS;
 }
 
-static inline void map_kernel_text(const pde_ptr_t kpml4t)
-{
-    using vm::bootmm_alloc;
-
-    pde_ptr_t kpdpt = reinterpret_cast<pde_ptr_t>(bootmm_alloc()),
-              kpgdir0 = reinterpret_cast<pde_ptr_t>(bootmm_alloc()),
-              kpgdir1 = reinterpret_cast<pde_ptr_t>(bootmm_alloc()),
-              iopgdir = reinterpret_cast<pde_ptr_t>(bootmm_alloc());
-
-    KDEBUG_ASSERT(kpdpt != nullptr && kpgdir0 != nullptr && kpgdir1 != nullptr && iopgdir != nullptr);
-
-    memset(kpdpt, 0, PAGE_SIZE);
-    memset(kpgdir0, 0, PAGE_SIZE);
-    memset(kpgdir1, 0, PAGE_SIZE);
-    memset(iopgdir, 0, PAGE_SIZE);
-
-    // Map [0,2GB) to -2GB from the top virtual address.
-
-    kpml4t[511] = V2P((uintptr_t)kpdpt) | PG_P | PG_W;
-
-    // kpgdir1 is for [0,-1GB)
-    kpdpt[511] = V2P((uintptr_t)kpgdir1) | PG_P | PG_W;
-    // kpgdir0 is for [-1GB,-2GB)
-    kpdpt[510] = V2P((uintptr_t)kpgdir0) | PG_P | PG_W;
-
-    kpdpt[509] = V2P((uintptr_t)iopgdir) | PG_P | PG_W;
-
-    for (size_t n = 0; n < PDENTRIES_COUNT; n++)
-    {
-        kpgdir0[n] = (n << P2_SHIFT) | PG_PS | PG_P | PG_W;
-        kpgdir1[n] = ((n + 512) << P2_SHIFT) | PG_PS | PG_P | PG_W;
-    }
-
-    for (size_t n = 0; n < 16; n++)
-    {
-        iopgdir[n] = (DEVICE_PHYSICALBASE + (n << P2_SHIFT)) | PG_PS | PG_P | PG_W | PG_PWT | PG_PCD;
-    }
-}
-
-static inline void map_whole_physical(const pde_ptr_t kpml4t)
-{
-    // the physical memory address is between [0,maxsize]
-    for (uintptr_t addr = 0; addr <= phy_mem_info.physize; addr += 2_MB)
-    {
-        uintptr_t virtual_addr = addr + PHYREMAP_VIRTUALBASE;
-        KDEBUG_ASSERT(virtual_addr < PHYREMAP_VIRTUALEND);
-
-        if (map_addr(kpml4t, virtual_addr, addr, PG_W) != ERROR_SUCCESS)
-        {
-            KDEBUG_GENERALPANIC("Can't allocate enough space for paging.\n");
-        }
-    }
-}
-
 static inline void initialize_phymem_parameters(void)
 {
     // get mmap tag from multiboot info and find the limit of physical memory
@@ -244,21 +190,16 @@ void vm::init_kernelvm(void)
     // allocate pml4t and initialize it with 0
     g_kpml4t = reinterpret_cast<pde_ptr_t>(bootmm_alloc());
     memset(g_kpml4t, 0, PAGE_SIZE);
+    
 
-    // // map kernel from address 0 to KERNEL_VIRTUALBASE
-    // map_kernel_text(g_kpml4t);
-
-    // // map whole physical memory again to PHYREMAP_VIRTUALBASE
-    // map_whole_physical(g_kpml4t);
-    for (size_t i = 0; i < kmem_map_size; i++)
+    // map all the definition in kmem_map
+    for (auto kmmap_entry : kmem_map)
     {
-        auto kmmap_entry = kmem_map[i];
-
-        for (uintptr_t addr = kmem_map[i].pstart, virtual_addr = kmem_map[i].vstart;
-             addr <= kmem_map[i].pend;
-             addr += 2_MB, virtual_addr += 2_MB)
+        for (uintptr_t addr = kmmap_entry.pstart, virtual_addr = kmmap_entry.vstart;
+             addr <= kmmap_entry.pend;
+             addr += PG_PS_SIZE, virtual_addr += PG_PS_SIZE)
         {
-            if (map_addr(g_kpml4t, virtual_addr, addr, kmem_map[i].permissions) != ERROR_SUCCESS)
+            if (map_addr(g_kpml4t, virtual_addr, addr, kmmap_entry.permissions) != ERROR_SUCCESS)
             {
                 KDEBUG_GENERALPANIC("Can't allocate enough space for paging.\n");
             }
@@ -269,12 +210,6 @@ void vm::init_kernelvm(void)
     switch_kernelvm();
 }
 
-static size_t next_iopgdir_idx = 511;
-uintptr_t vm::map_io_addr(uintptr_t addrst, size_t sz)
-{
-
-    switch_kernelvm();
-}
 
 void vm::freevm(pde_t *pgdir)
 {
