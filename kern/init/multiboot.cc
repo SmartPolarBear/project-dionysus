@@ -52,6 +52,7 @@ void multiboot::init_mbi(void)
     //FIXME: add a barrier to prevent something crack the mboot info
     // I guess the crack is because an imperfect memory layout.
     char *p = vm::bootmm_alloc();
+    
     // console::printf("mbootinfo=0x%p,p=0x%p\n", mboot_info, p);
 }
 
@@ -66,7 +67,7 @@ void multiboot::parse_multiboot_tags(void)
     }
 }
 
-multiboot_tag_ptr multiboot::aquire_tag(size_t type)
+multiboot_tag_const_readonly_ptr multiboot::aquire_tag(size_t type)
 {
     return multiboot_tags[type];
 }
