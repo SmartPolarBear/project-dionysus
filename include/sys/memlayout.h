@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-22 13:11:14
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-20 22:55:01
+ * @ Modified time: 2019-11-22 23:03:56
  * @ Description:
  */
 #if !defined(__INCLUDE_SYS_MEMLAYOUT_H)
@@ -27,7 +27,7 @@ constexpr size_t PHYMEMORY_SIZE = PHYREMAP_VIRTUALEND - PHYREMAP_VIRTUALBASE + 1
 constexpr uintptr_t KERNEL_VIRTUALBASE = 0xFFFFFFFF80000000;
 constexpr uintptr_t KERNEL_VIRTUALEND = VIRTUALADDR_LIMIT;
 constexpr uintptr_t KERNEL_SIZE = KERNEL_VIRTUALEND - KERNEL_VIRTUALBASE + 1;
-// Note that the multiboot info will be placed just after kernel
+// Note: the multiboot info will be placed just after kernel
 // Be greatly cautious not to overwrite it !!!!
 constexpr uintptr_t KERNEL_VIRTUALLINK = 0xFFFFFFFF80100000;
 
