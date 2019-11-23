@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 1970-01-01 08:00:00
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-23 13:52:02
+ * @ Modified time: 2019-11-23 13:55:55
  * @ Description:
  */
 
@@ -70,8 +70,8 @@ static void acpi_init_v2(const acpi_rsdp *rsdp)
 
 void acpi::acpi_init(void)
 {
-    auto acpi_new_tag = reinterpret_cast<multiboot_tag_new_acpi *>(multiboot::aquire_tag(MULTIBOOT_TAG_TYPE_ACPI_NEW));
-    auto acpi_old_tag = reinterpret_cast<multiboot_tag_old_acpi *>(multiboot::aquire_tag(MULTIBOOT_TAG_TYPE_ACPI_OLD));
+    auto acpi_new_tag = multiboot::aquire_tag_ptr<multiboot_tag_new_acpi>(MULTIBOOT_TAG_TYPE_ACPI_NEW);
+    auto acpi_old_tag = multiboot::aquire_tag_ptr<multiboot_tag_new_acpi>(MULTIBOOT_TAG_TYPE_ACPI_OLD);
 
     if (acpi_new_tag == nullptr && acpi_old_tag == nullptr)
     {
@@ -81,8 +81,6 @@ void acpi::acpi_init(void)
     acpi_rsdp *rsdp = (acpi_new_tag != nullptr)
                           ? rsdp = reinterpret_cast<decltype(rsdp)>(acpi_new_tag->rsdp)
                           : rsdp = reinterpret_cast<decltype(rsdp)>(acpi_old_tag->rsdp);
-
-    console::printf("acpi=%d\n", rsdp->rsdt_addr_phys);
 
     if (!arr_cmp(rsdp->signature, SIGNATURE_RSDP, 8))
     {

@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-10-13 22:46:26
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-23 00:29:15
+ * @ Modified time: 2019-11-23 13:55:33
  * @ Description: Implement Intel's 4-level paging and the modification of page tables, etc.
  */
 
@@ -150,7 +150,7 @@ static inline RESULT map_addr(const pde_ptr_t kpml4t, uintptr_t vaddr, uintptr_t
 static inline void initialize_phymem_parameters(void)
 {
     // get mmap tag from multiboot info and find the limit of physical memory
-    auto memtag = multiboot::aquire_tag<multiboot_tag_mmap>(MULTIBOOT_TAG_TYPE_MMAP);
+    auto memtag = multiboot::aquire_tag_ptr<multiboot_tag_mmap>(MULTIBOOT_TAG_TYPE_MMAP);
     size_t entry_count = (memtag->size - sizeof(multiboot_uint32_t) * 4ul - sizeof(memtag->entry_size)) / memtag->entry_size;
     auto physize = 0ull;
 

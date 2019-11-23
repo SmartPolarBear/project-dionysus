@@ -27,12 +27,12 @@ constexpr size_t BOOT_INFO_MAX_EXPECTED_SIZE = 4_KB;
 void init_mbi(void);
 void parse_multiboot_tags(void);
 
-multiboot_tag_const_readonly_ptr aquire_tag(size_t type);
+multiboot_tag_const_readonly_ptr aquire_tag_ptr(size_t type);
 
 template <typename T>
-static inline auto aquire_tag(size_t type) -> typed_mboottag_const_readonly_ptr<T>
+static inline auto aquire_tag_ptr(size_t type) -> typed_mboottag_const_readonly_ptr<T>
 {
-    return reinterpret_cast<typed_mboottag_const_readonly_ptr<T>>(aquire_tag(type));
+    return reinterpret_cast<typed_mboottag_const_readonly_ptr<T>>(aquire_tag_ptr(type));
 }
 
 } // namespace multiboot
