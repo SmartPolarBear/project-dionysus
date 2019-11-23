@@ -2,10 +2,9 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 1970-01-01 08:00:00
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-22 23:02:51
+ * @ Modified time: 2019-11-23 13:52:02
  * @ Description:
  */
-
 
 #include "drivers/acpi/acpi.h"
 #include "drivers/console/console.h"
@@ -47,76 +46,26 @@ static inline bool acpi_sdt_checksum(acpi::acpi_desc_header *header)
 
 static void acpi_init_v1(const acpi_rsdp *rsdp)
 {
-    KDEBUG_ASSERT(rsdp->xsdt_addr_phys < V2P(KERNEL_VIRTUALBASE));
-    
-    acpi_rsdt *rsdt = reinterpret_cast<acpi_rsdt *>(rsdp->rsdt_addr_phys);
-    int k = sizeof(acpi_rsdp);
+    KDEBUG_ASSERT(rsdp->xsdt_addr_phys < PHYMEMORY_SIZE);
+
+    acpi_rsdt *rsdt = reinterpret_cast<acpi_rsdt *>(P2V(rsdp->rsdt_addr_phys));
     size_t entrycnt = (rsdt->header.length - sizeof(*rsdt)) / 4;
 
-    // KDEBUG_ASSERT(acpi_sdt_checksum(&rsdt->header) == true);
+    KDEBUG_ASSERT(acpi_sdt_checksum(&rsdt->header) == true);
 
     console::printf("Init acpi v1 entries %d\n", entrycnt);
 }
 
 static void acpi_init_v2(const acpi_rsdp *rsdp)
 {
-    KDEBUG_ASSERT(rsdp->xsdt_addr_phys < V2P(KERNEL_VIRTUALBASE));
+    KDEBUG_ASSERT(rsdp->xsdt_addr_phys < PHYMEMORY_SIZE);
 
     acpi_xsdt *xsdt = reinterpret_cast<acpi_xsdt *>(P2V(rsdp->xsdt_addr_phys));
     size_t entrycnt = (xsdt->header.length - sizeof(*xsdt)) / 8;
 
-    // KDEBUG_ASSERT(acpi_sdt_checksum(&xsdt->header) == true);
+    KDEBUG_ASSERT(acpi_sdt_checksum(&xsdt->header) == true);
+
     console::printf("Init acpi v2 entries %d\n", entrycnt);
-}
-
-static acpi_rsdp *scan_rsdp(const char *start, const char *end)
-{
-    // for (char *p = p2v(base); len >= sizeof(struct acpi_rdsp); len -= 4, p += 4)
-    // {
-    //     if (memcmp(p, SIG_RDSP, 8) == 0)
-    //     {
-    //         uint sum, n;
-    //         for (sum = 0, n = 0; n < 20; n++)
-    //             sum += p[n];
-    //         if ((sum & 0xff) == 0)
-    //             return (struct acpi_rdsp *)p;
-    //     }
-    // }
-    // return (struct acpi_rdsp *)0;
-
-    for (char *p = const_cast<char *>(start); p != end; p++)
-    {
-        if (arr_cmp(p, acpi::SIGNATURE_RSDP, 8))
-        {
-            size_t checksum = 0;
-            for (size_t i = 0; i < 20; i++)
-            {
-                checksum += p[i];
-            }
-
-            if ((checksum & 0XFF) == 0)
-            {
-                return reinterpret_cast<acpi_rsdp *>(p);
-            }
-        }
-    }
-    return nullptr;
-}
-
-static acpi_rsdp *find_rsdp(void)
-{
-    const char *ebda_phy = new ((void *)0x40E) char; //extended BIOS data area
-    const char *mainbios_phy = new ((void *)0x000E0000) char;
-
-    constexpr size_t ebda_size = 1024;
-    constexpr size_t mainbios_size = 0x000FFFFF - 0x000E0000;
-
-    auto rsdp = scan_rsdp(P2V_WO(ebda_phy), P2V_WO(ebda_phy + ebda_size));
-    rsdp = rsdp != nullptr ? rsdp : scan_rsdp(P2V_WO(mainbios_phy), P2V_WO(mainbios_phy + mainbios_size));
-
-    KDEBUG_ASSERT(rsdp != nullptr);
-
-    return rsdp;
 }
 
 void acpi::acpi_init(void)
@@ -135,7 +84,6 @@ void acpi::acpi_init(void)
 
     console::printf("acpi=%d\n", rsdp->rsdt_addr_phys);
 
-    return;
     if (!arr_cmp(rsdp->signature, SIGNATURE_RSDP, 8))
     {
         KDEBUG_GENERALPANIC("Invalid ACPI RSDP: failed to check signature.");
