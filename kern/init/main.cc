@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-22 23:33:08
+ * @ Modified time: 2019-11-23 13:40:06
  * @ Description: the entry point for kernel in C++
  */
 
@@ -42,24 +42,6 @@ extern "C" [[noreturn]] void kmain() {
 
     // acpi initialization
     acpi::acpi_init();
-
-    char *first = (char *)(PHYREMAP_VIRTUALBASE);
-    char *sample = (char *)(KERNEL_VIRTUALBASE);
-    for (; first != (char *)(PHYREMAP_VIRTUALBASE + 256_MB); first++, sample++)
-    {
-        KDEBUG_ASSERT((*(first)) == (*(sample)));
-    }
-
-    console::printf("Successfully verified.\n");
-
-    auto memtag = (multiboot_tag_mmap *)multiboot::aquire_tag(MULTIBOOT_TAG_TYPE_MMAP);
-    size_t entry_count = (memtag->size - sizeof(multiboot_uint32_t) * 4ul - sizeof(memtag->entry_size)) / memtag->entry_size;
-
-    for (size_t i = 0; i < entry_count; i++)
-    {
-        auto entry = memtag->entries + i;
-        console::printf("addr=0x%x,len=0x%x,type=%d\n", entry->addr, entry->len, entry->type);
-    }
 
     console::printf("Hello world! build=%d\n", 5);
 

@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-10-13 22:46:26
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-23 00:26:17
+ * @ Modified time: 2019-11-23 00:29:15
  * @ Description: Implement Intel's 4-level paging and the modification of page tables, etc.
  */
 
@@ -209,7 +209,6 @@ void vm::init_kernelvm(void)
     // install the PML4T to the CR3 register.
     switch_kernelvm();
 }
-
 
 void vm::freevm(pde_t *pgdir)
 {
