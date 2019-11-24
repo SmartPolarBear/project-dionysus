@@ -17,6 +17,7 @@ uintptr_t V2P(uintptr_t x)
     else
     {
         KDEBUG_GENERALPANIC("Invalid address for V2P\n");
+        return 0;
     }
 }
 
@@ -33,6 +34,7 @@ uintptr_t P2V(uintptr_t x)
     else
     {
         KDEBUG_GENERALPANIC("Invalid address for P2V\n");
+        return 0;
     }
 }
 

@@ -2,6 +2,7 @@
 #define __INCLUDE_DRIVERS_ACPI_H
 
 #include "sys/types.h"
+#include "drivers/acpi/cpu.h"
 
 // Intel's advanced configuration and power interface
 namespace acpi
@@ -14,7 +15,6 @@ enum rsdp_reversion : uint8_t
     RSDP_REV1 = 0,
     RSDP_REV2 = 2
 };
-
 
 // root system description pointer
 struct acpi_rsdp
@@ -61,13 +61,13 @@ struct acpi_xsdt
     uintptr_t entry[0];
 } __attribute__((__packed__));
 
-enum rsdt_entry_type
+enum entry_type
 {
-    RSDT_ENTRY_TYPE_LAPIC = 0,
-    RSDT_ENTRY_TYPE_IOAPIC = 1,
-    RSDT_ENTRY_TYPE_INT_SRC_OVERRIDE = 2,
-    RSDT_ENTRY_TYPE_NMI_INT_SRC = 3,
-    RSDT_ENTRY_TYPE_LAPIC_NMI = 4,
+    ENTRY_TYPE_LAPIC = 0,
+    ENTRY_TYPE_IOAPIC = 1,
+    ENTRY_TYPE_INT_SRC_OVERRIDE = 2,
+    ENTRY_TYPE_NMI_INT_SRC = 3,
+    ENTRY_TYPE_LAPIC_NMI = 4,
 };
 
 // 5.2.12
