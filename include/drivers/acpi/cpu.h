@@ -34,7 +34,7 @@ struct cpu
 constexpr size_t CPU_COUNT_LIMIT = 8;
 
 extern struct cpu cpus[CPU_COUNT_LIMIT];
-extern size_t cpu_count;
+extern size_t cpu_max_idx;
 
 extern __thread struct cpu *cpu;
 

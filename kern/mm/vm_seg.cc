@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-10-15 20:03:19
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-10-15 20:14:36
+ * @ Modified time: 2019-11-24 17:52:27
  * @ Description:
  */
 
@@ -13,6 +13,10 @@
 #include "sys/mmu.h"
 #include "sys/types.h"
 #include "sys/vm.h"
+
+#include "drivers/acpi/cpu.h"
+
+__thread struct cpu *cpu;
 
 static inline void make_gate(uint32_t *idt, uint32_t n,
                              void *kva,
@@ -29,5 +33,4 @@ static inline void make_gate(uint32_t *idt, uint32_t n,
 
 void vm::segment::init_segment(void)
 {
-    
 }
