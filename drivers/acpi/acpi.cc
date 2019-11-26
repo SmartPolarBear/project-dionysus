@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 1970-01-01 08:00:00
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-25 22:50:51
+ * @ Modified time: 2019-11-25 23:24:05
  * @ Description:
  */
 
@@ -11,6 +11,7 @@
 #include "sys/multiboot.h"
 
 #include "drivers/acpi/acpi.h"
+#include "drivers/apic/apic.h"
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 
@@ -59,19 +60,16 @@ static void acpi_init_smp(const acpi_madt *madt)
     KDEBUG_ASSERT(madt->header.length >= sizeof(decltype(*madt)));
 
     uintptr_t lapic_addr = madt->lapic_addr_phys;
-    size_t first_ioapic_id = 0;
-
-    for (uint8_t *p = (uint8_t *)madt->table,
-                 *e = p + madt->header.length - sizeof(decltype(*madt));
-         p < e;)
+    uint8_t *p = (uint8_t *)madt->table;
+    uint8_t *e = p + madt->header.length - sizeof(decltype(*madt));
+    while (p < e)
     {
-        size_t len = 0;
         if (e - p < 2)
         {
             break;
         }
 
-        len = p[1];
+        size_t len  = p[1];
 
         if (e - p < len)
         {
@@ -108,10 +106,6 @@ static void acpi_init_smp(const acpi_madt *madt)
             }
             console::printf("ACPI: IOAPIC#%d@0x%x ID=%d, BASE=%d\n",
                             ioapic_max_idx, ioapic->addr, ioapic->id, ioapic->interrupt_base);
-            if (ioapic_max_idx == 0)
-            {
-                first_ioapic_id = ioapic->id;
-            }
             ioapic_ids[ioapic_max_idx] = ioapic->id;
             ioapic_max_idx++;
             break;
@@ -125,7 +119,7 @@ static void acpi_init_smp(const acpi_madt *madt)
 
     // the kernel must run with at lease 2 CPUs
     KDEBUG_ASSERT(cpu_max_idx >= 1);
-    
+    apic::lapic = IO2V<decltype(apic::lapic)>((void *)lapic_addr);
 }
 
 static void acpi_init_v1(const acpi_rsdp *rsdp)

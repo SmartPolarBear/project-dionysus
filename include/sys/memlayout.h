@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-22 13:11:14
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-23 14:01:16
+ * @ Modified time: 2019-11-25 23:14:41
  * @ Description:
  */
 #if !defined(__INCLUDE_SYS_MEMLAYOUT_H)
@@ -43,8 +43,9 @@ constexpr uintptr_t DEVICE_PHYSICALBASE = 0xFE000000;
 // convert with uintptr_t, defined in vm_utils.cc
 extern uintptr_t V2P(uintptr_t x);
 extern uintptr_t P2V(uintptr_t x);
-uintptr_t P2V_KERNEL(uintptr_t x);
-uintptr_t P2V_PHYREMAP(uintptr_t x);
+extern uintptr_t P2V_KERNEL(uintptr_t x);
+extern uintptr_t P2V_PHYREMAP(uintptr_t x);
+extern uintptr_t IO2V(uintptr_t x);
 
 template <typename P>
 static inline P V2P_WO(P a)
@@ -59,6 +60,12 @@ static inline P P2V_WO(P a)
 }
 
 template <typename P>
+static inline P IO2V_WO(P a)
+{
+    return (P)(IO2V((uintptr_t)a));
+}
+
+template <typename P>
 static inline P V2P(void *a)
 {
     return (P)(V2P((uintptr_t)a));
@@ -68,6 +75,12 @@ template <typename P>
 static inline P P2V(void *a)
 {
     return (P)(P2V((uintptr_t)a));
+}
+
+template <typename P>
+static inline P IO2V(void *a)
+{
+    return (P)(IO2V((uintptr_t)a));
 }
 
 #endif // __INCLUDE_SYS_MEMLAYOUT_H

@@ -1,7 +1,7 @@
 TOP_SRC=..
 include $(TOP_SRC)/Makefile.mk
 
-SUBDIRS = console debug acpi lock
+SUBDIRS = console debug acpi apic lock
 
 all: $(SUBDIRS)
 
