@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 1970-01-01 08:00:00
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-25 23:24:05
+ * @ Modified time: 2019-11-28 23:18:55
  * @ Description:
  */
 
@@ -54,72 +54,110 @@ static inline bool acpi_sdt_checksum(acpi::acpi_desc_header *header)
     return sum == 0;
 }
 
+enum madt_entry_type : uint8_t
+{
+    LAPIC = 0,
+    IOAPIC = 1,
+    ISO = 2,
+    NMI = 3,
+
+    LAPIC_NMI = 4,
+    LAPIC_ADDR_OVERRIDE = 5,
+    IO_SAPIC = 6,
+
+    LSAPIC = 7,
+    PIS = 8,
+    Lx2APIC = 9,
+    Lx2APIC_NMI = 0xA,
+    GIC = 0xB,
+    GICD = 0xC,
+};
+
+struct madt_entry_header
+{
+    madt_entry_type type;
+    uint8_t length;
+} __attribute__((__packed__));
+static_assert(sizeof(madt_entry_header) == sizeof(char[2]));
+
 static void acpi_init_smp(const acpi_madt *madt)
 {
     KDEBUG_ASSERT(madt != nullptr);
-    KDEBUG_ASSERT(madt->header.length >= sizeof(decltype(*madt)));
+    KDEBUG_ASSERT(madt->header.length >= sizeof(*madt));
 
-    uintptr_t lapic_addr = madt->lapic_addr_phys;
-    uint8_t *p = (uint8_t *)madt->table;
-    uint8_t *e = p + madt->header.length - sizeof(decltype(*madt));
-    while (p < e)
+    apic::lapic = IO2V<decltype(apic::lapic)>((void *)madt->lapic_addr_phys);
+
+    const madt_entry_header *begin = reinterpret_cast<decltype(begin)>(madt->table),
+                            *end = reinterpret_cast<decltype(begin)>(madt->table + madt->header.length - sizeof(*madt));
+    console::printf("type,len=%d %d\n", madt->table[0], madt->table[1]);
+
+    for (auto entry = const_cast<madt_entry_header *>(begin);
+         entry <= end && entry->length;
+         entry += entry->length)
     {
-        if (e - p < 2)
-        {
-            break;
-        }
-
-        size_t len  = p[1];
-
-        if (e - p < len)
-        {
-            break;
-        }
-
-        switch (p[0])
-        {
-        case acpi::ENTRY_TYPE_LAPIC:
-        {
-            acpi::madt_lapic *lapic = reinterpret_cast<decltype(lapic)>(p);
-            if (len < sizeof(*lapic))
-            {
-                break;
-            }
-            if (!(lapic->flags & acpi::APIC_LAPIC_ENABLED))
-            {
-                break;
-            }
-
-            console::printf("ACPI: CPU#%d ACPI ID %d\n", cpu_max_idx, lapic->apic_id);
-
-            cpus[cpu_max_idx].id = cpu_max_idx;
-            cpus[cpu_max_idx].apicid = lapic->apic_id;
-            ++cpu_max_idx;
-            break;
-        }
-        case acpi::ENTRY_TYPE_IOAPIC:
-        {
-            acpi::madt_ioapic *ioapic = reinterpret_cast<decltype(ioapic)>(p);
-            if (len < sizeof(*ioapic))
-            {
-                break;
-            }
-            console::printf("ACPI: IOAPIC#%d@0x%x ID=%d, BASE=%d\n",
-                            ioapic_max_idx, ioapic->addr, ioapic->id, ioapic->interrupt_base);
-            ioapic_ids[ioapic_max_idx] = ioapic->id;
-            ioapic_max_idx++;
-            break;
-        }
-        default:
-            break;
-        }
-
-        p += len;
+        console::printf("Entry type=%d\n", entry->type);
     }
 
-    // the kernel must run with at lease 2 CPUs
-    KDEBUG_ASSERT(cpu_max_idx >= 1);
-    apic::lapic = IO2V<decltype(apic::lapic)>((void *)lapic_addr);
+    // uintptr_t lapic_addr = madt->lapic_addr_phys;
+    // uint8_t *p = (uint8_t *)madt->table;
+    // uint8_t *e = p + madt->header.length - sizeof(decltype(*madt));
+    // while (p < e)
+    // {
+    //     if (e - p < 2)
+    //     {
+    //         break;
+    //     }
+
+    //     size_t len = p[1];
+
+    //     if (e - p < len)
+    //     {
+    //         break;
+    //     }
+
+    //     switch (p[0])
+    //     {
+    //     case acpi::ENTRY_TYPE_LAPIC:
+    //     {
+    //         acpi::madt_lapic *lapic = reinterpret_cast<decltype(lapic)>(p);
+    //         if (len < sizeof(*lapic))
+    //         {
+    //             break;
+    //         }
+    //         if (!(lapic->flags & acpi::APIC_LAPIC_ENABLED))
+    //         {
+    //             break;
+    //         }
+
+    //         console::printf("ACPI: CPU#%d ACPI ID %d\n", cpu_max_idx, lapic->apic_id);
+
+    //         cpus[cpu_max_idx].id = cpu_max_idx;
+    //         cpus[cpu_max_idx].apicid = lapic->apic_id;
+    //         ++cpu_max_idx;
+    //         break;
+    //     }
+    //     case acpi::ENTRY_TYPE_IOAPIC:
+    //     {
+    //         acpi::madt_ioapic *ioapic = reinterpret_cast<decltype(ioapic)>(p);
+    //         if (len < sizeof(*ioapic))
+    //         {
+    //             break;
+    //         }
+    //         console::printf("ACPI: IOAPIC#%d@0x%x ID=%d, BASE=%d\n",
+    //                         ioapic_max_idx, ioapic->addr, ioapic->id, ioapic->interrupt_base);
+    //         ioapic_ids[ioapic_max_idx] = ioapic->id;
+    //         ioapic_max_idx++;
+    //         break;
+    //     }
+    //     default:
+    //         break;
+    //     }
+
+    //     p += len;
+    // }
+
+    // // the kernel must run with at lease 2 CPUs
+    // KDEBUG_ASSERT(cpu_max_idx >= 1);
 }
 
 static void acpi_init_v1(const acpi_rsdp *rsdp)
@@ -127,7 +165,7 @@ static void acpi_init_v1(const acpi_rsdp *rsdp)
     KDEBUG_ASSERT(rsdp->xsdt_addr_phys < PHYMEMORY_SIZE);
 
     acpi_rsdt *rsdt = reinterpret_cast<acpi_rsdt *>(P2V(rsdp->rsdt_addr_phys));
-    size_t entrycnt = (rsdt->header.length - sizeof(*rsdt)) / 4;
+    size_t entrycnt = (rsdt->header.length - sizeof(rsdt->header)) / 4;
 
     KDEBUG_ASSERT(acpi_sdt_checksum(&rsdt->header) == true);
 
@@ -138,6 +176,10 @@ static void acpi_init_v1(const acpi_rsdp *rsdp)
         if (arr_cmp(header->signature, acpi::SIGNATURE_MADT, 4) == 0)
         {
             madt = reinterpret_cast<decltype(madt)>(header);
+            console::printf("madt->header.length=%d\n", madt->header.length);
+            console::printf("type,len=%d %d\n", madt->table[0], madt->table[1]);
+
+            break;
         }
     }
 
@@ -151,11 +193,25 @@ static void acpi_init_v2(const acpi_rsdp *rsdp)
     KDEBUG_ASSERT(rsdp->xsdt_addr_phys < PHYMEMORY_SIZE);
 
     acpi_xsdt *xsdt = reinterpret_cast<acpi_xsdt *>(P2V(rsdp->xsdt_addr_phys));
-    size_t entrycnt = (xsdt->header.length - sizeof(*xsdt)) / 8;
+    size_t entrycnt = (xsdt->header.length - sizeof(xsdt->header)) / 8;
 
     KDEBUG_ASSERT(acpi_sdt_checksum(&xsdt->header) == true);
 
-    console::printf("Init acpi v2 entries %d\n", entrycnt);
+    acpi_madt *madt = nullptr;
+    for (size_t i = 0; i < entrycnt; i++)
+    {
+        auto header = reinterpret_cast<acpi_desc_header *>(P2V(xsdt->entry[i]));
+        if (arr_cmp(header->signature, acpi::SIGNATURE_MADT, 4) == 0)
+        {
+            madt = reinterpret_cast<decltype(madt)>(header);
+            console::printf("madt->header.length=%d\n", madt->header.length);
+            console::printf("type,len=%d %d\n", madt->table[0], madt->table[1]);
+        }
+    }
+
+    KDEBUG_ASSERT(madt != nullptr);
+
+    acpi_init_smp(madt);
 }
 
 void acpi::acpi_init(void)

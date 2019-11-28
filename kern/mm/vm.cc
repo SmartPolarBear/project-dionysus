@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-10-13 22:46:26
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-23 13:55:33
+ * @ Modified time: 2019-11-26 23:10:24
  * @ Description: Implement Intel's 4-level paging and the modification of page tables, etc.
  */
 
@@ -162,7 +162,7 @@ static inline void initialize_phymem_parameters(void)
 
     physize = PGROUNDDOWN(physize);
 
-    KDEBUG_ASSERT(physize > KERNEL_SIZE && physize <= PHYMEMORY_SIZE);
+    KDEBUG_ASSERT(physize >= KERNEL_SIZE && physize <= PHYMEMORY_SIZE);
 
     phy_mem_info.memmap.entries = memtag->entries;
     phy_mem_info.memmap.size = entry_count;
