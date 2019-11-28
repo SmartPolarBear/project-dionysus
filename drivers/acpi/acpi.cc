@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 1970-01-01 08:00:00
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-28 23:18:55
+ * @ Modified time: 2019-11-28 23:36:21
  * @ Description:
  */
 
@@ -37,7 +37,7 @@ static inline size_t arr_cmp(TA *ita, TB *itb, size_t len)
     {
         if (*(ita + i) != *(itb + i))
         {
-            return i;
+            return (*(ita + i) > *(itb + i)) ? 1 : -1;
         }
     }
 
@@ -91,11 +91,15 @@ static void acpi_init_smp(const acpi_madt *madt)
                             *end = reinterpret_cast<decltype(begin)>(madt->table + madt->header.length - sizeof(*madt));
     console::printf("type,len=%d %d\n", madt->table[0], madt->table[1]);
 
+    auto next_entry = [](auto entry) {
+        return reinterpret_cast<decltype(entry)>((void *)(uintptr_t(entry) + entry->length));
+    };
+
     for (auto entry = const_cast<madt_entry_header *>(begin);
-         entry <= end && entry->length;
-         entry += entry->length)
+         entry < end;
+         entry = next_entry(entry))
     {
-        console::printf("Entry type=%d\n", entry->type);
+        console::printf("Entry type=%d,len=%d\n", entry->type, entry->length);
     }
 
     // uintptr_t lapic_addr = madt->lapic_addr_phys;
@@ -176,9 +180,6 @@ static void acpi_init_v1(const acpi_rsdp *rsdp)
         if (arr_cmp(header->signature, acpi::SIGNATURE_MADT, 4) == 0)
         {
             madt = reinterpret_cast<decltype(madt)>(header);
-            console::printf("madt->header.length=%d\n", madt->header.length);
-            console::printf("type,len=%d %d\n", madt->table[0], madt->table[1]);
-
             break;
         }
     }
@@ -204,8 +205,7 @@ static void acpi_init_v2(const acpi_rsdp *rsdp)
         if (arr_cmp(header->signature, acpi::SIGNATURE_MADT, 4) == 0)
         {
             madt = reinterpret_cast<decltype(madt)>(header);
-            console::printf("madt->header.length=%d\n", madt->header.length);
-            console::printf("type,len=%d %d\n", madt->table[0], madt->table[1]);
+            break;
         }
     }
 
