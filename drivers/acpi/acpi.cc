@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 1970-01-01 08:00:00
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-29 23:13:56
+ * @ Modified time: 2019-11-29 23:32:21
  * @ Description:
  */
 
@@ -18,11 +18,17 @@
 #include "lib/libc/string.h"
 #include "lib/libcxx/new"
 
-// declared in acpi.h
-struct cpu cpus[CPU_COUNT_LIMIT] = {};
-size_t cpu_max_idx = 0;
+// declared in cpu.h
+cpu_info cpus[CPU_COUNT_LIMIT] = {};
+// the numbers of cpu (cores) should be within the range of uint8_t
+uint8_t cpu_max_idx = 0;
 
-size_t ioapic_ids[CPU_COUNT_LIMIT] = {};
+struct
+{
+    uintptr_t addr;
+    size_t id;
+    uintptr_t interrupt_base;
+} ioapics[CPU_COUNT_LIMIT] = {};
 size_t ioapic_max_idx = 0;
 
 using acpi::acpi_desc_header;
@@ -32,7 +38,7 @@ using acpi::acpi_rsdt;
 using acpi::acpi_xsdt;
 using acpi::madt_entry_header;
 
-static inline bool acpi_sdt_checksum(acpi::acpi_desc_header *header)
+static inline bool acpi_sdt_checksum(const acpi::acpi_desc_header *header)
 {
     uint8_t sum = 0;
     for (size_t i = 0; i < header->length; i++)
@@ -74,9 +80,7 @@ static void acpi_init_smp(const acpi_madt *madt)
 
             console::printf("ACPI: CPU#%d ACPI ID %d\n", cpu_max_idx, lapic->apic_id);
 
-            cpus[cpu_max_idx].id = cpu_max_idx;
-            cpus[cpu_max_idx].apicid = lapic->apic_id;
-            ++cpu_max_idx;
+            cpus[cpu_max_idx++] = {.id = cpu_max_idx, .apicid = lapic->apic_id};
             break;
         }
         case acpi::MADT_ENTRY_IOAPIC:
@@ -87,8 +91,7 @@ static void acpi_init_smp(const acpi_madt *madt)
             console::printf("ACPI: IOAPIC#%d @ 0x%x ID=%d, BASE=%d\n",
                             ioapic_max_idx, ioapic->addr, ioapic->id, ioapic->interrupt_base);
 
-            ioapic_ids[ioapic_max_idx] = ioapic->id;
-            ioapic_max_idx++;
+            ioapics[ioapic_max_idx++] = {ioapic->addr, ioapic->id, ioapic->interrupt_base};
             break;
         }
         default:
@@ -100,19 +103,18 @@ static void acpi_init_smp(const acpi_madt *madt)
     KDEBUG_ASSERT(cpu_max_idx >= 1);
 }
 
-static void acpi_init_v1(const acpi_rsdp *rsdp)
+// the common part of sdt initialize shared between acpi v1 and v2
+template <typename TEntry>
+static void sdt_common_initialize(const acpi_desc_header *sdtheader, const TEntry *entries)
 {
-    KDEBUG_ASSERT(rsdp->xsdt_addr_phys < PHYMEMORY_SIZE);
+    size_t entrycnt = (sdtheader->length - sizeof(*sdtheader)) / 4;
 
-    acpi_rsdt *rsdt = reinterpret_cast<acpi_rsdt *>(P2V(rsdp->rsdt_addr_phys));
-    size_t entrycnt = (rsdt->header.length - sizeof(rsdt->header)) / 4;
-
-    KDEBUG_ASSERT(acpi_sdt_checksum(&rsdt->header) == true);
+    KDEBUG_ASSERT(acpi_sdt_checksum(sdtheader) == true);
 
     acpi_madt *madt = nullptr;
     for (size_t i = 0; i < entrycnt; i++)
     {
-        auto header = reinterpret_cast<acpi_desc_header *>(P2V(rsdt->entry[i]));
+        auto header = reinterpret_cast<acpi_desc_header *>(P2V(entries[i]));
         if (strncmp((char *)header->signature, acpi::SIGNATURE_MADT, strlen(acpi::SIGNATURE_MADT)) == 0)
         {
             madt = reinterpret_cast<decltype(madt)>(header);
@@ -125,29 +127,20 @@ static void acpi_init_v1(const acpi_rsdp *rsdp)
     acpi_init_smp(madt);
 }
 
+static void acpi_init_v1(const acpi_rsdp *rsdp)
+{
+    KDEBUG_ASSERT(rsdp->xsdt_addr_phys < PHYMEMORY_SIZE);
+    acpi_rsdt *rsdt = reinterpret_cast<acpi_rsdt *>(P2V(rsdp->rsdt_addr_phys));
+    
+    sdt_common_initialize(&rsdt->header, rsdt->entry);
+}
+
 static void acpi_init_v2(const acpi_rsdp *rsdp)
 {
     KDEBUG_ASSERT(rsdp->xsdt_addr_phys < PHYMEMORY_SIZE);
-
     acpi_xsdt *xsdt = reinterpret_cast<acpi_xsdt *>(P2V(rsdp->xsdt_addr_phys));
-    size_t entrycnt = (xsdt->header.length - sizeof(xsdt->header)) / 8;
-
-    KDEBUG_ASSERT(acpi_sdt_checksum(&xsdt->header) == true);
-
-    acpi_madt *madt = nullptr;
-    for (size_t i = 0; i < entrycnt; i++)
-    {
-        auto header = reinterpret_cast<acpi_desc_header *>(P2V(xsdt->entry[i]));
-        if (strncmp((char *)header->signature, acpi::SIGNATURE_MADT, strlen(acpi::SIGNATURE_MADT)) == 0)
-        {
-            madt = reinterpret_cast<decltype(madt)>(header);
-            break;
-        }
-    }
-
-    KDEBUG_ASSERT(madt != nullptr);
-
-    acpi_init_smp(madt);
+    
+    sdt_common_initialize(&xsdt->header, xsdt->entry);
 }
 
 void acpi::acpi_init(void)
