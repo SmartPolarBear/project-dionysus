@@ -1,8 +1,8 @@
 #if !defined(__INCLUDE_DRIVERS_ACPI_H)
 #define __INCLUDE_DRIVERS_ACPI_H
 
-#include "sys/types.h"
 #include "drivers/acpi/cpu.h"
+#include "sys/types.h"
 
 // Intel's advanced configuration and power interface
 namespace acpi
@@ -61,13 +61,23 @@ struct acpi_xsdt
     uintptr_t entry[0];
 } __attribute__((__packed__));
 
-enum entry_type
+enum madt_entry_type : uint8_t
 {
-    ENTRY_TYPE_LAPIC = 0,
-    ENTRY_TYPE_IOAPIC = 1,
-    ENTRY_TYPE_INT_SRC_OVERRIDE = 2,
-    ENTRY_TYPE_NMI_INT_SRC = 3,
-    ENTRY_TYPE_LAPIC_NMI = 4,
+    MADT_ENTRY_LAPIC = 0,
+    MADT_ENTRY_IOAPIC = 1,
+    MADT_ENTRY_ISO = 2,
+    MADT_ENTRY_NMI = 3,
+
+    MADT_ENTRY_LAPIC_NMI = 4,
+    MADT_ENTRY_LAPIC_ADDR_OVERRIDE = 5,
+    MADT_ENTRY_IO_SAPIC = 6,
+
+    MADT_ENTRY_LSAPIC = 7,
+    MADT_ENTRY_PIS = 8,
+    MADT_ENTRY_Lx2APIC = 9,
+    MADT_ENTRY_Lx2APIC_NMI = 0xA,
+    MADT_ENTRY_GIC = 0xB,
+    MADT_ENTRY_GICD = 0xC,
 };
 
 // 5.2.12
@@ -80,6 +90,13 @@ struct acpi_madt
     uint32_t flags;
     uint8_t table[0];
 } __attribute__((__packed__));
+
+struct madt_entry_header
+{
+    madt_entry_type type;
+    uint8_t length;
+} __attribute__((__packed__));
+static_assert(sizeof(madt_entry_header) == sizeof(char[2]));
 
 // 5.2.12.2
 constexpr uint32_t APIC_LAPIC_ENABLED = 1;

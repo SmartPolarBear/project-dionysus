@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 1970-01-01 08:00:00
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-28 23:36:21
+ * @ Modified time: 2019-11-29 23:07:52
  * @ Description:
  */
 
@@ -15,6 +15,7 @@
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 
+#include "lib/libc/string.h"
 #include "lib/libcxx/new"
 
 // declared in acpi.h
@@ -29,20 +30,7 @@ using acpi::acpi_madt;
 using acpi::acpi_rsdp;
 using acpi::acpi_rsdt;
 using acpi::acpi_xsdt;
-
-template <typename TA, typename TB>
-static inline size_t arr_cmp(TA *ita, TB *itb, size_t len)
-{
-    for (size_t i = 0; i < len; i++)
-    {
-        if (*(ita + i) != *(itb + i))
-        {
-            return (*(ita + i) > *(itb + i)) ? 1 : -1;
-        }
-    }
-
-    return 0;
-}
+using acpi::madt_entry_header;
 
 static inline bool acpi_sdt_checksum(acpi::acpi_desc_header *header)
 {
@@ -53,32 +41,6 @@ static inline bool acpi_sdt_checksum(acpi::acpi_desc_header *header)
     }
     return sum == 0;
 }
-
-enum madt_entry_type : uint8_t
-{
-    LAPIC = 0,
-    IOAPIC = 1,
-    ISO = 2,
-    NMI = 3,
-
-    LAPIC_NMI = 4,
-    LAPIC_ADDR_OVERRIDE = 5,
-    IO_SAPIC = 6,
-
-    LSAPIC = 7,
-    PIS = 8,
-    Lx2APIC = 9,
-    Lx2APIC_NMI = 0xA,
-    GIC = 0xB,
-    GICD = 0xC,
-};
-
-struct madt_entry_header
-{
-    madt_entry_type type;
-    uint8_t length;
-} __attribute__((__packed__));
-static_assert(sizeof(madt_entry_header) == sizeof(char[2]));
 
 static void acpi_init_smp(const acpi_madt *madt)
 {
@@ -99,7 +61,15 @@ static void acpi_init_smp(const acpi_madt *madt)
          entry < end;
          entry = next_entry(entry))
     {
-        console::printf("Entry type=%d,len=%d\n", entry->type, entry->length);
+        switch (entry->type)
+        {
+        case acpi::MADT_ENTRY_LAPIC:
+            break;
+        case acpi::MADT_ENTRY_IOAPIC:
+            break;
+        default:
+            break;
+        }
     }
 
     // uintptr_t lapic_addr = madt->lapic_addr_phys;
@@ -177,7 +147,7 @@ static void acpi_init_v1(const acpi_rsdp *rsdp)
     for (size_t i = 0; i < entrycnt; i++)
     {
         auto header = reinterpret_cast<acpi_desc_header *>(P2V(rsdt->entry[i]));
-        if (arr_cmp(header->signature, acpi::SIGNATURE_MADT, 4) == 0)
+        if (strncmp((char *)header->signature, acpi::SIGNATURE_MADT, strlen(acpi::SIGNATURE_MADT)) == 0)
         {
             madt = reinterpret_cast<decltype(madt)>(header);
             break;
@@ -202,7 +172,7 @@ static void acpi_init_v2(const acpi_rsdp *rsdp)
     for (size_t i = 0; i < entrycnt; i++)
     {
         auto header = reinterpret_cast<acpi_desc_header *>(P2V(xsdt->entry[i]));
-        if (arr_cmp(header->signature, acpi::SIGNATURE_MADT, 4) == 0)
+        if (strncmp((char *)header->signature, acpi::SIGNATURE_MADT, strlen(acpi::SIGNATURE_MADT)) == 0)
         {
             madt = reinterpret_cast<decltype(madt)>(header);
             break;
@@ -228,7 +198,7 @@ void acpi::acpi_init(void)
                           ? rsdp = reinterpret_cast<decltype(rsdp)>(acpi_new_tag->rsdp)
                           : rsdp = reinterpret_cast<decltype(rsdp)>(acpi_old_tag->rsdp);
 
-    if (arr_cmp(rsdp->signature, SIGNATURE_RSDP, 8) != 0)
+    if (strncmp((char *)rsdp->signature, SIGNATURE_RSDP, strlen(SIGNATURE_RSDP)) != 0)
     {
         KDEBUG_GENERALPANIC("Invalid ACPI RSDP: failed to check signature.");
     }
