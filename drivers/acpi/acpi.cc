@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 1970-01-01 08:00:00
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-29 23:07:52
+ * @ Modified time: 2019-11-29 23:13:56
  * @ Description:
  */
 
@@ -51,7 +51,6 @@ static void acpi_init_smp(const acpi_madt *madt)
 
     const madt_entry_header *begin = reinterpret_cast<decltype(begin)>(madt->table),
                             *end = reinterpret_cast<decltype(begin)>(madt->table + madt->header.length - sizeof(*madt));
-    console::printf("type,len=%d %d\n", madt->table[0], madt->table[1]);
 
     auto next_entry = [](auto entry) {
         return reinterpret_cast<decltype(entry)>((void *)(uintptr_t(entry) + entry->length));
@@ -64,74 +63,41 @@ static void acpi_init_smp(const acpi_madt *madt)
         switch (entry->type)
         {
         case acpi::MADT_ENTRY_LAPIC:
+        {
+            acpi::madt_lapic *lapic = reinterpret_cast<decltype(lapic)>(entry);
+            KDEBUG_ASSERT(sizeof(*lapic) == lapic->length);
+
+            if (!(lapic->flags & acpi::APIC_LAPIC_ENABLED))
+            {
+                break;
+            }
+
+            console::printf("ACPI: CPU#%d ACPI ID %d\n", cpu_max_idx, lapic->apic_id);
+
+            cpus[cpu_max_idx].id = cpu_max_idx;
+            cpus[cpu_max_idx].apicid = lapic->apic_id;
+            ++cpu_max_idx;
             break;
+        }
         case acpi::MADT_ENTRY_IOAPIC:
+        {
+            acpi::madt_ioapic *ioapic = reinterpret_cast<decltype(ioapic)>(entry);
+            KDEBUG_ASSERT(sizeof(*ioapic) == ioapic->length);
+
+            console::printf("ACPI: IOAPIC#%d @ 0x%x ID=%d, BASE=%d\n",
+                            ioapic_max_idx, ioapic->addr, ioapic->id, ioapic->interrupt_base);
+
+            ioapic_ids[ioapic_max_idx] = ioapic->id;
+            ioapic_max_idx++;
             break;
+        }
         default:
             break;
         }
     }
 
-    // uintptr_t lapic_addr = madt->lapic_addr_phys;
-    // uint8_t *p = (uint8_t *)madt->table;
-    // uint8_t *e = p + madt->header.length - sizeof(decltype(*madt));
-    // while (p < e)
-    // {
-    //     if (e - p < 2)
-    //     {
-    //         break;
-    //     }
-
-    //     size_t len = p[1];
-
-    //     if (e - p < len)
-    //     {
-    //         break;
-    //     }
-
-    //     switch (p[0])
-    //     {
-    //     case acpi::ENTRY_TYPE_LAPIC:
-    //     {
-    //         acpi::madt_lapic *lapic = reinterpret_cast<decltype(lapic)>(p);
-    //         if (len < sizeof(*lapic))
-    //         {
-    //             break;
-    //         }
-    //         if (!(lapic->flags & acpi::APIC_LAPIC_ENABLED))
-    //         {
-    //             break;
-    //         }
-
-    //         console::printf("ACPI: CPU#%d ACPI ID %d\n", cpu_max_idx, lapic->apic_id);
-
-    //         cpus[cpu_max_idx].id = cpu_max_idx;
-    //         cpus[cpu_max_idx].apicid = lapic->apic_id;
-    //         ++cpu_max_idx;
-    //         break;
-    //     }
-    //     case acpi::ENTRY_TYPE_IOAPIC:
-    //     {
-    //         acpi::madt_ioapic *ioapic = reinterpret_cast<decltype(ioapic)>(p);
-    //         if (len < sizeof(*ioapic))
-    //         {
-    //             break;
-    //         }
-    //         console::printf("ACPI: IOAPIC#%d@0x%x ID=%d, BASE=%d\n",
-    //                         ioapic_max_idx, ioapic->addr, ioapic->id, ioapic->interrupt_base);
-    //         ioapic_ids[ioapic_max_idx] = ioapic->id;
-    //         ioapic_max_idx++;
-    //         break;
-    //     }
-    //     default:
-    //         break;
-    //     }
-
-    //     p += len;
-    // }
-
-    // // the kernel must run with at lease 2 CPUs
-    // KDEBUG_ASSERT(cpu_max_idx >= 1);
+    // the kernel must run with at lease 2 CPUs
+    KDEBUG_ASSERT(cpu_max_idx >= 1);
 }
 
 static void acpi_init_v1(const acpi_rsdp *rsdp)
