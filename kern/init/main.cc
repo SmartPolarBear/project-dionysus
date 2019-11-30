@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-29 23:17:44
+ * @ Modified time: 2019-11-30 23:52:54
  * @ Description: the entry point for kernel in C++
  */
 
@@ -12,6 +12,7 @@
 #include "drivers/acpi/acpi.h"
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
+#include "drivers/apic/apic.h"
 
 #include "lib/libc/string.h"
 #include "lib/libcxx/new"
@@ -42,6 +43,8 @@ extern "C" [[noreturn]] void kmain() {
 
     // acpi initialization
     acpi::acpi_init();
+
+    local_apic::lapic_init();
 
     console::printf("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
 
