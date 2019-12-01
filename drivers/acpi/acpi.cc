@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 1970-01-01 08:00:00
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-30 23:15:37
+ * @ Modified time: 2019-12-01 13:40:41
  * @ Description:
  */
 
@@ -54,6 +54,7 @@ static void acpi_init_smp(const acpi_madt *madt)
     KDEBUG_ASSERT(madt->header.length >= sizeof(*madt));
 
     local_apic::lapic = IO2V<decltype(local_apic::lapic)>((void *)madt->lapic_addr_phys);
+    uint32_t *lapic = P2V<decltype(lapic)>((void *)madt->lapic_addr_phys);
 
     const madt_entry_header *begin = reinterpret_cast<decltype(begin)>(madt->table),
                             *end = reinterpret_cast<decltype(begin)>(madt->table + madt->header.length - sizeof(*madt));
@@ -139,7 +140,7 @@ static void acpi_init_v2(const acpi_rsdp *rsdp)
 {
     KDEBUG_ASSERT(rsdp->xsdt_addr_phys < PHYMEMORY_SIZE);
     acpi_xsdt *xsdt = reinterpret_cast<acpi_xsdt *>(P2V(rsdp->xsdt_addr_phys));
-    
+
     sdt_common_initialize(&xsdt->header, xsdt->entry);
 }
 

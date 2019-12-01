@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-30 23:52:54
+ * @ Modified time: 2019-12-01 13:34:25
  * @ Description: the entry point for kernel in C++
  */
 
@@ -44,6 +44,7 @@ extern "C" [[noreturn]] void kmain() {
     // acpi initialization
     acpi::acpi_init();
 
+    // initialize apic
     local_apic::lapic_init();
 
     console::printf("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);

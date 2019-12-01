@@ -50,7 +50,7 @@ constexpr size_t TCCR = 0x0390 / 4; // Timer Current Count
 constexpr size_t TDCR = 0x03E0 / 4; // Timer Divide Configuration
 constexpr size_t TIC_DEFUALT_VALUE = 10000000;
 
-static void write_lapic(int index, int value)
+static void write_lapic(size_t index, uint32_t value)
 {
     local_apic::lapic[index] = value;
     auto val = local_apic::lapic[ID]; // wait for finish by reading

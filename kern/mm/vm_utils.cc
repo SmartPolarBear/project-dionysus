@@ -53,5 +53,5 @@ uintptr_t P2V_PHYREMAP(uintptr_t x)
 uintptr_t IO2V(uintptr_t x)
 {
     KDEBUG_ASSERT(x <= PHYMEMORY_SIZE);
-    return x + DEVICE_VIRTUALBASE - 0xFE000000;
+    return (x - 0xFE000000) + DEVICE_VIRTUALBASE;
 }
