@@ -37,7 +37,7 @@
                     "ignoreFailures": true
                 },
             ],
-            "preLaunchTask": "Debug4VSCode"
+            //"preLaunchTask": "Debug4VSCode"
         }
     ]
 }

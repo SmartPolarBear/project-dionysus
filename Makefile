@@ -34,7 +34,8 @@ debug: all
 
 debug4vsc: all
 	@$(QEMU) -serial mon:stdio $(QEMUOPTS) -S $(QEMUGDB) &
-
+	@sleep 2
+	
 $(BUILD)/kernel: $(BASEOBJS)
 	$(LD) $(LDFLAGS) -o $@ $^
 	$(OBJDUMP) -S $@ > $(BUILD)/kernel.asm

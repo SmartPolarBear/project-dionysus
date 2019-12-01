@@ -89,6 +89,11 @@
                 "panel": "shared",
                 "showReuseMessage": true,
                 "clear": false
+            },
+            "options": {
+                "env": {
+                    "DISPLAY":"172.20.160.1:0"
+                }
             }
         },
     ]
