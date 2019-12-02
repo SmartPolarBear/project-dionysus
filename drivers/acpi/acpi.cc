@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 1970-01-01 08:00:00
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-12-01 13:40:41
+ * @ Modified time: 2019-12-01 19:20:37
  * @ Description:
  */
 
@@ -54,7 +54,6 @@ static void acpi_init_smp(const acpi_madt *madt)
     KDEBUG_ASSERT(madt->header.length >= sizeof(*madt));
 
     local_apic::lapic = IO2V<decltype(local_apic::lapic)>((void *)madt->lapic_addr_phys);
-    uint32_t *lapic = P2V<decltype(lapic)>((void *)madt->lapic_addr_phys);
 
     const madt_entry_header *begin = reinterpret_cast<decltype(begin)>(madt->table),
                             *end = reinterpret_cast<decltype(begin)>(madt->table + madt->header.length - sizeof(*madt));
@@ -144,7 +143,7 @@ static void acpi_init_v2(const acpi_rsdp *rsdp)
     sdt_common_initialize(&xsdt->header, xsdt->entry);
 }
 
-void acpi::acpi_init(void)
+void acpi::init_acpi(void)
 {
     auto acpi_new_tag = multiboot::aquire_tag_ptr<multiboot_tag_new_acpi>(MULTIBOOT_TAG_TYPE_ACPI_NEW);
     auto acpi_old_tag = multiboot::aquire_tag_ptr<multiboot_tag_new_acpi>(MULTIBOOT_TAG_TYPE_ACPI_OLD);

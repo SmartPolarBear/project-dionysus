@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-22 13:11:14
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-25 23:14:41
+ * @ Modified time: 2019-12-01 19:12:28
  * @ Description:
  */
 #if !defined(__INCLUDE_SYS_MEMLAYOUT_H)
@@ -39,6 +39,9 @@ constexpr uintptr_t KERNEL_VIRTUALLINK = 0xFFFFFFFF80100000;
 // for memory-mapped IO
 constexpr uintptr_t DEVICE_VIRTUALBASE = 0xFFFFFFFF40000000;
 constexpr uintptr_t DEVICE_PHYSICALBASE = 0xFE000000;
+// this value can be change if needed.
+constexpr size_t DEVICE_SIZE = 32_MB;
+constexpr uintptr_t DEVICE_PHYSICALEND = DEVICE_PHYSICALBASE + DEVICE_SIZE;
 
 // convert with uintptr_t, defined in vm_utils.cc
 extern uintptr_t V2P(uintptr_t x);

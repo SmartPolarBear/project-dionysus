@@ -6,7 +6,7 @@
 namespace local_apic
 {
 extern volatile uint32_t *lapic;
-void lapic_init(void);
+void init_lapic(void);
 } // namespace lapic
 
 namespace io_apic

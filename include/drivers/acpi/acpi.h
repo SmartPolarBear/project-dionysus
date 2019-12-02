@@ -120,7 +120,7 @@ struct madt_ioapic
     uint32_t interrupt_base;
 } __attribute__((__packed__));
 
-void acpi_init(void);
+void init_acpi(void);
 } // namespace acpi
 
 #endif // __INCLUDE_DRIVERS_ACPI_H

@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-12-01 13:34:25
+ * @ Modified time: 2019-12-01 21:22:06
  * @ Description: the entry point for kernel in C++
  */
 
@@ -10,9 +10,9 @@
 #include "boot/multiboot2.h"
 
 #include "drivers/acpi/acpi.h"
+#include "drivers/apic/apic.h"
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
-#include "drivers/apic/apic.h"
 
 #include "lib/libc/string.h"
 #include "lib/libcxx/new"
@@ -32,23 +32,22 @@ extern "C" [[noreturn]] void kmain() {
     // which is put *right* after the kernel by grub.
     // the size of which is expected to be less than 4K.
     vm::bootmm_init(end + multiboot::BOOT_INFO_MAX_EXPECTED_SIZE,
-                    (void *)P2V(16_MB));
+                    (void *)P2V(32_MB));
 
     // process the multiboot information
     multiboot::init_mbi();
-    multiboot::parse_multiboot_tags();
 
     // initialize the paging
     vm::init_kernelvm();
 
-    // acpi initialization
-    acpi::acpi_init();
+    // initialize acpi
+    acpi::init_acpi();
 
     // initialize apic
-    local_apic::lapic_init();
+    local_apic::init_lapic();
 
     console::printf("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
-
+    
     for (;;)
         ;
 }

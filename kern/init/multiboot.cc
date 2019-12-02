@@ -54,6 +54,7 @@ void multiboot::init_mbi(void)
     char *p = vm::bootmm_alloc();
     
     // console::printf("mbootinfo=0x%p,p=0x%p\n", mboot_info, p);
+    parse_multiboot_tags();
 }
 
 //Map the tag type to the corresponding pointer

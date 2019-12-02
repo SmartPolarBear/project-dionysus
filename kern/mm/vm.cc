@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-10-13 22:46:26
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-12-01 13:39:43
+ * @ Modified time: 2019-12-01 19:11:48
  * @ Description: Implement Intel's 4-level paging and the modification of page tables, etc.
  */
 
@@ -57,14 +57,14 @@ struct
         [KMMAP_DEV] =
             {
                 .pstart = DEVICE_PHYSICALBASE,
-                .pend = 32_MB,
+                .pend = DEVICE_PHYSICALEND,
                 .vstart = DEVICE_VIRTUALBASE,
                 .permissions = PG_W | PG_PWT | PG_PCD},
         // map whole physical memory again to PHYREMAP_VIRTUALBASE
         [KMMAP_PHYREMAP] =
             {
                 .pstart = 0,
-                .pend = 0, //to be filled in initialize_phymem_parameters,
+                .pend = 0, //to be filled in initialize_phymem_parameters
                 .vstart = PHYREMAP_VIRTUALBASE,
                 .permissions = PG_W}};
 
@@ -126,7 +126,7 @@ static inline RESULT map_addr(const pde_ptr_t kpml4t, uintptr_t vaddr, uintptr_t
         {
             return ERROR_MEMORY_ALLOC;
         }
-        
+
         memset(pgdir, 0, PAGE_SIZE);
         *pdpte = ((V2P((uintptr_t)pgdir)) | PG_P | permissions);
     }
@@ -191,7 +191,7 @@ void vm::init_kernelvm(void)
     // allocate pml4t and initialize it with 0
     g_kpml4t = reinterpret_cast<pde_ptr_t>(bootmm_alloc());
     memset(g_kpml4t, 0, PAGE_SIZE);
-    
+
     // map all the definition in kmem_map
     for (auto kmmap_entry : kmem_map)
     {

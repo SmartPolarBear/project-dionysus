@@ -56,7 +56,7 @@ static void write_lapic(size_t index, uint32_t value)
     auto val = local_apic::lapic[ID]; // wait for finish by reading
 }
 
-void local_apic::lapic_init(void)
+void local_apic::init_lapic(void)
 {
     if (!lapic)
     {
