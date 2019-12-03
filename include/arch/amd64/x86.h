@@ -81,4 +81,5 @@ static inline void lcr3(uintptr_t val)
                  : "r"(val));
 }
 
+
 #endif // __INCLUDE_ARCH_X86_H

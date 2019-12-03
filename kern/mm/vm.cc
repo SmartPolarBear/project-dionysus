@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-10-13 22:46:26
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-12-01 19:11:48
+ * @ Modified time: 2019-12-03 23:15:28
  * @ Description: Implement Intel's 4-level paging and the modification of page tables, etc.
  */
 
@@ -19,6 +19,7 @@
 #include "sys/types.h"
 
 #include "arch/amd64/x86.h"
+#include "arch/amd64/cpuid.h"
 
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
@@ -147,6 +148,17 @@ static inline RESULT map_addr(const pde_ptr_t kpml4t, uintptr_t vaddr, uintptr_t
     return ERROR_SUCCESS;
 }
 
+
+static inline void check_hardware(void)
+{
+    uint64_t regs[4];
+    cpuid(CPUID_GETFEATURES, regs);
+    if (!(regs[3] & bit_PAE))
+    {
+        KDEBUG_GENERALPANIC("CPU Feature 'PAE' is required for 4-level paging.");
+    }
+}
+
 static inline void initialize_phymem_parameters(void)
 {
     // get mmap tag from multiboot info and find the limit of physical memory
@@ -185,6 +197,9 @@ pde_t *vm::setup_kernelvm(void)
 
 void vm::init_kernelvm(void)
 {
+    // check the feature availablity
+    check_hardware();
+
     // cache significant information in advance
     initialize_phymem_parameters();
 
