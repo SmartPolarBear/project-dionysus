@@ -67,6 +67,7 @@ void local_apic::init_lapic(void)
     write_lapic(SVR, ENABLE | (TRAP_IRQ0 + IRQ_SPURIOUS));
 
     // initialize timer
+    // TODO: make a seperate timer driver
     write_lapic(TDCR, TIMER_FLAG_X1);
     write_lapic(TIMER, TIMER_FLAG_PERIODIC | (TRAP_IRQ0 + IRQ_TIMER));
     write_lapic(TICR, TIC_DEFUALT_VALUE);

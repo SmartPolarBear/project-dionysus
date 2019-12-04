@@ -21,6 +21,8 @@ void freevm(pde_t *pgdir);
 void switch_kernelvm(void);
 pde_t *setup_kernelvm(void);
 void init_kernelvm(void);
+
+void init_segmentation(void);
 } // namespace vm
 
 #endif // __INCLUDE_SYS_VM_H
