@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-10-13 22:46:26
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-12-04 23:34:02
+ * @ Modified time: 2019-12-05 23:34:03
  * @ Description: Implement Intel's 4-level paging and the modification of page tables, etc.
  */
 
@@ -18,9 +18,10 @@
 #include "sys/param.h"
 #include "sys/types.h"
 
-#include "arch/amd64/cpuid.h"
 #include "arch/amd64/x86.h"
 
+#include "drivers/acpi/cpu.h"
+#include "drivers/apic/apic.h"
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 
@@ -224,23 +225,6 @@ void vm::init_kernelvm(void)
     switch_kernelvm();
 }
 
-void vm::init_segmentation(void)
-{
-    uint32_t *tss = nullptr;
-    uint64_t *gdt = nullptr;
-    auto local_storage = vm::bootmm_alloc();
-
-    memset(local_storage, 0, PAGE_SIZE);
-
-    gdt = reinterpret_cast<decltype(gdt)>(local_storage);
-
-    tss = reinterpret_cast<decltype(tss)>(local_storage + 1024);
-    tss[16] = 0x00680000;
-
-    wrmsr(0xC0000100, ((uintptr_t)local_storage) + ((PAGE_SIZE) / 2));
-
-    
-}
 
 void vm::freevm(pde_t *pgdir)
 {

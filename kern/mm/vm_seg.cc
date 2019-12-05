@@ -2,12 +2,10 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-10-15 20:03:19
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-24 17:52:27
+ * @ Modified time: 2019-12-05 23:36:35
  * @ Description:
  */
 
-#include "arch/amd64/x86.h"
-#include "lib/libc/string.h"
 #include "sys/bootmm.h"
 #include "sys/memlayout.h"
 #include "sys/mmu.h"
@@ -15,22 +13,50 @@
 #include "sys/vm.h"
 
 #include "drivers/acpi/cpu.h"
+#include "drivers/apic/apic.h"
+#include "drivers/console/console.h"
+#include "drivers/debug/kdebug.h"
 
-__thread struct cpu *cpu;
+#include "arch/amd64/x86.h"
 
-static inline void make_gate(uint32_t *idt, uint32_t n,
-                             void *kva,
-                             DescriptorPrivilegeLevel pl,
-                             ExceptionType trap)
+#include "lib/libc/string.h"
+
+__thread cpu_info *cpu;
+// TODO: lacking records of proc
+
+void vm::segment::init_segmentation(void)
 {
-    uintptr_t addr = (uintptr_t)kva;
-    n *= 4;
-    idt[n + 0] = (addr & 0xFFFF) | ((SEG_KCODE << 3) << 16);
-    idt[n + 1] = (addr & 0xFFFF0000) | trap | ((pl & 3) << 13); // P=1 DPL=pl
-    idt[n + 2] = addr >> 32;
-    idt[n + 3] = 0;
-}
+    uint32_t *tss = nullptr;
+    uint64_t *gdt = nullptr;
+    auto local_storage = vm::bootmm_alloc();
 
-void vm::segment::init_segment(void)
-{
+    memset(local_storage, 0, PAGE_SIZE);
+
+    gdt = reinterpret_cast<decltype(gdt)>(local_storage);
+
+    tss = reinterpret_cast<decltype(tss)>(local_storage + 1024);
+    tss[16] = 0x00680000;
+
+    wrmsr(0xC0000100, ((uintptr_t)local_storage) + ((PAGE_SIZE) / 2));
+
+    auto c = &cpus[local_apic::get_cpunum()];
+    c->local = local_storage;
+
+    cpu = c;
+    // TODO: lacking initialization of proc
+
+    auto tss_addr = (uintptr_t)tss;
+    gdt[0] = 0x0000000000000000;
+    gdt[SEG_KCODE] = 0x0020980000000000; // Code, DPL=0, R/X
+    gdt[SEG_UCODE] = 0x0020F80000000000; // Code, DPL=3, R/X
+    gdt[SEG_KDATA] = 0x0000920000000000; // Data, DPL=0, W
+    gdt[SEG_KCPU] = 0x0000000000000000;  // unused
+    gdt[SEG_UDATA] = 0x0000F20000000000; // Data, DPL=3, W
+    gdt[SEG_TSS + 0] = (0x0067) | ((tss_addr & 0xFFFFFF) << 16) |
+                       (0x00E9LL << 40) | (((tss_addr >> 24) & 0xFF) << 56);
+    gdt[SEG_TSS + 1] = (tss_addr >> 32);
+
+    lgdt(reinterpret_cast<segdesc *>(gdt), sizeof(uint64_t[8]));
+
+    ltr(SEG_TSS << 3);
 }

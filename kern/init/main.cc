@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-12-03 23:25:53
+ * @ Modified time: 2019-12-05 23:35:21
  * @ Description: the entry point for kernel in C++
  */
 
@@ -47,10 +47,10 @@ extern "C" [[noreturn]] void kmain() {
     local_apic::init_lapic();
 
     // install gdt
-    vm::init_segmentation();
+    vm::segment::init_segmentation();
 
     console::printf("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
-    
+
     for (;;)
         ;
 }

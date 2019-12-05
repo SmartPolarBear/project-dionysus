@@ -9,7 +9,7 @@ namespace vm
 namespace segment
 {
 // run once for each core.
-void init_segment(void);
+void init_segmentation(void);
 } // namespace segment
 
 // we use 2MB page, so there's in fact nothing as PTE, only PDE
@@ -21,8 +21,6 @@ void freevm(pde_t *pgdir);
 void switch_kernelvm(void);
 pde_t *setup_kernelvm(void);
 void init_kernelvm(void);
-
-void init_segmentation(void);
 } // namespace vm
 
 #endif // __INCLUDE_SYS_VM_H

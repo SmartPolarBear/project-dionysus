@@ -7,6 +7,20 @@
 
 #include "sys/types.h"
 
+// cpuid and corrosponding enumerations
+#include "arch/amd64/cpuid.h"
+
+// read and write specific registers
+#include "arch/amd64/regs.h"
+
+// read and write msr
+#include "arch/amd64/msr.h"
+
+// cpu features like halt and interrupt enability
+#include "arch/amd64/cpu.h"
+
+// port io and SIMD
+
 static inline uint8_t inb(uint16_t port)
 {
     uint8_t data = 0;
@@ -22,21 +36,6 @@ static inline void outb(uint16_t port, uint8_t data)
     asm volatile("out %0,%1"
                  :
                  : "a"(data), "d"(port));
-}
-
-static inline void hlt(void)
-{
-    asm volatile("hlt");
-}
-
-static inline void cli(void)
-{
-    asm volatile("cli");
-}
-
-static inline void sti(void)
-{
-    asm volatile("sti");
 }
 
 static inline void
@@ -66,39 +65,5 @@ stosl(void *addr, int data, int cnt)
                  : "memory", "cc");
 }
 
-static inline uintptr_t rcr2(void)
-{
-    uintptr_t val;
-    asm volatile("mov %%cr2,%0"
-                 : "=r"(val));
-    return val;
-}
-
-static inline void lcr3(uintptr_t val)
-{
-    asm volatile("mov %0,%%cr3"
-                 :
-                 : "r"(val));
-}
-
-static inline void wrmsr(uint64_t msr, uint64_t value)
-{
-    uint32_t low = value & 0xFFFFFFFF;
-    uint32_t high = value >> 32;
-    asm volatile(
-        "wrmsr"
-        :
-        : "c"(msr), "a"(low), "d"(high));
-}
-
-static inline uint64_t rdmsr(uint64_t msr)
-{
-    uint32_t low, high;
-    asm volatile(
-        "rdmsr"
-        : "=a"(low), "=d"(high)
-        : "c"(msr));
-    return ((uint64_t)high << 32) | low;
-}
 
 #endif // __INCLUDE_ARCH_X86_H

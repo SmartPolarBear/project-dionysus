@@ -1,6 +1,9 @@
+#include "drivers/acpi/cpu.h"
 #include "drivers/apic/apic.h"
 #include "drivers/apic/traps.h"
 #include "drivers/debug/kdebug.h"
+
+#include "arch/amd64/x86.h"
 
 volatile uint32_t *local_apic::lapic;
 
@@ -101,4 +104,32 @@ void local_apic::init_lapic(void)
 
     // Enable interrupts on the APIC (but not on the processor).
     write_lapic(TASK_PRIORITY, 0);
+}
+
+// when interrupts are enable
+// it can be dangerous to call this, getting short-lasting results
+// NOTICE: this can cause even tripple fault
+//          can be highly relavant to lock aquire and release
+size_t local_apic::get_cpunum(void)
+{
+    if (read_eflags() & EFLAG_IF)
+    {
+        KDEBUG_GENERALPANIC_WITH_RETURN_ADDR("local_apic::get_cpunum can't be called with interrupts enabled\n");
+    }
+
+    if (lapic == nullptr)
+    {
+        return 0;
+    }
+
+    auto id = lapic[ID] >> 24;
+    for (size_t i = 0; i < cpu_count; i++)
+    {
+        if (id == cpu[i].apicid)
+        {
+            return i;
+        }
+    }
+
+    return 0;
 }

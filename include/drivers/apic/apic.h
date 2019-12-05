@@ -7,7 +7,8 @@ namespace local_apic
 {
 extern volatile uint32_t *lapic;
 void init_lapic(void);
-} // namespace lapic
+size_t get_cpunum(void);
+} // namespace local_apic
 
 namespace io_apic
 {

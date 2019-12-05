@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 1970-01-01 08:00:00
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-12-01 19:20:37
+ * @ Modified time: 2019-12-05 23:23:37
  * @ Description:
  */
 
@@ -21,7 +21,7 @@
 // declared in cpu.h
 cpu_info cpus[CPU_COUNT_LIMIT] = {};
 // the numbers of cpu (cores) should be within the range of uint8_t
-uint8_t cpu_max_idx = 0;
+uint8_t cpu_count = 0;
 
 struct
 {
@@ -29,7 +29,7 @@ struct
     size_t id;
     uintptr_t interrupt_base;
 } ioapics[CPU_COUNT_LIMIT] = {};
-size_t ioapic_max_idx = 0;
+size_t ioapic_count = 0;
 
 using acpi::acpi_desc_header;
 using acpi::acpi_madt;
@@ -78,9 +78,9 @@ static void acpi_init_smp(const acpi_madt *madt)
                 break;
             }
 
-            console::printf("ACPI: CPU#%d ACPI ID %d\n", cpu_max_idx, lapic->apic_id);
+            console::printf("ACPI: CPU#%d ACPI ID %d\n", cpu_count, lapic->apic_id);
 
-            cpus[cpu_max_idx++] = {.id = cpu_max_idx, .apicid = lapic->apic_id};
+            cpus[cpu_count++] = {.id = cpu_count, .apicid = lapic->apic_id};
             break;
         }
         case acpi::MADT_ENTRY_IOAPIC:
@@ -89,9 +89,9 @@ static void acpi_init_smp(const acpi_madt *madt)
             KDEBUG_ASSERT(sizeof(*ioapic) == ioapic->length);
 
             console::printf("ACPI: IOAPIC#%d @ 0x%x ID=%d, BASE=%d\n",
-                            ioapic_max_idx, ioapic->addr, ioapic->id, ioapic->interrupt_base);
+                            ioapic_count, ioapic->addr, ioapic->id, ioapic->interrupt_base);
 
-            ioapics[ioapic_max_idx++] = {ioapic->addr, ioapic->id, ioapic->interrupt_base};
+            ioapics[ioapic_count++] = {ioapic->addr, ioapic->id, ioapic->interrupt_base};
             break;
         }
         default:
@@ -100,7 +100,7 @@ static void acpi_init_smp(const acpi_madt *madt)
     }
 
     // the kernel must run with at lease 2 CPUs
-    KDEBUG_ASSERT(cpu_max_idx >= 1);
+    KDEBUG_ASSERT(cpu_count >= 1);
 }
 
 // the common part of sdt initialize shared between acpi v1 and v2
