@@ -1,7 +1,7 @@
 TOP_SRC=..
 include $(TOP_SRC)/Makefile.mk
 
-SUBDIRS = diskimg
+SUBDIRS = diskimg vectors
 
 all: $(SUBDIRS)
 
