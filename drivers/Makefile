@@ -6,7 +6,7 @@ SUBDIRS = console debug acpi apic lock
 all: prepare $(SUBDIRS)
 
 prepare:
-	python3 $(BUILD)/tools/vectors/gvectors.py apic/vectors.S
+	$(PYTHON) $(GVECTORS_PY) $(CODEGEN_CONFIG)/gvectors/gvectors.json apic/vectors.S
 
 clean: 
 	for dir in $(SUBDIRS); do $(MAKE) -C $$dir clean; done

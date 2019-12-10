@@ -1,9 +1,6 @@
 TOP_SRC = .
 include $(TOP_SRC)/Makefile.mk
 
-CONFIG=$(TOP_SRC)/config
-
-BUILD_CONFIG=$(CONFIG)/build
 SUBDIRS = tools kern drivers
 
 BUILD=./build
@@ -44,10 +41,10 @@ $(BUILD)/kernel: $(BASEOBJS)
 
 
 $(BUILD)/disk.img: $(TOP_SRC)/disk.img $(BUILD)/kernel $(BUILD)/tools/diskimg/diskimg.py
-	python3 $(BUILD)/tools/diskimg/diskimg.py update $(TOP_SRC) $(BUILD_CONFIG)/hdimage.list
+	$(PYTHON) $(DISKIMG_PY) update $(TOP_SRC) $(BUILD_CONFIG)/hdimage.list
 
 $(BUILD)/disk.qcow2: $(BUILD)/disk.img $(BUILD)/tools/diskimg/diskimg.py
-	python3 $(BUILD)/tools/diskimg/diskimg.py convert $(TOP_SRC) qcow2 $< $@
+	$(PYTHON) $(DISKIMG_PY) convert $(TOP_SRC) qcow2 $< $@
 
 $(SUBDIRS):
 	$(MAKE) -C $@ $(MFLAGS) all

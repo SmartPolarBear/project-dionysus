@@ -1,0 +1,5 @@
+{
+    "trap_entry_name": "trap_entry",
+    "list_name_suffix": "vectors",
+    "item_name_prefix": "vector"
+}

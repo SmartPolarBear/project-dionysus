@@ -2,6 +2,10 @@ ifndef TOP_SRC
 TOP_SRC = .
 endif
 
+CONFIG=$(TOP_SRC)/config
+BUILD_CONFIG=$(CONFIG)/build
+CODEGEN_CONFIG=$(CONFIG)/codegen
+
 BUILD = $(TOP_SRC)/build
 MOUNTPOINT=$(BUILD)/mount/
 INCLUDE = $(TOP_SRC)/include
@@ -10,6 +14,10 @@ TOOLPREFIX =
 
 HOST_CXX = g++
 HOST_CC = gcc
+
+PYTHON=python3
+DISKIMG_PY=$(BUILD)/tools/diskimg/diskimg.py
+GVECTORS_PY=$(BUILD)/tools/vectors/gvectors.py
 
 CC = $(TOOLPREFIX)clang
 CXX = $(TOOLPREFIX)clang++
