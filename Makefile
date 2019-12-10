@@ -1,14 +1,16 @@
 TOP_SRC = .
 include $(TOP_SRC)/Makefile.mk
 
-SETS=$(TOP_SRC)/distrib/sets
+CONFIG=$(TOP_SRC)/config
+
+BUILD_CONFIG=$(CONFIG)/build
 SUBDIRS = tools kern drivers
 
 BUILD=./build
-BASELIST = $(shell cat $(SETS)/base.list)
+BASELIST = $(shell cat $(BUILD_CONFIG)/base.list)
 BASEOBJS = $(addprefix $(BUILD)/,$(BASELIST))
 
-BINLIST = $(shell cat $(SETS)/bin.list)
+BINLIST = $(shell cat $(BUILD_CONFIG)/bin.list)
 BINOBJS =  $(addprefix $(BUILD)/bin/,$(BINLIST))
 
 all: $(BUILD) $(SUBDIRS) $(BUILD)/kernel $(BUILD)/disk.img
@@ -42,7 +44,7 @@ $(BUILD)/kernel: $(BASEOBJS)
 
 
 $(BUILD)/disk.img: $(TOP_SRC)/disk.img $(BUILD)/kernel $(BUILD)/tools/diskimg/diskimg.py
-	python3 $(BUILD)/tools/diskimg/diskimg.py update $(TOP_SRC) $(SETS)/hdimage.list
+	python3 $(BUILD)/tools/diskimg/diskimg.py update $(TOP_SRC) $(BUILD_CONFIG)/hdimage.list
 
 $(BUILD)/disk.qcow2: $(BUILD)/disk.img $(BUILD)/tools/diskimg/diskimg.py
 	python3 $(BUILD)/tools/diskimg/diskimg.py convert $(TOP_SRC) qcow2 $< $@

@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-12-05 23:35:21
+ * @ Modified time: 2019-12-10 22:41:42
  * @ Description: the entry point for kernel in C++
  */
 
@@ -24,6 +24,12 @@
 #include "sys/vm.h"
 
 extern char end[]; // kernel.ld
+
+// temporary workround for vectors
+extern "C" void trapsentry()
+{
+    return;
+}
 
 // global entry of the kernel
 extern "C" [[noreturn]] void kmain() {
