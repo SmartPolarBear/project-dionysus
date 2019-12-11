@@ -41,4 +41,17 @@ static inline void lgdt(segdesc *p, size_t size)
                  : "r"(pd));
 }
 
+static inline void lidt(gatedesc *p, int size)
+{
+  volatile uint16_t pd[5];
+
+  pd[0] = size-1;
+  pd[1] = (uintptr_t)p;
+  pd[2] = (uintptr_t)p >> 16;
+  pd[3] = (uintptr_t)p >> 32;
+  pd[4] = (uintptr_t)p >> 48;
+
+  asm volatile("lidt (%0)" : : "r" (pd));
+}
+
 #endif // __INCLUDE_ARCH_AMD64_CPU_H

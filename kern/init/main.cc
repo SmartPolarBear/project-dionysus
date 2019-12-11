@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-12-10 23:38:13
+ * @ Modified time: 2019-12-11 23:26:41
  * @ Description: the entry point for kernel in C++
  */
 
@@ -11,6 +11,7 @@
 
 #include "drivers/acpi/acpi.h"
 #include "drivers/apic/apic.h"
+#include "drivers/apic/traps.h"
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 
@@ -51,6 +52,9 @@ extern "C" [[noreturn]] void kmain() {
 
     // initialize local apic
     local_apic::init_lapic();
+
+    // install trap vectors
+    trap::initialize_trap_vectors();
 
     // install gdt
     vm::segment::init_segmentation();

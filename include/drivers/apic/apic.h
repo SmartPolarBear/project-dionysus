@@ -3,6 +3,11 @@
 
 #include "sys/types.h"
 
+namespace trap
+{
+void initialize_trap_vectors(void);
+} // namespace ivector
+
 namespace local_apic
 {
 extern volatile uint32_t *lapic;

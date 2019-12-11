@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-22 13:11:10
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-11-24 17:06:10
+ * @ Modified time: 2019-12-11 23:24:37
  * @ Description:
  */
 
@@ -145,6 +145,20 @@ struct segdesc
     uint32_t db : 1;         // 0 = 16-bit segment, 1 = 32-bit segment
     uint32_t g : 1;          // Granularity: limit scaled by 4K when set
     uint32_t base_31_24 : 8; // High bits of segment base address
+};
+
+// Gate descriptors for interrupts and traps
+struct gatedesc
+{
+    uint32_t off_15_0 : 16;  // low 16 bits of offset in segment
+    uint32_t cs : 16;        // code segment selector
+    uint32_t args : 5;       // # args, 0 for interrupt/trap gates
+    uint32_t rsv1 : 3;       // reserved(should be zero I guess)
+    uint32_t type : 4;       // type(STS_{TG,IG32,TG32})
+    uint32_t s : 1;          // must be 0 (system)
+    uint32_t dpl : 2;        // descriptor(meaning new) privilege level
+    uint32_t p : 1;          // Present
+    uint32_t off_31_16 : 16; // high bits of offset in segment
 };
 
 #endif // __INCLUDE_SYS_MMU_H

@@ -19,5 +19,6 @@ drivers/acpi/acpi.o
 drivers/apic/lapic.o
 drivers/apic/ioapic.o
 drivers/apic/vectors.o
+drivers/apic/traps.o
 
 
