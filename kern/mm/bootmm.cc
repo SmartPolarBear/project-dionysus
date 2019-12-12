@@ -33,8 +33,8 @@ extern char end[]; //kernel.ld
 static void
 freerange(void *vstart, void *vend)
 {
-    char *p = (char *)PGROUNDUP((uintptr_t)vstart);
-    for (; p + BLOCKSIZE <= reinterpret_cast<char *>(PGROUNDDOWN((uintptr_t)vend)); p += BLOCKSIZE)
+    char *p = (char *)PAGE_ROUNDUP((uintptr_t)vstart);
+    for (; p + BLOCKSIZE <= reinterpret_cast<char *>(PAGE_ROUNDDOWN((uintptr_t)vend)); p += BLOCKSIZE)
     {
         vm::bootmm_free(p);
     }

@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-22 13:11:10
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-12-11 23:24:37
+ * @ Modified time: 2019-12-12 23:03:07
  * @ Description:
  */
 
@@ -67,7 +67,7 @@ enum DescriptorPrivilegeLevel
     DPL_USER = 0x3
 };
 
-enum Segment
+enum SegmentIndex
 {
     SEG_KCODE = 1,
     SEG_KDATA = 2,
@@ -77,18 +77,18 @@ enum Segment
     SEG_TSS = 6,
 };
 
-static inline constexpr size_t PGROUNDUP(size_t sz)
+static inline constexpr size_t PAGE_ROUNDUP(size_t addr)
 {
-    return (((sz) + ((size_t)PAGE_SIZE - 1)) & ~((size_t)(PAGE_SIZE - 1)));
+    return (((addr) + ((size_t)PAGE_SIZE - 1)) & ~((size_t)(PAGE_SIZE - 1)));
 }
 
-static inline constexpr size_t PGROUNDDOWN(size_t a)
+static inline constexpr size_t PAGE_ROUNDDOWN(size_t addr)
 {
-    return (((a)) & ~((size_t)(PAGE_SIZE - 1)));
+    return (((addr)) & ~((size_t)(PAGE_SIZE - 1)));
 }
 
 // Task state segment format
-struct taskstate
+struct machine_state
 {
     uint32_t link; // Old ts selector
     uint32_t esp0; // Stack pointers and segment selectors
@@ -130,7 +130,7 @@ struct taskstate
 };
 
 // Segment Descriptor
-struct segdesc
+struct gdt_segment
 {
     uint32_t lim_15_0 : 16;  // Low bits of segment limit
     uint32_t base_15_0 : 16; // Low bits of segment base address
@@ -148,7 +148,7 @@ struct segdesc
 };
 
 // Gate descriptors for interrupts and traps
-struct gatedesc
+struct idt_gate
 {
     uint32_t off_15_0 : 16;  // low 16 bits of offset in segment
     uint32_t cs : 16;        // code segment selector

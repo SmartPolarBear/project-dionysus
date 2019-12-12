@@ -172,7 +172,7 @@ static inline void initialize_phymem_parameters(void)
         physize = sysstd::max(physize, sysstd::min(entry->addr + entry->len, (unsigned long long)PHYMEMORY_SIZE));
     }
 
-    physize = PGROUNDDOWN(physize);
+    physize = PAGE_ROUNDDOWN(physize);
 
     KDEBUG_ASSERT(physize >= KERNEL_SIZE && physize <= PHYMEMORY_SIZE);
 

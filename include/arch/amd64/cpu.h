@@ -26,7 +26,7 @@ static inline void ltr(uint16_t sel)
                  : "r"(sel));
 }
 
-static inline void lgdt(segdesc *p, size_t size)
+static inline void lgdt(gdt_segment *p, size_t size)
 {
     volatile uint16_t pd[5] = {0};
 
@@ -41,7 +41,7 @@ static inline void lgdt(segdesc *p, size_t size)
                  : "r"(pd));
 }
 
-static inline void lidt(gatedesc *p, int size)
+static inline void lidt(idt_gate *p, int size)
 {
   volatile uint16_t pd[5];
 

@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-10-15 20:03:19
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-12-05 23:36:35
+ * @ Modified time: 2019-12-12 23:03:23
  * @ Description:
  */
 
@@ -56,7 +56,7 @@ void vm::segment::init_segmentation(void)
                        (0x00E9LL << 40) | (((tss_addr >> 24) & 0xFF) << 56);
     gdt[SEG_TSS + 1] = (tss_addr >> 32);
 
-    lgdt(reinterpret_cast<segdesc *>(gdt), sizeof(uint64_t[8]));
+    lgdt(reinterpret_cast<gdt_segment *>(gdt), sizeof(uint64_t[8]));
 
     ltr(SEG_TSS << 3);
 }

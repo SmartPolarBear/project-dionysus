@@ -33,5 +33,10 @@ void trap::initialize_trap_vectors(void)
 
     make_gate(idt, 64, reinterpret_cast<void *>(vectors[64]), 3, IT_TRAP);
 
-    lidt(reinterpret_cast<gatedesc *>(idt), PAGE_SIZE);
+    lidt(reinterpret_cast<idt_gate *>(idt), PAGE_SIZE);
+}
+
+extern "C" void trap_entry()
+{
+    return;
 }
