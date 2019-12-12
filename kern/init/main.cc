@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-12-12 22:54:04
+ * @ Modified time: 2019-12-12 23:05:43
  * @ Description: the entry point for kernel in C++
  */
 
@@ -41,17 +41,17 @@ extern "C" [[noreturn]] void kmain() {
     // initialize the paging
     vm::init_kernelvm();
 
+    // install gdt
+    vm::segment::init_segmentation();
+
+    // install trap vectors
+    trap::initialize_trap_vectors();
+
     // initialize acpi
     acpi::init_acpi();
 
     // initialize local apic
     local_apic::init_lapic();
-
-    // install trap vectors
-    trap::initialize_trap_vectors();
-
-    // install gdt
-    vm::segment::init_segmentation();
 
     console::printf("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
 
