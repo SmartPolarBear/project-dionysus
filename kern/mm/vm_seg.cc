@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-10-15 20:03:19
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-12-12 23:03:23
+ * @ Modified time: 2019-12-12 23:11:54
  * @ Description:
  */
 
@@ -30,14 +30,14 @@ void vm::segment::init_segmentation(void)
     uint64_t *gdt = nullptr;
     auto local_storage = vm::bootmm_alloc();
 
-    memset(local_storage, 0, PAGE_SIZE);
+    memset(local_storage, 0, vm::BOOTMM_BLOCKSIZE);
 
     gdt = reinterpret_cast<decltype(gdt)>(local_storage);
 
     tss = reinterpret_cast<decltype(tss)>(local_storage + 1024);
     tss[16] = 0x00680000;
 
-    wrmsr(0xC0000100, ((uintptr_t)local_storage) + ((PAGE_SIZE) / 2));
+    wrmsr(0xC0000100, ((uintptr_t)local_storage) + ((vm::BOOTMM_BLOCKSIZE) / 2));
 
     auto c = &cpus[local_apic::get_cpunum()];
     c->local = local_storage;

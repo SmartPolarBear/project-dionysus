@@ -24,7 +24,7 @@ static inline void make_gate(uint32_t *idt_head, uint32_t head_offset, void *kva
 void trap::initialize_trap_vectors(void)
 {
     uint32_t *idt = reinterpret_cast<decltype(idt)>(vm::bootmm_alloc());
-    memset(idt, 0, PAGE_SIZE);
+    memset(idt, 0, vm::BOOTMM_BLOCKSIZE);
 
     for (size_t i = 0; i < 256; i++)
     {
@@ -33,7 +33,7 @@ void trap::initialize_trap_vectors(void)
 
     make_gate(idt, 64, reinterpret_cast<void *>(vectors[64]), 3, IT_TRAP);
 
-    lidt(reinterpret_cast<idt_gate *>(idt), PAGE_SIZE);
+    lidt(reinterpret_cast<idt_gate *>(idt), vm::BOOTMM_BLOCKSIZE);
 }
 
 extern "C" void trap_entry()

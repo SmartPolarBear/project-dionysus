@@ -38,10 +38,10 @@ void multiboot::init_mbi(void)
     }
 
     auto primitive = P2V<decltype(mboot_info)>(mbi_structptr);
-    KDEBUG_ASSERT(primitive->total_size < PAGE_SIZE);
+    KDEBUG_ASSERT(primitive->total_size < vm::BOOTMM_BLOCKSIZE);
 
     mboot_info = reinterpret_cast<decltype(mboot_info)>(vm::bootmm_alloc());
-    memset(mboot_info, 0, PAGE_SIZE);
+    memset(mboot_info, 0, vm::BOOTMM_BLOCKSIZE);
     memmove(mboot_info, mbi_structptr, primitive->total_size);
 
     for (auto ptr : multiboot_tags)
