@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-22 13:11:10
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-12-12 23:03:07
+ * @ Modified time: 2019-12-13 23:26:05
  * @ Description:
  */
 
@@ -17,6 +17,9 @@
 
 constexpr size_t PDENTRIES_COUNT = 512;
 constexpr size_t PTENTRIES_COUNT = 512;
+
+constexpr size_t PAGE_SIZE = 4_KB;
+constexpr size_t PG_PS_SIZE = 2_MB;
 
 constexpr size_t P4_SHIFT = 39;
 constexpr size_t P3_SHIFT = 30;
@@ -38,8 +41,15 @@ static inline constexpr size_t P2X(size_t addr)
     return (addr >> P2_SHIFT) & PX_MASK;
 }
 
-constexpr size_t PAGE_SIZE = 4_KB;
-constexpr size_t PG_PS_SIZE = 2_MB;
+static inline constexpr size_t PAGE_ROUNDUP(size_t addr)
+{
+    return (((addr) + ((size_t)PAGE_SIZE - 1)) & ~((size_t)(PAGE_SIZE - 1)));
+}
+
+static inline constexpr size_t PAGE_ROUNDDOWN(size_t addr)
+{
+    return (((addr)) & ~((size_t)(PAGE_SIZE - 1)));
+}
 
 // Page table/directory entry flags
 enum PageEntryFlags
@@ -76,16 +86,6 @@ enum SegmentIndex
     SEG_UDATA = 5,
     SEG_TSS = 6,
 };
-
-static inline constexpr size_t PAGE_ROUNDUP(size_t addr)
-{
-    return (((addr) + ((size_t)PAGE_SIZE - 1)) & ~((size_t)(PAGE_SIZE - 1)));
-}
-
-static inline constexpr size_t PAGE_ROUNDDOWN(size_t addr)
-{
-    return (((addr)) & ~((size_t)(PAGE_SIZE - 1)));
-}
 
 // Task state segment format
 struct machine_state
