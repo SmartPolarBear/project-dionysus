@@ -1,6 +1,11 @@
 #if !defined(__INCLUDE_DIRVERS_APIC_TRAPS_H__)
 #define __INCLUDE_DIRVERS_APIC_TRAPS_H__
 
+namespace trap
+{
+void initialize_trap_vectors(void);
+} // namespace ivector
+
 // Processor-defined:
 enum processor_defined_traps
 {

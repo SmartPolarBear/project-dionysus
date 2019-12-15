@@ -1,7 +1,7 @@
+
 #if !defined(__INCLUDE_DRIVERS_ACPI_H)
 #define __INCLUDE_DRIVERS_ACPI_H
 
-#include "drivers/acpi/cpu.h"
 #include "sys/types.h"
 
 // Intel's advanced configuration and power interface
@@ -120,7 +120,13 @@ struct madt_ioapic
     uint32_t interrupt_base;
 } __attribute__((__packed__));
 
+
 void init_acpi(void);
+
+size_t get_ioapic_count(void);
+void get_ioapics(madt_ioapic res[], size_t bufsz);
+madt_ioapic get_first_ioapic(void);
+
 } // namespace acpi
 
 #endif // __INCLUDE_DRIVERS_ACPI_H

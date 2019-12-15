@@ -1,6 +1,7 @@
 #include "arch/amd64/x86.h"
 
 #include "drivers/apic/apic.h"
+#include "drivers/apic/traps.h"
 
 #include "sys/bootmm.h"
 #include "sys/mmu.h"

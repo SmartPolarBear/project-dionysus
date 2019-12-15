@@ -3,11 +3,6 @@
 
 #include "sys/types.h"
 
-namespace trap
-{
-void initialize_trap_vectors(void);
-} // namespace ivector
-
 namespace local_apic
 {
 extern volatile uint32_t *lapic;
@@ -17,8 +12,7 @@ size_t get_cpunum(void);
 
 namespace io_apic
 {
-    
-} // namespace ioapic
-
+void init_ioapic(void);
+} // namespace io_apic
 
 #endif // __INCLUDE_DRIVERS_APIC_H
