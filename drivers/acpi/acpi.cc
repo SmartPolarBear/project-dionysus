@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 1970-01-01 08:00:00
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-12-15 22:47:46
+ * @ Modified time: 2019-12-15 23:18:27
  * @ Description:
  */
 
@@ -45,7 +45,7 @@ static inline bool acpi_sdt_checksum(const acpi::acpi_desc_header *header)
     return sum == 0;
 }
 
-static void acpi_init_smp(const acpi_madt *madt)
+static void acpi_init_apic(const acpi_madt *madt)
 {
     KDEBUG_ASSERT(madt != nullptr);
     KDEBUG_ASSERT(madt->header.length >= sizeof(*madt));
@@ -121,7 +121,7 @@ static void sdt_common_initialize(const acpi_desc_header *sdtheader, const TEntr
 
     KDEBUG_ASSERT(madt != nullptr);
 
-    acpi_init_smp(madt);
+    acpi_init_apic(madt);
 }
 
 static void acpi_init_v1(const acpi_rsdp *rsdp)
