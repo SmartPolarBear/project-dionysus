@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-12-15 18:38:26
+ * @ Modified time: 2019-12-15 22:30:06
  * @ Description: the entry point for kernel in C++
  */
 
@@ -58,7 +58,7 @@ extern "C" [[noreturn]] void kmain() {
 
     //TODO: initialize start other cpu cores, then implement process manager.
 
-    console::printf("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
+    console::printf("Codename \"dionysus\" built on %s %s\nBoot OK!\n", __DATE__, __TIME__);
 
     for (;;)
         ;

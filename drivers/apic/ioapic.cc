@@ -112,8 +112,7 @@ Mask	            16	        Just like in the old PIC, you can temporary disable 
 Destination	        56 - 63	    This field is interpreted according to the Destination Format bit. If Physical destination is choosen, then this field is limited to bits 56 - 59 (only 16 CPUs addressable). You put here the APIC ID of the CPU that you want to receive the interrupt. TODO: Logical destination format...
 */
 
-struct redirection_entry
-{
+union redirection_entry {
     struct
     {
         uint64_t vector : 8;
@@ -132,6 +131,16 @@ struct redirection_entry
         uint32_t raw_low;
         uint32_t raw_high;
     } __attribute__((packed));
+};
+
+enum delievery_mode
+{
+    DLM_FIXED = 0,
+    DLM_LOWEST_PRIORITY = 1,
+    DLM_SMI = 2,
+    DLM_NMI = 4,
+    DLM_INIT = 5,
+    DLM_EXTINT = 7,
 };
 
 enum trigger_mode
@@ -168,17 +177,17 @@ void io_apic::init_ioapic(void)
     auto ioapic = acpi::get_first_ioapic();
     uintptr_t ioapic_addr = IO2V(ioapic.addr);
 
-    size_t max_intr = (read_ioapic(ioapic_addr, IOAPICVER) >> 16) & 0xFF;
-    size_t apicid = read_ioapic(ioapic_addr, IOAPICID) >> 24;
+    size_t redirection_count = (read_ioapic(ioapic_addr, IOAPICVER) >> 16) & 0b11111111;
+    size_t apicid = (read_ioapic(ioapic_addr, IOAPICID) >> 24) & 0b1111;
 
     KDEBUG_ASSERT(apicid == ioapic.id);
 
-    for (size_t i = 0; i <= max_intr; i++)
+    for (size_t i = 0; i <= redirection_count; i++)
     {
         redirection_entry redir =
             {
-                .vector = i,
-                .delievery_mode = 0b000,
+                .vector = 0,
+                .delievery_mode = DLM_FIXED,
                 .destination_mode = DTM_PHYSICAL,
                 .polarity = 0,
                 .trigger_mode = TRG_EDGE,
@@ -186,13 +195,9 @@ void io_apic::init_ioapic(void)
                 .destination_id = 0,
             };
 
+        constexpr auto a = sizeof(decltype(redir));
+
         write_ioapic(ioapic_addr, IOREDTBL_BASE + i * 2 + 0, redir.raw_low);
         write_ioapic(ioapic_addr, IOREDTBL_BASE + i * 2 + 1, redir.raw_high);
     }
-
-    // verify the ESR for errors
-
-    
-
-    console::printf("apicid=%d,max intrrupt=%d\n", apicid, max_intr);
 };
