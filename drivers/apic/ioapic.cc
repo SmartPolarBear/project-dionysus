@@ -10,87 +10,6 @@
 #include "sys/memlayout.h"
 #include "sys/mmu.h"
 
-namespace pic8259A
-{
-enum controllers
-{
-    IO_PIC1 = 0x20,
-    IO_PIC2 = 0xA0
-};
-
-constexpr size_t IRQ_SLAVE = 2;
-
-static uint16_t irqmask = 0xFFFF & ~(1 << IRQ_SLAVE);
-
-static inline void pic_setmask(uint16_t mask)
-{
-    irqmask = mask;
-    outb(IO_PIC1 + 1, mask);
-    outb(IO_PIC2 + 1, mask >> 8);
-}
-
-static inline void pic_enable(int irq)
-{
-    pic_setmask(irqmask & ~(1 << irq));
-}
-
-void initialize_pic(void)
-{
-    // mask all interrupts
-    outb(IO_PIC1 + 1, 0xFF);
-    outb(IO_PIC2 + 1, 0xFF);
-
-    // Set up master (8259A-1)
-
-    // ICW1:  0001g0hi
-    //    g:  0 = edge triggering, 1 = level triggering
-    //    h:  0 = cascaded PICs, 1 = master only
-    //    i:  0 = no ICW4, 1 = ICW4 required
-    outb(IO_PIC1, 0x11);
-
-    // ICW2:  Vector offset
-    outb(IO_PIC1 + 1, TRAP_IRQ0);
-
-    // ICW3:  (master PIC) bit mask of IR lines connected to slaves
-    //        (slave PIC) 3-bit # of slave's connection to master
-    outb(IO_PIC1 + 1, 1 << IRQ_SLAVE);
-
-    // ICW4:  000nbmap
-    //    n:  1 = special fully nested mode
-    //    b:  1 = buffered mode
-    //    m:  0 = slave PIC, 1 = master PIC
-    //      (ignored when b is 0, as the master/slave role
-    //      can be hardwired).
-    //    a:  1 = Automatic EOI mode
-    //    p:  0 = MCS-80/85 mode, 1 = intel x86 mode
-    outb(IO_PIC1 + 1, 0x3);
-
-    // Set up slave (8259A-2)
-    outb(IO_PIC2, 0x11);              // ICW1
-    outb(IO_PIC2 + 1, TRAP_IRQ0 + 8); // ICW2
-    outb(IO_PIC2 + 1, IRQ_SLAVE);     // ICW3
-    // NB Automatic EOI mode doesn't tend to work on the slave.
-    // Linux source code says it's "to be investigated".
-    outb(IO_PIC2 + 1, 0x3); // ICW4
-
-    // OCW3:  0ef01prs
-    //   ef:  0x = NOP, 10 = clear specific mask, 11 = set specific mask
-    //    p:  0 = no polling, 1 = polling mode
-    //   rs:  0x = NOP, 10 = read IRR, 11 = read ISR
-    outb(IO_PIC1, 0x68); // clear specific mask
-    outb(IO_PIC1, 0x0a); // read IRR by default
-
-    outb(IO_PIC2, 0x68); // OCW3
-    outb(IO_PIC2, 0x0a); // OCW3
-
-    if (irqmask != 0xFFFF)
-    {
-        pic_setmask(irqmask);
-    }
-}
-
-} // namespace pic8259A
-
 enum ioapic_regs
 {
     IOAPICID = 0x00,
@@ -170,6 +89,7 @@ uint32_t read_ioapic(const uintptr_t apic_base, const uint8_t reg)
     // return the data from IOWIN
     return *(volatile uint32_t *)(apic_base + 0x10);
 }
+
 void io_apic::init_ioapic(void)
 {
     pic8259A::initialize_pic();
@@ -190,7 +110,7 @@ void io_apic::init_ioapic(void)
     {
         redirection_entry redir =
             {
-                .vector = 0,
+                .vector = TRAP_IRQ0 + i,
                 .delievery_mode = DLM_FIXED,
                 .destination_mode = DTM_PHYSICAL,
                 .polarity = 0,
@@ -199,9 +119,27 @@ void io_apic::init_ioapic(void)
                 .destination_id = 0,
             };
 
-        constexpr auto a = sizeof(decltype(redir));
 
         write_ioapic(ioapic_addr, IOREDTBL_BASE + i * 2 + 0, redir.raw_low);
         write_ioapic(ioapic_addr, IOREDTBL_BASE + i * 2 + 1, redir.raw_high);
     }
 };
+
+void io_apic::enable_trap(uint32_t trapnum, uint32_t cpu_acpi_id_rounted)
+{
+    redirection_entry redir_new = {
+        .vector = TRAP_IRQ0 + trapnum,
+        .delievery_mode = DLM_FIXED,
+        .destination_mode = DTM_PHYSICAL,
+        .polarity = 0,
+        .trigger_mode = TRG_EDGE,
+        .mask = true,
+        .destination_id = cpu_acpi_id_rounted,
+    };
+    auto ioapic = acpi::get_first_ioapic();
+
+    uintptr_t ioapic_addr = IO2V(ioapic.addr);
+
+    write_ioapic(ioapic_addr, IOREDTBL_BASE + trapnum * 2 + 0, redir_new.raw_low);
+    write_ioapic(ioapic_addr, IOREDTBL_BASE + trapnum * 2 + 1, redir_new.raw_high);
+}

@@ -127,6 +127,8 @@ size_t get_ioapic_count(void);
 void get_ioapics(madt_ioapic res[], size_t bufsz);
 madt_ioapic get_first_ioapic(void);
 
+//TODO: instead of copy madt_lapic to cpus array, directly provide interface to get them
+
 } // namespace acpi
 
 #endif // __INCLUDE_DRIVERS_ACPI_H
