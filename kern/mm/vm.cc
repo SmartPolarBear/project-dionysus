@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-10-13 22:46:26
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-12-05 23:34:03
+ * @ Modified time: 2019-12-16 23:34:11
  * @ Description: Implement Intel's 4-level paging and the modification of page tables, etc.
  */
 
@@ -70,7 +70,7 @@ struct
                 .vstart = PHYREMAP_VIRTUALBASE,
                 .permissions = PG_W}};
 
-constexpr auto kmem_map_size = (sizeof(kmem_map) / sizeof(kmem_map[0]));
+[[maybe_unused]] constexpr auto kmem_map_size = (sizeof(kmem_map) / sizeof(kmem_map[0]));
 
 struct
 {
@@ -193,6 +193,7 @@ void vm::switch_kernelvm()
 pde_t *vm::setup_kernelvm(void)
 {
     KDEBUG_NOT_IMPLEMENTED;
+    return nullptr;
 }
 
 void vm::init_kernelvm(void)
@@ -225,7 +226,7 @@ void vm::init_kernelvm(void)
     switch_kernelvm();
 }
 
-
 void vm::freevm(pde_t *pgdir)
 {
+    [[maybe_unused]]auto warning_bypass=pgdir;
 }
