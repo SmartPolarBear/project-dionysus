@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 1970-01-01 08:00:00
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-12-16 22:59:19
+ * @ Modified time: 2019-12-16 23:21:38
  * @ Description:
  */
 
@@ -50,7 +50,7 @@ static void acpi_init_apic(const acpi_madt *madt)
     KDEBUG_ASSERT(madt != nullptr);
     KDEBUG_ASSERT(madt->header.length >= sizeof(*madt));
 
-    local_apic::lapic = IO2V<decltype(local_apic::lapic)>((void *)madt->lapic_addr_phys);
+    local_apic::lapic = IO2V<decltype(local_apic::lapic)>((void *)static_cast<uintptr_t>(madt->lapic_addr_phys));
 
     const madt_entry_header *begin = reinterpret_cast<decltype(begin)>(madt->table),
                             *end = reinterpret_cast<decltype(begin)>(madt->table + madt->header.length - sizeof(*madt));
@@ -77,7 +77,8 @@ static void acpi_init_apic(const acpi_madt *madt)
 
             console::printf("ACPI: CPU#%d ACPI ID %d\n", cpu_count, lapic->apic_id);
 
-            cpus[cpu_count++] = {.id = cpu_count, .apicid = lapic->apic_id};
+            cpus[cpu_count] = {.id = cpu_count, .apicid = lapic->apic_id};
+            cpu_count++;
             break;
         }
         case acpi::MADT_ENTRY_IOAPIC:
@@ -88,7 +89,8 @@ static void acpi_init_apic(const acpi_madt *madt)
             console::printf("ACPI: IOAPIC#%d @ 0x%x ID=%d, BASE=%d\n",
                             ioapic_count, ioapic->addr, ioapic->id, ioapic->interrupt_base);
 
-            ioapics[ioapic_count++] = madt_ioapic{*ioapic};
+            ioapics[ioapic_count] = madt_ioapic{*ioapic};
+            ioapic_count++;
             break;
         }
         default:
