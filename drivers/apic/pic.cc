@@ -27,8 +27,8 @@ static inline void pic_setmask(uint16_t mask)
     outb(IO_PIC2 + 1, mask >> 8);
 }
 
-static inline void pic_enable(int irq)
-{
+// for we never use 8259A pic, this is deprecated
+[[deprecated]] void pic_enable(int irq) {
     pic_setmask(irqmask & ~(1 << irq));
 }
 
