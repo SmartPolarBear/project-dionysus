@@ -8,7 +8,7 @@ namespace multiboot
 {
 
 using multiboot_tag_ptr = multiboot_tag *;
-using multiboot_tag_const_readonly_ptr = const multiboot_tag_ptr const;
+using multiboot_tag_const_readonly_ptr = const multiboot_tag_ptr;
 
 template <typename T>
 using typed_mboottag_ptr = T *;
