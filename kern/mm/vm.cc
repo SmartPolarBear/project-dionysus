@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-10-13 22:46:26
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-12-16 23:34:11
+ * @ Modified time: 2019-12-16 23:35:44
  * @ Description: Implement Intel's 4-level paging and the modification of page tables, etc.
  */
 
@@ -228,5 +228,5 @@ void vm::init_kernelvm(void)
 
 void vm::freevm(pde_t *pgdir)
 {
-    [[maybe_unused]]auto warning_bypass=pgdir;
+    [[maybe_unused]] auto warning_bypass = pgdir;
 }

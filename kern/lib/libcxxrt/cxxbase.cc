@@ -8,7 +8,7 @@ extern "C"
     void __cxa_finalize(void *);
     void __cxa_pure_virtual();
     void __stack_chk_guard_setup();
-    void __attribute__((noreturn)) __stack_chk_fail();
+    [[noreturn]] void __stack_chk_fail();
     void _Unwind_Resume();
 }
 
@@ -55,8 +55,7 @@ void __stack_chk_guard_setup()
 
 struct IntRegs;
 
-void __attribute__((noreturn)) __stack_chk_fail()
-{
+[[noreturn]] void __stack_chk_fail() {
     KDEBUG_GENERALPANIC("Buffer Overflow (SSP Signal)\n");
     for (;;)
         ;
