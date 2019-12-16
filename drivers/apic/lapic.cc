@@ -48,15 +48,15 @@ enum INTRRUPT_FLAGS
     INTERRUPT_MASKED = 0x00010000
 };
 
-constexpr size_t TICR = 0x0380 / 4; // Timer Initial Count
-constexpr size_t TCCR = 0x0390 / 4; // Timer Current Count
-constexpr size_t TDCR = 0x03E0 / 4; // Timer Divide Configuration
+constexpr size_t TICR = 0x0380 / 4;                         // Timer Initial Count
+constexpr size_t TCCR __attribute__((unused)) = 0x0390 / 4; // Timer Current Count
+constexpr size_t TDCR = 0x03E0 / 4;                         // Timer Divide Configuration
 constexpr size_t TIC_DEFUALT_VALUE = 10000000;
 
 static void write_lapic(size_t index, uint32_t value)
 {
     local_apic::lapic[index] = value;
-    auto val = local_apic::lapic[ID]; // wait for finish by reading
+    auto val __attribute__((unused)) = local_apic::lapic[ID]; // wait for finish by reading
 }
 
 void local_apic::init_lapic(void)
