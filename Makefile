@@ -23,6 +23,9 @@ clean:
 qemu: all 
 	$(QEMU_EXE) -serial mon:stdio $(QEMUOPTS)
 
+qemu-whpx: all 
+	$(QEMU_EXE) -serial mon:stdio -accel whpx $(QEMUOPTS)
+
 vbox: all $(BUILD)/disk.qcow2
 	$(VBOXMANAGE) $(VBOXMANAGE_FALGS) $(VBOX_MACHINENAME)
 
@@ -57,4 +60,4 @@ $(MOUNTPOINT):
 	@echo "[MKDIR] $(MOUNTPOINT)" 
 	@mkdir -p $@
 
-.PHONY: all clean qemu debug debug4vsc $(SUBDIRS) $(BUILD) $(MOUNTPOINT)
+.PHONY: all clean qemu qemu-whpx debug debug4vsc $(SUBDIRS) $(BUILD) $(MOUNTPOINT)

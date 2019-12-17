@@ -17,6 +17,7 @@ void *__stack_chk_guard(0);
 
 namespace __cxxabiv1
 {
+    
 __extension__ typedef int __guard __attribute__((mode(__DI__)));
 
 extern "C"
@@ -25,6 +26,7 @@ extern "C"
     void __cxa_guard_release(__guard *Guard) { *(char *)Guard = 1; }
     void __cxa_guard_abort(__guard *) {}
 }
+
 } // namespace __cxxabiv1
 
 int __cxa_atexit(void (*)(void *), void *, void *)

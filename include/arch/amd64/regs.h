@@ -53,6 +53,32 @@ enum eflags_value
     EFLAG_ID = 0x00200000,        // ID flag
 };
 
+struct trap_info
+{
+    uint64_t rax; // eax in x86
+    uint64_t rbx;
+    uint64_t rcx;
+    uint64_t rdx;
+    uint64_t rbp;
+    uint64_t rsi;
+    uint64_t rdi;
+    uint64_t r8;
+    uint64_t r9;
+    uint64_t r10;
+    uint64_t r11;
+    uint64_t r12;
+    uint64_t r13;
+    uint64_t r14;
+    uint64_t r15;
 
+    uint64_t trapno;
+    uint64_t err;
+
+    uint64_t rip; // eip in x86
+    uint64_t cs;
+    uint64_t rflags; // eflags in x86
+    uint64_t rsp;    // esp in x86
+    uint64_t ss;     // ds in x86
+};
 
 #endif // __INCLUDE_ARCH_AMD64_REGS_H

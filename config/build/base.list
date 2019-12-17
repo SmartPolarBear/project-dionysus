@@ -20,8 +20,9 @@ drivers/apic/lapic.o
 drivers/apic/ioapic.o
 drivers/apic/vectors.o
 drivers/apic/traps.o
+drivers/apic/trapentry_asm.o
 drivers/apic/pic.o
-drivers/apic/timer.o
+drivers/apic_timer/timer.o
 
 
 

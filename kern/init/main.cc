@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-12-16 23:03:29
+ * @ Modified time: 2019-12-17 23:07:17
  * @ Description: the entry point for kernel in C++
  */
 
@@ -12,6 +12,7 @@
 #include "drivers/acpi/acpi.h"
 #include "drivers/apic/apic.h"
 #include "drivers/apic/traps.h"
+#include "drivers/apic_timer/timer.h"
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 
@@ -52,6 +53,9 @@ extern "C" [[noreturn]] void kmain() {
 
     // initialize local APIC
     local_apic::init_lapic();
+
+    // initialize apic timer
+    timer::init_apic_timer();
 
     // initialize I/O APIC
     io_apic::init_ioapic();

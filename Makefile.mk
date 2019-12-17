@@ -50,7 +50,7 @@ CPUS = 4
 
 QEMUOPTS =  -drive file=$(BUILD)/disk.img,index=0,media=disk,format=raw -cpu max
 #QEMUOPTS +=  -accel whpx
-QEMUOPTS += -smp $(CPUS) -m 2G $(QEMUEXTRA)
+QEMUOPTS += -smp $(CPUS) -m 8G $(QEMUEXTRA)
 
 
 VBOX_MACHINENAME = Test
