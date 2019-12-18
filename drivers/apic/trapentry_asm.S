@@ -1,6 +1,6 @@
 .globl trap_entry
 trap_entry:
-  # Build trap frame.
+  # Build a trap_info structure.
   push %r15
   push %r14
   push %r13
@@ -20,7 +20,8 @@ trap_entry:
   mov  %rsp, %rdi  # frame in arg1
   call trap_body
 
-  # Return falls through to trapret...
+  # Return falls through to trap_ret
+  
 .globl trap_ret
 trap_ret:
   pop %rax

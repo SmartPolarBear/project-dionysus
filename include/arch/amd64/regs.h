@@ -55,7 +55,7 @@ enum eflags_value
 
 struct trap_info
 {
-    uint64_t rax; // eax in x86
+    uint64_t rax;       // eax in x86
     uint64_t rbx;
     uint64_t rcx;
     uint64_t rdx;
@@ -74,11 +74,11 @@ struct trap_info
     uint64_t trapno;
     uint64_t err;
 
-    uint64_t rip; // eip in x86
+    uint64_t rip;       // eip in x86
     uint64_t cs;
-    uint64_t rflags; // eflags in x86
-    uint64_t rsp;    // esp in x86
-    uint64_t ss;     // ds in x86
+    uint64_t rflags;    // eflags in x86
+    uint64_t rsp;       // esp in x86
+    uint64_t ss;        // ds in x86
 };
 
 #endif // __INCLUDE_ARCH_AMD64_REGS_H
