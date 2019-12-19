@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-12-17 23:07:17
+ * @ Modified time: 2019-12-19 23:36:53
  * @ Description: the entry point for kernel in C++
  */
 
@@ -26,6 +26,11 @@
 #include "sys/vm.h"
 
 extern char end[]; // kernel.ld
+
+extern "C" void ap_enter(void)
+{
+    return;
+}
 
 // global entry of the kernel
 extern "C" [[noreturn]] void kmain() {

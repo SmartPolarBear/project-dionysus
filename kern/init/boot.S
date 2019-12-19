@@ -1,5 +1,10 @@
 #include "boot/multiboot2.h"
 
+
+# !!This file, more than being used by the grub2 bootloader, is also used for booting APs
+# entry32mp and entry64mp is highly related to the AP booting
+
+
 .code32
 .global mboot_header
 .global mboot_entry
@@ -171,8 +176,8 @@ entry64high:
     mov %ax, %gs
 
 # check to see if we're booting a secondary core
-    #test %ebx, %ebx
-    #jnz entry64mp
+    test %ebx, %ebx
+    # jnz entry64mp
 
 # setup initial stack
     mov $0xFFFFFFFF80010000, %rax
@@ -193,9 +198,9 @@ spin:
 
 entry64mp:
 # obtain kstack from data block before entryother
-    #mov $0x7000, %rax
-    #mov -16(%rax), %rsp
-    #jmp mpenter
+    mov $0x7000, %rax
+    mov -16(%rax), %rsp
+    jmp ap_enter
 
 .global wrmsr
 wrmsr:
