@@ -60,8 +60,10 @@ mboot_header_end:
 
 
 mboot_entry:
+
 // temporary stack for mbi
     movl $0x10000,%esp
+
 // push mbi address
     pushl %ebx
     pushl %eax
@@ -103,8 +105,10 @@ ptbl_loop:
 // When secondary processors boot, they'll call through
 // entry32mp (from entryother), but with a nonzero ebx.
 // We'll reuse these bootstrap pagetables and GDT.
+
     xor %ebx, %ebx
 
+// !!the code below may ALSO be excuted for booting APs
 .global entry32mp
 entry32mp:
 
@@ -127,12 +131,12 @@ entry32mp:
 
 // if %ebx isn't zero, it's booting APs
 // therefore we don't pop multiboot structures
-    cmpl %ebx,$0x0
+    cmpl $0x0, %ebx
     jne skip_mboot_pop
 
 // pop mbi & magic number
     popl %ecx
-    popl %ebx
+    popl %edx
 
 skip_mboot_pop:
 
@@ -163,10 +167,16 @@ gdt64_end:
 .align 16
 .code64
 entry64low:
-// save the mbi & the magic number
-    movq %rbx, mbi_structptr
+
+// check whether it's booting APs, skip saving mbi if it is.
+    cmpl $0x0, %ebx
+    jne skip_save_mbi
+
+// else save the mbi & the magic number
+    movq %rdx, mbi_structptr
     movq %rcx, mbi_magicnum
 
+skip_save_mbi:
     movq $entry64high, %rax
     jmp *%rax
 
@@ -182,10 +192,11 @@ entry64high:
     mov %ax, %fs
     mov %ax, %gs
 
-// check to see if we're booting a secondary core
-    test %ebx, %ebx
-    # jnz entry64mp
+// check to see if it's booting an AP
+    test %rbx, %rbx
+    jnz entry64mp
 
+// else continue the kernel initialization
 // setup initial stack
     mov $0xFFFFFFFF80010000, %rax
     mov %rax, %rsp
