@@ -135,6 +135,7 @@ entry32mp:
     jne skip_mboot_pop
 
 // pop mbi & magic number
+// using ecx and edx instead of eax and ebx to avoid conflict with AP booting
     popl %ecx
     popl %edx
 
@@ -169,12 +170,16 @@ gdt64_end:
 entry64low:
 
 // check whether it's booting APs, skip saving mbi if it is.
-    cmpl $0x0, %ebx
+    cmpq $0x0, %rbx
     jne skip_save_mbi
 
 // else save the mbi & the magic number
     movq %rdx, mbi_structptr
     movq %rcx, mbi_magicnum
+
+//  clear the registers for mbi saving
+    xorq %rcx,%rcx
+    xorq %rdx,%rdx
 
 skip_save_mbi:
     movq $entry64high, %rax
