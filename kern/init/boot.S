@@ -1,8 +1,8 @@
 #include "boot/multiboot2.h"
 
 
-# !!This file, more than being used by the grub2 bootloader, is also used for booting APs
-# entry32mp and entry64mp is highly related to the AP booting
+// !!This file, more than being used by the grub2 bootloader, is also used for booting APs
+// entry32mp and entry64mp is highly related to the AP booting
 
 
 .code32
@@ -60,35 +60,35 @@ mboot_header_end:
 
 
 mboot_entry:
-# temporary stack for mbi
+// temporary stack for mbi
     movl $0x10000,%esp
-# push mbi address
+// push mbi address
     pushl %ebx
     pushl %eax
 
-# zero 4 pages for our bootstrap page tables
+// zero 4 pages for our bootstrap page tables
     xor %eax, %eax
     mov $0x1000, %edi
     mov $0x5000, %ecx
     rep stosb
 
-# P4ML[0] -> 0x2000 (PDPT-A)
+// P4ML[0] -> 0x2000 (PDPT-A)
     mov $(0x2000 | 3), %eax
     mov %eax, 0x1000
 
-# P4ML[511] -> 0x3000 (PDPT-B)
+// P4ML[511] -> 0x3000 (PDPT-B)
     mov $(0x3000 | 3), %eax
     mov %eax, 0x1FF8
 
-# PDPT-A[0] -> 0x4000 (PD)
+// PDPT-A[0] -> 0x4000 (PD)
     mov $(0x4000 | 3), %eax
     mov %eax, 0x2000
 
-# PDPT-B[510] -> 0x4000 (PD)
+// PDPT-B[510] -> 0x4000 (PD)
     mov $(0x4000 | 3), %eax
     mov %eax, 0x3FF0
 
-# PD[0..511] -> 0..1022MB
+// PD[0..511] -> 0..1022MB
     mov $0x83, %eax
     mov $0x4000, %ebx
     mov $512, %ecx
@@ -99,43 +99,50 @@ ptbl_loop:
     dec %ecx
     jnz ptbl_loop
 
-# Clear ebx for initial processor boot.
-# When secondary processors boot, they'll call through
-# entry32mp (from entryother), but with a nonzero ebx.
-# We'll reuse these bootstrap pagetables and GDT.
+// Clear ebx for initial processor boot.
+// When secondary processors boot, they'll call through
+// entry32mp (from entryother), but with a nonzero ebx.
+// We'll reuse these bootstrap pagetables and GDT.
     xor %ebx, %ebx
 
 .global entry32mp
 entry32mp:
 
-# CR3 -> 0x1000 (P4ML)
+// CR3 -> 0x1000 (P4ML)
     mov $0x1000, %eax
     mov %eax, %cr3
 
     lgdt (gdtr64 - mboot_header + mboot_load_addr)
 
-# Enable PAE - CR4.PAE=1
+// Enable PAE - CR4.PAE=1
     mov %cr4, %eax
     bts $5, %eax
     mov %eax, %cr4
 
-# enable long mode - EFER.LME=1
+// enable long mode - EFER.LME=1
     mov $0xc0000080, %ecx
     rdmsr
     bts $8, %eax
     wrmsr
 
-# push mbi & magic number
+// if %ebx isn't zero, it's booting APs
+// therefore we don't pop multiboot structures
+    cmpl %ebx,$0x0
+    jne skip_mboot_pop
+
+// pop mbi & magic number
     popl %ecx
     popl %ebx
 
-# enable paging
+skip_mboot_pop:
+
+// enable paging
     mov %cr0, %eax
     bts $31, %eax
     mov %eax, %cr0
 
 
-# shift to 64bit segment
+// shift to 64bit segment
     ljmp $8,$(entry64low - mboot_header + mboot_load_addr)
 
 .align 16
@@ -156,7 +163,7 @@ gdt64_end:
 .align 16
 .code64
 entry64low:
-# save the mbi & the magic number
+// save the mbi & the magic number
     movq %rbx, mbi_structptr
     movq %rcx, mbi_magicnum
 
@@ -167,7 +174,7 @@ entry64low:
 _start:
 entry64high:
 
-# ensure data segment registers are sane
+// ensure data segment registers are sane
     xor %rax, %rax
     mov %ax, %ss
     mov %ax, %ds
@@ -175,39 +182,39 @@ entry64high:
     mov %ax, %fs
     mov %ax, %gs
 
-# check to see if we're booting a secondary core
+// check to see if we're booting a secondary core
     test %ebx, %ebx
     # jnz entry64mp
 
-# setup initial stack
+// setup initial stack
     mov $0xFFFFFFFF80010000, %rax
     mov %rax, %rsp
 
-# call global constructors
+// call global constructors
     call call_ctors
 
-# enter main()
+// enter main()
     call kmain
 
-# call global destructors
+// call global destructors
     call call_dtors
 
-# kernel shouldn't return here normally
+// kernel shouldn't return here
 spin:
   jmp spin
 
 entry64mp:
-# obtain kstack from data block before entryother
+// obtain kstack from data block before entryother
     mov $0x7000, %rax
     mov -16(%rax), %rsp
     jmp ap_enter
 
 .global wrmsr
 wrmsr:
-    mov %rdi, %rcx     # arg0 -> msrnum
-    mov %rsi, %rax     # val.low -> eax
+    mov %rdi, %rcx     // arg0 -> msrnum
+    mov %rsi, %rax     // val.low -> eax
     shr $32, %rsi
-    mov %rsi, %rdx     # val.high -> edx
+    mov %rsi, %rdx     // val.high -> edx
     wrmsr
     retq
 
