@@ -15,6 +15,7 @@ drivers/console/console.o
 drivers/console/uart.o
 drivers/debug/kdebug.o
 drivers/lock/spinlock.o
+drivers/acpi/ap.o
 drivers/acpi/acpi.o
 drivers/apic/lapic.o
 drivers/apic/ioapic.o
