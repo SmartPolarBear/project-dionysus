@@ -4,13 +4,17 @@ include $(TOP_SRC)/Makefile.mk
 SUBDIRS = tools kern drivers
 
 BUILD=./build
+
 BASELIST = $(shell cat $(BUILD_CONFIG)/base.list)
 BASEOBJS = $(addprefix $(BUILD)/,$(BASELIST))
+
+KERNBINLIST= $(shell cat $(BUILD_CONFIG)/kernbin.list)
+KERNBINOBJS= $(addprefix $(BUILD)/,$(KERNBINLIST))
 
 BINLIST = $(shell cat $(BUILD_CONFIG)/bin.list)
 BINOBJS =  $(addprefix $(BUILD)/bin/,$(BINLIST))
 
-all: $(BUILD) $(SUBDIRS) $(BUILD)/ap_boot $(BUILD)/kernel $(BUILD)/disk.img
+all: $(BUILD) $(SUBDIRS) $(KERNBINOBJS) $(BUILD)/kernel $(BUILD)/disk.img
 
 BUILDDISTDIRS = $(shell ls -d $(BUILD)/*/)
 clean:
@@ -37,11 +41,7 @@ debug: all
 debug4vsc: all
 	@$(QEMU) -serial mon:stdio $(QEMUOPTS) -S $(QEMUGDB) &
 
-
-$(BUILD)/ap_boot: $(BUILD)/kern/init/ap_boot.o
-	$(LD) $(LDFLAGS) --omagic -e start -Ttext 0x7000 -o $(BUILD)/ap_boot.o $^
-	$(OBJCOPY) -S -O binary -j .text $(BUILD)/ap_boot.o $(BUILD)/ap_boot
-	$(OBJDUMP) -S $(BUILD)/ap_boot.o > $(BUILD)/ap_boot.asm
+include $(TOP_SRC)/Makefile.kernbin.mk
 	
 $(BUILD)/kernel: $(BASEOBJS)
 	$(LD) $(LDFLAGS) -Tkern/kernel.ld  -o $@ $^ -b binary $(BUILD)/ap_boot
