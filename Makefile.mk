@@ -26,7 +26,7 @@ OBJCOPY = $(TOOLPREFIX)objcopy
 OBJDUMP = $(TOOLPREFIX)objdump
 GDB=gdb
 
-LDFLAGS=-z max-page-size=0x1000 -no-pie -nostdlib -Tkern/kernel.ld 
+LDFLAGS=-z max-page-size=0x1000 -no-pie -nostdlib
 
 SHAREDFLAGS = -mno-sse -fno-exceptions -fno-rtti -ffreestanding -nostdlib -fno-builtin -Wall -Wextra -mcmodel=large -mno-red-zone
 SHAREDFLAGS += -I$(TOP_SRC)/include

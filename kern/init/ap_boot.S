@@ -1,7 +1,8 @@
+#include "sys/mmu.h"
 
 .code16
-.globl codehead
-codehead:
+.globl start
+start:
     cli
 
     xorw    %ax,%ax

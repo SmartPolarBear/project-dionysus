@@ -10,14 +10,14 @@ BASEOBJS = $(addprefix $(BUILD)/,$(BASELIST))
 BINLIST = $(shell cat $(BUILD_CONFIG)/bin.list)
 BINOBJS =  $(addprefix $(BUILD)/bin/,$(BINLIST))
 
-all: $(BUILD) $(SUBDIRS) $(BUILD)/kernel $(BUILD)/disk.img
+all: $(BUILD) $(SUBDIRS) $(BUILD)/ap_boot $(BUILD)/kernel $(BUILD)/disk.img
 
 BUILDDISTDIRS = $(shell ls -d $(BUILD)/*/)
 clean:
 	for dir in $(SUBDIRS); do $(MAKE) -C $$dir clean; done
-
 	for dir in $(BUILDDISTDIRS); do rm -rf $$dir; done
 	@rm -f $(BUILD)/kernel*
+	@rm -f $(BUILD)/ap_boot*
 	#@rm -rf $(BUILD)
 
 qemu: all 
@@ -36,12 +36,17 @@ debug: all
 
 debug4vsc: all
 	@$(QEMU) -serial mon:stdio $(QEMUOPTS) -S $(QEMUGDB) &
+
+
+$(BUILD)/ap_boot: $(BUILD)/kern/init/ap_boot.o
+	$(LD) $(LDFLAGS) --omagic -e start -Ttext 0x7000 -o $(BUILD)/ap_boot.o $^
+	$(OBJCOPY) -S -O binary -j .text $(BUILD)/ap_boot.o $(BUILD)/ap_boot
+	$(OBJDUMP) -S $(BUILD)/ap_boot.o > $(BUILD)/ap_boot.asm
 	
 $(BUILD)/kernel: $(BASEOBJS)
-	$(LD) $(LDFLAGS) -o $@ $^
+	$(LD) $(LDFLAGS) -Tkern/kernel.ld  -o $@ $^ -b binary $(BUILD)/ap_boot
 	$(OBJDUMP) -S $@ > $(BUILD)/kernel.asm
 	$(OBJDUMP) -t $@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $(BUILD)/kernel.sym
-
 
 $(BUILD)/disk.img: $(TOP_SRC)/disk.img $(BUILD)/kernel $(BUILD)/tools/diskimg/diskimg.py
 	$(PYTHON) $(DISKIMG_PY) update $(TOP_SRC) $(BUILD_CONFIG)/hdimage.list
