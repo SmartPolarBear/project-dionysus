@@ -2,16 +2,42 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-22 13:11:10
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-12-13 23:26:05
+ * @ Modified time: 2019-12-21 23:29:10
  * @ Description:
  */
 
 #if !defined(__INCLUDE_SYS_MMU_H)
 #define __INCLUDE_SYS_MMU_H
 
-#if !defined(__cplusplus)
+
+#if !defined(__cplusplus) && !defined(__ASSEMBLER__)
 #error "This header is only for C++"
 #endif //__cplusplus
+
+#ifdef __ASSEMBLER__
+// this is for ap_boot.S
+// so they must be macros
+
+#define SEG_NULLASM \
+    .word 0, 0;     \
+    .byte 0, 0, 0, 0
+
+// The 0xC0 means the limit is in 4096-byte units
+// and (for executable segments) 32-bit mode.
+#define SEG_ASM(type, base, lim)                    \
+    .word(((lim) >> 12) & 0xffff), ((base)&0xffff); \
+    .byte(((base) >> 16) & 0xff), (0x90 | (type)),  \
+        (0xC0 | (((lim) >> 28) & 0xf)), (((base) >> 24) & 0xff)
+
+#define STA_X 0x8 // Executable segment
+#define STA_E 0x4 // Expand down (non-executable segments)
+#define STA_C 0x4 // Conforming code segment (executable only)
+#define STA_W 0x2 // Writeable (non-executable segments)
+#define STA_R 0x2 // Readable (executable segments)
+#define STA_A 0x1 // Accessed
+
+#else 
+// not in ap_boot.S
 
 #include "sys/types.h"
 
@@ -160,5 +186,6 @@ struct idt_gate
     uint32_t p : 1;          // Present
     uint32_t off_31_16 : 16; // high bits of offset in segment
 };
+#endif // __ASSEMBLER__
 
 #endif // __INCLUDE_SYS_MMU_H
