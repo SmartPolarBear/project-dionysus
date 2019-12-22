@@ -3,10 +3,22 @@
 #include "drivers/apic/traps.h"
 #include "drivers/debug/kdebug.h"
 
+#include "sys/memlayout.h"
+#include "sys/mmu.h"
+
 #include "arch/amd64/x86.h"
 
 volatile uint32_t *local_apic::lapic;
 
+// Spin for a given number of microseconds.
+// On real hardware would want to tune this dynamically.
+[[clang::optnone]] static void microdelay(size_t us)
+{
+    for (size_t i = 0; i < us; i++)
+    {
+        ; // do nothing. just cost time.
+    }
+}
 
 void local_apic::write_lapic(size_t index, uint32_t value)
 {
@@ -81,4 +93,39 @@ size_t local_apic::get_cpunum(void)
     }
 
     return 0;
+}
+
+void local_apic::start_ap(uint8_t apicid, uintptr_t addr)
+{
+    [[maybe_unused]] constexpr size_t CMOS_PORT = 0x70;
+    [[maybe_unused]] constexpr size_t CMOS_RETURN = 0x71;
+
+    // "The BSP must initialize CMOS shutdown code to 0AH
+    // and the warm reset vector (DWORD based at 40:67) to point at
+    // the AP startup code prior to the [universal startup algorithm]."
+    outb(CMOS_PORT, 0xF); // offset 0xF is shutdown code
+    outb(CMOS_PORT + 1, 0x0A);
+    uint16_t *wrv = reinterpret_cast<decltype(wrv)>(P2V((0x40 << 4 | 0x67))); // Warm reset vector
+    wrv[0] = 0;
+    wrv[1] = addr >> 4;
+
+    // "Universal startup algorithm."
+    // Send INIT (level-triggered) interrupt to reset other CPU.
+    write_lapic(ICRHI, apicid << 24);
+    write_lapic(ICRLO, ICRLO_CMD_INIT | ICRLO_CMD_LEVEL | ICRLO_CMD_ASSERT);
+    microdelay(200);
+
+    write_lapic(ICRLO, ICRLO_CMD_INIT | ICRLO_CMD_LEVEL);
+    microdelay(10000);
+
+    // Send startup IPI (twice!) to enter code.
+    // Regular hardware is supposed to only accept a STARTUP
+    // when it is in the halted state due to an INIT.  So the second
+    // should be ignored, but it is part of the official Intel algorithm.
+    for (int i = 0; i < 2; i++)
+    {
+        write_lapic(ICRHI, apicid << 24);
+        write_lapic(ICRLO, ICRLO_CMD_STARTUP | (addr >> 12));
+        microdelay(200);
+    }
 }

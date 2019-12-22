@@ -40,4 +40,9 @@ extern uint8_t cpu_count;
 
 extern __thread struct cpu *cpu;
 
+namespace ap
+{
+void init_ap(void);
+} // namespace ap
+
 #endif // __INCLUDE_DRIVERS_ACPI_CPU_H

@@ -57,6 +57,9 @@ extern volatile uint32_t *lapic;
 void init_lapic(void);
 size_t get_cpunum(void);
 void write_lapic(size_t index, uint32_t value);
+
+void start_ap(uint8_t apicid, uintptr_t addr);
+
 } // namespace local_apic
 
 namespace io_apic

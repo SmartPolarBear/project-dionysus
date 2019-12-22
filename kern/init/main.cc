@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-12-21 23:58:58
+ * @ Modified time: 2019-12-22 00:09:02
  * @ Description: the entry point for kernel in C++
  */
 
@@ -10,6 +10,7 @@
 #include "boot/multiboot2.h"
 
 #include "drivers/acpi/acpi.h"
+#include "drivers/acpi/cpu.h"
 #include "drivers/apic/apic.h"
 #include "drivers/apic/traps.h"
 #include "drivers/apic_timer/timer.h"
@@ -61,6 +62,9 @@ extern "C" [[noreturn]] void kmain() {
     io_apic::init_ioapic();
 
     //TODO: initialize start other cpu cores, then implement process manager.
+
+    // boot other CPU cores
+    ap::init_ap();
 
     console::printf("Codename \"dionysus\" built on %s %s\nBoot OK!\n", __DATE__, __TIME__);
 
