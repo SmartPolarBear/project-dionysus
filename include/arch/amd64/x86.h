@@ -19,6 +19,9 @@
 // cpu features like halt and interrupt enability
 #include "arch/amd64/cpu.h"
 
+// atomic
+#include "arch/amd64/atomic.h"
+
 // port io and SIMD
 
 static inline uint8_t inb(uint16_t port)

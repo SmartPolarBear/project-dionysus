@@ -27,6 +27,8 @@ struct cpu
     int ncli;                  // Depth of pushcli nesting.
     int intena;                // Were interrupts enabled before pushcli?
 
+    bool present;
+
     //Cpu-local storage variables
     void *local;
 };
@@ -35,10 +37,10 @@ using cpu_info = struct cpu;
 
 constexpr size_t CPU_COUNT_LIMIT = 8;
 
-extern struct cpu cpus[CPU_COUNT_LIMIT];
+extern cpu_info cpus[CPU_COUNT_LIMIT];
 extern uint8_t cpu_count;
 
-extern __thread struct cpu *cpu;
+extern __thread cpu_info *cpu;
 
 namespace ap
 {

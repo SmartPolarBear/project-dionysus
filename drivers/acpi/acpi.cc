@@ -77,7 +77,7 @@ static void acpi_init_apic(const acpi_madt *madt)
 
             console::printf("ACPI: CPU#%d ACPI ID %d\n", cpu_count, lapic->apic_id);
 
-            cpus[cpu_count] = {.id = cpu_count, .apicid = lapic->apic_id};
+            cpus[cpu_count] = {.id = cpu_count, .apicid = lapic->apic_id, .present = true};
             cpu_count++;
             break;
         }

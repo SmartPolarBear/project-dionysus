@@ -182,6 +182,7 @@ entry64low:
     xorq %rdx,%rdx
 
 skip_save_mbi:
+
     movq $entry64high, %rax
     jmp *%rax
 

@@ -1,8 +1,12 @@
-
+#include "arch/amd64/x86.h"
 
 #include "drivers/acpi/acpi.h"
 #include "drivers/acpi/cpu.h"
 #include "drivers/apic/apic.h"
+#include "drivers/apic/traps.h"
+#include "drivers/apic_timer/timer.h"
+#include "drivers/console/console.h"
+#include "drivers/debug/kdebug.h"
 
 #include "sys/bootmm.h"
 #include "sys/memlayout.h"
@@ -21,32 +25,46 @@ extern "C" void entry32mp(void);
 
 constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
 
-extern "C" [[clang::optnone]] void ap_enter(void)
-{
-    return;
-}
-
-[[clang::optnone]] void ap::init_ap(void)
-{
+[[clang::optnone]] void ap::init_ap(void) {
     uint8_t *code = reinterpret_cast<decltype(code)>(P2V(AP_CODE_LOAD_ADDR));
     memmove(code, _binary___build_ap_boot_start, (size_t)_binary___build_ap_boot_size);
 
-    for (auto cpu = cpus; cpu != cpus + cpu_count; cpu++)
+    auto current_cpuid = local_apic::get_cpunum();
+
+    for (auto cpu : cpus)
     {
-        if (cpu == cpus + local_apic::get_cpunum())
+        if (cpu.present && cpu.id != current_cpuid)
         {
-            continue;
+            char *stack = vm::bootmm_alloc();
+            if (stack == nullptr)
+            {
+                KDEBUG_GENERALPANIC("Can't allocate enough memory for AP boot.\n");
+            }
+
+            *(uint32_t *)(code - 4) = 0x8000; // just enough stack to get us to entry64mp
+            *(uint32_t *)(code - 8) = V2P(uintptr_t(entry32mp));
+            *(uint64_t *)(code - 16) = (uint64_t)(stack + PAGE_SIZE);
+
+            local_apic::start_ap(cpu.apicid, V2P((uintptr_t)code));
+
+            while (cpu.started == false)
+                ;
         }
-
-        char *stack = vm::bootmm_alloc();
-
-        *(uint32_t *)(code - 4) = 0x8000; // just enough stack to get us to entry64mp
-        *(uint32_t *)(code - 8) = V2P(uintptr_t(entry32mp));
-        *(uint64_t *)(code - 16) = (uint64_t)(stack + PAGE_SIZE);
-
-        local_apic::start_ap(cpu->apicid, V2P((uintptr_t)code));
-    
-        while(cpu->started==false)
-            ;
     }
+}
+
+extern "C" [[clang::optnone]] void ap_enter(void) {
+    // install the kernel vm
+    vm::switch_kernelvm();
+    // install trap vectors
+    trap::initialize_trap_vectors();
+    // initialize segmentation
+    vm::segment::init_segmentation();
+    // initialize local APIC
+    local_apic::init_lapic();
+    // initialize apic timer
+    timer::init_apic_timer();
+
+    xchg(&cpu->started, 1u);
+    console::printf("Init CPU apicid=%d, id=%d\n", cpu->apicid, cpu->id);
 }

@@ -95,7 +95,7 @@ size_t local_apic::get_cpunum(void)
     return 0;
 }
 
-void local_apic::start_ap(uint8_t apicid, uintptr_t addr)
+void local_apic::start_ap(size_t apicid, uintptr_t addr)
 {
     [[maybe_unused]] constexpr size_t CMOS_PORT = 0x70;
     [[maybe_unused]] constexpr size_t CMOS_RETURN = 0x71;
