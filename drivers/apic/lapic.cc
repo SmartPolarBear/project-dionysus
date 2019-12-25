@@ -84,6 +84,8 @@ size_t local_apic::get_cpunum(void)
     }
 
     auto id = lapic[ID] >> 24;
+    return id;
+
     for (size_t i = 0; i < cpu_count; i++)
     {
         if (id == cpu[i].apicid)

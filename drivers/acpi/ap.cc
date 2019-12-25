@@ -31,9 +31,9 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
 
     auto current_cpuid = local_apic::get_cpunum();
 
-    for (auto cpu : cpus)
+    for (const auto &core : cpus)
     {
-        if (cpu.present && cpu.id != current_cpuid)
+        if (core.present && core.id != current_cpuid)
         {
             char *stack = vm::bootmm_alloc();
             if (stack == nullptr)
@@ -45,10 +45,12 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
             *(uint32_t *)(code - 8) = V2P(uintptr_t(entry32mp));
             *(uint64_t *)(code - 16) = (uint64_t)(stack + PAGE_SIZE);
 
-            local_apic::start_ap(cpu.apicid, V2P((uintptr_t)code));
+            local_apic::start_ap(core.apicid, V2P((uintptr_t)code));
 
-            while (cpu.started == false)
-                ;
+            while (core.started == 0u)
+                if (core.started == 0u)
+                    ;
+            ;
         }
     }
 }
@@ -66,5 +68,5 @@ extern "C" [[clang::optnone]] void ap_enter(void) {
     timer::init_apic_timer();
 
     xchg(&cpu->started, 1u);
-    console::printf("Init CPU apicid=%d, id=%d\n", cpu->apicid, cpu->id);
+    // console::printf("Init CPU apicid=%d, id=%d, started=%d\n", cpu->apicid, cpu->id, cpu->started);
 }

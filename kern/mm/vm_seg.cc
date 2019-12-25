@@ -39,7 +39,8 @@ void vm::segment::init_segmentation(void)
 
     wrmsr(0xC0000100, ((uintptr_t)local_storage) + ((vm::BOOTMM_BLOCKSIZE) / 2));
 
-    auto c = &cpus[local_apic::get_cpunum()];
+    auto cpunum = local_apic::get_cpunum();
+    auto c = &cpus[cpunum];
     c->local = local_storage;
 
     cpu = c;
