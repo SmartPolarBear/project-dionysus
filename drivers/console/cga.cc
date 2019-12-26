@@ -9,6 +9,17 @@
 constexpr uint16_t backsp = 0x100;
 constexpr uint16_t crt_port = 0x3d4;
 
+static constexpr uint16_t MAKE_CGA_CHAR(char content, uint16_t attr)
+{
+    uint16_t ret = content | (attr << 8);
+    return ret;
+}
+
+static constexpr uint16_t MAKE_CGA_ATTRIB(uint8_t freground, uint8_t background)
+{
+    return (background << 4) | (freground & 0x0F);
+}
+
 // global state for cga display style
 struct
 {
@@ -16,7 +27,6 @@ struct
     uint8_t background = console::CGACOLOR_BLACK;
 } cga_attrib;
 
-// void *cga_addr = (void *)();
 volatile uint16_t *cga_mem = (uint16_t *)(0xB8000 + KERNEL_VIRTUALBASE);
 
 static size_t get_cur_pos(void)
@@ -39,7 +49,7 @@ static void set_cur_pos(size_t pos)
 void console::cga_putc(uint32_t c)
 {
     auto pos = get_cur_pos();
-    uint16_t attrib = (cga_attrib.background << 4) | (cga_attrib.foreground & 0x0F); //no background, lightgray foreground
+    uint16_t attrib = MAKE_CGA_ATTRIB(cga_attrib.foreground, cga_attrib.background); //no background, lightgray foreground
 
     if (c == '\n')
     {
@@ -54,12 +64,14 @@ void console::cga_putc(uint32_t c)
     }
     else
     {
-        cga_mem[pos++] = c | (attrib << 8);
+        cga_mem[pos++] = MAKE_CGA_CHAR(c, attrib);
     }
 
     if (pos < 0 || pos > 25 * 80)
     {
-        KDEBUG_GENERALPANIC("pos out of bound.");
+        KDEBUG_GENERALPANIC(pos < 0
+                                ? "pos out of bound: it should be positive."
+                                : "pos out of bound: it should be smaller than 25*80");
     }
 
     if ((pos / 80) >= 24)
@@ -74,7 +86,7 @@ void console::cga_putc(uint32_t c)
     }
 
     set_cur_pos(pos);
-    cga_mem[pos] = ' ' | attrib;
+    cga_mem[pos] = MAKE_CGA_CHAR(' ', attrib);
 }
 
 void console::cga_setpos(size_t pos)
