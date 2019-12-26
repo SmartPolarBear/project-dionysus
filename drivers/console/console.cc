@@ -283,7 +283,7 @@ void console::console_settextattrib(size_t attribs)
     }
 }
 
-void console_debugdisablelock(void)
+void console::console_debugdisablelock(void)
 {
     conslock.lock_enable = false;
 }

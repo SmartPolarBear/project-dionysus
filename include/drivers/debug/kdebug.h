@@ -6,7 +6,8 @@
 namespace kdebug
 {
 void kdebug_panic(const char *fmt, ...);
-void kdebug_panic2(const char *fmt, bool topleft, ...);
+// use uint32_t for the bool value to make va_args happy.
+void kdebug_panic2(const char *fmt, uint32_t topleft, ...);
 void kdebug_getcallerpcs(size_t buflen, uintptr_t pcs[]);
 
 // panic with line number and file name

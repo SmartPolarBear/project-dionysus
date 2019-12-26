@@ -108,13 +108,13 @@ void kdebug::kdebug_panic(const char *fmt, ...)
 
     // set global panic state for other cpu
     panicked = true;
-    
+
     // infinite loop
     for (;;)
         ;
 }
 
-void kdebug::kdebug_panic2(const char *fmt, bool topleft = false, ...)
+void kdebug::kdebug_panic2(const char *fmt, uint32_t topleft, ...)
 {
     // disable interrupts
     cli();
@@ -135,7 +135,7 @@ void kdebug::kdebug_panic2(const char *fmt, bool topleft = false, ...)
     va_list ap;
     int c;
 
-    va_start(ap, fmt);
+    va_start(ap, topleft);
 
     if (fmt)
     {

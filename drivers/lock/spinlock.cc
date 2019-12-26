@@ -6,7 +6,7 @@
 
 using lock::spinlock;
 
-void lock::spinlock_initlock(spinlock *splk, char *name)
+void lock::spinlock_initlock(spinlock *splk,const char *name)
 {
     splk->name = name;
     splk->locked = false;

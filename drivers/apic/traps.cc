@@ -44,6 +44,6 @@ void trap::initialize_trap_vectors(void)
     lidt(reinterpret_cast<idt_gate *>(idt), vm::BOOTMM_BLOCKSIZE);
 }
 
-extern "C" void trap_body(trap_info info)
+extern "C" void trap_body([[maybe_unused]] trap_info info)
 {
 }
