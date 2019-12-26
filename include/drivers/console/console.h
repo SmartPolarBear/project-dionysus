@@ -36,6 +36,7 @@ enum text_attributes
 };
 
 void console_settextattrib(size_t attribs);
+void console_debugdisablelock(void);
 } // namespace console
 
 #endif // __INCLUDE_DRIVERS_CONSOLE_H

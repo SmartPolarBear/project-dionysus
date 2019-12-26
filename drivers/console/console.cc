@@ -1,17 +1,26 @@
 #include "drivers/console/console.h"
 #include "drivers/console/cga.h"
 #include "drivers/debug/kdebug.h"
+#include "drivers/lock/spinlock.h"
+
 #include "lib/libc/stdlib.h"
 #include "lib/libc/string.h"
+
 #include "sys/types.h"
 
 #include <stdarg.h>
+
+using lock::spinlock;
+using lock::spinlock_acquire;
+using lock::spinlock_initlock;
+using lock::spinlock_release;
 
 using putc_function_type = void (*)(uint32_t);
 using setpos_function_type = void (*)(size_t);
 using setcolor_function_type = void (*)(uint8_t fr, uint8_t bk);
 
 const size_t COLORTABLE_LEN = 8;
+
 struct console_dev
 {
     putc_function_type putc;
@@ -33,6 +42,12 @@ struct console_dev
          [5] = console::CGACOLOR_CYAN,
          [6] = console::CGACOLOR_LIGHT_GREY,
          [7] = console::CGACOLOR_BLACK}}};
+
+static struct
+{
+    spinlock lock;
+    bool lock_enable;
+} conslock;
 
 static inline void console_putc_impl(uint32_t c)
 {
@@ -69,16 +84,40 @@ static inline void console_setcolor_impl(uint8_t fridx, uint8_t bkidx)
 
 void console::puts(const char *str)
 {
+    // acquire the lock
+    if (conslock.lock_enable)
+    {
+        spinlock_acquire(&conslock.lock);
+    }
+
     while (*str != '\0')
     {
         console_putc_impl(*str);
         ++str;
     }
+
+    // release the lock
+    if (conslock.lock_enable)
+    {
+        spinlock_release(&conslock.lock);
+    }
 }
 
 void console::putc(char c)
 {
+    // acquire the lock
+    if (conslock.lock_enable)
+    {
+        spinlock_acquire(&conslock.lock);
+    }
+
     console_putc_impl(c);
+
+    // release the lock
+    if (conslock.lock_enable)
+    {
+        spinlock_release(&conslock.lock);
+    }
 }
 
 // buffer for converting ints with itoa
@@ -94,7 +133,11 @@ void console::printf(const char *fmt, ...)
 
     va_start(ap, fmt);
 
-    //TODO: acquire the lock
+    // acquire the lock
+    if (conslock.lock_enable)
+    {
+        spinlock_acquire(&conslock.lock);
+    }
 
     if (fmt == 0)
     {
@@ -162,21 +205,45 @@ void console::printf(const char *fmt, ...)
 
     va_end(ap);
 
-    //TODO : release the lock
+    // release the lock
+    if (conslock.lock_enable)
+    {
+        spinlock_release(&conslock.lock);
+    }
 }
 
 void console::console_init(void)
 {
+    spinlock_initlock(&conslock.lock, "console");
     console_setpos(0);
+    conslock.lock_enable = true;
 }
 
 void console::console_setpos(size_t pos)
 {
+    // acuqire the lock
+    if (conslock.lock_enable)
+    {
+        spinlock_acquire(&conslock.lock);
+    }
+
     console_setpos_impl(pos);
+
+    // release the lock
+    if (conslock.lock_enable)
+    {
+        spinlock_release(&conslock.lock);
+    }
 }
 
 void console::console_settextattrib(size_t attribs)
 {
+    // acuqire the lock
+    if (conslock.lock_enable)
+    {
+        spinlock_acquire(&conslock.lock);
+    }
+
     // color flags are ranged from 1<<0 to 1<<(COLORTABLE_LEN-1)
     if (((SIZE_MAX >> (64 - COLORTABLE_LEN)) << 0) & attribs) //check if any color flags
     {
@@ -208,4 +275,15 @@ void console::console_settextattrib(size_t attribs)
         // and therefore be valid for a index to color tables
         console_setcolor_impl(fridx % COLORTABLE_LEN, bkidx % COLORTABLE_LEN);
     }
+
+    // release the lock
+    if (conslock.lock_enable)
+    {
+        spinlock_release(&conslock.lock);
+    }
+}
+
+void console_debugdisablelock(void)
+{
+    conslock.lock_enable = false;
 }

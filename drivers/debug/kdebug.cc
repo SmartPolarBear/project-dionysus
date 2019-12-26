@@ -36,7 +36,8 @@ void kdebug::kdebug_panic(const char *fmt, ...)
     // disable interrupts
     cli();
 
-    //TODO: disable the lock of console
+    // disable the lock of console
+    console::console_debugdisablelock();
 
     // change cga color and reset cursor to draw attention
     constexpr auto panicked_screencolor = console::TATTR_BKBLUE | console::TATTR_FRYELLOW;
@@ -107,6 +108,7 @@ void kdebug::kdebug_panic(const char *fmt, ...)
 
     // set global panic state for other cpu
     panicked = true;
+    
     // infinite loop
     for (;;)
         ;
