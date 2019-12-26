@@ -1,3 +1,4 @@
+
 #if !defined(__INCLUDE_DRIVERS_ACPI_CPU_H)
 #define __INCLUDE_DRIVERS_ACPI_CPU_H
 
@@ -21,16 +22,13 @@ struct cpu
     uint8_t id;                // index into cpus[] below
     uint8_t apicid;            // Local APIC ID
     context *scheduler;        // swtch() here to enter scheduler
-    machine_state ts;              // Used by x86 to find stack for interrupt
+    machine_state ts;          // Used by x86 to find stack for interrupt
     gdt_segment gdt[7];        // x86 global descriptor table
     volatile uint32_t started; // Has the CPU started?
-    int ncli;                  // Depth of pushcli nesting.
-    int intena;                // Were interrupts enabled before pushcli?
-
-    bool present;
-
-    //Cpu-local storage variables
-    void *local;
+    int nest_pushcli_depth;    // Depth of pushcli nesting.
+    int intr_enable;           // Were interrupts enabled before pushcli?
+    bool present;              // Is this core available
+    void *local;               //Cpu-local storage variables
 };
 
 using cpu_info = struct cpu;

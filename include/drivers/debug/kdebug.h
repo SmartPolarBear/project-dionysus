@@ -6,6 +6,7 @@
 namespace kdebug
 {
 void kdebug_panic(const char *fmt, ...);
+void kdebug_panic2(const char *fmt, bool topleft, ...);
 void kdebug_getcallerpcs(size_t buflen, uintptr_t pcs[]);
 
 // panic with line number and file name
@@ -19,6 +20,10 @@ void kdebug_getcallerpcs(size_t buflen, uintptr_t pcs[]);
 // panic for not implemented functions
 #define KDEBUG_NOT_IMPLEMENTED \
     kdebug::kdebug_panic("KDEBUG_NOT_IMPLEMENTED:\nIn file: %s, line: %d\nThe function \"%s\" is not implemented.", __FILE__, __LINE__, __FUNCTION__)
+
+// pnaic that not move the cursor
+#define KDEBUG_FOLLOWPANIC(str) \
+    kdebug::kdebug_panic2("KDEBUG_GENERALPANIC:\nIn file: %s, line: %d\n%s", false, __FILE__, __LINE__, str)
 
 // panic the kernel if the condition isn't equal to 1
 #define KDEBUG_ASSERT(cond)                                                                                                \

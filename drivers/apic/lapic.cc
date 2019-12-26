@@ -83,6 +83,7 @@ size_t local_apic::get_cpunum(void)
         return 0;
     }
 
+    // FIXME: this shouldn't make sense, but it works
     auto id = lapic[ID] >> 24;
     return id;
 
