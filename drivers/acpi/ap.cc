@@ -67,6 +67,6 @@ extern "C" [[clang::optnone]] void ap_enter(void) {
     // initialize apic timer
     timer::init_apic_timer();
 
+    console::printf("Init CPU apicid=%d, id=%d\n", cpu->apicid, cpu->id);
     xchg(&cpu->started, 1u);
-    // console::printf("Init CPU apicid=%d, id=%d, started=%d\n", cpu->apicid, cpu->id, cpu->started);
 }

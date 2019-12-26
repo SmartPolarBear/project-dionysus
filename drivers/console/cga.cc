@@ -48,8 +48,9 @@ static void set_cur_pos(size_t pos)
 
 void console::cga_putc(uint32_t c)
 {
-    auto pos = get_cur_pos();
     uint16_t attrib = MAKE_CGA_ATTRIB(cga_attrib.foreground, cga_attrib.background); //no background, lightgray foreground
+
+    auto pos = get_cur_pos();
 
     if (c == '\n')
     {
@@ -67,13 +68,6 @@ void console::cga_putc(uint32_t c)
         cga_mem[pos++] = MAKE_CGA_CHAR(c, attrib);
     }
 
-    if (pos < 0 || pos > 25 * 80)
-    {
-        KDEBUG_GENERALPANIC(pos < 0
-                                ? "pos out of bound: it should be positive."
-                                : "pos out of bound: it should be smaller than 25*80");
-    }
-
     if ((pos / 80) >= 24)
     {
         //scroll up the screen
@@ -87,6 +81,13 @@ void console::cga_putc(uint32_t c)
 
     set_cur_pos(pos);
     cga_mem[pos] = MAKE_CGA_CHAR(' ', attrib);
+
+    if (pos < 0 || pos > 25 * 80)
+    {
+        KDEBUG_GENERALPANIC(pos < 0
+                                ? "pos out of bound: it should be positive."
+                                : "pos out of bound: it should be smaller than 25*80");
+    }
 }
 
 void console::cga_setpos(size_t pos)
