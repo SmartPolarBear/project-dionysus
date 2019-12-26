@@ -61,11 +61,13 @@ extern "C" [[noreturn]] void kmain() {
     // initialize I/O APIC
     io_apic::init_ioapic();
 
-    //TODO: initialize start other cpu cores, then implement process manager.
-
     // boot other CPU cores
     ap::init_ap();
+    
+    // TODO: after a proper scheduler implementation, this should be the last line of main
+    ap::all_processor_main();
 
+    //TODO: implement process manager.
     console::printf("Codename \"dionysus\" built on %s %s\nBoot OK!\n", __DATE__, __TIME__);
 
     for (;;)

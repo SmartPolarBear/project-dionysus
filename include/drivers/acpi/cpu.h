@@ -43,6 +43,7 @@ extern __thread cpu_info *cpu;
 namespace ap
 {
 void init_ap(void);
+void all_processor_main();
 } // namespace ap
 
 #endif // __INCLUDE_DRIVERS_ACPI_CPU_H

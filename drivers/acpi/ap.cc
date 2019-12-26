@@ -55,6 +55,12 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
     }
 }
 
+void ap::all_processor_main()
+{
+    console::printf("AP: Initialized CPU %d\n", cpu->id);
+    xchg(&cpu->started, 1u);
+}
+
 extern "C" [[clang::optnone]] void ap_enter(void) {
     // install the kernel vm
     vm::switch_kernelvm();
@@ -67,6 +73,5 @@ extern "C" [[clang::optnone]] void ap_enter(void) {
     // initialize apic timer
     timer::init_apic_timer();
 
-    console::printf("Init CPU apicid=%d, id=%d\n", cpu->apicid, cpu->id);
-    xchg(&cpu->started, 1u);
+    ap::all_processor_main();
 }
