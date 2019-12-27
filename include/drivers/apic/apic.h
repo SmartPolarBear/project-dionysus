@@ -2,6 +2,7 @@
 #define __INCLUDE_DRIVERS_APIC_H
 
 #include "sys/types.h"
+#include "drivers/acpi/cpu.h"
 
 namespace local_apic
 {

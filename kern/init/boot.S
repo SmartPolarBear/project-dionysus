@@ -170,7 +170,7 @@ gdt64_end:
 entry64low:
 
 // check whether it's booting APs, skip saving mbi if it is.
-    cmpq $0x0, %rbx
+    cmp $0x0, %rbx
     jne skip_save_mbi
 
 // else save the mbi & the magic number

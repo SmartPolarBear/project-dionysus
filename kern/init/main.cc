@@ -60,10 +60,10 @@ extern "C" [[noreturn]] void kmain() {
 
     // initialize I/O APIC
     io_apic::init_ioapic();
-
+    auto cpunum = local_apic::get_cpunum();
     // boot other CPU cores
     ap::init_ap();
-    
+
     // TODO: after a proper scheduler implementation, this should be the last line of main
     ap::all_processor_main();
 

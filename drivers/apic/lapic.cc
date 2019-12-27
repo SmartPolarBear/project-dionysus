@@ -1,6 +1,7 @@
 #include "drivers/acpi/cpu.h"
 #include "drivers/apic/apic.h"
 #include "drivers/apic/traps.h"
+#include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 
 #include "sys/memlayout.h"
@@ -83,13 +84,11 @@ size_t local_apic::get_cpunum(void)
         return 0;
     }
 
-    // FIXME: this shouldn't make sense, but it works
     auto id = lapic[ID] >> 24;
-    return id;
 
     for (size_t i = 0; i < cpu_count; i++)
     {
-        if (id == cpu[i].apicid)
+        if (id == cpus[i].apicid)
         {
             return i;
         }
@@ -97,6 +96,7 @@ size_t local_apic::get_cpunum(void)
 
     return 0;
 }
+
 
 void local_apic::start_ap(size_t apicid, uintptr_t addr)
 {

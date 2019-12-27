@@ -29,11 +29,9 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
     uint8_t *code = reinterpret_cast<decltype(code)>(P2V(AP_CODE_LOAD_ADDR));
     memmove(code, _binary___build_ap_boot_start, (size_t)_binary___build_ap_boot_size);
 
-    auto current_cpuid = local_apic::get_cpunum();
-
     for (const auto &core : cpus)
     {
-        if (core.present && core.id != current_cpuid)
+        if (core.present && core.id != local_apic::get_cpunum())
         {
             char *stack = vm::bootmm_alloc();
             if (stack == nullptr)
@@ -48,9 +46,7 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
             local_apic::start_ap(core.apicid, V2P((uintptr_t)code));
 
             while (core.started == 0u)
-                if (core.started == 0u)
-                    ;
-            ;
+                ;
         }
     }
 }

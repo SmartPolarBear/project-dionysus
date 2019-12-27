@@ -75,8 +75,6 @@ static void acpi_init_apic(const acpi_madt *madt)
                 break;
             }
 
-            console::printf("ACPI: CPU#%d ACPI ID %d\n", cpu_count, lapic->apic_id);
-
             cpus[cpu_count] = {.id = cpu_count, .apicid = lapic->apic_id, .present = true};
             cpu_count++;
             break;
@@ -85,9 +83,6 @@ static void acpi_init_apic(const acpi_madt *madt)
         {
             acpi::madt_ioapic *ioapic = reinterpret_cast<decltype(ioapic)>(entry);
             KDEBUG_ASSERT(sizeof(*ioapic) == ioapic->length);
-
-            console::printf("ACPI: IOAPIC#%d @ 0x%x ID=%d, BASE=%d\n",
-                            ioapic_count, ioapic->addr, ioapic->id, ioapic->interrupt_base);
 
             ioapics[ioapic_count] = madt_ioapic{*ioapic};
             ioapic_count++;
