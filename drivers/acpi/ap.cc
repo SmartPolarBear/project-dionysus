@@ -53,7 +53,7 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
 
 void ap::all_processor_main()
 {
-    console::printf("AP: Initialized CPU %d\n", cpu->id);
+    console::printf("AP: Initialized CPU %d(%d)\n", cpu->id,local_apic::get_cpunum());
     xchg(&cpu->started, 1u);
 }
 
