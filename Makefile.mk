@@ -30,7 +30,7 @@ LDFLAGS=-z max-page-size=0x1000 -no-pie -nostdlib
 
 SHAREDFLAGS = -mtls-direct-seg-refs -mno-sse -fno-exceptions -fno-rtti -ffreestanding -nostdlib -fno-builtin -Wall -Wextra -mcmodel=large -mno-red-zone
 SHAREDFLAGS += -I$(TOP_SRC)/include
-SHAREDFLAGS += -gdwarf-2 -fno-pie
+SHAREDFLAGS += --target=x86_64-pc-linux-elf -march=x86-64 -gdwarf-2 -fno-pie
 
 CFLAGS = -std=c17 $(SHAREDFLAGS)
 ASFLAGS = $(SHAREDFLAGS)
