@@ -21,7 +21,7 @@
 
 #include "lib/libc/string.h"
 
- thread_local  cpu_info *cpu;
+ __thread cpu_info *cpu;
 // TODO: lacking records of proc
 
 void vm::segment::init_segmentation(void)

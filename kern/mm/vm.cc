@@ -153,7 +153,7 @@ static inline void check_hardware(void)
 {
     uint64_t regs[4];
     cpuid(CPUID_GETFEATURES, regs);
-    if (!(regs[3] & bit_PAE))
+    if (!(regs[3] & 0x00000040))
     {
         KDEBUG_GENERALPANIC("CPU Feature 'PAE' is required for 4-level paging.");
     }

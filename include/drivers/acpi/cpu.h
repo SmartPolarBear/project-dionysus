@@ -38,7 +38,7 @@ constexpr size_t CPU_COUNT_LIMIT = 8;
 extern cpu_info cpus[CPU_COUNT_LIMIT];
 extern uint8_t cpu_count;
 
-extern thread_local cpu_info *cpu;
+extern __thread cpu_info *cpu;
 
 namespace ap
 {

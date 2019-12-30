@@ -108,17 +108,14 @@ void io_apic::init_ioapic(void)
 
     for (size_t i = 0; i <= redirection_count; i++)
     {
-        redirection_entry redir =
-            {
-                .vector = TRAP_IRQ0 + i,
-                .delievery_mode = DLM_FIXED,
-                .destination_mode = DTM_PHYSICAL,
-                .polarity = 0,
-                .trigger_mode = TRG_EDGE,
-                .mask = false,
-                .destination_id = 0,
-            };
-
+        redirection_entry redir;
+        redir.vector = TRAP_IRQ0 + i;
+        redir.delievery_mode = DLM_FIXED;
+        redir.destination_mode = DTM_PHYSICAL;
+        redir.polarity = 0;
+        redir.trigger_mode = TRG_EDGE;
+        redir.mask = false;
+        redir.destination_id = 0;
 
         write_ioapic(ioapic_addr, IOREDTBL_BASE + i * 2 + 0, redir.raw_low);
         write_ioapic(ioapic_addr, IOREDTBL_BASE + i * 2 + 1, redir.raw_high);
@@ -127,15 +124,15 @@ void io_apic::init_ioapic(void)
 
 void io_apic::enable_trap(uint32_t trapnum, uint32_t cpu_acpi_id_rounted)
 {
-    redirection_entry redir_new = {
-        .vector = TRAP_IRQ0 + trapnum,
-        .delievery_mode = DLM_FIXED,
-        .destination_mode = DTM_PHYSICAL,
-        .polarity = 0,
-        .trigger_mode = TRG_EDGE,
-        .mask = true,
-        .destination_id = cpu_acpi_id_rounted,
-    };
+    redirection_entry redir_new;
+    redir_new.vector = TRAP_IRQ0 + trapnum;
+    redir_new.delievery_mode = DLM_FIXED;
+    redir_new.destination_mode = DTM_PHYSICAL;
+    redir_new.polarity = 0;
+    redir_new.trigger_mode = TRG_EDGE;
+    redir_new.mask = true;
+    redir_new.destination_id = cpu_acpi_id_rounted;
+
     auto ioapic = acpi::get_first_ioapic();
 
     uintptr_t ioapic_addr = IO2V(ioapic.addr);
