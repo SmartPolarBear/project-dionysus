@@ -1,8 +1,8 @@
 /**
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
- * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-12-22 00:09:02
+ * @ Modified by: Daniel Lin
+ * @ Modified time: 2020-01-01 12:35:56
  * @ Description: the entry point for kernel in C++
  */
 
@@ -43,12 +43,6 @@ extern "C" [[noreturn]] void kmain() {
     // initialize the paging
     vm::init_kernelvm();
 
-    // install gdt
-    vm::segment::init_segmentation();
-
-    // install trap vectors
-    trap::initialize_trap_vectors();
-
     // initialize ACPI
     acpi::init_acpi();
 
@@ -57,6 +51,12 @@ extern "C" [[noreturn]] void kmain() {
 
     // initialize apic timer
     timer::init_apic_timer();
+    
+    // install trap vectors
+    trap::initialize_trap_vectors();
+
+    // install gdt
+    vm::segment::init_segmentation();
 
     // initialize I/O APIC
     io_apic::init_ioapic();
