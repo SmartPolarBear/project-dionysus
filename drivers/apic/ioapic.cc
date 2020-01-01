@@ -98,8 +98,12 @@ void io_apic::init_ioapic(void)
 
     uintptr_t ioapic_addr = IO2V(ioapic.addr);
 
+    console::printf("ioapic: addr=%d\n", ioapic_addr);
+    console::printf("read_ioapic(ioapic_addr, IOAPICID)=%d\n", read_ioapic(ioapic_addr, IOAPICID));
+
+    size_t apicid = (read_ioapic(ioapic_addr, IOAPICID) >> 24) & 0xF0;
     size_t redirection_count = (read_ioapic(ioapic_addr, IOAPICVER) >> 16) & 0b11111111;
-    size_t apicid = (read_ioapic(ioapic_addr, IOAPICID) >> 24) & 0b1111;
+
 
     if (apicid != ioapic.id)
     {

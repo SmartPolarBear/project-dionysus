@@ -68,6 +68,9 @@ extern "C" [[noreturn]] void kmain() {
     ap::all_processor_main();
 
     //TODO: implement process manager.
+    
+
+
     console::printf("Codename \"dionysus\" built on %s %s\nBoot OK!\n", __DATE__, __TIME__);
 
     for (;;)

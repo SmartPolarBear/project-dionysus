@@ -12,8 +12,8 @@ INCLUDE = $(TOP_SRC)/include
 
 TOOLPREFIX = 
 
-HOST_CXX = g++
-HOST_CC = gcc
+HOST_CXX = clang++
+HOST_CC = clang
 
 PYTHON=python3
 DISKIMG_PY=$(BUILD)/tools/diskimg/diskimg.py
@@ -46,12 +46,11 @@ QEMU_EXE = $(QEMU).exe
 GDBPORT = 32678
 QEMUGDB = -gdb tcp::$(GDBPORT)
 
-CPUS = 4
+CPUS = 6
 
 QEMUOPTS =  -drive file=$(BUILD)/disk.img,index=0,media=disk,format=raw -cpu max
 #QEMUOPTS +=  -accel whpx
 QEMUOPTS += -smp $(CPUS) -m 8G $(QEMUEXTRA)
-
 
 VBOX_MACHINENAME = Test
 VBOXMANAGE = VBoxManage.exe
