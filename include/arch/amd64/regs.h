@@ -71,7 +71,7 @@ struct trap_info
     uint64_t r14;
     uint64_t r15;
 
-    uint64_t trapno;
+    uint64_t trap_num;
     uint64_t err;
 
     uint64_t rip;       // eip in x86

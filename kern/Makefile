@@ -1,7 +1,7 @@
 TOP_SRC=..
 include $(TOP_SRC)/Makefile.mk
 
-SUBDIRS = init lib mm
+SUBDIRS = init lib mm proc
 
 all: $(SUBDIRS)
 

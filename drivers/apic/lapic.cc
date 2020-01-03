@@ -132,3 +132,17 @@ void local_apic::start_ap(size_t apicid, uintptr_t addr)
         microdelay(200);
     }
 }
+
+void local_apic::write_eoi(void)
+{
+    if(lapic)
+    {
+        write_lapic(EOI, 0);
+    }
+}
+
+
+
+
+
+

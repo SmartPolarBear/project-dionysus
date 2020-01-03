@@ -10,6 +10,7 @@ kern/mm/vm.o
 kern/mm/vm_seg.o
 kern/mm/vm_utils.o
 kern/mm/buddy.o
+kern/proc/scheduler.o
 drivers/console/cga.o
 drivers/console/console.o
 drivers/console/uart.o
