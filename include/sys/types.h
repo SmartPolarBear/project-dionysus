@@ -1,8 +1,8 @@
 /**
  * @ Author: SmartPolarBear
  * @ Create Time: 1970-01-01 08:00:00
- * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-12-16 23:25:06
+ * @ Modified by: Daniel Lin
+ * @ Modified time: 2020-01-04 23:51:56
  * @ Description:
  */
 
@@ -56,5 +56,6 @@ static inline constexpr ull operator"" _TB(ull sz)
 {
     return sz * STORAGE_UNIT * STORAGE_UNIT * STORAGE_UNIT * STORAGE_UNIT;
 }
+
 
 #endif // __INCLUDE_SYS_TYPES_H

@@ -36,4 +36,6 @@ void kdebug_getcallerpcs(size_t buflen, uintptr_t pcs[]);
 
 } // namespace kdebug
 
+#include "drivers/debug/hresult.h"
+
 #endif // __INCLUDE_DRIVERS_KDEBUG_H

@@ -1,10 +1,12 @@
 #if !defined(__INCLUDE_DIRVERS_APIC_TRAPS_H__)
 #define __INCLUDE_DIRVERS_APIC_TRAPS_H__
 
+#include "arch/amd64/regs.h"
+
+#include "drivers/debug/kdebug.h"
+
 namespace trap
 {
-void initialize_trap_vectors(void);
-
 constexpr size_t TRAP_NUMBERMAX = 512;
 // Processor-defined:
 enum processor_defined_traps
@@ -47,6 +49,19 @@ enum irqs
     IRQ_ERROR = 19,
     IRQ_SPURIOUS = 31,
 };
+
+using trap_handle_func = hresult (*)(trap_info);
+
+struct trap_handle
+{
+    trap_handle_func handle;
+};
+
+void initialize_trap_vectors(void);
+
+// returns the old handle
+trap_handle trap_handle_regsiter(size_t trapnumber, trap_handle handle);
+
 } // namespace trap
 
 #endif // __INCLUDE_DIRVERS_APIC_TRAPS_H__

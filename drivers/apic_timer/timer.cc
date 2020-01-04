@@ -1,7 +1,12 @@
-#include "drivers/apic_timer/timer.h"
+#include "arch/amd64/regs.h"
+
+#include "sys/types.h"
+
 #include "drivers/acpi/cpu.h"
 #include "drivers/apic/apic.h"
 #include "drivers/apic/traps.h"
+#include "drivers/apic_timer/timer.h"
+#include "drivers/debug/kdebug.h"
 #include "drivers/lock/spinlock.h"
 
 using local_apic::TDCR;
@@ -24,9 +29,16 @@ using trap::TRAP_IRQ0;
 uint64_t ticks = 0;
 spinlock tickslock;
 
+// defined below
+hresult handle_tick(trap_info info);
+
 void timer::init_apic_timer(void)
 {
-    // initialize timer
+    // register the handle
+    trap::trap_handle_regsiter(TRAP_IRQ0 + IRQ_TIMER, trap::trap_handle{
+                                                          .handle = handle_tick});
+
+    // initialize apic values
     write_lapic(TDCR, TIMER_FLAG_X1);
     write_lapic(TIMER, TIMER_FLAG_PERIODIC | (TRAP_IRQ0 + IRQ_TIMER));
     write_lapic(TICR, TIC_DEFUALT_VALUE);
@@ -34,7 +46,7 @@ void timer::init_apic_timer(void)
     spinlock_initlock(&tickslock, "timer_ticks");
 }
 
-void timer::handle_tick(void)
+hresult handle_tick([[maybe_unused]] trap_info info)
 {
     if (cpu->id == 0)
     {
@@ -44,4 +56,6 @@ void timer::handle_tick(void)
         spinlock_release(&tickslock);
     }
     local_apic::write_eoi();
+
+    return HRES_SUCCESS;
 }
