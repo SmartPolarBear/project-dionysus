@@ -10,6 +10,8 @@
 #include "sys/memlayout.h"
 #include "sys/mmu.h"
 
+using trap::TRAP_IRQ0;
+
 enum ioapic_regs
 {
     IOAPICID = 0x00,

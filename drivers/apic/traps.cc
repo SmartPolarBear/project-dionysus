@@ -50,9 +50,9 @@ extern "C" void trap_body([[maybe_unused]] trap_info info)
 {
     switch (info.trap_num)
     {
-    case TRAP_IRQ0+IRQ_TIMER:
-        timer::handle_tick();
-        break;
+    // case TRAP_IRQ0+IRQ_TIMER:
+    //     timer::handle_tick();
+    //     break;
     default:
         break;
     }

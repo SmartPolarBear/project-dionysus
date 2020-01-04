@@ -9,6 +9,10 @@
 
 #include "arch/amd64/x86.h"
 
+using trap::IRQ_ERROR;
+using trap::IRQ_SPURIOUS;
+using trap::TRAP_IRQ0;
+
 volatile uint32_t *local_apic::lapic;
 
 // Spin for a given number of microseconds.
@@ -97,7 +101,6 @@ size_t local_apic::get_cpunum(void)
     return 0;
 }
 
-
 void local_apic::start_ap(size_t apicid, uintptr_t addr)
 {
     [[maybe_unused]] constexpr size_t CMOS_PORT = 0x70;
@@ -135,14 +138,8 @@ void local_apic::start_ap(size_t apicid, uintptr_t addr)
 
 void local_apic::write_eoi(void)
 {
-    if(lapic)
+    if (lapic)
     {
         write_lapic(EOI, 0);
     }
 }
-
-
-
-
-
-

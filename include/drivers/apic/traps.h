@@ -4,8 +4,8 @@
 namespace trap
 {
 void initialize_trap_vectors(void);
-} // namespace ivector
 
+constexpr size_t TRAP_NUMBERMAX = 512;
 // Processor-defined:
 enum processor_defined_traps
 {
@@ -47,5 +47,6 @@ enum irqs
     IRQ_ERROR = 19,
     IRQ_SPURIOUS = 31,
 };
+} // namespace trap
 
 #endif // __INCLUDE_DIRVERS_APIC_TRAPS_H__

@@ -18,6 +18,9 @@ using lock::spinlock_acquire;
 using lock::spinlock_initlock;
 using lock::spinlock_release;
 
+using trap::IRQ_TIMER;
+using trap::TRAP_IRQ0;
+
 uint64_t ticks = 0;
 spinlock tickslock;
 
