@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: Daniel Lin
- * @ Modified time: 2020-01-05 19:43:46
+ * @ Modified time: 2020-01-05 23:20:23
  * @ Description: the entry point for kernel in C++
  */
 
@@ -70,6 +70,7 @@ extern "C" [[noreturn]] void kmain() {
     //TODO: implement process manager.
 
     console::printf("Codename \"dionysus\" built on %s %s\nBoot OK!\n", __DATE__, __TIME__);
+
 
     for (;;)
         ;

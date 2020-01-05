@@ -70,6 +70,8 @@ void local_apic::init_lapic(void)
 
     // Enable interrupts on the APIC (but not on the processor).
     write_lapic(TASK_PRIORITY, 0);
+
+    
 }
 
 // when interrupts are enable
