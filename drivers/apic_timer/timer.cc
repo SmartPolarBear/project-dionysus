@@ -6,6 +6,7 @@
 #include "drivers/apic/apic.h"
 #include "drivers/apic/traps.h"
 #include "drivers/apic_timer/timer.h"
+#include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 #include "drivers/lock/spinlock.h"
 
@@ -43,6 +44,8 @@ void timer::init_apic_timer(void)
     write_lapic(TIMER, TIMER_FLAG_PERIODIC | (TRAP_IRQ0 + IRQ_TIMER));
     write_lapic(TICR, TIC_DEFUALT_VALUE);
 
+    local_apic::write_eoi();
+
     spinlock_initlock(&tickslock, "timer_ticks");
 }
 
@@ -52,6 +55,7 @@ hresult handle_tick([[maybe_unused]] trap_info info)
     {
         spinlock_acquire(&tickslock);
         ticks++;
+        console::printf("%d\n", ticks);
         //TODO: wake up processes
         spinlock_release(&tickslock);
     }

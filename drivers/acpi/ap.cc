@@ -54,18 +54,25 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
 void ap::all_processor_main()
 {
     console::printf("AP: Initialized CPU %d\n", cpu->id);
-    xchg(&cpu->started, 1u);  
+    xchg(&cpu->started, 1u);
+
+    //FIXME: temporarily enable interrupt
+    sti();
 }
 
 extern "C" [[clang::optnone]] void ap_enter(void) {
     // install the kernel vm
     vm::switch_kernelvm();
+
     // install trap vectors
     trap::initialize_trap_vectors();
+
     // initialize segmentation
     vm::segment::init_segmentation();
+
     // initialize local APIC
     local_apic::init_lapic();
+
     // initialize apic timer
     timer::init_apic_timer();
 

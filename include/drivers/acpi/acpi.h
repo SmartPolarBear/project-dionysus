@@ -120,12 +120,24 @@ struct madt_ioapic
     uint32_t interrupt_base;
 } __attribute__((__packed__));
 
+struct madt_iso
+{
+    uint8_t type;
+    uint8_t length;
+    uint8_t bus_src;
+    uint8_t irq_src;
+    uint32_t global_system_interrupt;
+    uint16_t flags;
+} __attribute__((__packed__));
 
 void init_acpi(void);
 
 size_t get_ioapic_count(void);
 void get_ioapics(madt_ioapic res[], size_t bufsz);
 madt_ioapic get_first_ioapic(void);
+
+size_t get_iso_count(void);
+void get_isos(madt_iso res[], size_t bufsz);
 
 //TODO: instead of copy madt_lapic to cpus array, directly provide interface to get them
 

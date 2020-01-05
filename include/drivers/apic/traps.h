@@ -7,7 +7,7 @@
 
 namespace trap
 {
-constexpr size_t TRAP_NUMBERMAX = 512;
+constexpr size_t TRAP_NUMBERMAX = 256;
 // Processor-defined:
 enum processor_defined_traps
 {
@@ -37,7 +37,7 @@ enum processor_defined_traps
     TRAP_SYSCALL = 64,  // system call
     TRAP_DEFAULT = 500, // catchall
 
-    TRAP_IRQ0 = 32, // IRQ 0 corresponds to int T_IRQ
+    TRAP_IRQ0 = 2//32, // IRQ 0 corresponds to int T_IRQ
 };
 
 enum irqs

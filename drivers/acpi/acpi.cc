@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 1970-01-01 08:00:00
  * @ Modified by: Daniel Lin
- * @ Modified time: 2020-01-01 12:22:41
+ * @ Modified time: 2020-01-05 20:00:30
  * @ Description:
  */
 
@@ -13,6 +13,7 @@
 #include "drivers/acpi/acpi.h"
 #include "drivers/acpi/cpu.h"
 #include "drivers/apic/apic.h"
+#include "drivers/apic/traps.h"
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 
@@ -32,9 +33,15 @@ using acpi::acpi_rsdt;
 using acpi::acpi_xsdt;
 using acpi::madt_entry_header;
 using acpi::madt_ioapic;
+using acpi::madt_iso;
+
+using trap::TRAP_NUMBERMAX;
 
 madt_ioapic ioapics[CPU_COUNT_LIMIT] = {};
 size_t ioapic_count = 0;
+
+madt_iso intr_src_overrides[TRAP_NUMBERMAX] = {};
+size_t iso_count = 0;
 
 static inline bool acpi_sdt_checksum(const acpi::acpi_desc_header *header)
 {
@@ -87,6 +94,15 @@ static void acpi_init_apic(const acpi_madt *madt)
 
             ioapics[ioapic_count] = madt_ioapic{*ioapic};
             ioapic_count++;
+            break;
+        }
+        case acpi::MADT_ENTRY_ISO:
+        {
+            acpi::madt_iso *iso = reinterpret_cast<decltype(iso)>(entry);
+            KDEBUG_ASSERT(sizeof(*iso) == iso->length);
+
+            intr_src_overrides[iso_count] = madt_iso{*iso};
+            iso_count++;
             break;
         }
         default:
@@ -171,6 +187,7 @@ void acpi::init_acpi(void)
 
 namespace acpi
 {
+
 size_t get_ioapic_count(void)
 {
     return ioapic_count;
@@ -187,6 +204,19 @@ void get_ioapics(madt_ioapic res[], size_t bufsz)
 madt_ioapic get_first_ioapic(void)
 {
     return ioapics[0];
+}
+
+size_t get_iso_count(void)
+{
+    return iso_count;
+}
+
+void get_isos(madt_iso res[], size_t bufsz)
+{
+    for (size_t i = 0; i < bufsz; i++)
+    {
+        res[i] = madt_iso{intr_src_overrides[i]};
+    }
 }
 
 } // namespace acpi

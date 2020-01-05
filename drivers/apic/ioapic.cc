@@ -130,6 +130,7 @@ void io_apic::init_ioapic(void)
 void io_apic::enable_trap(uint32_t trapnum, uint32_t cpu_acpi_id_rounted)
 {
     redirection_entry redir_new;
+    
     redir_new.vector = TRAP_IRQ0 + trapnum;
     redir_new.delievery_mode = DLM_FIXED;
     redir_new.destination_mode = DTM_PHYSICAL;

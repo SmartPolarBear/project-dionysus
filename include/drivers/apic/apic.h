@@ -43,6 +43,7 @@ constexpr size_t PCINT = 0x0340 / 4; // Performance Counter LVT
 constexpr size_t LINT0 = 0x0350 / 4; // Local Vector Table 1 (LINT0)
 constexpr size_t LINT1 = 0x0360 / 4; // Local Vector Table 2 (LINT1)
 constexpr size_t ERROR = 0x0370 / 4; // Local Vector Table 3 (ERROR)
+
 enum INTRRUPT_FLAGS
 {
     INTERRUPT_MASKED = 0x00010000
