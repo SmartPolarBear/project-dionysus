@@ -51,15 +51,15 @@ void timer::init_apic_timer(void)
 
 hresult handle_tick([[maybe_unused]] trap_info info)
 {
-    // if (cpu->id == 0)
-    // {
-    //     spinlock_acquire(&tickslock);
-    //     ticks++;
-    //     console::printf("%d\n", ticks);
-    //     //TODO: wake up processes
-    //     spinlock_release(&tickslock);
-    // }
-    // local_apic::write_eoi();
+    if (cpu->id == 0)
+    {
+        spinlock_acquire(&tickslock);
+        ticks++;
+        console::printf("%d\n", ticks);
+        //TODO: wake up processes
+        spinlock_release(&tickslock);
+    }
+    local_apic::write_eoi();
 
     return HRES_SUCCESS;
 }

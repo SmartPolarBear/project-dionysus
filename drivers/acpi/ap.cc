@@ -58,6 +58,18 @@ void ap::all_processor_main()
 
     //FIXME: temporarily enable interrupt
     sti();
+
+    // simple scheduler loop
+    while (!kdebug::panicked)
+    {
+        sti();
+        console::printf("%d\n", cpu->id);
+    }
+
+    if (kdebug::panicked)
+    {
+        hlt();
+    }
 }
 
 extern "C" [[clang::optnone]] void ap_enter(void) {

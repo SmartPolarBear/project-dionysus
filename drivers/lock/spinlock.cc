@@ -6,7 +6,7 @@
 
 using lock::spinlock;
 
-void lock::spinlock_initlock(spinlock *splk,const char *name)
+void lock::spinlock_initlock(spinlock *splk, const char *name)
 {
     splk->name = name;
     splk->locked = false;
@@ -25,7 +25,7 @@ static inline void dump_callstack_and_panic(const spinlock *lock)
     KDEBUG_FOLLOWPANIC("acquire");
 }
 
-[[clang::optnone]] void lock::spinlock_acquire(spinlock *lock) {
+void lock::spinlock_acquire(spinlock *lock) {
     pushcli();
     if (spinlock_holding(lock))
     {
@@ -39,7 +39,7 @@ static inline void dump_callstack_and_panic(const spinlock *lock)
     kdebug::kdebug_getcallerpcs(16, lock->pcs);
 }
 
-    [[clang::optnone]] void lock::spinlock_release(spinlock *lock)
+void lock::spinlock_release(spinlock *lock)
 {
     if (!spinlock_holding(lock))
     {

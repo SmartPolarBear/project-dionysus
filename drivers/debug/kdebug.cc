@@ -6,7 +6,7 @@
 
 #include <stdarg.h>
 
-static bool panicked = false;
+bool kdebug::panicked = false;
 
 // read information from %rbp and retrive pcs
 void kdebug::kdebug_getcallerpcs(size_t buflen, uintptr_t pcs[])

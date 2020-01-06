@@ -1,8 +1,8 @@
 /**
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-10-13 22:46:26
- * @ Modified by: SmartPolarBear
- * @ Modified time: 2019-12-16 23:35:44
+ * @ Modified by: Daniel Lin
+ * @ Modified time: 2020-01-06 23:05:34
  * @ Description: Implement Intel's 4-level paging and the modification of page tables, etc.
  */
 
@@ -22,6 +22,7 @@
 
 #include "drivers/acpi/cpu.h"
 #include "drivers/apic/apic.h"
+#include "drivers/apic/traps.h"
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 
@@ -185,6 +186,13 @@ static inline void initialize_phymem_parameters(void)
     kmem_map[KMMAP_PHYREMAP].pend = physize;
 }
 
+static hresult handle_pgfault(trap_info info)
+{
+    console::printf("page fault!\n");
+    KDEBUG_FOLLOWPANIC("page fault");
+    return HRES_SUCCESS;
+}
+
 void vm::switch_kernelvm()
 {
     lcr3(V2P((uintptr_t)g_kpml4t));
@@ -224,6 +232,9 @@ void vm::init_kernelvm(void)
 
     // install the PML4T to the CR3 register.
     switch_kernelvm();
+
+    trap::trap_handle_regsiter(trap::TRAP_PGFLT, trap::trap_handle{
+                                                     .handle = handle_pgfault});
 }
 
 void vm::freevm(pde_t *pgdir)

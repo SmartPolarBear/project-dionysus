@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: Daniel Lin
- * @ Modified time: 2020-01-05 23:20:23
+ * @ Modified time: 2020-01-06 23:15:49
  * @ Description: the entry point for kernel in C++
  */
 
@@ -43,6 +43,8 @@ extern "C" [[noreturn]] void kmain() {
     // initialize the paging
     vm::init_kernelvm();
 
+    console::console_init();
+
     // initialize ACPI
     acpi::init_acpi();
 
@@ -61,6 +63,8 @@ extern "C" [[noreturn]] void kmain() {
     // initialize I/O APIC
     io_apic::init_ioapic();
 
+    console::printf("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
+
     // boot other CPU cores
     ap::init_ap();
 
@@ -68,9 +72,6 @@ extern "C" [[noreturn]] void kmain() {
     ap::all_processor_main();
 
     //TODO: implement process manager.
-
-    console::printf("Codename \"dionysus\" built on %s %s\nBoot OK!\n", __DATE__, __TIME__);
-
 
     for (;;)
         ;

@@ -131,13 +131,13 @@ void console::printf(const char *fmt, ...)
     char ch = 0;
     const char *s;
 
-    va_start(ap, fmt);
-
     // acquire the lock
     if (conslock.lock_enable)
     {
         spinlock_acquire(&conslock.lock);
     }
+
+    va_start(ap, fmt);
 
     if (fmt == 0)
     {
