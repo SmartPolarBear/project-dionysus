@@ -85,7 +85,8 @@ static inline void console_setcolor_impl(uint8_t fridx, uint8_t bkidx)
 void console::puts(const char *str)
 {
     // acquire the lock
-    if (conslock.lock_enable)
+    bool locking = conslock.lock_enable;
+    if (locking)
     {
         spinlock_acquire(&conslock.lock);
     }
@@ -97,7 +98,7 @@ void console::puts(const char *str)
     }
 
     // release the lock
-    if (conslock.lock_enable)
+    if (locking)
     {
         spinlock_release(&conslock.lock);
     }
@@ -106,7 +107,8 @@ void console::puts(const char *str)
 void console::putc(char c)
 {
     // acquire the lock
-    if (conslock.lock_enable)
+    bool locking = conslock.lock_enable;
+    if (locking)
     {
         spinlock_acquire(&conslock.lock);
     }
@@ -114,7 +116,7 @@ void console::putc(char c)
     console_putc_impl(c);
 
     // release the lock
-    if (conslock.lock_enable)
+    if (locking)
     {
         spinlock_release(&conslock.lock);
     }
@@ -132,7 +134,8 @@ void console::printf(const char *fmt, ...)
     const char *s;
 
     // acquire the lock
-    if (conslock.lock_enable)
+    bool locking = conslock.lock_enable;
+    if (locking)
     {
         spinlock_acquire(&conslock.lock);
     }
@@ -141,7 +144,7 @@ void console::printf(const char *fmt, ...)
 
     if (fmt == 0)
     {
-        KDEBUG_GENERALPANIC("Invalid format strings");
+        KDEBUG_GENERALPANIC("Invalid null pointer for format strings");
     }
 
     for (i = 0; (c = fmt[i] & 0xff) != 0; i++)
@@ -206,7 +209,7 @@ void console::printf(const char *fmt, ...)
     va_end(ap);
 
     // release the lock
-    if (conslock.lock_enable)
+    if (locking)
     {
         spinlock_release(&conslock.lock);
     }
@@ -222,7 +225,8 @@ void console::console_init(void)
 void console::console_setpos(size_t pos)
 {
     // acuqire the lock
-    if (conslock.lock_enable)
+    bool locking = conslock.lock_enable;
+    if (locking)
     {
         spinlock_acquire(&conslock.lock);
     }
@@ -230,7 +234,7 @@ void console::console_setpos(size_t pos)
     console_setpos_impl(pos);
 
     // release the lock
-    if (conslock.lock_enable)
+    if (locking)
     {
         spinlock_release(&conslock.lock);
     }
@@ -239,7 +243,9 @@ void console::console_setpos(size_t pos)
 void console::console_settextattrib(size_t attribs)
 {
     // acuqire the lock
-    if (conslock.lock_enable)
+    bool locking = conslock.lock_enable;
+
+    if (locking)
     {
         spinlock_acquire(&conslock.lock);
     }
@@ -277,7 +283,7 @@ void console::console_settextattrib(size_t attribs)
     }
 
     // release the lock
-    if (conslock.lock_enable)
+    if (locking)
     {
         spinlock_release(&conslock.lock);
     }

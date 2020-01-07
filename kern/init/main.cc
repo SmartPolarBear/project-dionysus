@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: Daniel Lin
- * @ Modified time: 2020-01-06 23:15:49
+ * @ Modified time: 2020-01-06 23:21:05
  * @ Description: the entry point for kernel in C++
  */
 
@@ -43,6 +43,7 @@ extern "C" [[noreturn]] void kmain() {
     // initialize the paging
     vm::init_kernelvm();
 
+    // initialize the console
     console::console_init();
 
     // initialize ACPI

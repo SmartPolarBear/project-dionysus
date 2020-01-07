@@ -15,17 +15,20 @@ void lock::spinlock_initlock(spinlock *splk, const char *name)
 
 static inline void dump_callstack_and_panic(const spinlock *lock)
 {
-    console::printf("lock %s has been held.\nCall stack:\n", lock->name);
-    for (auto cs : lock->pcs)
-    {
-        console::printf("%p ", cs);
-    }
+    KDEBUG_GENERALPANIC("acquire");
 
-    console::printf("\n");
-    KDEBUG_FOLLOWPANIC("acquire");
+    // console::printf("lock %s has been held.\nCall stack:\n", lock->name);
+    // for (auto cs : lock->pcs)
+    // {
+    //     console::printf("%p ", cs);
+    // }
+
+    // console::printf("\n");
+    // KDEBUG_FOLLOWPANIC("acquire");
 }
 
-void lock::spinlock_acquire(spinlock *lock) {
+void lock::spinlock_acquire(spinlock *lock)
+{
     pushcli();
     if (spinlock_holding(lock))
     {
