@@ -4,18 +4,6 @@
 #include "drivers/debug/kdebug.h"
 #include "drivers/lock/spinlock.h"
 
-void lock::mutex::lock(void)
-{
-    while (!__sync_bool_compare_and_swap(&lockval, 0, 1))
-    {
-        asm volatile("pause");
-    }
-}
-
-void lock::mutex::unlock(void)
-{
-    lockval = 0;
-}
 
 using lock::spinlock;
 
@@ -30,14 +18,20 @@ static inline void dump_callstack_and_panic(const spinlock *lock)
 {
     // disable the lock of console
     console::console_debugdisablelock();
+    console::console_setpos(0);
+
+    constexpr auto panicked_screencolor = console::TATTR_BKBLUE | console::TATTR_FRYELLOW;
+    console::console_settextattrib(panicked_screencolor);
 
     console::printf("lock %s has been held.\nCall stack:\n", lock->name);
+
     for (auto cs : lock->pcs)
     {
         console::printf("%p ", cs);
     }
 
     console::printf("\n");
+
     KDEBUG_FOLLOWPANIC("acquire");
 }
 

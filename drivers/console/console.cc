@@ -123,7 +123,7 @@ void console::putc(char c)
 }
 
 // buffer for converting ints with itoa
-constexpr size_t MAXNUMBER_LEN = 128;
+constexpr size_t MAXNUMBER_LEN = 256;
 char nbuf[MAXNUMBER_LEN] = {};
 
 void console::printf(const char *fmt, ...)
@@ -144,7 +144,7 @@ void console::printf(const char *fmt, ...)
 
     if (fmt == 0)
     {
-        KDEBUG_GENERALPANIC("Invalid null pointer for format strings");
+        KDEBUG_GENERALPANIC("Invalid null format strings");
     }
 
     for (i = 0; (c = fmt[i] & 0xff) != 0; i++)
@@ -168,7 +168,7 @@ void console::printf(const char *fmt, ...)
         case 'd':
             memset(nbuf, 0, sizeof(nbuf));
             itoa(nbuf, va_arg(ap, int), 10);
-            for (size_t i = 0; nbuf[i]; i++)
+            for (size_t i = 0; nbuf[i] && i < sizeof(int32_t); i++)
             {
                 console_putc_impl(nbuf[i]);
             }
@@ -176,7 +176,7 @@ void console::printf(const char *fmt, ...)
         case 'x':
             memset(nbuf, 0, sizeof(nbuf));
             itoa(nbuf, va_arg(ap, int), 16);
-            for (size_t i = 0; nbuf[i]; i++)
+            for (size_t i = 0; nbuf[i] && i < sizeof(int32_t); i++)
             {
                 console_putc_impl(nbuf[i]);
             }
@@ -184,7 +184,7 @@ void console::printf(const char *fmt, ...)
         case 'p':
             memset(nbuf, 0, sizeof(nbuf));
             itoa(nbuf, va_arg(ap, size_t), 16);
-            for (size_t i = 0; nbuf[i]; i++)
+            for (size_t i = 0; nbuf[i] && i < sizeof(size_t); i++)
             {
                 console_putc_impl(nbuf[i]);
             }

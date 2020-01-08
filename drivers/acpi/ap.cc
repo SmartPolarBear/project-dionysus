@@ -68,7 +68,10 @@ void ap::all_processor_main()
 
     if (kdebug::panicked)
     {
+        cli();
         hlt();
+        for (;;)
+            ;
     }
 }
 

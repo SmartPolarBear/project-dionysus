@@ -22,15 +22,6 @@ void spinlock_release(spinlock *lock);
 void pushcli(void);
 void popcli(void);
 
-class mutex
-{
-private:
-    using lock_val_type = volatile uint32_t;
-    lock_val_type lockval;
-public:
-    void lock(void);
-    void unlock(void);
-}
 
 } // namespace lock
 

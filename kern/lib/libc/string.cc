@@ -2,23 +2,12 @@
 #include "lib/libc/string.h"
 #include "arch/amd64/x86.h"
 
-extern "C" void *memset(void *dst, size_t c, size_t n)
+extern "C" void *memset(void *s, int c, size_t n)
 {
-    // if ((size_t)dst % 4ul == 0 && n % 4ul == 0ul)
-    // {
-    //     c &= 0xFFul;
-    //     stosl(dst, (c << 24ul) | (c << 16ul) | (c << 8ul) | c, n / 4ul);
-    // }
-    // else
-    // {
-    //     stosb(dst, c, n);
-    // }
-    char *d = (char *)dst;
-    for (size_t i = 0; i < n; i++)
-    {
-        d[i] = c;
-    }
-    return dst;
+    unsigned char *p = (unsigned char *)s;
+    while (n--)
+        *p++ = (unsigned char)c;
+    return s;
 }
 
 extern "C" int memcmp(const void *v1, const void *v2, size_t n)
