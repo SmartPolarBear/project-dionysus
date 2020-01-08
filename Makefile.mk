@@ -36,11 +36,8 @@ CFLAGS = -std=c17 $(SHAREDFLAGS)
 ASFLAGS = $(SHAREDFLAGS)
 CXXFLAGS = -std=c++2a $(SHAREDFLAGS)
 
-# If the makefile can't find QEMU, specify its path here
-# QEMU = qemu-system-i386
 QEMU = qemu-system-x86_64
 QEMU_EXE = $(QEMU).exe
-#QEMU = qemu-system-x86_64.exe
 
 
 GDBPORT = 32678

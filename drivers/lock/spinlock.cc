@@ -4,27 +4,41 @@
 #include "drivers/debug/kdebug.h"
 #include "drivers/lock/spinlock.h"
 
+void lock::mutex::lock(void)
+{
+    while (!__sync_bool_compare_and_swap(&lockval, 0, 1))
+    {
+        asm volatile("pause");
+    }
+}
+
+void lock::mutex::unlock(void)
+{
+    lockval = 0;
+}
+
 using lock::spinlock;
 
 void lock::spinlock_initlock(spinlock *splk, const char *name)
 {
     splk->name = name;
-    splk->locked = false;
+    splk->locked = 0u;
     splk->cpu = nullptr;
 }
 
 static inline void dump_callstack_and_panic(const spinlock *lock)
 {
-    KDEBUG_GENERALPANIC("acquire");
+    // disable the lock of console
+    console::console_debugdisablelock();
 
-    // console::printf("lock %s has been held.\nCall stack:\n", lock->name);
-    // for (auto cs : lock->pcs)
-    // {
-    //     console::printf("%p ", cs);
-    // }
+    console::printf("lock %s has been held.\nCall stack:\n", lock->name);
+    for (auto cs : lock->pcs)
+    {
+        console::printf("%p ", cs);
+    }
 
-    // console::printf("\n");
-    // KDEBUG_FOLLOWPANIC("acquire");
+    console::printf("\n");
+    KDEBUG_FOLLOWPANIC("acquire");
 }
 
 void lock::spinlock_acquire(spinlock *lock)
@@ -34,6 +48,7 @@ void lock::spinlock_acquire(spinlock *lock)
     {
         dump_callstack_and_panic(lock);
     }
+    __sync_synchronize();
 
     while (xchg(&lock->locked, 1u) != 0)
         ;

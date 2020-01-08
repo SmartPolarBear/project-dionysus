@@ -3,17 +3,15 @@
 
 #include "sys/types.h"
 
-template <typename T>
-static inline auto xchg(volatile T *addr, T newval) -> T
+__attribute__((always_inline)) static inline uint32_t xchg(volatile uint32_t *addr, uintptr_t newval)
 {
-    T result = 0;
+    uint32_t result;
 
     // The + in "+m" denotes a read-modify-write operand.
-    asm volatile("lock; xchg %0, %1"
+    asm volatile("lock xchgl %0, %1"
                  : "+m"(*addr), "=a"(result)
-                 : "1"((T)newval)
+                 : "1"((uint32_t)newval)
                  : "cc");
-
     return result;
 }
 
