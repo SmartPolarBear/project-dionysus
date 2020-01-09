@@ -42,7 +42,6 @@ void lock::spinlock_acquire(spinlock *lock)
     {
         dump_callstack_and_panic(lock);
     }
-    __sync_synchronize();
 
     while (xchg(&lock->locked, 1u) != 0)
         ;

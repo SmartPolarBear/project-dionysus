@@ -62,7 +62,6 @@ void ap::all_processor_main()
     // simple scheduler loop
     while (!kdebug::panicked)
     {
-        sti();
         console::printf("%d\n", cpu->id);
     }
 

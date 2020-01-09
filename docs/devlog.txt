@@ -1,0 +1,4 @@
+1/19/2020
+Conclusion:
+1) there may not be many problems in spinlock implementation, neither should clang be to blame for this
+2) console and memset are suspects
