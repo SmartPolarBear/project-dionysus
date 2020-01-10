@@ -7,31 +7,17 @@
 
 #include "drivers/debug/kdebug.h"
 
-
-extern "C" void *memset(void *s, int c, size_t n)
-{
+extern "C" void *memset(void *s, int c, size_t n) {
     // a nullptr should not be memset
-    KDEBUG_ASSERT(s != nullptr);
-    // n=0 doesn't make any effect
-    KDEBUG_ASSERT(n != 0);
+    unsigned char *mem = reinterpret_cast<unsigned char *>(s);
 
-    auto sanity_check = [](uintptr_t addr) -> bool {
-        return (addr >= KERNEL_ADDRESS_SPACE_BASE) || (addr >= PHYREMAP_VIRTUALBASE && addr < PHYREMAP_VIRTUALEND);
-    };
-
-    uint8_t *mem = reinterpret_cast<decltype(mem)>(s);
-
-    if (!sanity_check(reinterpret_cast<uintptr_t>(mem)))
+    if (n >= 102400)
     {
         KDEBUG_GENERALPANIC("memset: invalid address.\n");
     }
 
     for (size_t i = 0; i < n; i++)
     {
-        if (!sanity_check(reinterpret_cast<uintptr_t>(mem + i)))
-        {
-            KDEBUG_GENERALPANIC("memset: invalid address.\n");
-        }
         mem[i] = static_cast<uint8_t>(c);
     }
     return s;

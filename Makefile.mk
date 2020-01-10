@@ -28,8 +28,9 @@ GDB=gdb
 
 LDFLAGS=-z max-page-size=0x1000 -no-pie -nostdlib
 
+SHAREDFLAGS += --target=x86_64-pc-linux-elf 
 SHAREDFLAGS = -fno-pie -fno-exceptions -fno-rtti -ffreestanding -nostdlib -fno-builtin -gdwarf-2 -Wall -Wextra
-SHAREDFLAGS += --target=x86_64-pc-linux-elf -march=x86-64 -mtls-direct-seg-refs -mno-sse -mcmodel=large -mno-red-zone
+SHAREDFLAGS += -march=x86-64 -mtls-direct-seg-refs -mno-sse -mcmodel=large -mno-red-zone
 SHAREDFLAGS += -I$(TOP_SRC)/include
 
 CFLAGS = -std=c17 $(SHAREDFLAGS)

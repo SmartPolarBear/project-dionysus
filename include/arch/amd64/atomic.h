@@ -3,7 +3,7 @@
 
 #include "sys/types.h"
 
-__attribute__((always_inline)) static inline uint32_t xchg(volatile uint32_t *addr, uintptr_t newval)
+static inline uint32_t xchg(volatile uint32_t *addr, size_t newval)
 {
     uint32_t result;
 

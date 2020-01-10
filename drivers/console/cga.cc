@@ -76,7 +76,7 @@ void console::cga_putc(uint32_t c)
                 sizeof(cga_mem[0]) * 23 * 80);
 
         pos -= 80;
-        memset((void *)(cga_mem + pos), 0, sizeof(cga_mem[0]) * (24 + 80 - pos));
+        memset((void *)(cga_mem + pos), 0, sizeof(cga_mem[0]) * (24 * 80 - pos));
     }
 
     set_cur_pos(pos);

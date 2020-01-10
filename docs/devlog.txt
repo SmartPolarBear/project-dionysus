@@ -1,4 +1,16 @@
-1/19/2020
+1/09/2020
 Conclusion:
 1) there may not be many problems in spinlock implementation, neither should clang be to blame for this
 2) console and memset are suspects
+
+1/10/2020
+Discovery:
+extern "C" will cause unexpected randomly reordering of parameter data
+e.g you call func(A,B) with something like func(1,2) yet you get A=2 B=1 inside func.
+*************
+The discovery below leads to the truth, but the conclusion above is completely wrong
+It is ignored that the screen froze before crashing at the memset, which is the key to the problem.
+In putchar implementation in cga.cc, 24*80-pos is mistaken by 24+80-pos, causing the parameter passed to memset
+overflow to INT64_MAX. As it is so big, I mistaken it as an address in a wrong place, that's why I came to a wrong
+conclusion
+

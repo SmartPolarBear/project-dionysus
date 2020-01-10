@@ -166,6 +166,7 @@ void console::printf(const char *fmt, ...)
             ch = va_arg(ap, int);
             console_putc_impl(ch & 0xFF);
         case 'd':
+        {
             memset(nbuf, 0, sizeof(nbuf));
             itoa(nbuf, va_arg(ap, int), 10);
             for (size_t i = 0; nbuf[i] && i < sizeof(int32_t); i++)
@@ -173,7 +174,9 @@ void console::printf(const char *fmt, ...)
                 console_putc_impl(nbuf[i]);
             }
             break;
+        }
         case 'x':
+        {
             memset(nbuf, 0, sizeof(nbuf));
             itoa(nbuf, va_arg(ap, int), 16);
             for (size_t i = 0; nbuf[i] && i < sizeof(int32_t); i++)
@@ -181,7 +184,9 @@ void console::printf(const char *fmt, ...)
                 console_putc_impl(nbuf[i]);
             }
             break;
+        }
         case 'p':
+        {
             memset(nbuf, 0, sizeof(nbuf));
             itoa(nbuf, va_arg(ap, size_t), 16);
             for (size_t i = 0; nbuf[i] && i < sizeof(size_t); i++)
@@ -189,20 +194,26 @@ void console::printf(const char *fmt, ...)
                 console_putc_impl(nbuf[i]);
             }
             break;
+        }
         case 's':
+        {
             if ((s = va_arg(ap, char *)) == 0)
                 s = "(null)";
             for (; *s; s++)
                 console_putc_impl(*s);
             break;
+        }
         case '%':
+        {
             console_putc_impl('%');
             break;
+        }
         default:
-            // Print unknown % sequence to draw attention.
+        { // Print unknown % sequence to draw attention.
             console_putc_impl('%');
             console_putc_impl(c);
             break;
+        }
         }
     }
 
