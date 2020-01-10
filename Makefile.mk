@@ -44,7 +44,7 @@ QEMU_EXE = $(QEMU).exe
 GDBPORT = 32678
 QEMUGDB = -gdb tcp::$(GDBPORT)
 
-CPUS = 6
+CPUS = 4
 
 QEMUOPTS =  -drive file=$(BUILD)/disk.img,index=0,media=disk,format=raw -cpu max
 #QEMUOPTS +=  -accel whpx
