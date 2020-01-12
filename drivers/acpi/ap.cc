@@ -62,7 +62,7 @@ void ap::all_processor_main()
     // simple scheduler loop
     while (!kdebug::panicked)
     {
-        console::printf("%d\n", cpu->id);
+        console::printf("%lld\n", ((size_t)-1) - cpu->id);
     }
 
     if (kdebug::panicked)

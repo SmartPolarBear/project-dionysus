@@ -129,9 +129,6 @@ char nbuf[MAXNUMBER_LEN] = {};
 void console::printf(const char *fmt, ...)
 {
     va_list ap;
-    int i, c; //, locking;
-    char ch = 0;
-    const char *s;
 
     // acquire the lock
     bool locking = conslock.lock_enable;
@@ -147,27 +144,49 @@ void console::printf(const char *fmt, ...)
         KDEBUG_GENERALPANIC("Invalid null format strings");
     }
 
-    for (i = 0; (c = fmt[i] & 0xff) != 0; i++)
+    auto char_data = [](char d) -> decltype(d & 0xFF) {
+        return d & 0xFF;
+    };
+
+    size_t i = 0, c = 0;
+    auto next_char = [&i, fmt, char_data](void) -> char {
+        return char_data(fmt[++i]);
+    };
+
+    char ch = 0;
+    const char *s = nullptr;
+
+    for (i = 0; (c = char_data(fmt[i])) != 0; i++)
     {
+
         if (c != '%')
         {
             console_putc_impl(c);
             continue;
         }
-        c = fmt[++i] & 0xff;
+
+        c = next_char();
+
         if (c == 0)
+        {
             break;
+        }
+
+        // reset buffer for itoa()
+        memset(nbuf, 0, sizeof(nbuf));
+
         switch (c)
         {
         case 'c':
-            // this va_arg uses int
+        { // this va_arg uses int
             // otherwise, a warning will be given, saying
             // warning: second argument to 'va_arg' is of promotable type 'char'; this va_arg has undefined behavior because arguments will be promoted to 'int
             ch = va_arg(ap, int);
-            console_putc_impl(ch & 0xFF);
+            console_putc_impl(char_data(ch));
+            break;
+        }
         case 'd':
         {
-            memset(nbuf, 0, sizeof(nbuf));
             itoa(nbuf, va_arg(ap, int), 10);
             for (size_t i = 0; nbuf[i] && i < sizeof(int32_t); i++)
             {
@@ -175,9 +194,32 @@ void console::printf(const char *fmt, ...)
             }
             break;
         }
+        case 'l':
+        {
+            char nextchars[2] = {0};
+            nextchars[0] = next_char();
+            nextchars[1] = next_char();
+
+            if (nextchars[0] == 'l' && nextchars[1] == 'd')
+            {
+                size_t len = itoa_ex(nbuf, va_arg(ap, unsigned long long), 10);
+                for (size_t i = 0; i < len; i++)
+                {
+                    console_putc_impl(nbuf[i]);
+                }
+            }
+            else
+            {
+                // Print unknown % sequence to draw attention.
+                console_putc_impl('%');
+                console_putc_impl('l');
+                console_putc_impl(nextchars[0]);
+                console_putc_impl(nextchars[1]);
+            }
+            break;
+        }
         case 'x':
         {
-            memset(nbuf, 0, sizeof(nbuf));
             itoa(nbuf, va_arg(ap, int), 16);
             for (size_t i = 0; nbuf[i] && i < sizeof(int32_t); i++)
             {
@@ -187,7 +229,6 @@ void console::printf(const char *fmt, ...)
         }
         case 'p':
         {
-            memset(nbuf, 0, sizeof(nbuf));
             itoa(nbuf, va_arg(ap, size_t), 16);
             for (size_t i = 0; nbuf[i] && i < sizeof(size_t); i++)
             {
@@ -198,9 +239,13 @@ void console::printf(const char *fmt, ...)
         case 's':
         {
             if ((s = va_arg(ap, char *)) == 0)
+            {
                 s = "(null)";
+            }
             for (; *s; s++)
+            {
                 console_putc_impl(*s);
+            }
             break;
         }
         case '%':
@@ -209,7 +254,8 @@ void console::printf(const char *fmt, ...)
             break;
         }
         default:
-        { // Print unknown % sequence to draw attention.
+        {
+            // Print unknown % sequence to draw attention.
             console_putc_impl('%');
             console_putc_impl(c);
             break;
