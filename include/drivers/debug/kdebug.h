@@ -3,6 +3,8 @@
 
 #include "sys/types.h"
 
+#include "drivers/lock/spinlock.h"
+
 namespace kdebug
 {
 extern bool panicked;
@@ -12,6 +14,7 @@ void kdebug_panic(const char *fmt, ...);
 void kdebug_panic2(const char *fmt, uint32_t topleft, ...);
 void kdebug_getcallerpcs(size_t buflen, uintptr_t pcs[]);
 
+void kdebug_dump_lock_panic(lock::spinlock *lock);
 // panic with line number and file name
 // to make __FILE__ and __LINE__ macros works right, this must be a macro as well.
 #define KDEBUG_GENERALPANIC(str) \

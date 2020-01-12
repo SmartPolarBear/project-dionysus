@@ -199,3 +199,25 @@ void kdebug::kdebug_panic2(const char *fmt, uint32_t topleft, ...)
     for (;;)
         ;
 }
+
+void kdebug::kdebug_dump_lock_panic(lock::spinlock *lock)
+{
+        // disable the lock of console
+    console::console_debugdisablelock();
+    console::console_setpos(0);
+
+    constexpr auto panicked_screencolor = console::TATTR_BKBLUE | console::TATTR_FRYELLOW;
+    console::console_settextattrib(panicked_screencolor);
+
+    console::printf("lock %s has been held.\nCall stack:\n", lock->name);
+
+    for (auto cs : lock->pcs)
+    {
+        console::printf("%p ", cs);
+    }
+
+    console::printf("\n");
+
+    KDEBUG_FOLLOWPANIC("acquire");
+}
+

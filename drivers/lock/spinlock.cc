@@ -14,33 +14,13 @@ void lock::spinlock_initlock(spinlock *splk, const char *name)
     splk->cpu = nullptr;
 }
 
-static inline void dump_callstack_and_panic(const spinlock *lock)
-{
-    // disable the lock of console
-    console::console_debugdisablelock();
-    console::console_setpos(0);
-
-    constexpr auto panicked_screencolor = console::TATTR_BKBLUE | console::TATTR_FRYELLOW;
-    console::console_settextattrib(panicked_screencolor);
-
-    console::printf("lock %s has been held.\nCall stack:\n", lock->name);
-
-    for (auto cs : lock->pcs)
-    {
-        console::printf("%p ", cs);
-    }
-
-    console::printf("\n");
-
-    KDEBUG_FOLLOWPANIC("acquire");
-}
 
 void lock::spinlock_acquire(spinlock *lock)
 {
     pushcli();
     if (spinlock_holding(lock))
     {
-        dump_callstack_and_panic(lock);
+        kdebug::kdebug_dump_lock_panic(lock);
     }
 
     while (xchg(&lock->locked, 1u) != 0)
