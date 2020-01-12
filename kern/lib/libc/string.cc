@@ -7,19 +7,18 @@
 
 #include "drivers/debug/kdebug.h"
 
-extern "C" void *memset(void *s, int c, size_t n) {
-    // a nullptr should not be memset
-    unsigned char *mem = reinterpret_cast<unsigned char *>(s);
-
-    if (n >= 102400)
+extern "C" void *memset(void *s, int c, size_t n)
+{
+    if (reinterpret_cast<size_t>(s) % 4 == 0 && n % 4 == 0)
     {
-        KDEBUG_GENERALPANIC("memset: invalid address.\n");
+        c &= 0xFF;
+        stosl(s, (c << 24) | (c << 16) | (c << 8) | c, n / 4);
+    }
+    else
+    {
+        stosb(s, c, n);
     }
 
-    for (size_t i = 0; i < n; i++)
-    {
-        mem[i] = static_cast<uint8_t>(c);
-    }
     return s;
 }
 
