@@ -14,3 +14,10 @@ In putchar implementation in cga.cc, 24*80-pos is mistaken by 24+80-pos, causing
 overflow to INT64_MAX. As it is so big, I mistaken it as an address in a wrong place, that's why I came to a wrong
 conclusion
 
+1/12/2020
+Plan to improve console, solving:
+1) the numbers is truncate in wrong place
+2) the lack of ability of showing decimal data or long int data
+3) the slow speed
+
+
