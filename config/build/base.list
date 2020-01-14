@@ -3,6 +3,7 @@ kern/init/main.o
 kern/init/multiboot.o
 kern/libc/string.o
 kern/libc/itoa.o
+kern/libc/ftoa.o
 kern/libcxxrt/cxxbase.o
 kern/libcxxrt/new.o
 kern/mm/bootmm.o

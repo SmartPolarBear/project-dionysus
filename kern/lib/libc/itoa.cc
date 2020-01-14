@@ -2,7 +2,7 @@
 
 #include "sys/types.h"
 
-extern "C" void itoa(char *buf, size_t n, int base)
+extern "C" [[deprecated("Deprecated for safety reasons")]] char *itoa(char *buf, size_t n, int base)
 {
     size_t tmp = 0;
     int i = 0;
@@ -21,6 +21,8 @@ extern "C" void itoa(char *buf, size_t n, int base)
         buf[j] = buf[i];
         buf[i] = tmp;
     }
+
+    return buf;
 }
 
 size_t itoa_ex(char *buf, unsigned long long n, int base)

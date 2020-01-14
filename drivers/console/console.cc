@@ -185,10 +185,19 @@ void console::printf(const char *fmt, ...)
             console_putc_impl(char_data(ch));
             break;
         }
+        case 'f':
+        {
+            size_t len = ftoa_ex(va_arg(ap, double), nbuf, 10);
+            for (size_t i = 0; i < len; i++)
+            {
+                console_putc_impl(nbuf[i]);
+            }
+            break;
+        }
         case 'd':
         {
-            itoa(nbuf, va_arg(ap, int), 10);
-            for (size_t i = 0; nbuf[i] && i < sizeof(int32_t); i++)
+            size_t len = itoa_ex(nbuf, va_arg(ap, int), 10);
+            for (size_t i = 0; i < len; i++)
             {
                 console_putc_impl(nbuf[i]);
             }
@@ -220,8 +229,8 @@ void console::printf(const char *fmt, ...)
         }
         case 'x':
         {
-            itoa(nbuf, va_arg(ap, int), 16);
-            for (size_t i = 0; nbuf[i] && i < sizeof(int32_t); i++)
+            size_t len = itoa_ex(nbuf, va_arg(ap, int), 16);
+            for (size_t i = 0; i < len; i++)
             {
                 console_putc_impl(nbuf[i]);
             }
@@ -229,8 +238,8 @@ void console::printf(const char *fmt, ...)
         }
         case 'p':
         {
-            itoa(nbuf, va_arg(ap, size_t), 16);
-            for (size_t i = 0; nbuf[i] && i < sizeof(size_t); i++)
+            size_t len = itoa_ex(nbuf, va_arg(ap, size_t), 16);
+            for (size_t i = 0; i < len; i++)
             {
                 console_putc_impl(nbuf[i]);
             }
