@@ -38,13 +38,10 @@ void timer::init_apic_timer(void)
     // register the handle
     trap::trap_handle_regsiter(TRAP_IRQ0 + IRQ_TIMER, trap::trap_handle{
                                                           .handle = handle_tick});
-
     // initialize apic values
     write_lapic(TDCR, TIMER_FLAG_X1);
     write_lapic(TIMER, TIMER_FLAG_PERIODIC | (TRAP_IRQ0 + IRQ_TIMER));
     write_lapic(TICR, TIC_DEFUALT_VALUE);
-
-    local_apic::write_eoi();
 
     spinlock_initlock(&tickslock, "timer_ticks");
 }
@@ -55,11 +52,11 @@ hresult handle_tick([[maybe_unused]] trap_info info)
     {
         spinlock_acquire(&tickslock);
         ticks++;
-        console::printf("%d\n", ticks);
+        console::printf("ticks=%d\n", ticks);
         //TODO: wake up processes
         spinlock_release(&tickslock);
     }
-    local_apic::write_eoi();
 
+    local_apic::write_eoi();
     return HRES_SUCCESS;
 }

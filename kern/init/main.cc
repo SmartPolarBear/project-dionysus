@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: Daniel Lin
- * @ Modified time: 2020-01-06 23:21:05
+ * @ Modified time: 2020-01-15 22:16:40
  * @ Description: the entry point for kernel in C++
  */
 

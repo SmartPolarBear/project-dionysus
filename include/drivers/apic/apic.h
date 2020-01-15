@@ -1,8 +1,8 @@
 #if !defined(__INCLUDE_DRIVERS_APIC_H)
 #define __INCLUDE_DRIVERS_APIC_H
 
-#include "sys/types.h"
 #include "drivers/acpi/cpu.h"
+#include "sys/types.h"
 
 namespace local_apic
 {
@@ -35,8 +35,8 @@ constexpr size_t ICRHI = 0x0310 / 4; //Interrupt Command [63:32]
 constexpr size_t TIMER = 0x0320 / 4;
 enum TIMER_FLAGS
 {
-    TIMER_FLAG_X1,
-    TIMER_FLAG_PERIODIC
+    TIMER_FLAG_X1 = 0x0000000B,
+    TIMER_FLAG_PERIODIC = 0x00020000,
 };
 
 constexpr size_t PCINT = 0x0340 / 4; // Performance Counter LVT

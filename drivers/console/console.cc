@@ -187,6 +187,9 @@ void console::printf(const char *fmt, ...)
         }
         case 'f':
         {
+            //FIXME: va_arg(ap, double) always return wrong value
+            KDEBUG_GENERALPANIC("%f flag is disabled because va_arg(ap, double) always return wrong value");
+            
             size_t len = ftoa_ex(va_arg(ap, double), nbuf, 10);
             for (size_t i = 0; i < len; i++)
             {
