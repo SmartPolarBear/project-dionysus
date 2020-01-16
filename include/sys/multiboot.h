@@ -19,6 +19,8 @@ using typed_mboottag_const_ptr = const typed_mboottag_ptr<T>;
 template <typename T>
 using typed_mboottag_const_readonly_ptr = typed_mboottag_const_ptr<T> const;
 
+using aquire_tag_ptr_predicate = bool (*)(multiboot_tag_const_readonly_ptr);
+
 constexpr size_t TAGS_COUNT_MAX = 24;
 
 //This can be increase if the required info become more.
@@ -27,15 +29,27 @@ constexpr size_t BOOT_INFO_MAX_EXPECTED_SIZE = 4_KB;
 void init_mbi(void);
 void parse_multiboot_tags(void);
 
-// returns the real count of results
-size_t get_all_tags(size_t type, multiboot_tag_ptr buf[], size_t bufsz);
+// if buf==nullptr, regardless of bufsz, this function will return the number of tags with given type
+// or it will copy specified amount of tags to the buf and return the count copied
+size_t get_all_tags(size_t type, multiboot_tag_ptr *buf, size_t bufsz);
 
-multiboot_tag_const_readonly_ptr aquire_tag_ptr_first(size_t type);
+// get the first tag with the type
+multiboot_tag_const_readonly_ptr aquire_tag_ptr(size_t type);
+// get the first tag with the type, for which the predicate returns true
+multiboot_tag_const_readonly_ptr aquire_tag_ptr(size_t type, aquire_tag_ptr_predicate pred);
 
 template <typename T>
-static inline auto aquire_tag_ptr_first(size_t type) -> typed_mboottag_const_readonly_ptr<T>
+// get the first typed tag with the type
+static inline auto aquire_tag_ptr(size_t type) -> typed_mboottag_const_readonly_ptr<T>
 {
-    return reinterpret_cast<typed_mboottag_const_readonly_ptr<T>>(aquire_tag_ptr_first(type));
+    return reinterpret_cast<typed_mboottag_const_readonly_ptr<T>>(aquire_tag_ptr(type));
+}
+
+template <typename T>
+// get the first typed tag with the type, for which the predicate returns true
+static inline auto aquire_tag_ptr(size_t type, aquire_tag_ptr_predicate pred) -> typed_mboottag_const_readonly_ptr<T>
+{
+    return reinterpret_cast<typed_mboottag_const_readonly_ptr<T>>(aquire_tag_ptr(type, pred));
 }
 
 } // namespace multiboot

@@ -42,6 +42,7 @@ struct multiboot_tag_node
 };
 
 list_head multiboot_tag_heads[TAGS_COUNT_MAX] = {};
+
 multiboot_tag_node allnodes[TAGS_COUNT_MAX * 4] = {};
 size_t allnodes_counter = 0;
 static inline multiboot_tag_node *alloc_new_node(void)
@@ -95,27 +96,55 @@ void multiboot::parse_multiboot_tags(void)
     }
 }
 
-multiboot_tag_const_readonly_ptr multiboot::aquire_tag_ptr_first(size_t type)
+multiboot_tag_const_readonly_ptr multiboot::aquire_tag_ptr(size_t type)
 {
     multiboot_tag_ptr buf[1] = {};
     auto cnt = get_all_tags(type, buf, 1);
     return buf[0];
 }
 
-size_t multiboot::get_all_tags(size_t type, multiboot_tag_ptr buf[], size_t bufsz)
+multiboot_tag_const_readonly_ptr multiboot::aquire_tag_ptr(size_t type, aquire_tag_ptr_predicate pred)
+{
+    multiboot_tag_ptr buf[TAGS_COUNT_MAX] = {};
+    size_t count = get_all_tags(type, nullptr, 0);
+    if (!count)
+    {
+        return nullptr;
+    }
+
+    count = get_all_tags(type, buf, count);
+
+    for (size_t i = 0; i < count; i++)
+    {
+        if (pred(buf[i]))
+        {
+            return buf[i];
+        }
+    }
+
+    return nullptr;
+}
+
+size_t multiboot::get_all_tags(size_t type, multiboot_tag_ptr *buf, size_t bufsz)
 {
     list_head *iter = nullptr, *head = &multiboot_tag_heads[type];
     size_t count = 0;
 
     list_for(iter, head)
     {
-        if (count >= bufsz)
+        if (buf != nullptr)
         {
-            break;
+            if (count >= bufsz)
+            {
+                break;
+            }
+            auto entry = list_entry(iter, multiboot_tag_node, node);
+            buf[count++] = entry->tag;
         }
-
-        auto entry = list_entry(iter, multiboot_tag_node, node);
-        buf[count++] = entry->tag;
+        else
+        {
+            count++;
+        }
     }
 
     return count;

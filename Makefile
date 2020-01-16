@@ -11,10 +11,13 @@ BASEOBJS = $(addprefix $(BUILD)/,$(BASELIST))
 KERNBINLIST= $(shell cat $(BUILD_CONFIG)/kernbin.list)
 KERNBINOBJS= $(addprefix $(BUILD)/,$(KERNBINLIST))
 
+BOOTMODULESLIST= $(shell cat $(BUILD_CONFIG)/modules.list)
+BOOTMODULESOBJS= $(addprefix $(BUILD)/,$(BOOTMODULESLIST))
+
 BINLIST = $(shell cat $(BUILD_CONFIG)/bin.list)
 BINOBJS =  $(addprefix $(BUILD)/bin/,$(BINLIST))
 
-all: $(BUILD) $(SUBDIRS) $(KERNBINOBJS) $(BUILD)/kernel $(BUILD)/disk.img
+all: $(BUILD) $(SUBDIRS) $(BOOTMODULESOBJS) $(KERNBINOBJS) $(BUILD)/kernel $(BUILD)/disk.img
 
 BUILDDISTDIRS = $(shell ls -d $(BUILD)/*/)
 clean:
@@ -43,8 +46,8 @@ debug4vsc: all
 
 include $(TOP_SRC)/Makefile.kernbin.mk
 	
-$(BUILD)/kernel: $(BASEOBJS)
-	$(LD) $(LDFLAGS) -Tkern/kernel.ld  -o $@ $^ -b binary $(BUILD)/ap_boot
+$(BUILD)/kernel: $(BASEOBJS) $(KERNBINOBJS)
+	$(LD) $(LDFLAGS) -Tkern/kernel.ld  -o $@ $^ -b binary $(KERNBINOBJS)
 	$(OBJDUMP) -S $@ > $(BUILD)/kernel.asm
 	$(OBJDUMP) -t $@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $(BUILD)/kernel.sym
 

@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 1970-01-01 08:00:00
  * @ Modified by: Daniel Lin
- * @ Modified time: 2020-01-05 20:00:30
+ * @ Modified time: 2020-01-16 18:01:07
  * @ Description:
  */
 
@@ -156,8 +156,8 @@ static void acpi_init_v2(const acpi_rsdp *rsdp)
 
 void acpi::init_acpi(void)
 {
-    auto acpi_new_tag = multiboot::aquire_tag_ptr_first<multiboot_tag_new_acpi>(MULTIBOOT_TAG_TYPE_ACPI_NEW);
-    auto acpi_old_tag = multiboot::aquire_tag_ptr_first<multiboot_tag_new_acpi>(MULTIBOOT_TAG_TYPE_ACPI_OLD);
+    auto acpi_new_tag = multiboot::aquire_tag_ptr<multiboot_tag_new_acpi>(MULTIBOOT_TAG_TYPE_ACPI_NEW);
+    auto acpi_old_tag = multiboot::aquire_tag_ptr<multiboot_tag_new_acpi>(MULTIBOOT_TAG_TYPE_ACPI_OLD);
 
     if (acpi_new_tag == nullptr && acpi_old_tag == nullptr)
     {
