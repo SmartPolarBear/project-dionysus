@@ -20,4 +20,11 @@ Plan to improve console, solving:
 2) the lack of ability of showing decimal data or long int data
 3) the slow speed
 
+1/15/2020
+1) Basically finsihed the tasks concerning console.
+    NOTE: the %f flag is still not available because va_arg doesn't return right values
+2) Plan to save multiboot info with another data structure because some type of information structure
+    may appear many times, and with the simple array like now, I can only get one of them
+3) Plan to load ap_boot alongside as a boot module instead of copy it after the kernel binary.
+
 

@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 1970-01-01 08:00:00
  * @ Modified by: Daniel Lin
- * @ Modified time: 2020-01-04 23:51:56
+ * @ Modified time: 2020-01-16 14:34:57
  * @ Description:
  */
 
@@ -57,5 +57,12 @@ static inline constexpr ull operator"" _TB(ull sz)
     return sz * STORAGE_UNIT * STORAGE_UNIT * STORAGE_UNIT * STORAGE_UNIT;
 }
 
+// linked list head
+struct list_head
+{
+    list_head *next, *prev;
+};
+
+using list_foreach_func = void (*)(list_head *);
 
 #endif // __INCLUDE_SYS_TYPES_H

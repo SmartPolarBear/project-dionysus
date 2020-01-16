@@ -115,6 +115,10 @@ extern "C" void trap_body(trap_info info)
 
     // call the handle
     auto error = handle_table.trap_handles[info.trap_num].handle(info);
+
+    // finish the trap handle
+    local_apic::write_eoi();
+
     if (FAILED(error))
     {
         console::printf("** trap number:%d, error code:%d.\n", info.trap_num, HRESULT_CODE(error));

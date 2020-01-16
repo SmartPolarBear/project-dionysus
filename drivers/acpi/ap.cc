@@ -26,6 +26,7 @@ extern "C" void entry32mp(void);
 constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
 
 [[clang::optnone]] void ap::init_ap(void) {
+
     uint8_t *code = reinterpret_cast<decltype(code)>(P2V(AP_CODE_LOAD_ADDR));
     memmove(code, _binary___build_ap_boot_start, (size_t)_binary___build_ap_boot_size);
 
@@ -62,7 +63,7 @@ void ap::all_processor_main()
     // simple scheduler loop
     while (!kdebug::panicked)
     {
-        console::printf("%d\n", cpu->id);
+        // console::printf("%d\n", cpu->id);
     }
 
     if (kdebug::panicked)
