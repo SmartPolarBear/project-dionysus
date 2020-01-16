@@ -15,7 +15,7 @@ static inline void __list_init(list_head *head)
 static inline void __list_add(list_head *newnode, list_head *prev, list_head *next)
 {
     prev->next = newnode;
-    next->prev - newnode;
+    next->prev = newnode;
 
     newnode->next = next;
     newnode->prev = prev;
@@ -27,7 +27,7 @@ static inline void __list_remove(list_head *prev, list_head *next)
     next->prev = prev;
 }
 
-namespace klib
+namespace libk
 {
 
 static inline void list_init(list_head *head)
@@ -47,6 +47,9 @@ static inline void list_remove(list_head *entry)
 
 #define list_entry(ptr, type, member) \
     container_of(ptr, type, member)
+
+#define list_for(pos, head) \
+  for (pos = (head)->next; pos != (head); pos = pos->next)
 
 static inline void list_for_each(list_head *head, list_foreach_func func)
 {

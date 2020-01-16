@@ -163,7 +163,7 @@ static inline void check_hardware(void)
 static inline void initialize_phymem_parameters(void)
 {
     // get mmap tag from multiboot info and find the limit of physical memory
-    auto memtag = multiboot::aquire_tag_ptr<multiboot_tag_mmap>(MULTIBOOT_TAG_TYPE_MMAP);
+    auto memtag = multiboot::aquire_tag_ptr_first<multiboot_tag_mmap>(MULTIBOOT_TAG_TYPE_MMAP);
     size_t entry_count = (memtag->size - sizeof(multiboot_uint32_t) * 4ul - sizeof(memtag->entry_size)) / memtag->entry_size;
     auto physize = 0ull;
 

@@ -2,7 +2,7 @@
  * @ Author: SmartPolarBear
  * @ Create Time: 2019-09-23 23:06:29
  * @ Modified by: Daniel Lin
- * @ Modified time: 2020-01-16 15:13:51
+ * @ Modified time: 2020-01-16 17:48:43
  * @ Description: the entry point for kernel in C++
  */
 
@@ -28,13 +28,6 @@
 #include "sys/vm.h"
 
 extern char end[]; // kernel.ld
-
-struct teststruct
-{
-    char *name;
-    int val;
-    list_head node;
-};
 
 // global entry of the kernel
 extern "C" [[noreturn]] void kmain() {
@@ -71,22 +64,6 @@ extern "C" [[noreturn]] void kmain() {
 
     // initialize I/O APIC
     io_apic::init_ioapic();
-
-    // list_head head;
-    // klib::list_init(&head);
-
-    // teststruct t1 = {.name = "test1", .val = 1};
-    // teststruct t2 = {.name = "test2", .val = 11};
-    // teststruct t3 = {.name = "test3", .val = 111};
-
-    // klib::list_add(&t1.node, &head);
-    // klib::list_add(&t2.node, &head);
-    // klib::list_add(&t3.node, &head);
-
-    // klib::list_for_each(&head, [](list_head *h) {
-    //     teststruct *element = list_entry(h, teststruct, node);
-    //     console::printf("name=%s,val=%d\n", element->name, element->val);
-    // });
 
     console::printf("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
 
