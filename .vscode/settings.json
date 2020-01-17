@@ -48,29 +48,55 @@
         "streambuf": "cpp",
         "typeinfo": "cpp",
     },
-    "autoHeader": {
-        "format": {
-            "startWith": "/**",
-            "middleWith": "*",
-            "endWith": "*/",
-            "headerPrefix": "@",
+    "psi-header.config": {
+        "forceToTop": true,
+        "blankLinesAfter": 6,
+        "license": "0BSD"
+    },
+    "psi-header.changes-tracking": {
+        "isActive": true,
+        "modAuthor": "Modified By: ",
+        "modDate": "Last Modified: ",
+        "modDateFormat": "date",
+        "include": [],
+        "exclude": [
+            "markdown",
+            "json"
+        ],
+        "excludeGlob": [
+            "out/**",
+            "src/**/*.xyz"
+        ],
+        "autoHeader": "manualSave"
+    },
+    "psi-header.variables": [
+        [
+            "author",
+            "SmartPolarBear"
+        ],
+        [
+            "authoremail",
+            "clevercoolbear@outlook.com"
+        ]
+    ],
+    "psi-header.templates": [
+        {
+            "language": "*",
+            "template": [
+                "Last Modified: ",
+                "Modified By: ",
+                "-----",
+                "<<licensetext>>",
+                "-----",
+                "HISTORY:",
+                "Date      \tBy\tComments",
+                "----------\t---\t----------------------------------------------------------"
+            ],
+            "changeLogCaption": "HISTORY:",
+            "changeLogHeaderLineCount": 2,
+            "changeLogEntryTemplate": [
+                "<<dateformat('YYYY-MM-DD')>>\t<<initials>>\t"
+            ]
         },
-        "header": {
-            "Author": "Daniel Lin",
-            "Create Time": {
-                "type": "createTime",
-                "format": "YYYY-MM-DD HH:mm:ss",
-            },
-            "Modified by": {
-                "type": "modifier",
-                "value": "Daniel Lin",
-            },
-            "Modified time": {
-                "type": "modifyTime",
-                "format": "YYYY-MM-DD HH:mm:ss"
-            },
-            "Description": "",
-        }
-    }
-
+    ]
 }

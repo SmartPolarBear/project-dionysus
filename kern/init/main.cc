@@ -1,10 +1,30 @@
-/**
- * @ Author: SmartPolarBear
- * @ Create Time: 2019-09-23 23:06:29
- * @ Modified by: Daniel Lin
- * @ Modified time: 2020-01-16 17:48:43
- * @ Description: the entry point for kernel in C++
+/*
+ * Last Modified: Fri Jan 17 2020
+ * Modified By: SmartPolarBear
+ * -----
+ * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
+ * 
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+ * REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+ * FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+ * INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ * LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+ * OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ * PERFORMANCE OF THIS SOFTWARE.
+ * -----
+ * HISTORY:
+ * Date      	By	Comments
+ * ----------	---	----------------------------------------------------------
  */
+
+
+
+
+
+
 
 #include "arch/amd64/x86.h"
 #include "boot/multiboot2.h"

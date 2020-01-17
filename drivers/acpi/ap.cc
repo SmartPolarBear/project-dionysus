@@ -1,3 +1,27 @@
+/*
+ * Last Modified: Fri Jan 17 2020
+ * Modified By: SmartPolarBear
+ * -----
+ * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
+ * 
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+ * REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+ * FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+ * INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ * LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+ * OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ * PERFORMANCE OF THIS SOFTWARE.
+ * -----
+ * HISTORY:
+ * Date      	By	Comments
+ * ----------	---	----------------------------------------------------------
+ */
+
+
+
 #include "arch/amd64/x86.h"
 
 #include "drivers/acpi/acpi.h"
@@ -22,6 +46,7 @@ extern "C" void entry32mp(void);
 constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
 
 [[clang::optnone]] void ap::init_ap(void) {
+    
     auto tag = multiboot::aquire_tag_ptr<multiboot_tag_module>(MULTIBOOT_TAG_TYPE_MODULE,
                                                                [](auto ptr) -> bool {
                                                                    multiboot_tag_module *mdl_tag = reinterpret_cast<decltype(mdl_tag)>(ptr);
@@ -73,7 +98,7 @@ void ap::all_processor_main()
     // simple scheduler loop
     while (!kdebug::panicked)
     {
-        console::printf("%d\n", cpu->id);
+        // console::printf("%d\n", cpu->id);
     }
 
     if (kdebug::panicked)
