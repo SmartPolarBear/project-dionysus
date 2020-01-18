@@ -1,8 +1,13 @@
-TOP_SRC= ../..
-KERN_SRC = ..
+TOP_SRCDIR = ../..
 
-OUTDIR = $(BUILD)/kern/mm
+SUBDIRS = vm allocators
 
-OBJS = bootmm.o vm.o vm_seg.o vm_utils.o buddy.o
+all: $(SUBDIRS)
 
-include $(KERN_SRC)/Makefile.kern.mk
+$(SUBDIRS):
+	$(MAKE) -C $@ $(MFLAGS) all
+
+clean: 
+	for dir in $(SUBDIRS); do $(MAKE) -C $$dir clean; done
+
+.PHONY: all $(SUBDIRS) clean

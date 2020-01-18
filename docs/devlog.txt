@@ -27,4 +27,16 @@ Plan to improve console, solving:
     may appear many times, and with the simple array like now, I can only get one of them
 3) Plan to load ap_boot alongside as a boot module instead of copy it after the kernel binary.
 
-
+1/17/2020
+Done:
+1) Finished the plan, discussed above, concerning re-implementation of multiboot info data structure
+2) Finished the plan, discussed above, concerning seperate ap_boot from kernel as a boot module
+3) Have implemented a linked list in a Linux kernel style
+Plans:
+1) Implement the buddy (may be with the slab) memory allcator
+    a. Classify files in /kern/mm into seperate directories
+    b. Implement buddy
+2) Implement a higher-level abstraction for devices,  including but not limited to console and memory manager
+    a. Refactory code
+    b. Design and impelement a universal interface for them.
+    c. Most importantly, make new and delete operator work.

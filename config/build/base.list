@@ -6,11 +6,11 @@ kern/libc/itoa.o
 kern/libc/ftoa.o
 kern/libcxxrt/cxxbase.o
 kern/libcxxrt/new.o
-kern/mm/bootmm.o
-kern/mm/vm.o
-kern/mm/vm_seg.o
-kern/mm/vm_utils.o
-kern/mm/buddy.o
+kern/mm/allocators/bootmm.o
+kern/mm/allocators/buddy.o
+kern/mm/vm/vm.o
+kern/mm/vm/vm_seg.o
+kern/mm/vm/vm_utils.o
 kern/proc/scheduler.o
 drivers/console/cga.o
 drivers/console/console.o
