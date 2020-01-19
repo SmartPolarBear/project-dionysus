@@ -1,5 +1,5 @@
 /*
- * Last Modified: Fri Jan 17 2020
+ * Last Modified: Sat Jan 18 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -19,11 +19,6 @@
  * Date      	By	Comments
  * ----------	---	----------------------------------------------------------
  */
-
-
-
-
-
 
 
 #include "arch/amd64/x86.h"

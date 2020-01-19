@@ -40,3 +40,11 @@ Plans:
     a. Refactory code
     b. Design and impelement a universal interface for them.
     c. Most importantly, make new and delete operator work.
+
+1/19/2020
+Done:
+1) finished codes of the initialization of buddy along with free memory.
+    ! yet to be called in the kernel's main
+
+
+
