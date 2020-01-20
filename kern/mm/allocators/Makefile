@@ -1,8 +1,13 @@
-TOP_SRC= ../../..
-KERN_SRC = ../..
+TOP_SRC = ../../..
 
-OUTDIR = $(BUILD)/kern/mm/allocators
+SUBDIRS = boot buddy
 
-OBJS = buddy.o bootmm.o 
+all: $(SUBDIRS)
 
-include $(KERN_SRC)/Makefile.kern.mk
+$(SUBDIRS):
+	$(MAKE) -C $@ $(MFLAGS) all
+
+clean: 
+	for dir in $(SUBDIRS); do $(MAKE) -C $$dir clean; done
+
+.PHONY: all $(SUBDIRS) clean

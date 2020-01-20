@@ -1,4 +1,4 @@
-TOP_SRCDIR = ../..
+TOP_SRC = ../..
 
 SUBDIRS = vm allocators
 
