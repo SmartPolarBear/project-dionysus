@@ -219,6 +219,11 @@ pde_t *vm::setup_kernelvm(void)
     return nullptr;
 }
 
+size_t vm::get_physical_mem_size(void)
+{
+    return phy_mem_info.physize;
+}
+
 void vm::init_kernelvm(void)
 {
     // check the feature availablity

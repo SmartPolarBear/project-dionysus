@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sat Jan 18 2020
+ * Last Modified: Tue Jan 21 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -20,7 +20,6 @@
  * ----------	---	----------------------------------------------------------
  */
 
-
 #include "arch/amd64/x86.h"
 #include "boot/multiboot2.h"
 
@@ -36,22 +35,21 @@
 #include "lib/libcxx/new"
 #include "lib/libkern/data/list.h"
 
-#include "sys/bootmm.h"
 #include "sys/memlayout.h"
+#include "sys/mm.h"
 #include "sys/multiboot.h"
 #include "sys/param.h"
 #include "sys/vm.h"
 
-extern char end[]; // kernel.ld
-
 // global entry of the kernel
-extern "C" [[noreturn]] void kmain() {
+extern "C" [[noreturn]] void kmain()
+{
     // memory allocator at boot time, allocating memory within (end+0x1000,P2V(4MB))
     // the offset is intended to protect multiboot info from overwritten,
     // which is put *right* after the kernel by grub.
     // the size of which is expected to be less than 4K.
-    vm::bootmm_init(end + multiboot::BOOT_INFO_MAX_EXPECTED_SIZE,
-                    (void *)P2V(32_MB));
+    vm::bootmm_init(vm::kernel_boot_mem_begin(),
+                    vm::kernel_boot_mem_end());
 
     // process the multiboot information
     multiboot::init_mbi();
@@ -79,6 +77,9 @@ extern "C" [[noreturn]] void kmain() {
 
     // initialize I/O APIC
     io_apic::init_ioapic();
+
+    // initialize buddy allocator
+    // vm::buddy_init(vm::kernel_mem_begin(), vm::kernel_mem_end());
 
     console::printf("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
 

@@ -1,5 +1,5 @@
 /*
- * Last Modified: Fri Jan 17 2020
+ * Last Modified: Tue Jan 21 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -98,7 +98,7 @@ void ap::all_processor_main()
     // simple scheduler loop
     while (!kdebug::panicked)
     {
-        // console::printf("%d\n", cpu->id);
+        console::printf("cpu %d\n", cpu->id);
     }
 
     if (kdebug::panicked)
