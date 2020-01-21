@@ -1,5 +1,5 @@
 /*
- * Last Modified: Fri Jan 17 2020
+ * Last Modified: Tue Jan 21 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -19,7 +19,6 @@
  * Date      	By	Comments
  * ----------	---	----------------------------------------------------------
  */
-
 
 #include "sys/vm.h"
 
@@ -201,10 +200,11 @@ static inline void initialize_phymem_parameters(void)
     kmem_map[KMMAP_PHYREMAP].pend = physize;
 }
 
-static hresult handle_pgfault(trap_info info)
+static hresult handle_pgfault([[maybe_unused]] trap_info info)
 {
-    console::printf("page fault!\n");
-    KDEBUG_FOLLOWPANIC("page fault");
+    //TODO: handle the page fault
+    // console::printf("page fault!\n");
+    // KDEBUG_FOLLOWPANIC("page fault");
     return HRES_SUCCESS;
 }
 

@@ -99,7 +99,7 @@ void multiboot::parse_multiboot_tags(void)
 multiboot_tag_const_readonly_ptr multiboot::aquire_tag_ptr(size_t type)
 {
     multiboot_tag_ptr buf[1] = {};
-    auto cnt = get_all_tags(type, buf, 1);
+    [[maybe_unused]] auto cnt = get_all_tags(type, buf, 1);
     return buf[0];
 }
 

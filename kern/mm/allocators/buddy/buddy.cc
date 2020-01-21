@@ -1,3 +1,26 @@
+/*
+ * Last Modified: Mon Jan 20 2020
+ * Modified By: SmartPolarBear
+ * -----
+ * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
+ * 
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+ * REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+ * FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+ * INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ * LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+ * OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ * PERFORMANCE OF THIS SOFTWARE.
+ * -----
+ * HISTORY:
+ * Date      	By	Comments
+ * ----------	---	----------------------------------------------------------
+ */
+
+
 #include "sys/buddy_alloc.h"
 
 #include "drivers/debug/kdebug.h"
@@ -22,8 +45,10 @@ void vm::buddy_init(void *st, void *ed)
     size_t len = buddy.end - buddy.start;
 
     size_t n_marks = (len >> (ORD_COUNT + 5)) + 1, total_offset = 0;
-    // can't use size_t because the end condition will never be reached
-    for (int64_t i = ORD_COUNT - 1; i >= 0; i++)
+
+    // can't use size_t here because the end condition will never be reached
+    // use int because ORD_COUNT won't be bigger than INT_MAX
+    for (int i = ORD_COUNT - 1; i >= 0; i++)
     {
         order *ord = &buddy.orders[i];
 
@@ -45,7 +70,7 @@ void vm::buddy_init(void *st, void *ed)
 
     for (uintptr_t i = buddy.start_mem; i < buddy.end; i += (1 << ORD_COUNT))
     {
-        buddy_internal::buddy_free((void *)i, ORD_COUNT);
+        buddy_internal::buddy_free(reinterpret_cast<raw_ptr>(i), ORD_COUNT);
     }
 
     buddy.initialized = true;
