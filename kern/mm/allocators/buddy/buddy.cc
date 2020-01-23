@@ -1,5 +1,5 @@
 /*
- * Last Modified: Thu Jan 23 2020
+ * Last Modified: Fri Jan 24 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -26,21 +26,25 @@
 #include "drivers/debug/kdebug.h"
 #include "drivers/lock/spinlock.h"
 
+#include "lib/libc/string.h"
+
 #include "./buddy.h"
 
 using namespace buddy_internal::types;
 using namespace buddy_internal::constants;
 
-buddy_struct buddy_internal::buddy;
+buddy_struct buddy_internal::buddy = {};
 
 using buddy_internal::buddy;
 
-void vm::buddy_init(void *st, void *ed)
+void vm::buddy_init(raw_ptr st, raw_ptr ed)
 {
     spinlock_initlock(&buddy.buddylock, "buddy_allocator");
 
     buddy.start = PAGE_ROUNDUP(reinterpret_cast<uintptr_t>(st));
     buddy.end = PAGE_ROUNDDOWN(reinterpret_cast<uintptr_t>(ed));
+
+    console::printf("start=0x%x,end=0x%x", buddy.start, buddy.end);
 
     size_t len = buddy.end - buddy.start;
 
@@ -62,31 +66,24 @@ void vm::buddy_init(void *st, void *ed)
             auto mark = buddy_internal::order_get_mark(i + MIN_ORD, j);
             mark->links = buddy_internal::links(MARK_EMPTY, MARK_EMPTY);
             mark->bitmap = 0;
-
-            if (j == 1)
-            {
-                console::printf("addr1=0x%p,bitmap=%d\n", mark, mark->bitmap);
-            }
         }
 
         total_offset += n_marks;
         n_marks <<= 1;
-
-        auto mark = buddy_internal::order_get_mark(i + MIN_ORD, 1);
-        console::printf("addr2=0x%p,bitmap=%d\n", mark, mark->bitmap);
     }
 
     buddy.start_mem = buddy_internal::align_up(buddy.start + total_offset * sizeof(mark), 1 << MAX_ORD);
 
     for (uintptr_t i = buddy.start_mem; i < buddy.end; i += (1 << MAX_ORD))
     {
-        buddy_internal::buddy_free((raw_ptr)(i), MAX_ORD);
+        buddy_internal::buddy_free(reinterpret_cast<raw_ptr>(i), MAX_ORD);
     }
 
     buddy.initialized = true;
+    buddy.lock_enable = true;
 }
 
-void *vm::buddy_alloc(size_t sz)
+raw_ptr vm::buddy_alloc(size_t sz)
 {
 }
 

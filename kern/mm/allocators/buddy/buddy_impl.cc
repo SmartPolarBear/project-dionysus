@@ -1,5 +1,5 @@
 /*
- * Last Modified: Thu Jan 23 2020
+ * Last Modified: Fri Jan 24 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -88,12 +88,17 @@ buddy_internal::raw_ptr buddy_internal::buddy_alloc(size_t order)
         KDEBUG_GENERALPANIC("buddy_alloc: given order is out of range.");
     }
 
-    spinlock_acquire(&buddy.buddylock);
-
+    if (buddy.lock_enable)
+    {
+        spinlock_acquire(&buddy.buddylock);
+    }
     auto ret = buddy_alloc_impl(order);
 
-    spinlock_release(&buddy.buddylock);
-
+    if (buddy.lock_enable)
+    {
+        spinlock_release(&buddy.buddylock);
+    }
+    
     return ret;
 }
 
@@ -108,9 +113,15 @@ void buddy_internal::buddy_free(raw_ptr mem, size_t order)
         KDEBUG_GENERALPANIC("buddy_free: memory unaligned\n");
     }
 
-    spinlock_acquire(&buddy.buddylock);
+    if (buddy.lock_enable)
+    {
+        spinlock_acquire(&buddy.buddylock);
+    }
 
     buddy_free_impl(mem, order);
 
-    spinlock_release(&buddy.buddylock);
+    if (buddy.lock_enable)
+    {
+        spinlock_release(&buddy.buddylock);
+    }
 }

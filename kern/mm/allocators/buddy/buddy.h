@@ -1,5 +1,5 @@
 /*
- * Last Modified: Thu Jan 23 2020
+ * Last Modified: Fri Jan 24 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -49,14 +49,14 @@ namespace types
 {
 struct mark
 {
-    uint32_t links;
-    uint32_t bitmap;
+    size_t links;
+    size_t bitmap;
 };
 
 struct order
 {
-    uint32_t head;
-    uint32_t offset;
+    size_t head;
+    size_t offset;
 };
 
 using lock::spinlock;
@@ -70,6 +70,7 @@ struct buddy_struct
     uintptr_t start, start_mem;
     uintptr_t end;
     bool initialized;
+    bool lock_enable;
     order orders[ORD_COUNT];
 };
 
@@ -83,7 +84,7 @@ extern buddy_struct buddy;
 
 static inline mark *order_get_mark(size_t order, size_t idx)
 {
-    return (mark *)buddy.start + (buddy.orders[order - MIN_ORD].offset + idx);
+    return reinterpret_cast<mark *>(buddy.start) + (buddy.orders[order - MIN_ORD].offset + idx);
 }
 
 static inline constexpr size_t align_up(size_t sz, size_t al)

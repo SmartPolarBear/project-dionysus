@@ -1,5 +1,5 @@
 /*
- * Last Modified: Wed Jan 22 2020
+ * Last Modified: Fri Jan 24 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -40,7 +40,7 @@ extern uint8_t end[]; // kernel.ld
 namespace vm
 {
 
-constexpr uintptr_t BOOT_MEM_LIMIT = 128_MB;
+constexpr uintptr_t BOOT_MEM_LIMIT = 32_MB;
 
 static inline void *kernel_boot_mem_begin(void)
 {
