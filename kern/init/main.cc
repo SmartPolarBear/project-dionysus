@@ -79,7 +79,7 @@ extern "C" [[noreturn]] void kmain()
     io_apic::init_ioapic();
 
     // initialize buddy allocator
-    // vm::buddy_init(vm::kernel_mem_begin(), vm::kernel_mem_end());
+    vm::buddy_init(vm::kernel_mem_begin(), vm::kernel_mem_end());
 
     console::printf("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
 

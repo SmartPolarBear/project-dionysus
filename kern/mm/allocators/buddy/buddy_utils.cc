@@ -1,5 +1,5 @@
 /*
- * Last Modified: Tue Jan 21 2020
+ * Last Modified: Thu Jan 23 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -36,7 +36,7 @@ void buddy_internal::block_set_available(size_t order, size_t blk_id)
 
     if (mark_if_available(mrk, blk_id))
     {
-        KDEBUG_GENERALPANIC("buddy: freeing a free block.");
+        KDEBUG_GENERALPANIC("block_set_available: freeing a free block.");
     }
 
     mrk->bitmap |= (1 << (blk_id & 0x1F));

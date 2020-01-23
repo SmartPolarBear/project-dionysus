@@ -1,5 +1,5 @@
 /*
- * Last Modified: Mon Jan 20 2020
+ * Last Modified: Thu Jan 23 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -44,8 +44,8 @@ buddy_internal::raw_ptr buddy_internal::buddy_alloc_impl(size_t order)
     else if (order < MAX_ORD)
     {
         ret = buddy_alloc_impl(order + 1);
-        
-        if(ret!=nullptr)
+
+        if (ret != nullptr)
         {
             // make the compiler happy.
             uint8_t *typed_ret = reinterpret_cast<decltype(typed_ret)>(ret);
@@ -59,18 +59,18 @@ buddy_internal::raw_ptr buddy_internal::buddy_alloc_impl(size_t order)
 // seperate from _buddy_free for the sake of recursive calls
 void buddy_internal::buddy_free_impl(raw_ptr mem, size_t order)
 {
-    size_t block_id = mem_get_block_id(order, reinterpret_cast<uintptr_t>(mem));
+    size_t block_id = mem_get_block_id(order, (uintptr_t)(mem));
     mark *mark = order_get_mark(order, block_id >> 5);
 
     if (mark_if_available(mark, block_id))
     {
-        KDEBUG_GENERALPANIC("buddy: freeing a free block.");
+        KDEBUG_GENERALPANIC("buddy_free_impl: freeing a free block.");
     }
 
     size_t buddy_id = block_id ^ 0x0001; // blk_id and buddy_id differs in the last bit
                                          // buddy must be in the same bit map
 
-    if (!mark_if_available(mark, buddy_id) || (order == ORD_COUNT))
+    if (!mark_if_available(mark, buddy_id) || (order == MAX_ORD))
     {
         block_set_available(order, block_id);
     }
@@ -99,9 +99,13 @@ buddy_internal::raw_ptr buddy_internal::buddy_alloc(size_t order)
 
 void buddy_internal::buddy_free(raw_ptr mem, size_t order)
 {
-    if ((order > MAX_ORD) || (order < MIN_ORD) || ((uintptr_t)mem) & ((1 << order) - 1))
+    if ((order > MAX_ORD) || (order < MIN_ORD))
     {
         KDEBUG_GENERALPANIC("buddy_free: order out of range or memory unaligned\n");
+    }
+    else if (((uintptr_t)mem) & ((1 << order) - 1))
+    {
+        KDEBUG_GENERALPANIC("buddy_free: memory unaligned\n");
     }
 
     spinlock_acquire(&buddy.buddylock);

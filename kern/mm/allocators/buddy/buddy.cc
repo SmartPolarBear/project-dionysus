@@ -1,5 +1,5 @@
 /*
- * Last Modified: Mon Jan 20 2020
+ * Last Modified: Thu Jan 23 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -20,7 +20,6 @@
  * ----------	---	----------------------------------------------------------
  */
 
-
 #include "sys/buddy_alloc.h"
 
 #include "drivers/debug/kdebug.h"
@@ -39,16 +38,16 @@ void vm::buddy_init(void *st, void *ed)
 {
     spinlock_initlock(&buddy.buddylock, "buddy_allocator");
 
-    buddy.start = reinterpret_cast<uintptr_t>(st);
-    buddy.end = reinterpret_cast<uintptr_t>(ed);
+    buddy.start = PAGE_ROUNDUP(reinterpret_cast<uintptr_t>(st));
+    buddy.end = PAGE_ROUNDDOWN(reinterpret_cast<uintptr_t>(ed));
 
     size_t len = buddy.end - buddy.start;
 
-    size_t n_marks = (len >> (ORD_COUNT + 5)) + 1, total_offset = 0;
+    size_t n_marks = (len >> (MAX_ORD + 5)) + 1, total_offset = 0;
 
     // can't use size_t here because the end condition will never be reached
     // use int because ORD_COUNT won't be bigger than INT_MAX
-    for (int i = ORD_COUNT - 1; i >= 0; i++)
+    for (int i = ORD_COUNT - 1; i >= 0; i--)
     {
         order *ord = &buddy.orders[i];
 
@@ -66,11 +65,11 @@ void vm::buddy_init(void *st, void *ed)
         n_marks <<= 1;
     }
 
-    buddy.start_mem = buddy_internal::align_up(buddy.start + total_offset * sizeof(mark), 1 << ORD_COUNT);
+    buddy.start_mem = buddy_internal::align_up(buddy.start + total_offset * sizeof(mark), 1 << MAX_ORD);
 
-    for (uintptr_t i = buddy.start_mem; i < buddy.end; i += (1 << ORD_COUNT))
+    for (uintptr_t i = buddy.start_mem; i < buddy.end; i += (1 << MAX_ORD))
     {
-        buddy_internal::buddy_free(reinterpret_cast<raw_ptr>(i), ORD_COUNT);
+        buddy_internal::buddy_free(reinterpret_cast<raw_ptr>(i), MAX_ORD);
     }
 
     buddy.initialized = true;

@@ -1,5 +1,5 @@
 /*
- * Last Modified: Tue Jan 21 2020
+ * Last Modified: Wed Jan 22 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -55,15 +55,20 @@ static inline void *kernel_boot_mem_end(void)
 static inline void *kernel_mem_begin(void)
 {
     // with a guard hole sized BOOTMM_BLOCKSIZE
-    return reinterpret_cast<uint8_t*>(kernel_boot_mem_end()) + BOOTMM_BLOCKSIZE;
+    return reinterpret_cast<uint8_t *>(kernel_boot_mem_end()) + BOOTMM_BLOCKSIZE;
 }
 
 static inline void *kernel_mem_end(void)
 {
     size_t phymem_size = get_physical_mem_size();
-    size_t kmem_size = sysstd::min(phymem_size, KERNEL_SIZE);
-
-    return (void *)P2V(kmem_size);
+    if (phymem_size < KERNEL_SIZE)
+    {
+        return (void *)P2V(phymem_size);
+    }
+    else
+    {
+        return (void *)(VIRTUALADDR_LIMIT);
+    }
 }
 
 } // namespace vm
