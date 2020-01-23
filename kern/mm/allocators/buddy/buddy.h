@@ -131,6 +131,7 @@ static inline raw_ptr block_id_to_memaddr(size_t order, size_t block_id)
 void block_set_available(size_t order, size_t blk_id);
 void block_set_unavailable(size_t order, size_t blk_id);
 raw_ptr order_get_block(size_t order);
+size_t size_to_order(size_t size);
 
 // buddy_impl.cc
 raw_ptr buddy_alloc(size_t order);

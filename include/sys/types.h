@@ -57,6 +57,15 @@ static inline constexpr ull operator"" _TB(ull sz)
     return sz * STORAGE_UNIT * STORAGE_UNIT * STORAGE_UNIT * STORAGE_UNIT;
 }
 
+template <typename T>
+static inline auto powerof2_roundup(T x) -> T
+{
+    return 1ull << (sizeof(T) * 8 - __builtin_clzll(x));
+}
+
+#define container_of(ptr, type, member) \
+    ((type *)((char *)(ptr)-offsetof(type, member)))
+
 // linked list head
 struct list_head
 {

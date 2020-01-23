@@ -1,5 +1,5 @@
 /*
- * Last Modified: Thu Jan 23 2020
+ * Last Modified: Fri Jan 24 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -118,4 +118,29 @@ buddy_internal::raw_ptr buddy_internal::order_get_block(size_t order)
     }
 
     return nullptr;
+}
+
+size_t buddy_internal::size_to_order(size_t size)
+{
+    size = powerof2_roundup(size);
+
+    size_t ret = 0;
+    for (ret = 0; ret < 32; ret++)
+    {
+        if (size & (1 << ret))
+        {
+            break;
+        }
+    }
+
+    if (ret < MIN_ORD)
+    {
+        ret = MIN_ORD;
+    }
+    else if (ret > MAX_ORD)
+    {
+        KDEBUG_GENERALPANIC("buddy_get_order: order too big!");
+    }
+
+    return ret;
 }

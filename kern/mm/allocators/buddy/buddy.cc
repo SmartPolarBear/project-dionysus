@@ -37,14 +37,18 @@ buddy_struct buddy_internal::buddy = {};
 
 using buddy_internal::buddy;
 
+struct memory_block_info
+{
+    size_t order;
+    uint8_t mem[0];
+};
+
 void vm::buddy_init(raw_ptr st, raw_ptr ed)
 {
     spinlock_initlock(&buddy.buddylock, "buddy_allocator");
 
     buddy.start = PAGE_ROUNDUP(reinterpret_cast<uintptr_t>(st));
     buddy.end = PAGE_ROUNDDOWN(reinterpret_cast<uintptr_t>(ed));
-
-    console::printf("start=0x%x,end=0x%x", buddy.start, buddy.end);
 
     size_t len = buddy.end - buddy.start;
 
@@ -85,8 +89,15 @@ void vm::buddy_init(raw_ptr st, raw_ptr ed)
 
 raw_ptr vm::buddy_alloc(size_t sz)
 {
+    size_t order = buddy_internal::size_to_order(sizeof(memory_block_info) + sz + sizeof(char));
+    memory_block_info *binfo = reinterpret_cast<decltype(binfo)>(buddy_internal::buddy_alloc(order));
+    binfo->order = order;
+    return reinterpret_cast<raw_ptr>(binfo->mem);
 }
 
 void vm::buddy_free(void *m)
 {
+    uint8_t *raw_ptr = reinterpret_cast<decltype(raw_ptr)>(m);
+    memory_block_info *binfo = reinterpret_cast<decltype(binfo)>(container_of(raw_ptr, memory_block_info, mem));
+    buddy_internal::buddy_free(binfo, binfo->order);
 }
