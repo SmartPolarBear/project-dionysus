@@ -22,6 +22,7 @@
 
 #include "sys/buddy_alloc.h"
 
+#include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 #include "drivers/lock/spinlock.h"
 
@@ -43,7 +44,9 @@ void vm::buddy_init(void *st, void *ed)
 
     size_t len = buddy.end - buddy.start;
 
-    size_t n_marks = (len >> (MAX_ORD + 5)) + 1, total_offset = 0;
+    size_t n_marks = (len >> (MAX_ORD + 5)) + 1;
+
+    size_t total_offset = 0;
 
     // can't use size_t here because the end condition will never be reached
     // use int because ORD_COUNT won't be bigger than INT_MAX
@@ -59,17 +62,25 @@ void vm::buddy_init(void *st, void *ed)
             auto mark = buddy_internal::order_get_mark(i + MIN_ORD, j);
             mark->links = buddy_internal::links(MARK_EMPTY, MARK_EMPTY);
             mark->bitmap = 0;
+
+            if (j == 1)
+            {
+                console::printf("addr1=0x%p,bitmap=%d\n", mark, mark->bitmap);
+            }
         }
 
         total_offset += n_marks;
         n_marks <<= 1;
+
+        auto mark = buddy_internal::order_get_mark(i + MIN_ORD, 1);
+        console::printf("addr2=0x%p,bitmap=%d\n", mark, mark->bitmap);
     }
 
     buddy.start_mem = buddy_internal::align_up(buddy.start + total_offset * sizeof(mark), 1 << MAX_ORD);
 
     for (uintptr_t i = buddy.start_mem; i < buddy.end; i += (1 << MAX_ORD))
     {
-        buddy_internal::buddy_free(reinterpret_cast<raw_ptr>(i), MAX_ORD);
+        buddy_internal::buddy_free((raw_ptr)(i), MAX_ORD);
     }
 
     buddy.initialized = true;

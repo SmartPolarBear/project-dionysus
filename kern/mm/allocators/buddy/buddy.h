@@ -49,14 +49,14 @@ namespace types
 {
 struct mark
 {
-    size_t links;
-    size_t bitmap;
+    uint32_t links;
+    uint32_t bitmap;
 };
 
 struct order
 {
-    size_t head;
-    size_t offset;
+    uint32_t head;
+    uint32_t offset;
 };
 
 using lock::spinlock;
@@ -83,7 +83,7 @@ extern buddy_struct buddy;
 
 static inline mark *order_get_mark(size_t order, size_t idx)
 {
-    return reinterpret_cast<mark *>(buddy.start + (buddy.orders[order - MIN_ORD].offset + idx));
+    return (mark *)buddy.start + (buddy.orders[order - MIN_ORD].offset + idx);
 }
 
 static inline constexpr size_t align_up(size_t sz, size_t al)
@@ -108,7 +108,7 @@ static inline constexpr size_t link_next(size_t links)
 
 static inline constexpr size_t links(size_t pre, size_t next)
 {
-    return ((pre << 16) | (next & 0xFFFF));
+    return (((pre) << 16) | ((next)&0xFFFF));
 }
 
 static inline size_t mem_get_block_id(size_t order, uintptr_t mem)

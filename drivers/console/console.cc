@@ -241,6 +241,8 @@ void console::printf(const char *fmt, ...)
         }
         case 'p':
         {
+            static_assert(sizeof(size_t *) == sizeof(size_t));
+            
             size_t len = itoa_ex(nbuf, va_arg(ap, size_t), 16);
             for (size_t i = 0; i < len; i++)
             {
