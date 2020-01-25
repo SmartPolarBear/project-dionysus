@@ -84,9 +84,14 @@ void console::cga_putc(uint32_t c)
 
     if (pos < 0 || pos > 25 * 80)
     {
-        KDEBUG_GENERALPANIC(pos < 0
-                                ? "pos out of bound: it should be positive."
-                                : "pos out of bound: it should be smaller than 25*80");
+        auto msg = pos < 0
+                       ? "pos out of bound: it should be positive."
+                       : "pos out of bound: it should be smaller than 25*80";
+
+        KDEBUG_RICHPANIC(msg,
+                             "KERNEL PANIC: BUILTIN CGA",
+                             false,
+                             "The pos now is %d", pos);
     }
 }
 

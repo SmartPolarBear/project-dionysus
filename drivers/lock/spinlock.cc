@@ -4,7 +4,6 @@
 #include "drivers/debug/kdebug.h"
 #include "drivers/lock/spinlock.h"
 
-
 using lock::spinlock;
 
 void lock::spinlock_initlock(spinlock *splk, const char *name)
@@ -13,7 +12,6 @@ void lock::spinlock_initlock(spinlock *splk, const char *name)
     splk->locked = 0u;
     splk->cpu = nullptr;
 }
-
 
 void lock::spinlock_acquire(spinlock *lock)
 {
@@ -34,7 +32,10 @@ void lock::spinlock_release(spinlock *lock)
 {
     if (!spinlock_holding(lock))
     {
-        KDEBUG_GENERALPANIC("Release a not-held spinlock.\n");
+        KDEBUG_RICHPANIC("Release a not-held spinlock.\n",
+                             "KERNEL PANIC",
+                             false,
+                             "Lock's name: %s", lock->name);
     }
 
     lock->pcs[0] = 0;
@@ -64,13 +65,15 @@ void lock::popcli(void)
 {
     if (read_eflags() & EFLAG_IF)
     {
-        KDEBUG_GENERALPANIC("popcli - interruptible");
+        KDEBUG_RICHPANIC("Can't be called if interrupts are enabled",
+                             "KERNEL PANIC: SPINLOCK",
+                             false,
+                             "");
     }
 
-    if (--cpu->nest_pushcli_depth < 0)
-    {
-        KDEBUG_GENERALPANIC("popcli");
-    }
+    --cpu->nest_pushcli_depth;
+    KDEBUG_ASSERT(cpu->nest_pushcli_depth >= 0);
+
 
     if (cpu->nest_pushcli_depth == 0 && cpu->intr_enable)
     {

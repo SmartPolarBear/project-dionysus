@@ -1,5 +1,5 @@
 /*
- * Last Modified: Fri Jan 24 2020
+ * Last Modified: Sat Jan 25 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -50,7 +50,7 @@ extern "C" [[noreturn]] void kmain()
     // the size of which is expected to be less than 4K.
     vm::bootmm_init(vm::kernel_boot_mem_begin(),
                     vm::kernel_boot_mem_end());
-                    
+
     // process the multiboot information
     multiboot::init_mbi();
 

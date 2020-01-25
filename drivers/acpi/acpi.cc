@@ -161,7 +161,9 @@ void acpi::init_acpi(void)
 
     if (acpi_new_tag == nullptr && acpi_old_tag == nullptr)
     {
-        KDEBUG_GENERALPANIC("ACPI is not compatible with the machine.");
+        KDEBUG_RICHPANIC("ACPI is not compatible with the machine.",
+                             "KERNEL PANIC:ACPI",
+                             false, "");
     }
 
     acpi_rsdp *rsdp = (acpi_new_tag != nullptr)
@@ -170,7 +172,9 @@ void acpi::init_acpi(void)
 
     if (strncmp((char *)rsdp->signature, SIGNATURE_RSDP, strlen(SIGNATURE_RSDP)) != 0)
     {
-        KDEBUG_GENERALPANIC("Invalid ACPI RSDP: failed to check signature.");
+        KDEBUG_RICHPANIC("Invalid ACPI RSDP: failed to check signature.",
+                             "KERNEL PANIC:ACPI",
+                             false, "The given signature is %s\n", rsdp->signature);
     }
 
     KDEBUG_ASSERT(rsdp != nullptr);

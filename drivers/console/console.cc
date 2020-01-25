@@ -141,7 +141,10 @@ void console::printf(const char *fmt, ...)
 
     if (fmt == 0)
     {
-        KDEBUG_GENERALPANIC("Invalid null format strings");
+        KDEBUG_RICHPANIC("Invalid null format strings",
+                             "KERNEL PANIC: BUILTIN CONSOLE",
+                             false,
+                             "");
     }
 
     auto char_data = [](char d) -> decltype(d & 0xFF) {
@@ -188,8 +191,11 @@ void console::printf(const char *fmt, ...)
         case 'f':
         {
             //FIXME: va_arg(ap, double) always return wrong value
-            KDEBUG_GENERALPANIC("%f flag is disabled because va_arg(ap, double) always return wrong value");
-            
+            KDEBUG_RICHPANIC("%f flag is disabled because va_arg(ap, double) always return wrong value",
+                                 "KERNEL PANIC: BUILTIN CONSOLE",
+                                 false,
+                                 "");
+
             size_t len = ftoa_ex(va_arg(ap, double), nbuf, 10);
             for (size_t i = 0; i < len; i++)
             {
@@ -242,7 +248,7 @@ void console::printf(const char *fmt, ...)
         case 'p':
         {
             static_assert(sizeof(size_t *) == sizeof(size_t));
-            
+
             size_t len = itoa_ex(nbuf, va_arg(ap, size_t), 16);
             for (size_t i = 0; i < len; i++)
             {

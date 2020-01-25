@@ -107,7 +107,9 @@ extern "C" void trap_body(trap_info info)
     // check if the trap number is out of range
     if (info.trap_num >= TRAP_NUMBERMAX || info.trap_num < 0)
     {
-        KDEBUG_GENERALPANIC("trap number is out of range");
+        KDEBUG_RICHPANIC("trap number is out of range",
+                             "KERNEL PANIC: TRAP",
+                             false, "The given trap number is %d", info.trap_num);
     }
 
     // it should be assigned with the defualt handle when initialized

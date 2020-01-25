@@ -17,7 +17,7 @@ void *__stack_chk_guard(0);
 
 namespace __cxxabiv1
 {
-    
+
 __extension__ typedef int __guard __attribute__((mode(__DI__)));
 
 extern "C"
@@ -57,8 +57,13 @@ void __stack_chk_guard_setup()
 
 struct IntRegs;
 
-[[noreturn]] void __stack_chk_fail() {
-    KDEBUG_GENERALPANIC("Buffer Overflow (SSP Signal)\n");
+[[noreturn]] void __stack_chk_fail()
+{
+    KDEBUG_RICHPANIC("Buffer Overflow (SSP Signal)\n",
+                         "KERNEL PANIC: BUILTIN C++RT",
+                         false,
+                         "");
+
     for (;;)
         ;
 }

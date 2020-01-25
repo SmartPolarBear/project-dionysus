@@ -1,5 +1,5 @@
 /*
- * Last Modified: Tue Jan 21 2020
+ * Last Modified: Sat Jan 25 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -19,8 +19,6 @@
  * Date      	By	Comments
  * ----------	---	----------------------------------------------------------
  */
-
-
 
 #include "arch/amd64/x86.h"
 
@@ -45,8 +43,9 @@ extern "C" void entry32mp(void);
 
 constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
 
-[[clang::optnone]] void ap::init_ap(void) {
-    
+[[clang::optnone]] void ap::init_ap(void)
+{
+
     auto tag = multiboot::aquire_tag_ptr<multiboot_tag_module>(MULTIBOOT_TAG_TYPE_MODULE,
                                                                [](auto ptr) -> bool {
                                                                    multiboot_tag_module *mdl_tag = reinterpret_cast<decltype(mdl_tag)>(ptr);
@@ -72,7 +71,9 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
             char *stack = vm::bootmm_alloc();
             if (stack == nullptr)
             {
-                KDEBUG_GENERALPANIC("Can't allocate enough memory for AP boot.\n");
+                KDEBUG_RICHPANIC("Can't allocate enough memory for AP boot.\n",
+                                     "KERNEL PANIC: AP",
+                                     false, "");
             }
 
             *(uint32_t *)(code - 4) = 0x8000; // just enough stack to get us to entry64mp
@@ -110,7 +111,8 @@ void ap::all_processor_main()
     }
 }
 
-extern "C" [[clang::optnone]] void ap_enter(void) {
+extern "C" [[clang::optnone]] void ap_enter(void)
+{
     // install the kernel vm
     vm::switch_kernelvm();
 

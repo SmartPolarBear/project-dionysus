@@ -16,7 +16,10 @@ uintptr_t V2P(uintptr_t x)
     }
     else
     {
-        KDEBUG_GENERALPANIC("Invalid address for V2P\n");
+        KDEBUG_RICHPANIC("Invalid address for V2P\n",
+                             "KERNEL PANIC: VM",
+                             false,
+                             "The given address is 0x%x", x);
         return 0;
     }
 }
@@ -33,7 +36,10 @@ uintptr_t P2V(uintptr_t x)
     }
     else
     {
-        KDEBUG_GENERALPANIC("Invalid address for P2V\n");
+        KDEBUG_RICHPANIC("Invalid address for V2P\n",
+                             "KERNEL PANIC: VM",
+                             false,
+                             "The given address is 0x%x", x);
         return 0;
     }
 }

@@ -35,7 +35,9 @@ void local_apic::init_lapic(void)
 {
     if (!lapic)
     {
-        KDEBUG_GENERALPANIC("LAPIC isn't avaiable.\n");
+        KDEBUG_RICHPANIC("LAPIC isn't avaiable.\n",
+                         "KERNEL PANIC: LAPIC",
+                         false, "");
     }
 
     //enable local APIC
@@ -69,7 +71,7 @@ void local_apic::init_lapic(void)
         ;
 
     // Enable interrupts on the APIC (but not on the processor).
-    write_lapic(TASK_PRIORITY, 0);    
+    write_lapic(TASK_PRIORITY, 0);
 }
 
 // when interrupts are enable
@@ -80,7 +82,10 @@ size_t local_apic::get_cpunum(void)
 {
     if (read_eflags() & EFLAG_IF)
     {
-        KDEBUG_GENERALPANIC_WITH_RETURN_ADDR("local_apic::get_cpunum can't be called with interrupts enabled\n");
+        KDEBUG_RICHPANIC("local_apic::get_cpunum can't be called with interrupts enabled\n",
+                         "KERNEL PANIC:LAPIC",
+                         false,
+                         "Return address: 0x%x\n", __builtin_return_address(0));
     }
 
     if (lapic == nullptr)

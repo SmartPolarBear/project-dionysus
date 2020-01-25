@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sat Jan 18 2020
+ * Last Modified: Sat Jan 25 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -19,7 +19,6 @@
  * Date      	By	Comments
  * ----------	---	----------------------------------------------------------
  */
-
 
 //FIXME: some fault occurs in multiboot.cc for the mem is unexpectedly modified.
 
@@ -65,7 +64,10 @@ void vm::bootmm_free(char *v)
 {
     if (((size_t)v) % BOOTMM_BLOCKSIZE || v < end || V2P((uintptr_t)v) >= PHYMEMORY_SIZE)
     {
-        KDEBUG_GENERALPANIC("Unable to free an invalid pointer.\n");
+        KDEBUG_RICHPANIC("Unable to free an invalid pointer.\n",
+                             "KERNEL PANIC: BOOTMM",
+                             false,
+                             "");
     }
 
     memset(v, 1, BOOTMM_BLOCKSIZE);

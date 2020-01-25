@@ -31,6 +31,7 @@ void kdebug::kdebug_getcallerpcs(size_t buflen, uintptr_t pcs[])
     }
 }
 
+
 void kdebug::kdebug_panic(const char *fmt, ...)
 {
     // disable interrupts
