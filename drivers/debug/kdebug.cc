@@ -8,6 +8,34 @@
 
 bool kdebug::panicked = false;
 
+static inline void kdebug_vpanic_print_impl(const char *fmt, bool topleft, va_list ap)
+{
+    // disable the lock of console
+    console::console_debugdisablelock();
+
+    // change cga color and reset cursor to draw attention
+    constexpr auto panicked_screencolor = console::TATTR_BKBLUE | console::TATTR_FRYELLOW;
+    console::console_settextattrib(panicked_screencolor);
+
+    // panic2 message is usually on the left-top of the console
+    if (topleft)
+    {
+        console::console_setpos(0);
+    }
+
+    console::vprintf(fmt, ap);
+
+    constexpr size_t PCS_BUFLEN = 16;
+    uintptr_t pcs[PCS_BUFLEN] = {0};
+    kdebug::kdebug_getcallerpcs(PCS_BUFLEN, pcs);
+
+    console::printf("\n");
+    for (auto pc : pcs)
+    {
+        console::printf("%p ", pc);
+    }
+}
+
 // read information from %rbp and retrive pcs
 void kdebug::kdebug_getcallerpcs(size_t buflen, uintptr_t pcs[])
 {
@@ -31,81 +59,17 @@ void kdebug::kdebug_getcallerpcs(size_t buflen, uintptr_t pcs[])
     }
 }
 
-
-void kdebug::kdebug_panic(const char *fmt, ...)
+[[noreturn]] void kdebug::kdebug_panic(const char *fmt, ...)
 {
     // disable interrupts
     cli();
 
-    // disable the lock of console
-    console::console_debugdisablelock();
-
-    // change cga color and reset cursor to draw attention
-    constexpr auto panicked_screencolor = console::TATTR_BKBLUE | console::TATTR_FRYELLOW;
-    console::console_settextattrib(panicked_screencolor);
-
-    // panic message must be on the left-top of the console
-    console::console_setpos(0);
-
-    // first, print the given imformation.
     va_list ap;
-    int c;
-
     va_start(ap, fmt);
 
-    if (fmt)
-    {
-
-        for (size_t i = 0; (c = fmt[i] & 0xff) != 0; i++)
-        {
-            if (c != '%')
-            {
-                console::putc(c);
-                continue;
-            }
-            c = fmt[++i] & 0xff;
-            if (c == 0)
-                break;
-            switch (c)
-            {
-            case 'c':
-                console::printf("%c", va_arg(ap, int));
-                break;
-            case 'd':
-                console::printf("%d", va_arg(ap, int));
-                break;
-            case 'x':
-                console::printf("%x", va_arg(ap, int));
-                break;
-            case 'p':
-                console::printf("%p", va_arg(ap, size_t));
-                break;
-            case 's':
-                console::printf("%s", va_arg(ap, char *));
-                break;
-            case '%':
-                console::printf("%");
-                break;
-            default:
-                console::putc('%');
-                console::putc(c);
-
-                break;
-            }
-        }
-    }
+    kdebug_vpanic_print_impl(fmt, false, ap);
 
     va_end(ap);
-
-    constexpr size_t PCS_BUFLEN = 16;
-    uintptr_t pcs[PCS_BUFLEN] = {0};
-    kdebug_getcallerpcs(PCS_BUFLEN, pcs);
-
-    console::printf("\n");
-    for (auto pc : pcs)
-    {
-        console::printf("%p ", pc);
-    }
 
     // set global panic state for other cpu
     panicked = true;
@@ -115,83 +79,17 @@ void kdebug::kdebug_panic(const char *fmt, ...)
         ;
 }
 
-void kdebug::kdebug_panic2(const char *fmt, uint32_t topleft, ...)
+[[noreturn]] void kdebug::kdebug_panic2(const char *fmt, uint32_t topleft, ...)
 {
     // disable interrupts
     cli();
 
-    // disable the lock of console
-    console::console_debugdisablelock();
-
-    // change cga color and reset cursor to draw attention
-    constexpr auto panicked_screencolor = console::TATTR_BKBLUE | console::TATTR_FRYELLOW;
-    console::console_settextattrib(panicked_screencolor);
-
-    // panic2 message is usually on the left-top of the console
-    if (topleft)
-    {
-        console::console_setpos(0);
-    }
-
-    // first, print the given imformation.
     va_list ap;
-    int c;
-
     va_start(ap, topleft);
 
-    if (fmt)
-    {
-
-        for (size_t i = 0; (c = fmt[i] & 0xff) != 0; i++)
-        {
-            if (c != '%')
-            {
-                console::putc(c);
-                continue;
-            }
-            c = fmt[++i] & 0xff;
-            if (c == 0)
-                break;
-            switch (c)
-            {
-            case 'c':
-                console::printf("%c", va_arg(ap, int));
-                break;
-            case 'd':
-                console::printf("%d", va_arg(ap, int));
-                break;
-            case 'x':
-                console::printf("%x", va_arg(ap, int));
-                break;
-            case 'p':
-                console::printf("%p", va_arg(ap, size_t));
-                break;
-            case 's':
-                console::printf("%s", va_arg(ap, char *));
-                break;
-            case '%':
-                console::printf("%");
-                break;
-            default:
-                console::putc('%');
-                console::putc(c);
-
-                break;
-            }
-        }
-    }
+    kdebug_vpanic_print_impl(fmt, topleft, ap);
 
     va_end(ap);
-
-    constexpr size_t PCS_BUFLEN = 16;
-    uintptr_t pcs[PCS_BUFLEN] = {0};
-    kdebug_getcallerpcs(PCS_BUFLEN, pcs);
-
-    console::printf("\n");
-    for (auto pc : pcs)
-    {
-        console::printf("%p ", pc);
-    }
 
     // set global panic state for other cpu
     panicked = true;
@@ -203,7 +101,7 @@ void kdebug::kdebug_panic2(const char *fmt, uint32_t topleft, ...)
 
 void kdebug::kdebug_dump_lock_panic(lock::spinlock *lock)
 {
-        // disable the lock of console
+    // disable the lock of console
     console::console_debugdisablelock();
     console::console_setpos(0);
 
@@ -221,4 +119,3 @@ void kdebug::kdebug_dump_lock_panic(lock::spinlock *lock)
 
     KDEBUG_FOLLOWPANIC("acquire");
 }
-

@@ -11,6 +11,8 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdarg.h>
+
 
 using ldbl = long double;
 using ull = unsigned long long;

@@ -8,8 +8,6 @@
 
 #include "sys/types.h"
 
-#include <stdarg.h>
-
 using lock::spinlock;
 using lock::spinlock_acquire;
 using lock::spinlock_initlock;
@@ -126,18 +124,14 @@ void console::putc(char c)
 constexpr size_t MAXNUMBER_LEN = 256;
 char nbuf[MAXNUMBER_LEN] = {};
 
-void console::printf(const char *fmt, ...)
+void console::vprintf(const char *fmt, va_list ap)
 {
-    va_list ap;
-
     // acquire the lock
     bool locking = conslock.lock_enable;
     if (locking)
     {
         spinlock_acquire(&conslock.lock);
     }
-
-    va_start(ap, fmt);
 
     if (fmt == 0)
     {
@@ -283,13 +277,21 @@ void console::printf(const char *fmt, ...)
         }
     }
 
-    va_end(ap);
-
     // release the lock
     if (locking)
     {
         spinlock_release(&conslock.lock);
     }
+}
+
+void console::printf(const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    
+    console::vprintf(fmt, ap);
+
+    va_end(ap);
 }
 
 void console::console_init(void)
