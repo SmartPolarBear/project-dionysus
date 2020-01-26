@@ -1,10 +1,31 @@
-/**
- * @ Author: SmartPolarBear
- * @ Create Time: 1970-01-01 08:00:00
- * @ Modified by: Daniel Lin
- * @ Modified time: 2020-01-16 14:34:57
- * @ Description:
+/*
+ * Last Modified: Sat Jan 25 2020
+ * Modified By: SmartPolarBear
+ * -----
+ * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
+ * 
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+ * REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+ * FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+ * INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ * LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+ * OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ * PERFORMANCE OF THIS SOFTWARE.
+ * -----
+ * HISTORY:
+ * Date      	By	Comments
+ * ----------	---	----------------------------------------------------------
  */
+
+
+
+
+
+
+
 
 #if !defined(__INCLUDE_SYS_TYPES_H)
 #define __INCLUDE_SYS_TYPES_H

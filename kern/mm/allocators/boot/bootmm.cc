@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sat Jan 25 2020
+ * Last Modified: Sun Jan 26 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -39,11 +39,12 @@ struct run
 struct
 {
     run *freelist;
+    size_t used;
 } bootmem;
 
 extern char end[]; //kernel.ld
 
-static void
+static inline void
 freerange(void *vstart, void *vend)
 {
     char *p = (char *)PAGE_ROUNDUP((uintptr_t)vstart);
@@ -57,6 +58,7 @@ freerange(void *vstart, void *vend)
 void vm::bootmm_init(void *vstart, void *vend)
 {
     freerange(vstart, vend);
+    bootmem.used = 0;
 }
 
 //Free a block
@@ -69,6 +71,8 @@ void vm::bootmm_free(char *v)
                              false,
                              "");
     }
+
+    bootmem.used--;
 
     memset(v, 1, BOOTMM_BLOCKSIZE);
     auto r = reinterpret_cast<run *>(v);
@@ -85,5 +89,12 @@ char *vm::bootmm_alloc(void)
         bootmem.freelist = r->next;
     }
 
+    bootmem.used++;
+
     return reinterpret_cast<char *>(r);
+}
+
+size_t vm::bootmm_get_used(void)
+{
+    return bootmem.used;
 }
