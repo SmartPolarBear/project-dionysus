@@ -46,5 +46,9 @@ Done:
 1) finished codes of the initialization of buddy along with free memory.
     ! yet to be called in the kernel's main
 
+1/27/2020
+1) The memory layout needs adjusting
+2) Implement a slab allocator
+
 
 
