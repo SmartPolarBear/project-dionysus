@@ -56,7 +56,7 @@ static inline void *kernel_boot_mem_end(void)
 static inline void *kernel_mem_begin(void)
 {
     // with a guard hole sized BOOTMM_BLOCKSIZE
-    return reinterpret_cast<uint8_t *>(kernel_boot_mem_end()) +  allocators::bootmm::BOOTMM_BLOCKSIZE;
+    return reinterpret_cast<uint8_t *>(kernel_boot_mem_end()) +  allocators::boot_allocator::BOOTMM_BLOCKSIZE;
 }
 
 static inline void *kernel_mem_end(void)

@@ -28,16 +28,16 @@ void vm::segment::init_segmentation(void)
 {
     uint32_t *tss = nullptr;
     uint64_t *gdt = nullptr;
-    auto local_storage = allocators::bootmm::bootmm_alloc();
+    auto local_storage = allocators::boot_allocator::bootmm_alloc();
 
-    memset(local_storage, 0, allocators::bootmm::BOOTMM_BLOCKSIZE);
+    memset(local_storage, 0, allocators::boot_allocator::BOOTMM_BLOCKSIZE);
 
     gdt = reinterpret_cast<decltype(gdt)>(local_storage);
 
     tss = reinterpret_cast<decltype(tss)>(local_storage + 1024);
     tss[16] = 0x00680000;
 
-    wrmsr(0xC0000100, ((uintptr_t)local_storage) + ((allocators::bootmm::BOOTMM_BLOCKSIZE) / 2));
+    wrmsr(0xC0000100, ((uintptr_t)local_storage) + ((allocators::boot_allocator::BOOTMM_BLOCKSIZE) / 2));
 
     auto c = &cpus[local_apic::get_cpunum()];
     c->local = local_storage;

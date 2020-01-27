@@ -68,7 +68,7 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
     {
         if (core.present && core.id != local_apic::get_cpunum())
         {
-            char *stack = allocators::bootmm::bootmm_alloc();
+            char *stack = allocators::boot_allocator::bootmm_alloc();
             if (stack == nullptr)
             {
                 KDEBUG_RICHPANIC("Can't allocate enough memory for AP boot.\n",

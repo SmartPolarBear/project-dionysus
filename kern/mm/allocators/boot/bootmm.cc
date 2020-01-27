@@ -31,7 +31,7 @@
 
 #include "drivers/debug/kdebug.h"
 
-using allocators::bootmm::BOOTMM_BLOCKSIZE;
+using allocators::boot_allocator::BOOTMM_BLOCKSIZE;
 
 struct run
 {
@@ -52,19 +52,19 @@ freerange(void *vstart, void *vend)
     char *p = (char *)PAGE_ROUNDUP((uintptr_t)vstart);
     for (; p + BOOTMM_BLOCKSIZE <= reinterpret_cast<char *>(PAGE_ROUNDDOWN((uintptr_t)vend)); p += BOOTMM_BLOCKSIZE)
     {
-        allocators::bootmm::bootmm_free(p);
+        allocators::boot_allocator::bootmm_free(p);
     }
 }
 
 //Ininialzie the boot mem manager
-void allocators::bootmm::bootmm_init(void *vstart, void *vend)
+void allocators::boot_allocator::bootmm_init(void *vstart, void *vend)
 {
     freerange(vstart, vend);
     bootmem.used = 0;
 }
 
 //Free a block
-void allocators::bootmm::bootmm_free(char *v)
+void allocators::boot_allocator::bootmm_free(char *v)
 {
     if (((size_t)v) % BOOTMM_BLOCKSIZE || v < end || V2P((uintptr_t)v) >= PHYMEMORY_SIZE)
     {
@@ -83,7 +83,7 @@ void allocators::bootmm::bootmm_free(char *v)
 }
 
 // Allocate a block sized 4096 bytes
-char *allocators::bootmm::bootmm_alloc(void)
+char *allocators::boot_allocator::bootmm_alloc(void)
 {
     auto r = bootmem.freelist;
     if (r)
@@ -96,7 +96,7 @@ char *allocators::bootmm::bootmm_alloc(void)
     return reinterpret_cast<char *>(r);
 }
 
-size_t allocators::bootmm::bootmm_get_used(void)
+size_t allocators::boot_allocator::bootmm_get_used(void)
 {
     return bootmem.used;
 }

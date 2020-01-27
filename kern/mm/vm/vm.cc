@@ -46,7 +46,7 @@
 using vm::pde_ptr_t;
 using vm::pde_t;
 
-using allocators::bootmm::bootmm_alloc;
+using allocators::boot_allocator::bootmm_alloc;
 
 /*TODO: kernel text should be specially mapped for the sake of safety
     this should be done after we have user processes to prevent their attempt to change kernel code*/

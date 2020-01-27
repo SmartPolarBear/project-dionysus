@@ -8,7 +8,7 @@
 namespace allocators
 {
 
-namespace bootmm
+namespace boot_allocator
 {
 constexpr size_t BOOTMM_BLOCKSIZE = 4096;
 
