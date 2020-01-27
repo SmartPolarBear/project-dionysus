@@ -30,7 +30,7 @@
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 
-#include "sys/allocators/bootmm.h"
+#include "sys/allocators/boot_alloc.h"
 #include "sys/memlayout.h"
 #include "sys/multiboot.h"
 #include "sys/types.h"
@@ -68,12 +68,12 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
     {
         if (core.present && core.id != local_apic::get_cpunum())
         {
-            char *stack = vm::bootmm_alloc();
+            char *stack = allocators::bootmm::bootmm_alloc();
             if (stack == nullptr)
             {
                 KDEBUG_RICHPANIC("Can't allocate enough memory for AP boot.\n",
-                                     "KERNEL PANIC: AP",
-                                     false, "");
+                                 "KERNEL PANIC: AP",
+                                 false, "");
             }
 
             *(uint32_t *)(code - 4) = 0x8000; // just enough stack to get us to entry64mp
@@ -99,7 +99,7 @@ void ap::all_processor_main()
     // simple scheduler loop
     while (!kdebug::panicked)
     {
-        // console::printf("cpu %d\n", cpu->id);
+        console::printf("cpu %d\n", cpu->id);
     }
 
     if (kdebug::panicked)

@@ -25,10 +25,11 @@
 
 #include "sys/types.h"
 
-#include "sys/allocators/bootmm.h"
+#include "sys/allocators/boot_alloc.h"
 #include "sys/allocators/buddy_alloc.h"
-#include "vm.h"
+#include "sys/allocators/slab_alloc.h"
 
+#include "sys/vm.h"
 #include "sys/memlayout.h"
 #include "sys/mmu.h"
 #include "sys/multiboot.h"
@@ -55,7 +56,7 @@ static inline void *kernel_boot_mem_end(void)
 static inline void *kernel_mem_begin(void)
 {
     // with a guard hole sized BOOTMM_BLOCKSIZE
-    return reinterpret_cast<uint8_t *>(kernel_boot_mem_end()) + BOOTMM_BLOCKSIZE;
+    return reinterpret_cast<uint8_t *>(kernel_boot_mem_end()) +  allocators::bootmm::BOOTMM_BLOCKSIZE;
 }
 
 static inline void *kernel_mem_end(void)

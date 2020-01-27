@@ -43,7 +43,7 @@ struct memory_block_info
     uint8_t mem[0];
 };
 
-void vm::buddy_init(raw_ptr st, raw_ptr ed)
+void allocators::buddy_allocator::buddy_init(raw_ptr st, raw_ptr ed)
 {
     spinlock_initlock(&buddy.buddylock, "buddy_allocator");
 
@@ -87,7 +87,7 @@ void vm::buddy_init(raw_ptr st, raw_ptr ed)
     buddy.lock_enable = true;
 }
 
-raw_ptr vm::buddy_alloc(size_t sz)
+raw_ptr allocators::buddy_allocator::buddy_alloc(size_t sz)
 {
     size_t order = buddy_internal::size_to_order(sizeof(memory_block_info) + sz + sizeof(char));
     memory_block_info *binfo = reinterpret_cast<decltype(binfo)>(buddy_internal::buddy_alloc(order));
@@ -95,7 +95,7 @@ raw_ptr vm::buddy_alloc(size_t sz)
     return reinterpret_cast<raw_ptr>(binfo->mem);
 }
 
-void vm::buddy_free(void *m)
+void allocators::buddy_allocator::buddy_free(void *m)
 {
     uint8_t *raw_ptr = reinterpret_cast<decltype(raw_ptr)>(m);
     memory_block_info *binfo = reinterpret_cast<decltype(binfo)>(container_of(raw_ptr, memory_block_info, mem));

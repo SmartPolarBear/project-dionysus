@@ -1,6 +1,6 @@
 #include "arch/amd64/x86.h"
 
-#include "sys/allocators/bootmm.h"
+#include "sys/allocators/boot_alloc.h"
 #include "sys/memlayout.h"
 #include "sys/mmu.h"
 #include "sys/multiboot.h"
@@ -65,10 +65,10 @@ void multiboot::init_mbi(void)
     }
 
     auto primitive = P2V<decltype(mboot_info)>(mbi_structptr);
-    KDEBUG_ASSERT(primitive->total_size < vm::BOOTMM_BLOCKSIZE);
+    KDEBUG_ASSERT(primitive->total_size < allocators::bootmm::BOOTMM_BLOCKSIZE);
 
-    mboot_info = reinterpret_cast<decltype(mboot_info)>(vm::bootmm_alloc());
-    memset(mboot_info, 0, vm::BOOTMM_BLOCKSIZE);
+    mboot_info = reinterpret_cast<decltype(mboot_info)>(allocators::bootmm::bootmm_alloc());
+    memset(mboot_info, 0, allocators::bootmm::BOOTMM_BLOCKSIZE);
     memmove(mboot_info, mbi_structptr, primitive->total_size);
 
     for (size_t i = 0; i < TAGS_COUNT_MAX; i++)
@@ -78,7 +78,7 @@ void multiboot::init_mbi(void)
 
     //FIXME: add a barrier to prevent something crack the mboot info
     // I guess the crack is because an imperfect memory layout.
-    [[maybe_unused]] char *p = vm::bootmm_alloc();
+    [[maybe_unused]] char *p = allocators::bootmm::bootmm_alloc();
 
     // console::printf("mbootinfo=0x%p,p=0x%p\n", mboot_info, p);
     parse_multiboot_tags();

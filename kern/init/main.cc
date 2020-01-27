@@ -56,8 +56,8 @@ extern "C" [[noreturn]] void kmain()
     // the offset is intended to protect multiboot info from overwritten,
     // which is put *right* after the kernel by grub.
     // the size of which is expected to be less than 4K.
-    vm::bootmm_init(vm::kernel_boot_mem_begin(),
-                    vm::kernel_boot_mem_end());
+    allocators::bootmm::bootmm_init(vm::kernel_boot_mem_begin(),
+                                    vm::kernel_boot_mem_end());
 
     // process the multiboot information
     multiboot::init_mbi();
@@ -87,10 +87,10 @@ extern "C" [[noreturn]] void kmain()
     io_apic::init_ioapic();
 
     // initialize buddy allocator
-    vm::buddy_init(vm::kernel_mem_begin(), vm::kernel_mem_end());
+    allocators::buddy_allocator::buddy_init(vm::kernel_mem_begin(), vm::kernel_mem_end());
 
     console::printf("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
-    
+
     // boot other CPU cores
     ap::init_ap();
 

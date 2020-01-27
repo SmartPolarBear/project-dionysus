@@ -24,7 +24,7 @@
 
 #include "boot/multiboot2.h"
 
-#include "sys/allocators/bootmm.h"
+#include "sys/allocators/boot_alloc.h"
 #include "sys/error.h"
 #include "sys/memlayout.h"
 #include "sys/mmu.h"
@@ -46,7 +46,7 @@
 using vm::pde_ptr_t;
 using vm::pde_t;
 
-using vm::bootmm_alloc;
+using allocators::bootmm::bootmm_alloc;
 
 /*TODO: kernel text should be specially mapped for the sake of safety
     this should be done after we have user processes to prevent their attempt to change kernel code*/

@@ -3,12 +3,16 @@
 
 #include "sys/types.h"
 
-namespace vm
+namespace allocators
+{
+
+namespace buddy_allocator
 {
 void buddy_init(void *as, void *ae);
-
 void *buddy_alloc(size_t sz);
 void buddy_free(void *m);
-} // namespace vm
+} // namespace buddy
+
+} // namespace allocators
 
 #endif // __INCLUDE_SYS_BUDDY_ALLOC_H
