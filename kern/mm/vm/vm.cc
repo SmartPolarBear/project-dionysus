@@ -1,5 +1,5 @@
 /*
- * Last Modified: Tue Jan 21 2020
+ * Last Modified: Mon Jan 27 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -24,7 +24,7 @@
 
 #include "boot/multiboot2.h"
 
-#include "sys/bootmm.h"
+#include "sys/allocators/bootmm.h"
 #include "sys/error.h"
 #include "sys/memlayout.h"
 #include "sys/mmu.h"

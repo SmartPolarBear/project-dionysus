@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sun Jan 26 2020
+ * Last Modified: Mon Jan 27 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -22,12 +22,14 @@
 
 //FIXME: some fault occurs in multiboot.cc for the mem is unexpectedly modified.
 
-#include "sys/bootmm.h"
-#include "drivers/debug/kdebug.h"
-#include "lib/libc/string.h"
-#include "lib/libcxx/new"
+#include "sys/allocators/bootmm.h"
 #include "sys/memlayout.h"
 #include "sys/mmu.h"
+
+#include "lib/libc/string.h"
+#include "lib/libcxx/new"
+
+#include "drivers/debug/kdebug.h"
 
 using vm::BOOTMM_BLOCKSIZE;
 
@@ -67,9 +69,9 @@ void vm::bootmm_free(char *v)
     if (((size_t)v) % BOOTMM_BLOCKSIZE || v < end || V2P((uintptr_t)v) >= PHYMEMORY_SIZE)
     {
         KDEBUG_RICHPANIC("Unable to free an invalid pointer.\n",
-                             "KERNEL PANIC: BOOTMM",
-                             false,
-                             "");
+                         "KERNEL PANIC: BOOTMM",
+                         false,
+                         "");
     }
 
     bootmem.used--;

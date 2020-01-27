@@ -6,7 +6,7 @@
  * @ Description:
  */
 
-#include "sys/bootmm.h"
+#include "sys/allocators/bootmm.h"
 #include "sys/memlayout.h"
 #include "sys/mmu.h"
 #include "sys/types.h"

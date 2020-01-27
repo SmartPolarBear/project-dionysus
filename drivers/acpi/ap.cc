@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sun Jan 26 2020
+ * Last Modified: Mon Jan 27 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -30,7 +30,7 @@
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 
-#include "sys/bootmm.h"
+#include "sys/allocators/bootmm.h"
 #include "sys/memlayout.h"
 #include "sys/multiboot.h"
 #include "sys/types.h"

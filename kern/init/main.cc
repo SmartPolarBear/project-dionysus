@@ -89,40 +89,8 @@ extern "C" [[noreturn]] void kmain()
     // initialize buddy allocator
     vm::buddy_init(vm::kernel_mem_begin(), vm::kernel_mem_end());
 
-    for (int i = 1; i <= 24; i++)
-    {
-        teststruct *ts[10];
-        for (int j = 0; j < 10; j++)
-        {
-            ts[j] = (teststruct *)vm::buddy_alloc(sizeof(teststruct));
-        }
-
-        for (int j = 0; j < 10; j++)
-        {
-            teststruct *t = ts[j];
-            t->a = 12 * i + j;
-            t->b = 123 * i + j;
-            t->c = 0x3f3f3f * i + j;
-            for (int k = 0; k < 100; k++)
-                t->arr[k] = k * i + j;
-        }
-
-        for (int j = 9; j >= 0; j--)
-        {
-            teststruct *t = ts[j];
-            console::printf("a,b,c=%d %d %lld\n", t->a, t->b, t->c);
-            for (int k = 0; k < 100; k++)
-            {
-                console::printf("arr[%d]=%d\n", k, t->arr[k]);
-            }
-
-            vm::buddy_free(t);
-            console::printf("========\n");
-        }
-        console::printf("-----------\n");
-    }
-
     console::printf("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
+    
     // boot other CPU cores
     ap::init_ap();
 

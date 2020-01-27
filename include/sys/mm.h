@@ -1,5 +1,5 @@
 /*
- * Last Modified: Fri Jan 24 2020
+ * Last Modified: Mon Jan 27 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -25,8 +25,8 @@
 
 #include "sys/types.h"
 
-#include "sys/bootmm.h"
-#include "sys/buddy_alloc.h"
+#include "sys/allocators/bootmm.h"
+#include "sys/allocators/buddy_alloc.h"
 #include "vm.h"
 
 #include "sys/memlayout.h"

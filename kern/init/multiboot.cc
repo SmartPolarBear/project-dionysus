@@ -1,8 +1,9 @@
-#include "sys/multiboot.h"
 #include "arch/amd64/x86.h"
-#include "sys/bootmm.h"
+
+#include "sys/allocators/bootmm.h"
 #include "sys/memlayout.h"
 #include "sys/mmu.h"
+#include "sys/multiboot.h"
 #include "sys/vm.h"
 
 #include "lib/libc/string.h"
@@ -58,9 +59,9 @@ void multiboot::init_mbi(void)
     if (mbi_magicnum != MULTIBOOT2_BOOTLOADER_MAGIC)
     {
         KDEBUG_RICHPANIC("Can't verify the magic number.\n",
-                             "KERNEL PANIC: MULTIBOOT",
-                             false,
-                             "The multiboot magic number given is %d\n", mbi_magicnum);
+                         "KERNEL PANIC: MULTIBOOT",
+                         false,
+                         "The multiboot magic number given is %d\n", mbi_magicnum);
     }
 
     auto primitive = P2V<decltype(mboot_info)>(mbi_structptr);

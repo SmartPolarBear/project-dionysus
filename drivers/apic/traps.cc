@@ -6,7 +6,7 @@
 #include "drivers/debug/kdebug.h"
 #include "drivers/lock/spinlock.h"
 
-#include "sys/bootmm.h"
+#include "sys/allocators/bootmm.h"
 #include "sys/mmu.h"
 #include "sys/vm.h"
 
