@@ -37,7 +37,6 @@ static inline void __list_remove_entry(list_head *entry)
 
 } // namespace __list_internals
 
-
 // initialize the list
 static inline void list_init(list_head *head)
 {
@@ -73,6 +72,10 @@ static inline void list_replace(list_head *old, list_head *newnode)
     newnode->prev->next = newnode;
 }
 
+static inline bool list_empty(const list_head *head)
+{
+    return (head->next) == head;
+}
 // swap e1 and e2
 static inline void list_swap(list_head *e1, list_head *e2)
 {
