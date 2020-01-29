@@ -6,6 +6,7 @@ kern/libc/itoa.o
 kern/libc/ftoa.o
 kern/libcxxrt/cxxbase.o
 kern/libcxxrt/new.o
+kern/mm/mm/kmalloc.o
 kern/mm/allocators/boot/bootmm.o
 kern/mm/allocators/buddy/buddy.o
 kern/mm/allocators/buddy/buddy_impl.o

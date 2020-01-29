@@ -39,12 +39,6 @@ buddy_struct buddy_internal::buddy = {};
 
 using buddy_internal::buddy;
 
-struct memory_block_info
-{
-    size_t order;
-    uint8_t mem[0];
-};
-
 void allocators::buddy_allocator::buddy_init(raw_ptr st, raw_ptr ed)
 {
     spinlock_initlock(&buddy.buddylock, "buddy_allocator");
@@ -89,20 +83,6 @@ void allocators::buddy_allocator::buddy_init(raw_ptr st, raw_ptr ed)
     buddy.lock_enable = true;
 }
 
-raw_ptr allocators::buddy_allocator::buddy_alloc(size_t sz)
-{
-    size_t order = buddy_internal::size_to_order(sizeof(memory_block_info) + sz + sizeof(char));
-    memory_block_info *binfo = reinterpret_cast<decltype(binfo)>(buddy_internal::buddy_alloc(order));
-    binfo->order = order;
-    return reinterpret_cast<raw_ptr>(binfo->mem);
-}
-
-void allocators::buddy_allocator::buddy_free(void *m)
-{
-    uint8_t *raw_ptr = reinterpret_cast<decltype(raw_ptr)>(m);
-    memory_block_info *binfo = reinterpret_cast<decltype(binfo)>(container_of(raw_ptr, memory_block_info, mem));
-    buddy_internal::buddy_free(binfo, binfo->order);
-}
 
 void *allocators::buddy_allocator::buddy_alloc_4k_page(void)
 {
@@ -125,3 +105,9 @@ void allocators::buddy_allocator::buddy_free_with_order(void *ptr,size_t order)
 {
     buddy_internal::buddy_free(ptr,order);
 }
+
+size_t allocators::buddy_allocator::buddy_order_from_size(size_t bytes)
+{
+    return buddy_internal::size_to_order(bytes);
+}
+

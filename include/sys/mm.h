@@ -1,5 +1,5 @@
 /*
- * Last Modified: Mon Jan 27 2020
+ * Last Modified: Wed Jan 29 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -73,5 +73,12 @@ static inline void *kernel_mem_end(void)
 }
 
 } // namespace vm
+
+namespace memory
+{
+// flags is reserved for future usage
+void *kmalloc(size_t sz, [[maybe_unused]] size_t flags);
+void kfree(void *ptr);
+} // namespace memory
 
 #endif // __INCLUDE_SYS_MM_H

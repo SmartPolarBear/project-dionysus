@@ -29,17 +29,16 @@
 #include "lib/libc/stdlib.h"
 #include "lib/libc/string.h"
 
-using allocators::slab_allocator::CACHE_NAME_MAXLEN;
 
 // slab
+using allocators::slab_allocator::CACHE_NAME_MAXLEN;
+using allocators::slab_allocator::BLOCK_SIZE;
+using allocators::slab_allocator::SIZED_CACHE_COUNT;
 using allocators::slab_allocator::slab;
 using allocators::slab_allocator::slab_bufctl;
 using allocators::slab_allocator::slab_cache;
 
 // buddy
-using allocators::buddy_allocator::buddy_alloc;
-using allocators::buddy_allocator::buddy_free;
-
 using allocators::buddy_allocator::buddy_alloc_with_order;
 using allocators::buddy_allocator::buddy_free_with_order;
 
@@ -61,8 +60,6 @@ using lock::spinlock_holding;
 using lock::spinlock_initlock;
 using lock::spinlock_release;
 
-constexpr size_t SIZED_CACHE_COUNT = 16;
-constexpr size_t BLOCK_SIZE = 4096;
 
 list_head cache_head;
 spinlock cache_head_lock;

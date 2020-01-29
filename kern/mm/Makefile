@@ -1,6 +1,6 @@
 TOP_SRC = ../..
 
-SUBDIRS = vm allocators
+SUBDIRS = vm allocators mm
 
 all: $(SUBDIRS)
 

@@ -20,6 +20,8 @@ using dtor_type = ctor_type;
 using slab_bufctl = size_t;
 
 constexpr size_t CACHE_NAME_MAXLEN = 32;
+constexpr size_t SIZED_CACHE_COUNT = 16;
+constexpr size_t BLOCK_SIZE = 4096;
 
 struct slab_cache
 {
