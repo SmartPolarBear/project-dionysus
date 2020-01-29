@@ -1,5 +1,5 @@
 /*
- * Last Modified: Mon Jan 27 2020
+ * Last Modified: Wed Jan 29 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -92,6 +92,7 @@ buddy_internal::raw_ptr buddy_internal::buddy_alloc(size_t order)
     {
         spinlock_acquire(&buddy.buddylock);
     }
+    
     auto ret = buddy_alloc_impl(order);
 
     if (buddy.lock_enable)

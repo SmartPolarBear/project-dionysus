@@ -32,6 +32,7 @@
 
 #include "sys/allocators/boot_alloc.h"
 #include "sys/memlayout.h"
+#include "sys/mm.h"
 #include "sys/multiboot.h"
 #include "sys/types.h"
 #include "sys/vm.h"
@@ -88,6 +89,47 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
     }
 }
 
+void test_mem()
+{
+    struct teststruct
+    {
+        char a;
+        int b;
+        size_t c;
+        int arr[100];
+    };
+
+    teststruct *ts[10];
+    for (int j = 0; j < 10; j++)
+    {
+        ts[j] = (teststruct *)allocators::buddy_allocator::buddy_alloc(sizeof(teststruct));
+    }
+
+    for (int j = 0; j < 10; j++)
+    {
+        teststruct *t = ts[j];
+        t->a = 12 * 1 + j;
+        t->b = 123 * 1 + j;
+        t->c = 0x3f3f3f * 1 + j;
+        for (int k = 0; k < 100; k++)
+            t->arr[k] = k * 1 + j;
+    }
+
+    for (int j = 9; j >= 0; j--)
+    {
+        teststruct *t = ts[j];
+        console::printf("a,b,c=%d %d %lld\n", t->a, t->b, t->c);
+        for (int k = 0; k < 100; k++)
+        {
+            console::printf("arr[%d]=%d\n", k, t->arr[k]);
+        }
+
+        allocators::buddy_allocator::buddy_free(t);
+        console::printf("========\n");
+    }
+    console::printf("-----------\n");
+}
+
 void ap::all_processor_main()
 {
     console::printf("AP: Initialized CPU %d\n", cpu->id);
@@ -99,7 +141,8 @@ void ap::all_processor_main()
     // simple scheduler loop
     while (!kdebug::panicked)
     {
-        // console::printf("cpu %d\n", cpu->id);
+        test_mem();
+        console::printf("cpu %d\n", cpu->id);
     }
 
     if (kdebug::panicked)

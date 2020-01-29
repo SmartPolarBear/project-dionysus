@@ -29,6 +29,8 @@ struct slab_cache
     dtor_type dtor;
     char name[CACHE_NAME_MAXLEN];
     list_head cache_link;
+
+    lock::spinlock lock;
 };
 
 struct slab

@@ -53,10 +53,19 @@ using libk::list_for_each;
 using libk::list_init;
 using libk::list_remove;
 
+//ATTENTION: IF ANY WEIRD BUG OCCURS IN THIS FILE, CONSIDER RACE CONDITION FIRST!
+// spinlock
+using lock::spinlock;
+using lock::spinlock_acquire;
+using lock::spinlock_holding;
+using lock::spinlock_initlock;
+using lock::spinlock_release;
+
 constexpr size_t SIZED_CACHE_COUNT = 16;
 constexpr size_t BLOCK_SIZE = 4096;
 
 list_head cache_head;
+spinlock cache_head_lock;
 
 slab_cache cache_cache;
 slab_cache *sized_caches[SIZED_CACHE_COUNT];
@@ -69,6 +78,9 @@ static inline constexpr size_t cache_obj_count(size_t obj_size)
 
 static inline void *slab_cache_grow(slab_cache *cache)
 {
+    // Precondition: the cache's lock must be held
+    KDEBUG_ASSERT(spinlock_holding(&cache->lock));
+
     auto block = buddy_alloc_4k_page();
     if (block == nullptr)
     {
@@ -102,6 +114,9 @@ static inline void *slab_cache_grow(slab_cache *cache)
 
 static inline void slab_destory(slab_cache *cache, slab *slb)
 {
+    // Precondition: the cache's lock must be held
+    KDEBUG_ASSERT(spinlock_holding(&cache->lock));
+
     void *obj = slb->obj_ptr;
     for (size_t i = 0; i < cache->obj_count; i++)
     {
@@ -115,6 +130,8 @@ static inline void slab_destory(slab_cache *cache, slab *slb)
     buddy_free_4k_page(slb);
 }
 
+// ATTENTION: BE CAUTIOUS FOR RACE CONDITION
+// This function should not be a critial section because there's no modifying
 static inline slab *slab_find(slab_cache *cache, void *obj)
 {
     list_head *heads[] = {&cache->partial, &cache->full};
@@ -147,6 +164,9 @@ void allocators::slab_allocator::slab_init(void)
 
     auto cache_cache_name = "cache_cache";
     strncpy(cache_cache.name, cache_cache_name, CACHE_NAME_MAXLEN);
+
+    spinlock_initlock(&cache_cache.lock, cache_cache_name);
+    spinlock_initlock(&cache_head_lock, "cache_head");
 
     list_init(&cache_cache.full);
     list_init(&cache_cache.partial);
@@ -187,14 +207,19 @@ slab_cache *allocators::slab_allocator::slab_cache_create(const char *name, size
         ret->dtor = dtor;
 
         strncpy(ret->name, name, CACHE_NAME_MAXLEN);
+        spinlock_initlock(&ret->lock, ret->name);
 
         list_init(&ret->full);
         list_init(&ret->partial);
         list_init(&ret->free);
 
+        spinlock_acquire(&cache_head_lock);
+        
         list_add(&ret->cache_link, &cache_head);
+        
+        spinlock_release(&cache_head_lock);
     }
-    else 
+    else
     {
         KDEBUG_GENERALPANIC("Insufficient memory for slab initialization.");
     }
@@ -204,6 +229,8 @@ slab_cache *allocators::slab_allocator::slab_cache_create(const char *name, size
 
 void *allocators::slab_allocator::slab_cache_alloc(slab_cache *cache)
 {
+    spinlock_acquire(&cache->lock);
+
     list_head *entry = nullptr;
     if (!list_empty(&cache->partial))
     {
@@ -231,18 +258,21 @@ void *allocators::slab_allocator::slab_cache_alloc(slab_cache *cache)
 
     if (slb->inuse == cache->obj_count)
     {
-        list_add(entry,&cache->full);
+        list_add(entry, &cache->full);
     }
     else
     {
-        list_add(entry,&cache->partial);
+        list_add(entry, &cache->partial);
     }
+
+    spinlock_release(&cache->lock);
 
     return ret;
 }
 
 void allocators::slab_allocator::slab_cache_destroy(slab_cache *cache)
 {
+    spinlock_acquire(&cache->lock);
     list_head *heads[] = {&cache->full, &cache->partial, &cache->free};
     for (auto head : heads)
     {
@@ -254,6 +284,7 @@ void allocators::slab_allocator::slab_cache_destroy(slab_cache *cache)
             slab_destory(cache, slb);
         }
     }
+    spinlock_release(&cache->lock);
 
     slab_cache_free(&cache_cache, cache);
 }
@@ -267,6 +298,7 @@ void allocators::slab_allocator::slab_cache_free(slab_cache *cache, void *obj)
 
     size_t offset = (((uintptr_t)obj) - ((uintptr_t)slb->obj_ptr)) / cache->obj_size;
 
+    spinlock_acquire(&cache->lock);
     list_remove(&slb->slab_link);
     slb->freelist[offset] = slb->next_free;
     slb->next_free = offset;
@@ -280,6 +312,8 @@ void allocators::slab_allocator::slab_cache_free(slab_cache *cache, void *obj)
     {
         list_add(&slb->slab_link, &cache->partial);
     }
+
+    spinlock_release(&cache->lock);
 }
 
 size_t allocators::slab_allocator::slab_cache_shrink(slab_cache *cache)
@@ -287,6 +321,8 @@ size_t allocators::slab_allocator::slab_cache_shrink(slab_cache *cache)
     size_t count = 0;
     auto entry = cache->free.next;
     auto head = &cache->free;
+    spinlock_acquire(&cache->lock);
+
     while (head != entry)
     {
         auto slb = list_entry(entry, slab, slab_link);
@@ -294,6 +330,9 @@ size_t allocators::slab_allocator::slab_cache_shrink(slab_cache *cache)
         slab_destory(cache, slb);
         count++;
     }
+
+    spinlock_release(&cache->lock);
+
     return count;
 }
 
