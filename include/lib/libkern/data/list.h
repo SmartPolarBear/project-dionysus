@@ -95,7 +95,7 @@ static inline void list_swap(list_head *e1, list_head *e2)
     container_of(ptr, type, member)
 
 #define list_for(pos, head) \
-    for (pos = (head)->next; pos != (head); pos = pos->next)
+    for ((pos) = (head)->next; (pos) != (head); (pos) = (pos)->next)
 
 static inline void list_for_each(list_head *head, list_foreach_func func)
 {

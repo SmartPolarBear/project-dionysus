@@ -1,5 +1,5 @@
 /*
- * Last Modified: Tue Jan 28 2020
+ * Last Modified: Wed Jan 29 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -30,6 +30,7 @@
 
 using allocators::slab_allocator::CACHE_NAME_MAXLEN;
 
+// slab
 using allocators::slab_allocator::slab;
 using allocators::slab_allocator::slab_bufctl;
 using allocators::slab_allocator::slab_cache;
@@ -38,6 +39,14 @@ using allocators::slab_allocator::slab_cache;
 using allocators::buddy_allocator::buddy_alloc;
 using allocators::buddy_allocator::buddy_free;
 
+using allocators::buddy_allocator::buddy_alloc_with_order;
+using allocators::buddy_allocator::buddy_free_with_order;
+
+using allocators::buddy_allocator::buddy_alloc_4k_page;
+using allocators::buddy_allocator::buddy_free_4k_page;
+
+
+// linked list
 using libk::list_add;
 using libk::list_empty;
 using libk::list_for_each;
@@ -60,7 +69,7 @@ static inline constexpr size_t cache_obj_count(size_t obj_size)
 
 static inline void *slab_cache_grow(slab_cache *cache)
 {
-    auto block = buddy_alloc(BLOCK_SIZE);
+    auto block = buddy_alloc_4k_page();
     if (block == nullptr)
     {
         return block;
@@ -73,7 +82,7 @@ static inline void *slab_cache_grow(slab_cache *cache)
 
     list_add(&slb->slab_link, &cache->free);
 
-    slb->obj_ptr = reinterpret_cast<decltype(slb->obj_ptr)>(((char *)block) + sizeof(slab));
+    slb->obj_ptr = reinterpret_cast<decltype(slb->obj_ptr)>(((char *)block) + sizeof(slab) + sizeof(slab_bufctl) * cache->obj_count);
 
     void *obj = slb->obj_ptr;
     for (size_t i = 0; i < cache->obj_count; i++)
@@ -103,7 +112,30 @@ static inline void slab_destory(slab_cache *cache, slab *slb)
     }
 
     list_remove(&slb->slab_link);
-    buddy_free(slb);
+    buddy_free_4k_page(slb);
+}
+
+static inline slab *slab_find(slab_cache *cache, void *obj)
+{
+    list_head *heads[] = {&cache->partial, &cache->full};
+    slab *slb = nullptr;
+
+    for (auto head : heads)
+    {
+        list_head *iter = nullptr;
+        list_for(iter, head)
+        {
+            slab *s = list_entry(iter, slab, slab_link);
+            uintptr_t begin = (uintptr_t)s->obj_ptr;
+            uintptr_t end = (uintptr_t)(((char *)s->obj_ptr) + cache->obj_size * cache->obj_count);
+            if (((uintptr_t)obj) >= begin && ((uintptr_t)obj) < end)
+            {
+                break;
+            }
+        }
+    }
+
+    return slb;
 }
 
 void allocators::slab_allocator::slab_init(void)
@@ -130,6 +162,7 @@ void allocators::slab_allocator::slab_init(void)
         sized_cache_name[0] = 's';
         sized_cache_name[1] = 'i';
         sized_cache_name[2] = 'z';
+        sized_cache_name[2] = 'e';
         sized_cache_name[4] = '-';
         sized_cache_name[5] = '-';
 
@@ -199,3 +232,71 @@ void *allocators::slab_allocator::slab_cache_alloc(slab_cache *cache)
 
     return ret;
 }
+
+void allocators::slab_allocator::slab_cache_destroy(slab_cache *cache)
+{
+    list_head *heads[] = {&cache->full, &cache->partial, &cache->free};
+    for (auto head : heads)
+    {
+        auto entry = head->next;
+        while (head != entry)
+        {
+            auto slb = list_entry(entry, slab, slab_link);
+            entry = entry->next;
+            slab_destory(cache, slb);
+        }
+    }
+
+    slab_cache_free(&cache_cache, cache);
+}
+
+void allocators::slab_allocator::slab_cache_free(slab_cache *cache, void *obj)
+{
+    KDEBUG_ASSERT(obj != nullptr && cache != nullptr);
+
+    slab *slb = slab_find(cache, obj);
+    KDEBUG_ASSERT(slb != nullptr);
+
+    size_t offset = (((uintptr_t)obj) - ((uintptr_t)slb->obj_ptr)) / cache->obj_size;
+
+    list_remove(&slb->slab_link);
+    slb->freelist[offset] = slb->next_free;
+    slb->next_free = offset;
+    slb->inuse--;
+
+    if (slb->inuse == 0)
+    {
+        list_add(&slb->slab_link, &cache->free);
+    }
+    else
+    {
+        list_add(&slb->slab_link, &cache->partial);
+    }
+}
+
+size_t allocators::slab_allocator::slab_cache_shrink(slab_cache *cache)
+{
+    size_t count = 0;
+    auto entry = cache->free.next;
+    auto head = &cache->free;
+    while (head != entry)
+    {
+        auto slb = list_entry(entry, slab, slab_link);
+        entry = entry->next;
+        slab_destory(cache, slb);
+        count++;
+    }
+    return count;
+}
+
+size_t allocators::slab_allocator::slab_cache_reap()
+{
+    size_t count = 0;
+    list_head *iter = nullptr;
+    list_for(iter, &cache_head)
+    {
+        count += slab_cache_shrink(list_entry(iter, slab_cache, cache_link));
+    }
+    return count;
+}
+

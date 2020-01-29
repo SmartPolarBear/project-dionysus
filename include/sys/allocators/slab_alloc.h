@@ -44,7 +44,10 @@ struct slab
 void slab_init(void);
 slab_cache *slab_cache_create(const char *name, size_t size, ctor_type ctor, dtor_type dtor);
 void *slab_cache_alloc(slab_cache *cache);
-
+void slab_cache_destroy(slab_cache *cache);
+void slab_cache_free(slab_cache *cache, void *obj);
+size_t slab_cache_shrink(slab_cache *cache);
+size_t slab_cache_reap();
 } // namespace slab_allocator
 
 } // namespace allocators

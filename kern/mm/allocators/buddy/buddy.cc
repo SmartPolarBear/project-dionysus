@@ -1,5 +1,5 @@
 /*
- * Last Modified: Mon Jan 27 2020
+ * Last Modified: Wed Jan 29 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -32,6 +32,8 @@
 
 using namespace buddy_internal::types;
 using namespace buddy_internal::constants;
+
+constexpr size_t ORDER_4K = 12;
 
 buddy_struct buddy_internal::buddy = {};
 
@@ -100,4 +102,26 @@ void allocators::buddy_allocator::buddy_free(void *m)
     uint8_t *raw_ptr = reinterpret_cast<decltype(raw_ptr)>(m);
     memory_block_info *binfo = reinterpret_cast<decltype(binfo)>(container_of(raw_ptr, memory_block_info, mem));
     buddy_internal::buddy_free(binfo, binfo->order);
+}
+
+void *allocators::buddy_allocator::buddy_alloc_4k_page(void)
+{
+    // the order of a 4K page (4096 byte) is 12
+    return buddy_alloc_with_order(ORDER_4K);
+}
+
+void allocators::buddy_allocator::buddy_free_4k_page(void* ptr)
+{
+    buddy_free_with_order(ptr, ORDER_4K);
+}
+
+void *allocators::buddy_allocator::buddy_alloc_with_order(size_t order)
+{
+    KDEBUG_ASSERT(order >= MIN_ORD && order <= MAX_ORD);
+    return buddy_internal::buddy_alloc(order);
+}
+
+void allocators::buddy_allocator::buddy_free_with_order(void *ptr,size_t order)
+{
+    buddy_internal::buddy_free(ptr,order);
 }

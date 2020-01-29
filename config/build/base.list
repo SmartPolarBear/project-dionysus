@@ -10,6 +10,7 @@ kern/mm/allocators/boot/bootmm.o
 kern/mm/allocators/buddy/buddy.o
 kern/mm/allocators/buddy/buddy_impl.o
 kern/mm/allocators/buddy/buddy_utils.o
+kern/mm/allocators/slab/slab.o
 kern/mm/vm/vm.o
 kern/mm/vm/vm_seg.o
 kern/mm/vm/vm_utils.o

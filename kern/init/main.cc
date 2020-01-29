@@ -1,5 +1,5 @@
 /*
- * Last Modified: Mon Jan 27 2020
+ * Last Modified: Wed Jan 29 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -41,13 +41,6 @@
 #include "sys/param.h"
 #include "sys/vm.h"
 
-struct teststruct
-{
-    char a;
-    int b;
-    size_t c;
-    int arr[100];
-};
 
 // global entry of the kernel
 extern "C" [[noreturn]] void kmain()
@@ -88,6 +81,9 @@ extern "C" [[noreturn]] void kmain()
 
     // initialize buddy allocator
     allocators::buddy_allocator::buddy_init(vm::kernel_mem_begin(), vm::kernel_mem_end());
+
+    // initialize slab allocator, which depends on the buddy allocator
+    allocators::slab_allocator::slab_init();
 
     console::printf("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
 
