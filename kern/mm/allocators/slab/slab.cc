@@ -23,6 +23,7 @@
 #include "sys/allocators/buddy_alloc.h"
 #include "sys/allocators/slab_alloc.h"
 
+#include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 
 #include "lib/libc/stdlib.h"
@@ -44,7 +45,6 @@ using allocators::buddy_allocator::buddy_free_with_order;
 
 using allocators::buddy_allocator::buddy_alloc_4k_page;
 using allocators::buddy_allocator::buddy_free_4k_page;
-
 
 // linked list
 using libk::list_add;
@@ -158,11 +158,13 @@ void allocators::slab_allocator::slab_init(void)
     char sized_cache_name[CACHE_NAME_MAXLEN];
     for (size_t sz = 16; sz < BLOCK_SIZE; sz *= 2)
     {
+
         memset(sized_cache_name, 0, sizeof(sized_cache_name));
+
         sized_cache_name[0] = 's';
         sized_cache_name[1] = 'i';
         sized_cache_name[2] = 'z';
-        sized_cache_name[2] = 'e';
+        sized_cache_name[3] = 'e';
         sized_cache_name[4] = '-';
         sized_cache_name[5] = '-';
 
@@ -192,6 +194,10 @@ slab_cache *allocators::slab_allocator::slab_cache_create(const char *name, size
 
         list_add(&ret->cache_link, &cache_head);
     }
+    else 
+    {
+        KDEBUG_GENERALPANIC("Insufficient memory for slab initialization.");
+    }
 
     return ret;
 }
@@ -213,6 +219,8 @@ void *allocators::slab_allocator::slab_cache_alloc(slab_cache *cache)
         entry = cache->free.next;
     }
 
+    KDEBUG_ASSERT(entry != nullptr);
+
     list_remove(entry);
     slab *slb = list_entry(entry, slab, slab_link);
 
@@ -223,11 +231,11 @@ void *allocators::slab_allocator::slab_cache_alloc(slab_cache *cache)
 
     if (slb->inuse == cache->obj_count)
     {
-        list_add(&cache->full, entry);
+        list_add(entry,&cache->full);
     }
     else
     {
-        list_add(&cache->partial, entry);
+        list_add(entry,&cache->partial);
     }
 
     return ret;
@@ -299,4 +307,3 @@ size_t allocators::slab_allocator::slab_cache_reap()
     }
     return count;
 }
-

@@ -1,5 +1,5 @@
 /*
- * Last Modified: Mon Jan 27 2020
+ * Last Modified: Wed Jan 29 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -203,8 +203,10 @@ static inline void initialize_phymem_parameters(void)
 static hresult handle_pgfault([[maybe_unused]] trap_info info)
 {
     //TODO: handle the page fault
-    // console::printf("page fault!\n");
-    // KDEBUG_FOLLOWPANIC("page fault");
+    KDEBUG_RICHPANIC("Invalid access to some memory or stack overflow.",
+                     "KERNEL PANIC: PAGE FAULT",
+                     false,
+                     "Address: 0x%p\n", rcr2());
     return HRES_SUCCESS;
 }
 
