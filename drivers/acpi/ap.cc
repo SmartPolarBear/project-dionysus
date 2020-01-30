@@ -32,7 +32,7 @@
 
 #include "sys/allocators/boot_alloc.h"
 #include "sys/memlayout.h"
-#include "sys/mm.h"
+#include "sys/memory.h"
 #include "sys/multiboot.h"
 #include "sys/types.h"
 #include "sys/vm.h"
@@ -90,7 +90,6 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
 }
 
 
-
 void ap::all_processor_main()
 {
     console::printf("AP: Initialized CPU %d\n", cpu->id);
@@ -102,8 +101,7 @@ void ap::all_processor_main()
     // simple scheduler loop
     while (!kdebug::panicked)
     {
-        // test_mem();
-        // console::printf("cpu %d\n", cpu->id);
+        console::printf("cpu %d\n", cpu->id);
     }
 
     if (kdebug::panicked)

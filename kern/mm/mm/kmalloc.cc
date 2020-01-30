@@ -21,7 +21,7 @@
  */
 
 #include "sys/allocators/slab_alloc.h"
-#include "sys/mm.h"
+#include "sys/memory.h"
 
 // slab
 using allocators::slab_allocator::CACHE_NAME_MAXLEN;

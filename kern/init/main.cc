@@ -36,26 +36,11 @@
 #include "lib/libkern/data/list.h"
 
 #include "sys/memlayout.h"
-#include "sys/mm.h"
+#include "sys/memory.h"
 #include "sys/multiboot.h"
 #include "sys/param.h"
 #include "sys/vm.h"
-void test_mem()
-{
-    struct teststruct
-    {
-        char a;
-        int b;
-        size_t c;
-        int arr[100];
-    };
 
-    teststruct *p = (teststruct *)memory::kmalloc(sizeof(teststruct), 0);
-    console::printf("[cpu %d] alloc 0x%p.\n", cpu->id, p);
-
-    memory::kfree(p);
-    console::printf("[cpu %d] free.\n", cpu->id);
-}
 
 // global entry of the kernel
 extern "C" [[noreturn]] void kmain()
@@ -99,7 +84,7 @@ extern "C" [[noreturn]] void kmain()
 
     // initialize slab allocator, which depends on the buddy allocator
     allocators::slab_allocator::slab_init();
-    test_mem();
+
     console::printf("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
 
     // boot other CPU cores
