@@ -1,5 +1,5 @@
 /*
- * Last Modified: Wed Jan 29 2020
+ * Last Modified: Thu Jan 30 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -29,10 +29,9 @@
 #include "lib/libc/stdlib.h"
 #include "lib/libc/string.h"
 
-
 // slab
-using allocators::slab_allocator::CACHE_NAME_MAXLEN;
 using allocators::slab_allocator::BLOCK_SIZE;
+using allocators::slab_allocator::CACHE_NAME_MAXLEN;
 using allocators::slab_allocator::SIZED_CACHE_COUNT;
 using allocators::slab_allocator::slab;
 using allocators::slab_allocator::slab_bufctl;
@@ -60,13 +59,12 @@ using lock::spinlock_holding;
 using lock::spinlock_initlock;
 using lock::spinlock_release;
 
-
 list_head cache_head;
 spinlock cache_head_lock;
 
-slab_cache cache_cache;
 slab_cache *sized_caches[SIZED_CACHE_COUNT];
-size_t sized_cache_count = 0;
+
+slab_cache cache_cache;
 
 static inline constexpr size_t cache_obj_count(size_t obj_size)
 {
@@ -144,6 +142,7 @@ static inline slab *slab_find(slab_cache *cache, void *obj)
             uintptr_t end = (uintptr_t)(((char *)s->obj_ptr) + cache->obj_size * cache->obj_count);
             if (((uintptr_t)obj) >= begin && ((uintptr_t)obj) < end)
             {
+                slb = s;
                 break;
             }
         }
@@ -173,7 +172,8 @@ void allocators::slab_allocator::slab_init(void)
     list_add(&cache_cache.cache_link, &cache_head);
 
     char sized_cache_name[CACHE_NAME_MAXLEN];
-    for (size_t sz = 16; sz < BLOCK_SIZE; sz *= 2)
+    size_t sized_cache_count = 0;
+    for (size_t sz = MIN_SIZED_CACHE_SIZE; sz <= MAX_SIZED_CACHE_SIZE; sz *= 2)
     {
 
         memset(sized_cache_name, 0, sizeof(sized_cache_name));
@@ -188,6 +188,8 @@ void allocators::slab_allocator::slab_init(void)
         [[maybe_unused]] size_t len = itoa_ex(sized_cache_name + 4, sz, 10);
         sized_caches[sized_cache_count++] = slab_cache_create(sized_cache_name, sz, nullptr, nullptr);
     }
+
+    KDEBUG_ASSERT(sized_cache_count == sized_cache_count);
 }
 
 slab_cache *allocators::slab_allocator::slab_cache_create(const char *name, size_t size, ctor_type ctor, dtor_type dtor)
@@ -211,9 +213,9 @@ slab_cache *allocators::slab_allocator::slab_cache_create(const char *name, size
         list_init(&ret->free);
 
         spinlock_acquire(&cache_head_lock);
-        
+
         list_add(&ret->cache_link, &cache_head);
-        
+
         spinlock_release(&cache_head_lock);
     }
     else

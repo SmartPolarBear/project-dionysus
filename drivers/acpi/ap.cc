@@ -1,5 +1,5 @@
 /*
- * Last Modified: Wed Jan 29 2020
+ * Last Modified: Thu Jan 30 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -89,18 +89,7 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
     }
 }
 
-void test_mem()
-{
-    struct teststruct
-    {
-        char a;
-        int b;
-        size_t c;
-        int arr[100];
-    };
 
- 
-}
 
 void ap::all_processor_main()
 {
@@ -114,7 +103,7 @@ void ap::all_processor_main()
     while (!kdebug::panicked)
     {
         // test_mem();
-        console::printf("cpu %d\n", cpu->id);
+        // console::printf("cpu %d\n", cpu->id);
     }
 
     if (kdebug::panicked)

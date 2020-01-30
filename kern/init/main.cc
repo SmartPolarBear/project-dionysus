@@ -1,5 +1,5 @@
 /*
- * Last Modified: Wed Jan 29 2020
+ * Last Modified: Thu Jan 30 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -40,7 +40,22 @@
 #include "sys/multiboot.h"
 #include "sys/param.h"
 #include "sys/vm.h"
+void test_mem()
+{
+    struct teststruct
+    {
+        char a;
+        int b;
+        size_t c;
+        int arr[100];
+    };
 
+    teststruct *p = (teststruct *)memory::kmalloc(sizeof(teststruct), 0);
+    console::printf("[cpu %d] alloc 0x%p.\n", cpu->id, p);
+
+    memory::kfree(p);
+    console::printf("[cpu %d] free.\n", cpu->id);
+}
 
 // global entry of the kernel
 extern "C" [[noreturn]] void kmain()
@@ -50,7 +65,7 @@ extern "C" [[noreturn]] void kmain()
     // which is put *right* after the kernel by grub.
     // the size of which is expected to be less than 4K.
     allocators::boot_allocator::bootmm_init(vm::kernel_boot_mem_begin(),
-                                    vm::kernel_boot_mem_end());
+                                            vm::kernel_boot_mem_end());
 
     // process the multiboot information
     multiboot::init_mbi();
@@ -84,7 +99,7 @@ extern "C" [[noreturn]] void kmain()
 
     // initialize slab allocator, which depends on the buddy allocator
     allocators::slab_allocator::slab_init();
-
+    test_mem();
     console::printf("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
 
     // boot other CPU cores

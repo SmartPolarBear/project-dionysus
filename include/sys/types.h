@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sat Jan 25 2020
+ * Last Modified: Thu Jan 30 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -20,20 +20,18 @@
  * ----------	---	----------------------------------------------------------
  */
 
-
-
-
-
-
-
-
 #if !defined(__INCLUDE_SYS_TYPES_H)
 #define __INCLUDE_SYS_TYPES_H
 
+// va_list and some things
+#include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdarg.h>
 
+// std::log2p1
+#include <bit>
+
+using std::log2p1;
 
 using ldbl = long double;
 using ull = unsigned long long;

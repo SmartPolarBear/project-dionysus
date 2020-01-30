@@ -1,5 +1,5 @@
 /*
- * Last Modified: Wed Jan 29 2020
+ * Last Modified: Thu Jan 30 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -19,8 +19,6 @@
  * Date      	By	Comments
  * ----------	---	----------------------------------------------------------
  */
-
-
 
 #include "sys/allocators/slab_alloc.h"
 #include "sys/mm.h"
@@ -42,7 +40,6 @@ using allocators::slab_allocator::slab_init;
 
 // defined in slab.cc
 extern slab_cache *sized_caches[SIZED_CACHE_COUNT];
-extern size_t sized_cache_count;
 
 // buddy
 using allocators::buddy_allocator::buddy_alloc_4k_page;
@@ -64,9 +61,17 @@ struct memory_block
     allocator_types type;
 
     union {
-        size_t size;  // used for slab
-        size_t order; // used for buddy
-    } size_info;
+        struct
+        {
+            size_t order;
+        } buddy;
+        
+        struct
+        {
+            size_t size;
+            slab_cache *cache;
+        } slab;
+    } alloc_info;
 
     uint8_t mem[0];
 };
@@ -76,11 +81,11 @@ static inline slab_cache *cache_from_size(size_t sz)
     slab_cache *cache = nullptr;
 
     // assumption: sized_caches are sorted ascendingly.
-    for (size_t i = 0; i < sized_cache_count; i++)
+    for (auto c : sized_caches)
     {
-        if (sz <= sized_caches[i]->obj_size)
+        if (sz <= c->obj_size)
         {
-            cache = sized_caches[i];
+            cache = c;
             break;
         }
     }
@@ -102,7 +107,7 @@ void *memory::kmalloc(size_t sz, [[maybe_unused]] size_t flags)
         ret = reinterpret_cast<decltype(ret)>(buddy_alloc_with_order(order));
 
         ret->type = allocator_types::BUDDY;
-        ret->size_info.order = order;
+        ret->alloc_info.buddy.order = order;
     }
     else
     {
@@ -111,7 +116,7 @@ void *memory::kmalloc(size_t sz, [[maybe_unused]] size_t flags)
 
         ret = reinterpret_cast<decltype(ret)>(slab_cache_alloc(cache));
         ret->type = allocator_types::SLAB;
-        ret->size_info.size = cache->obj_size;
+        ret->alloc_info.slab = decltype(ret->alloc_info.slab){.size = cache->obj_size, .cache = cache};
     }
 
     return ret->mem;
@@ -124,11 +129,11 @@ void memory::kfree(void *ptr)
 
     if (block->type == allocator_types::BUDDY)
     {
-        buddy_free_with_order(block, block->size_info.order);
+        buddy_free_with_order(block, block->alloc_info.buddy.order);
     }
     else if (block->type == allocator_types::SLAB)
     {
-        slab_cache *cache = cache_from_size(block->size_info.size);
+        auto cache = block->alloc_info.slab.cache;
         slab_cache_free(cache, block);
     }
 }
