@@ -50,5 +50,10 @@ Done:
 1) The memory layout needs adjusting
 2) Implement a slab allocator
 
-
+1/30/2020
+Done:
+1) Finished buddy and slab and C++ operators for memory allocation
+Plan:
+1) Adjust memory layout
+2) Implement the process manager
 

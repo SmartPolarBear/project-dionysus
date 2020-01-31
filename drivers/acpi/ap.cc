@@ -1,5 +1,5 @@
 /*
- * Last Modified: Thu Jan 30 2020
+ * Last Modified: Fri Jan 31 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -32,7 +32,6 @@
 
 #include "sys/allocators/boot_alloc.h"
 #include "sys/memlayout.h"
-#include "sys/memory.h"
 #include "sys/multiboot.h"
 #include "sys/types.h"
 #include "sys/vm.h"
@@ -57,9 +56,10 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
     KDEBUG_ASSERT(tag != nullptr);
 
     uint8_t *code = reinterpret_cast<decltype(code)>(P2V(AP_CODE_LOAD_ADDR));
-    /* TODO: not knowing tag->mod_end is the address of the last byte or next to it. May need +1 for code size
-        Although with or without +1 it runs fine, bugs may occurs if the code changes.
-    */
+
+    // Attention: not knowing tag->mod_end is the address of the last byte or next to it. May need +1 for code size
+    //    Although with or without +1 it runs fine, bugs may occurs if the code changes.
+    
     size_t code_size = tag->mod_end - tag->mod_start;
     memmove(code,
             reinterpret_cast<decltype(code)>(P2V_KERNEL(tag->mod_start)),
@@ -92,7 +92,6 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
 
 void ap::all_processor_main()
 {
-    console::printf("AP: Initialized CPU %d\n", cpu->id);
     xchg(&cpu->started, 1u);
 
     //FIXME: temporarily enable interrupt
@@ -101,7 +100,7 @@ void ap::all_processor_main()
     // simple scheduler loop
     while (!kdebug::panicked)
     {
-        console::printf("cpu %d\n", cpu->id);
+        // console::printf("cpu %d\n", cpu->id);
     }
 
     if (kdebug::panicked)
