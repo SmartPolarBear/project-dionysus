@@ -1,5 +1,5 @@
 /*
- * Last Modified: Fri Jan 31 2020
+ * Last Modified: Sat Feb 01 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -125,7 +125,7 @@ static inline RESULT map_addr(const pde_ptr_t kpml4t, uintptr_t vaddr, uintptr_t
             return ERROR_MEMORY_ALLOC;
         }
 
-        memset(pdpt, 0, PAGE_SIZE);
+        memset(pdpt, 0, PG_SIZE);
         *pml4e = ((V2P((uintptr_t)pdpt)) | PG_P | permissions);
     }
     else
@@ -144,7 +144,7 @@ static inline RESULT map_addr(const pde_ptr_t kpml4t, uintptr_t vaddr, uintptr_t
             return ERROR_MEMORY_ALLOC;
         }
 
-        memset(pgdir, 0, PAGE_SIZE);
+        memset(pgdir, 0, PG_SIZE);
         *pdpte = ((V2P((uintptr_t)pgdir)) | PG_P | permissions);
     }
     else
@@ -236,7 +236,7 @@ void vm::init_kernelvm(void)
 
     // allocate pml4t and initialize it with 0
     g_kpml4t = reinterpret_cast<pde_ptr_t>(bootmm_alloc());
-    memset(g_kpml4t, 0, PAGE_SIZE);
+    memset(g_kpml4t, 0, PG_SIZE);
 
     // map all the definition in kmem_map
     for (auto kmmap_entry : kmem_map)

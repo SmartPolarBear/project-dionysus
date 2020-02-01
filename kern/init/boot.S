@@ -94,6 +94,7 @@ mboot_entry:
     mov $0x83, %eax
     mov $0x4000, %ebx
     mov $512, %ecx
+    
 ptbl_loop:
     mov %eax, (%ebx)
     add $0x200000, %eax
