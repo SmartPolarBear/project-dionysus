@@ -88,6 +88,13 @@ static inline P IO2V(void *a)
     return (P)(IO2V((uintptr_t)a));
 }
 
+
+enum page_info_flags
+{
+    PHYSICAL_PAGE_FLAG_RESERVED = 0b01,
+    PHYSICAL_PAGE_FLAG_HEAD = 0b10
+};
+
 // descriptor of physical memory pages
 struct page_info
 {

@@ -95,7 +95,7 @@ static inline constexpr T rounddown(T val, T n)
 template <typename T>
 static inline constexpr T roundup(T val, T n)
 {
-    return rounddown(a + n - 1, n);
+    return rounddown(val + n - 1, n);
 }
 
 #define container_of(ptr, type, member) \

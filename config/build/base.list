@@ -4,6 +4,7 @@ kern/init/multiboot.o
 kern/libc/string.o
 kern/libc/itoa.o
 kern/libc/ftoa.o
+kern/libc/qsort.o
 kern/libcxxrt/cxxbase.o
 kern/libcxxrt/new.o
 kern/mm/allocators/boot/bootmm.o

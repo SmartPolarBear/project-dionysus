@@ -24,7 +24,7 @@ using aquire_tag_ptr_predicate = bool (*)(multiboot_tag_const_readonly_ptr);
 constexpr size_t TAGS_COUNT_MAX = 24;
 
 //This can be increase if the required info become more.
-constexpr size_t BOOT_INFO_MAX_EXPECTED_SIZE = 4_KB;
+constexpr size_t BOOT_INFO_MAX_EXPECTED_SIZE = PHYSICAL_PAGE_SIZE;
 
 void init_mbi(void);
 void parse_multiboot_tags(void);
