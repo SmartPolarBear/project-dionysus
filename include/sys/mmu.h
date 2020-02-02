@@ -9,7 +9,6 @@
 #if !defined(__INCLUDE_SYS_MMU_H)
 #define __INCLUDE_SYS_MMU_H
 
-
 #if !defined(__cplusplus) && !defined(__ASSEMBLER__)
 #error "This header is only for C++"
 #endif //__cplusplus
@@ -36,7 +35,7 @@
 #define STA_R 0x2 // Readable (executable segments)
 #define STA_A 0x1 // Accessed
 
-#else 
+#else
 // not in ap_boot.S
 
 #include "sys/types.h"
@@ -44,8 +43,11 @@
 constexpr size_t PDENTRIES_COUNT = 512;
 constexpr size_t PTENTRIES_COUNT = 512;
 
+constexpr bool PG_PS_ENABLE = true;
 constexpr size_t PG_SIZE = 4_KB;
 constexpr size_t PG_PS_SIZE = 2_MB;
+
+constexpr size_t PHYSICAL_PAGE_SIZE = PG_PS_ENABLE ? PG_PS_SIZE : PG_SIZE;
 
 constexpr size_t P4_SHIFT = 39;
 constexpr size_t P3_SHIFT = 30;

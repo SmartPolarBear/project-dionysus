@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sat Feb 01 2020
+ * Last Modified: Sun Feb 02 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -46,7 +46,7 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
 [[clang::optnone]] void ap::init_ap(void)
 {
 
-    auto tag = multiboot::aquire_tag_ptr<multiboot_tag_module>(MULTIBOOT_TAG_TYPE_MODULE,
+    auto tag = multiboot::acquire_tag_ptr<multiboot_tag_module>(MULTIBOOT_TAG_TYPE_MODULE,
                                                                [](auto ptr) -> bool {
                                                                    multiboot_tag_module *mdl_tag = reinterpret_cast<decltype(mdl_tag)>(ptr);
                                                                    const char *ap_boot_commandline = "/ap_boot";

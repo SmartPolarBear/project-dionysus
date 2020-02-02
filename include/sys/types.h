@@ -1,5 +1,5 @@
 /*
- * Last Modified: Thu Jan 30 2020
+ * Last Modified: Sun Feb 02 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -82,6 +82,20 @@ template <typename T>
 static inline auto powerof2_roundup(T x) -> T
 {
     return 1ull << (sizeof(T) * 8 - __builtin_clzll(x));
+}
+
+// round down to the nearest multiple of n
+template <typename T>
+static inline constexpr T rounddown(T val, T n)
+{
+    return val - val % n;
+}
+
+// round up to the nearest multiple of n
+template <typename T>
+static inline constexpr T roundup(T val, T n)
+{
+    return rounddown(a + n - 1, n);
 }
 
 #define container_of(ptr, type, member) \

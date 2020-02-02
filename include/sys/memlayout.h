@@ -14,6 +14,8 @@
 
 #include "sys/types.h"
 
+#include "lib/libkern/data/list.h"
+
 // user's address space limit
 constexpr size_t USER_ADDRESS_SPACE_LIMIT = 0x00007fffffffffff;
 
@@ -85,5 +87,13 @@ static inline P IO2V(void *a)
 {
     return (P)(IO2V((uintptr_t)a));
 }
+
+// descriptor of physical memory pages
+struct page_info
+{
+    size_t ref;
+    size_t flags;
+    list_head page_link;
+};
 
 #endif // __INCLUDE_SYS_MEMLAYOUT_H

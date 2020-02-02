@@ -34,22 +34,22 @@ void parse_multiboot_tags(void);
 size_t get_all_tags(size_t type, multiboot_tag_ptr *buf, size_t bufsz);
 
 // get the first tag with the type
-multiboot_tag_const_readonly_ptr aquire_tag_ptr(size_t type);
+multiboot_tag_const_readonly_ptr acquire_tag_ptr(size_t type);
 // get the first tag with the type, for which the predicate returns true
-multiboot_tag_const_readonly_ptr aquire_tag_ptr(size_t type, aquire_tag_ptr_predicate pred);
+multiboot_tag_const_readonly_ptr acquire_tag_ptr(size_t type, aquire_tag_ptr_predicate pred);
 
 template <typename T>
 // get the first typed tag with the type
-static inline auto aquire_tag_ptr(size_t type) -> typed_mboottag_const_readonly_ptr<T>
+static inline auto acquire_tag_ptr(size_t type) -> typed_mboottag_const_readonly_ptr<T>
 {
-    return reinterpret_cast<typed_mboottag_const_readonly_ptr<T>>(aquire_tag_ptr(type));
+    return reinterpret_cast<typed_mboottag_const_readonly_ptr<T>>(acquire_tag_ptr(type));
 }
 
 template <typename T>
 // get the first typed tag with the type, for which the predicate returns true
-static inline auto aquire_tag_ptr(size_t type, aquire_tag_ptr_predicate pred) -> typed_mboottag_const_readonly_ptr<T>
+static inline auto acquire_tag_ptr(size_t type, aquire_tag_ptr_predicate pred) -> typed_mboottag_const_readonly_ptr<T>
 {
-    return reinterpret_cast<typed_mboottag_const_readonly_ptr<T>>(aquire_tag_ptr(type, pred));
+    return reinterpret_cast<typed_mboottag_const_readonly_ptr<T>>(acquire_tag_ptr(type, pred));
 }
 
 } // namespace multiboot

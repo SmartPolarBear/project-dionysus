@@ -100,14 +100,14 @@ void multiboot::parse_multiboot_tags(void)
     }
 }
 
-multiboot_tag_const_readonly_ptr multiboot::aquire_tag_ptr(size_t type)
+multiboot_tag_const_readonly_ptr multiboot::acquire_tag_ptr(size_t type)
 {
     multiboot_tag_ptr buf[1] = {};
     [[maybe_unused]] auto cnt = get_all_tags(type, buf, 1);
     return buf[0];
 }
 
-multiboot_tag_const_readonly_ptr multiboot::aquire_tag_ptr(size_t type, aquire_tag_ptr_predicate pred)
+multiboot_tag_const_readonly_ptr multiboot::acquire_tag_ptr(size_t type, aquire_tag_ptr_predicate pred)
 {
     multiboot_tag_ptr buf[TAGS_COUNT_MAX] = {};
     size_t count = get_all_tags(type, nullptr, 0);

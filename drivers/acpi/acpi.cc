@@ -156,8 +156,8 @@ static void acpi_init_v2(const acpi_rsdp *rsdp)
 
 void acpi::init_acpi(void)
 {
-    auto acpi_new_tag = multiboot::aquire_tag_ptr<multiboot_tag_new_acpi>(MULTIBOOT_TAG_TYPE_ACPI_NEW);
-    auto acpi_old_tag = multiboot::aquire_tag_ptr<multiboot_tag_new_acpi>(MULTIBOOT_TAG_TYPE_ACPI_OLD);
+    auto acpi_new_tag = multiboot::acquire_tag_ptr<multiboot_tag_new_acpi>(MULTIBOOT_TAG_TYPE_ACPI_NEW);
+    auto acpi_old_tag = multiboot::acquire_tag_ptr<multiboot_tag_new_acpi>(MULTIBOOT_TAG_TYPE_ACPI_OLD);
 
     if (acpi_new_tag == nullptr && acpi_old_tag == nullptr)
     {
