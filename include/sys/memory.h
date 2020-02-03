@@ -1,5 +1,5 @@
 /*
- * Last Modified: Wed Jan 29 2020
+ * Last Modified: Sun Feb 02 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -41,8 +41,6 @@ extern uint8_t end[]; // kernel.ld
 namespace vm
 {
 
-constexpr uintptr_t BOOT_MEM_LIMIT = 32_MB;
-
 static inline void *kernel_boot_mem_begin(void)
 {
     return end + multiboot::BOOT_INFO_MAX_EXPECTED_SIZE;
@@ -50,7 +48,7 @@ static inline void *kernel_boot_mem_begin(void)
 
 static inline void *kernel_boot_mem_end(void)
 {
-    return (void *)P2V(BOOT_MEM_LIMIT);
+    return (void *)P2V(allocators::boot_allocator::BOOT_MEM_LIMIT);
 }
 
 static inline void *kernel_mem_begin(void)

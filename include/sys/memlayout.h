@@ -92,7 +92,10 @@ static inline P IO2V(void *a)
 enum page_info_flags
 {
     PHYSICAL_PAGE_FLAG_RESERVED = 0b01,
-    PHYSICAL_PAGE_FLAG_HEAD = 0b10
+    PHYSICAL_PAGE_FLAG_PROPERTY = 0b10,
+    PHYSICAL_PAGE_FLAG_ACTIVE = 0b100,
+    PHYSICAL_PAGE_FLAG_DIRTY = 0b1000,
+    PHYSICAL_PAGE_FLAG_SWAP = 0b1000,
 };
 
 // descriptor of physical memory pages
@@ -101,6 +104,12 @@ struct page_info
     size_t ref;
     size_t flags;
     list_head page_link;
+};
+
+struct free_area_info
+{
+    list_head freelist;
+    size_t free_count;
 };
 
 #endif // __INCLUDE_SYS_MEMLAYOUT_H
