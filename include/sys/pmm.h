@@ -17,7 +17,7 @@ struct pmm_manager_info
                                                     // the initial free physical memory space
     page_info *(*alloc_pages)(size_t n);            // allocate >=n pages, depend on the allocation algorithm
     void (*free_pages)(page_info *base, size_t n);  // free >=n pages with "base" addr of Page descriptor structures(memlayout.h)
-    size_t (*get_free_pages_count)(void);               // return the number of free pages
+    size_t (*get_free_pages_count)(void);           // return the number of free pages
 };
 
 extern pmm_manager_info *pmm_manager;
@@ -39,6 +39,11 @@ static inline page_info *alloc_page(void)
 static inline void free_page(page_info *pg)
 {
     free_pages(pg, 1);
+}
+
+static inline size_t page_to_physical_page_number(page_info *pg)
+{
+    return pg - pages;
 }
 
 } // namespace pmm

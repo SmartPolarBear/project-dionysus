@@ -4,6 +4,8 @@
 #define __INCLUDE_SYS_BOOTMM_H
 
 #include "sys/types.h"
+#include "sys/memlayout.h"
+#include "sys/mmu.h"
 
 namespace allocators
 {

@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sun Feb 02 2020
+ * Last Modified: Tue Feb 04 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -19,7 +19,6 @@
  * Date      	By	Comments
  * ----------	---	----------------------------------------------------------
  */
-
 
 #include "arch/amd64/sync.h"
 
@@ -134,7 +133,7 @@ static inline void detect_physical_mem()
 
     for (int i = reserved_spaces_count - 1; i >= 0; i--)
     {
-        if (i == reserved_spaces_count - 1)
+        if (((size_t)i) == reserved_spaces_count - 1)
         {
             init_memmap(pa_to_page(reserved_spaces[i].second),
                         count_of_pages(reserved_spaces[i].second, max_pa));

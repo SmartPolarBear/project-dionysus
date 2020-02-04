@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sun Feb 02 2020
+ * Last Modified: Tue Feb 04 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -82,6 +82,13 @@ template <typename T>
 static inline auto powerof2_roundup(T x) -> T
 {
     return 1ull << (sizeof(T) * 8 - __builtin_clzll(x));
+}
+
+template <typename T>
+static inline auto log2(T x) -> T
+{
+    unsigned long long val = x;
+    return ((T)(8 * sizeof(unsigned long long) - __builtin_clzll((val)) - 1));
 }
 
 // round down to the nearest multiple of n

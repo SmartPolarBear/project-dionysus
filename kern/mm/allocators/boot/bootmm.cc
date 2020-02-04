@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sun Feb 02 2020
+ * Last Modified: Tue Feb 04 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -75,7 +75,7 @@ void allocators::boot_allocator::bootmm_free(char *v)
     }
 
     bootmem.used--;
-    KDEBUG_ASSERT(bootmem.used >= 0 && bootmem.used <= vm::BOOT_MEM_LIMIT);
+    KDEBUG_ASSERT(bootmem.used >= 0 && bootmem.used <= BOOT_MEM_LIMIT);
 
     memset(v, 1, BOOTMM_BLOCKSIZE);
     auto r = reinterpret_cast<run *>(v);
