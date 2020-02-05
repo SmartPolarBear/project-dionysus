@@ -1,5 +1,5 @@
 /*
- * Last Modified: Thu Jan 30 2020
+ * Last Modified: Wed Feb 05 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -22,6 +22,7 @@
 
 #include "sys/allocators/buddy_alloc.h"
 #include "sys/allocators/slab_alloc.h"
+#include "sys/pmm.h"
 
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
@@ -37,12 +38,9 @@ using allocators::slab_allocator::slab;
 using allocators::slab_allocator::slab_bufctl;
 using allocators::slab_allocator::slab_cache;
 
-// buddy
-using allocators::buddy_allocator::buddy_alloc_with_order;
-using allocators::buddy_allocator::buddy_free_with_order;
-
-using allocators::buddy_allocator::buddy_alloc_4k_page;
-using allocators::buddy_allocator::buddy_free_4k_page;
+// physical memory manager
+using pmm::alloc_page;
+using pmm::free_page;
 
 // linked list
 using libk::list_add;
@@ -76,7 +74,10 @@ static inline void *slab_cache_grow(slab_cache *cache)
     // Precondition: the cache's lock must be held
     KDEBUG_ASSERT(spinlock_holding(&cache->lock));
 
-    auto block = buddy_alloc_4k_page();
+    auto page = alloc_page();
+
+    auto block = (void *)pmm::page_to_va(page);
+
     if (block == nullptr)
     {
         return block;
@@ -122,7 +123,10 @@ static inline void slab_destory(slab_cache *cache, slab *slb)
     }
 
     list_remove(&slb->slab_link);
-    buddy_free_4k_page(slb);
+
+    uintptr_t va = (uintptr_t)slb;
+
+    free_page((page_info *)(pmm::va_to_page(va)));
 }
 
 // ATTENTION: BE CAUTIOUS FOR RACE CONDITION

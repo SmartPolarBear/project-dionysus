@@ -4,6 +4,8 @@
 #include "sys/memlayout.h"
 #include "sys/types.h"
 
+#include "drivers/debug/kdebug.h"
+
 namespace pmm
 {
 constexpr size_t PMM_MANAGER_NAME_MAXLEN = 32;
@@ -41,9 +43,31 @@ static inline void free_page(page_info *pg)
     free_pages(pg, 1);
 }
 
-static inline size_t page_to_physical_page_number(page_info *pg)
+static inline size_t page_to_index(page_info *pg)
 {
     return pg - pages;
+}
+
+static inline uintptr_t page_to_pa(page_info *pg)
+{
+    return page_to_index(pg) << log2(PHYSICAL_PAGE_SIZE);
+}
+
+static inline uintptr_t page_to_va(page_info *pg)
+{
+    return P2V_KERNEL(page_to_pa(pg));
+}
+
+static inline page_info *pa_to_page(uintptr_t pa)
+{
+    size_t index = pa >> log2(PHYSICAL_PAGE_SIZE);
+    KDEBUG_ASSERT(index < page_count);
+    return &pages[index];
+}
+
+static inline page_info *va_to_page(uintptr_t va)
+{
+    return pa_to_page(V2P(va));
 }
 
 } // namespace pmm

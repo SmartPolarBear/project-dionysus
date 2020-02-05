@@ -55,6 +55,7 @@ void slab_cache_destroy(slab_cache *cache);
 void slab_cache_free(slab_cache *cache, void *obj);
 size_t slab_cache_shrink(slab_cache *cache);
 size_t slab_cache_reap();
+
 } // namespace slab_allocator
 
 } // namespace allocators

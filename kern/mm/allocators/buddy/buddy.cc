@@ -1,3 +1,4 @@
+#include "sys/allocators/buddy_alloc.h"
 #include "sys/memlayout.h"
 #include "sys/pmm.h"
 
@@ -11,6 +12,20 @@ using libk::list_empty;
 using libk::list_for_each;
 using libk::list_init;
 using libk::list_remove;
+
+using allocators::buddy_allocator::buddy_alloc_pages;
+using allocators::buddy_allocator::buddy_free_pages;
+using allocators::buddy_allocator::buddy_get_free_pages_count;
+using allocators::buddy_allocator::buddy_init_memmap;
+using allocators::buddy_allocator::init_buddy;
+
+pmm::pmm_manager_info allocators::buddy_allocator::buddy_pmm_manager = {
+    .init = init_buddy,
+    .init_memmap = buddy_init_memmap,
+    .alloc_pages = buddy_alloc_pages,
+    .free_pages = buddy_free_pages,
+    .get_free_pages_count = buddy_get_free_pages_count,
+};
 
 constexpr size_t MAX_ORDER = 12;
 free_area_info free_areas[MAX_ORDER + 1];
@@ -30,7 +45,7 @@ static inline size_t get_order(size_t n)
 
 static inline bool page_is_buddy(page_info *page, size_t order, size_t zone_num)
 {
-    if (pmm::page_to_physical_page_number(page) < pmm::page_count)
+    if (pmm::page_to_index(page) < pmm::page_count)
     {
         if (page->zone_id == zone_num)
         {
@@ -52,108 +67,7 @@ static inline page_info *index_to_page(size_t zone_id, size_t index)
     return zones[zone_id].base + index;
 }
 
-void init_buddy(void)
-{
-    for (size_t i = 0; i <= MAX_ORDER; i++)
-    {
-        list_init(&free_areas[i].freelist);
-        free_areas[i].free_count = 0;
-    }
-}
-
-void init_buddy_memmap(page_info *base, size_t n)
-{
-    KDEBUG_ASSERT(n > 0);
-    KDEBUG_ASSERT(zone_count < ZONE_COUNT_MAX);
-
-    for (page_info *p = base; p != base + n; p++)
-    {
-        KDEBUG_ASSERT(page_has_flag(p, PHYSICAL_PAGE_FLAG_RESERVED));
-        p->flags = 0;
-        p->property = 0;
-        p->ref = 0;
-        p->zone_id = zone_count;
-    }
-
-    zones[zone_count].base = base;
-    size_t order = MAX_ORDER, order_size = (1 << order);
-
-    for (page_info *p = base; n != 0;)
-    {
-        while (n >= order_size)
-        {
-            page_set_flag(p, PHYSICAL_PAGE_FLAG_PROPERTY);
-            p->property = order;
-
-            list_add(&p->page_link, &free_areas[order].freelist);
-
-            n -= order_size;
-            p += order_size;
-
-            free_areas[order].free_count++;
-        }
-
-        order--;
-        order_size >>= 1;
-    }
-    zone_count++;
-}
-
-static inline page_info *buddy_alloc_pages_impl(size_t order)
-{
-    KDEBUG_ASSERT(order <= MAX_ORDER);
-
-    for (size_t cur_order = order; cur_order <= MAX_ORDER; cur_order++)
-    {
-        if (!list_empty(&free_areas[cur_order].freelist))
-        {
-            auto entry = free_areas[cur_order].freelist.next;
-            page_info *page = list_entry(entry, page_info, page_link);
-
-            free_areas[cur_order].free_count--;
-
-            list_remove(entry);
-
-            size_t sz = 1 << cur_order;
-
-            while (cur_order > order)
-            {
-                cur_order--;
-                sz >>= 1;
-
-                page_info *buddy = page + sz;
-                buddy->property = cur_order;
-
-                page_set_flag(buddy, PHYSICAL_PAGE_FLAG_PROPERTY);
-
-                free_areas[cur_order].free_count++;
-                list_add(&buddy->page_link, &free_areas[cur_order].freelist);
-            }
-
-            page_clear_flag(page, PHYSICAL_PAGE_FLAG_PROPERTY);
-            return page;
-        }
-    }
-
-    return nullptr;
-}
-
-page_info *buddy_alloc_pages(size_t n)
-{
-    KDEBUG_ASSERT(n > 0);
-
-    size_t order = get_order(n), order_size = (1 << order);
-
-    page_info *page = buddy_alloc_pages_impl(order);
-    if (page != nullptr && n != order_size)
-    {
-        pmm::free_pages(page + n, order_size - n);
-    }
-
-    return page;
-}
-
-void buddy_free_pages_impl(page_info *base, size_t order)
+static inline void buddy_free_pages_impl(page_info *base, size_t order)
 {
     size_t buddy_index = 0, page_index = page_to_index(base);
 
@@ -196,7 +110,108 @@ void buddy_free_pages_impl(page_info *base, size_t order)
     list_add(&page->page_link, &free_areas[order].freelist);
 }
 
-void buddy_free_pages(page_info *base, size_t n)
+static inline page_info *buddy_alloc_pages_impl(size_t order)
+{
+    KDEBUG_ASSERT(order <= MAX_ORDER);
+
+    for (size_t cur_order = order; cur_order <= MAX_ORDER; cur_order++)
+    {
+        if (!list_empty(&free_areas[cur_order].freelist))
+        {
+            auto entry = free_areas[cur_order].freelist.next;
+            page_info *page = list_entry(entry, page_info, page_link);
+
+            free_areas[cur_order].free_count--;
+
+            list_remove(entry);
+
+            size_t sz = 1 << cur_order;
+
+            while (cur_order > order)
+            {
+                cur_order--;
+                sz >>= 1;
+
+                page_info *buddy = page + sz;
+                buddy->property = cur_order;
+
+                page_set_flag(buddy, PHYSICAL_PAGE_FLAG_PROPERTY);
+
+                free_areas[cur_order].free_count++;
+                list_add(&buddy->page_link, &free_areas[cur_order].freelist);
+            }
+
+            page_clear_flag(page, PHYSICAL_PAGE_FLAG_PROPERTY);
+            return page;
+        }
+    }
+
+    return nullptr;
+}
+
+void allocators::buddy_allocator::init_buddy(void)
+{
+    for (size_t i = 0; i <= MAX_ORDER; i++)
+    {
+        list_init(&free_areas[i].freelist);
+        free_areas[i].free_count = 0;
+    }
+}
+
+void allocators::buddy_allocator::buddy_init_memmap(page_info *base, size_t n)
+{
+    KDEBUG_ASSERT(n > 0);
+    KDEBUG_ASSERT(zone_count < ZONE_COUNT_MAX);
+
+    for (page_info *p = base; p != base + n; p++)
+    {
+        KDEBUG_ASSERT(page_has_flag(p, PHYSICAL_PAGE_FLAG_RESERVED));
+        p->flags = 0;
+        p->property = 0;
+        p->ref = 0;
+        p->zone_id = zone_count;
+    }
+
+    zones[zone_count].base = base;
+    size_t order = MAX_ORDER, order_size = (1 << order);
+
+    for (page_info *p = base; n != 0;)
+    {
+        while (n >= order_size)
+        {
+            page_set_flag(p, PHYSICAL_PAGE_FLAG_PROPERTY);
+            p->property = order;
+
+            list_add(&p->page_link, &free_areas[order].freelist);
+
+            n -= order_size;
+            p += order_size;
+
+            free_areas[order].free_count++;
+        }
+
+        order--;
+        order_size >>= 1;
+    }
+    zone_count++;
+}
+
+page_info *allocators::buddy_allocator::buddy_alloc_pages(size_t n)
+{
+    KDEBUG_ASSERT(n > 0);
+
+    size_t order = get_order(n), order_size = (1 << order);
+
+    page_info *page = buddy_alloc_pages_impl(order);
+    if (page != nullptr && n != order_size)
+    {
+        pmm::free_pages(page + n, order_size - n);
+    }
+
+    return page;
+}
+
+void allocators::buddy_allocator::buddy_free_pages(page_info *base, size_t n)
 {
     KDEBUG_ASSERT(n > 0);
 
@@ -234,7 +249,7 @@ void buddy_free_pages(page_info *base, size_t n)
     }
 }
 
-size_t buddy_get_free_pages_count(void)
+size_t allocators::buddy_allocator::buddy_get_free_pages_count(void)
 {
     size_t ret = 0;
     for (size_t order = 0; order <= MAX_ORDER; order++)

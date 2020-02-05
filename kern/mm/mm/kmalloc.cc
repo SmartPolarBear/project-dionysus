@@ -1,5 +1,5 @@
 /*
- * Last Modified: Thu Jan 30 2020
+ * Last Modified: Wed Feb 05 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -41,18 +41,17 @@ using allocators::slab_allocator::slab_init;
 // defined in slab.cc
 extern slab_cache *sized_caches[SIZED_CACHE_COUNT];
 
-// buddy
-using allocators::buddy_allocator::buddy_alloc_4k_page;
-using allocators::buddy_allocator::buddy_alloc_with_order;
-using allocators::buddy_allocator::buddy_free_4k_page;
-using allocators::buddy_allocator::buddy_free_with_order;
-using allocators::buddy_allocator::buddy_order_from_size;
+// pmm
+using pmm::alloc_page;
+using pmm::alloc_pages;
+using pmm::free_page;
+using pmm::free_pages;
 
 constexpr size_t GUARDIAN_BYTES_AFTER = 16;
 
 enum class allocator_types
 {
-    BUDDY,
+    PMM,
     SLAB
 };
 
@@ -63,9 +62,9 @@ struct memory_block
     union {
         struct
         {
-            size_t order;
-        } buddy;
-        
+            size_t page_count;
+        } pmm;
+
         struct
         {
             size_t size;
@@ -102,12 +101,13 @@ void *memory::kmalloc(size_t sz, [[maybe_unused]] size_t flags)
     if (actual_size > allocators::slab_allocator::BLOCK_SIZE)
     {
         // use buddy
-        size_t order = buddy_order_from_size(actual_size);
 
-        ret = reinterpret_cast<decltype(ret)>(buddy_alloc_with_order(order));
+        size_t npages = roundup(actual_size, PHYSICAL_PAGE_SIZE) / PHYSICAL_PAGE_SIZE;
 
-        ret->type = allocator_types::BUDDY;
-        ret->alloc_info.buddy.order = order;
+        ret = reinterpret_cast<decltype(ret)>(pmm::page_to_va(pmm::alloc_pages(npages)));
+
+        ret->type = allocator_types::PMM;
+        ret->alloc_info.pmm.page_count = npages;
     }
     else
     {
@@ -127,9 +127,9 @@ void memory::kfree(void *ptr)
     uint8_t *mem_ptr = reinterpret_cast<decltype(mem_ptr)>(ptr);
     memory_block *block = reinterpret_cast<decltype(block)>(container_of(mem_ptr, memory_block, mem));
 
-    if (block->type == allocator_types::BUDDY)
+    if (block->type == allocator_types::PMM)
     {
-        buddy_free_with_order(block, block->alloc_info.buddy.order);
+        pmm::free_pages(pmm::va_to_page((uintptr_t)ptr), block->alloc_info.pmm.page_count);
     }
     else if (block->type == allocator_types::SLAB)
     {

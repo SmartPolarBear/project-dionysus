@@ -14,6 +14,7 @@ kern/mm/mm/vm.o
 kern/mm/mm/vm_seg.o
 kern/mm/mm/kmalloc.o
 kern/mm/mm/vm_utils.o
+kern/mm/mm/pmm.o
 kern/proc/scheduler.o
 drivers/console/cga.o
 drivers/console/console.o
