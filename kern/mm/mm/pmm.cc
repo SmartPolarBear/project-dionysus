@@ -1,5 +1,5 @@
 /*
- * Last Modified: Tue Feb 04 2020
+ * Last Modified: Thu Feb 06 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -22,10 +22,13 @@
 
 #include "arch/amd64/sync.h"
 
+#include "sys/allocators/buddy_alloc.h"
+#include "sys/allocators/slab_alloc.h"
 #include "sys/memlayout.h"
 #include "sys/mmu.h"
 #include "sys/multiboot.h"
 #include "sys/pmm.h"
+#include "sys/vmm.h"
 
 #include "drivers/console/console.h"
 
@@ -41,17 +44,18 @@ using sysstd::simple_pair;
 
 using reserved_space = simple_pair<uintptr_t, uintptr_t>;
 
-extern uint8_t end[];                     // kernel.ld
-extern "C" void *mbi_structptr = nullptr; // multiboot.cc
+extern uint8_t end[];           // kernel.ld
+extern "C" void *mbi_structptr; // multiboot.cc
 
-pmm::pmm_manager_info *pmm::pmm_manager;
+// use buddy allocator to allocate physical pages
+pmm::pmm_manager_info *pmm::pmm_manager = &allocators::buddy_allocator::buddy_pmm_manager;
 
-page_info *pmm::pages;
-size_t pmm::page_count;
+page_info *pmm::pages = nullptr;
+size_t pmm::page_count = 0;
 
 constexpr size_t RESERVED_SPACES_MAX_COUNT = 32;
 size_t reserved_spaces_count = 0;
-reserved_space reserved_spaces[RESERVED_SPACES_MAX_COUNT];
+reserved_space reserved_spaces[RESERVED_SPACES_MAX_COUNT] = {};
 
 // the count of module tags can't be more than reserved spaces
 multiboot::multiboot_tag_ptr module_tags[RESERVED_SPACES_MAX_COUNT];
@@ -69,7 +73,7 @@ static inline void init_memmap(page_info *base, size_t sz)
     pmm_manager->init_memmap(base, sz);
 }
 
-static inline void detect_physical_mem()
+static inline void init_physical_mem()
 {
     auto memtag = multiboot::acquire_tag_ptr<multiboot_tag_mmap>(MULTIBOOT_TAG_TYPE_MMAP);
     size_t entry_count = (memtag->size - sizeof(multiboot_uint32_t) * 4ul - sizeof(memtag->entry_size)) / memtag->entry_size;
@@ -154,6 +158,16 @@ static inline void detect_physical_mem()
 void pmm::init_pmm(void)
 {
     init_pmm_manager();
+
+    init_physical_mem();
+
+    vmm::init_vmm();
+
+    vmm::boot_map_kernel_mem();
+
+    vmm::install_gdt();
+
+    allocators::slab_allocator::slab_init();
 }
 
 page_info *pmm::alloc_pages(size_t n)

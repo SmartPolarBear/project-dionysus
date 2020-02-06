@@ -7,8 +7,9 @@ using RESULT = uint64_t;
 
 enum ErrorCode : RESULT
 {
-    ERROR_SUCCESS = 0,
-    ERROR_MEMORY_ALLOC = 1
+    ERROR_SUCCESS,
+    ERROR_MEMORY_ALLOC,
+    ERROR_REMAP
 };
 
 #endif // __INCLUDE_SYS_ERROR_H

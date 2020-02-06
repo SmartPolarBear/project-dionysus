@@ -70,6 +70,16 @@ static inline page_info *va_to_page(uintptr_t va)
     return pa_to_page(V2P(va));
 }
 
+namespace boot_mem
+{
+static inline void *boot_alloc_page(void)
+{
+    auto page = alloc_page();
+    KDEBUG_ASSERT(page != nullptr);
+    return reinterpret_cast<void *>(page_to_va(page));
+}
+} // namespace boot_mem
+
 } // namespace pmm
 
 #endif // __INCLUDE_SYSY_PMM_H
