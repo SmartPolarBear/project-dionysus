@@ -1,5 +1,5 @@
 /*
- * Last Modified: Thu Feb 06 2020
+ * Last Modified: Fri Feb 07 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -36,6 +36,5 @@ static inline uint32_t xchg(volatile uint32_t *addr, size_t newval)
                  : "cc");
     return result;
 }
-
 
 #endif // __INCLUDE_ARCH_AMD64_ATOMIC_H

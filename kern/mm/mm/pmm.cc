@@ -1,5 +1,5 @@
 /*
- * Last Modified: Thu Feb 06 2020
+ * Last Modified: Fri Feb 07 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -155,6 +155,12 @@ static inline void init_physical_mem()
     }
 }
 
+static inline void create_kernel_vma(void)
+{
+    // TODO: load initial vma for kernel usage
+    // I guess I'd better allow kernel to access the whole memory 
+}
+
 void pmm::init_pmm(void)
 {
     init_pmm_manager();
@@ -168,6 +174,8 @@ void pmm::init_pmm(void)
     vmm::install_gdt();
 
     allocators::slab_allocator::slab_init();
+
+    create_kernel_vma();
 }
 
 page_info *pmm::alloc_pages(size_t n)
