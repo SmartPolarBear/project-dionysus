@@ -1,5 +1,5 @@
 /*
- * Last Modified: Fri Feb 07 2020
+ * Last Modified: Sat Feb 08 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -40,6 +40,8 @@ using pmm::page_count;
 using pmm::pages;
 using pmm::pmm_manager;
 
+using vmm::pde_ptr_t;
+
 using sysstd::simple_pair;
 
 using reserved_space = simple_pair<uintptr_t, uintptr_t>;
@@ -52,6 +54,7 @@ pmm::pmm_manager_info *pmm::pmm_manager = &allocators::buddy_allocator::buddy_pm
 
 page_info *pmm::pages = nullptr;
 size_t pmm::page_count = 0;
+size_t max_pa_addr = 0;
 
 constexpr size_t RESERVED_SPACES_MAX_COUNT = 32;
 size_t reserved_spaces_count = 0;
@@ -88,7 +91,7 @@ static inline void init_physical_mem()
             max_pa = sysstd::max(max_pa, sysstd::min(entry->addr + entry->len, (unsigned long long)PHYMEMORY_SIZE));
         }
     }
-
+    max_pa_addr = max_pa;
     page_count = max_pa / PHYSICAL_PAGE_SIZE;
     // The page management structure is placed a page after kernel
     // So as to protect the multiboot info
@@ -158,7 +161,7 @@ static inline void init_physical_mem()
 static inline void create_kernel_vma(void)
 {
     // TODO: load initial vma for kernel usage
-    // I guess I'd better allow kernel to access the whole memory 
+    // I guess I'd better allow kernel to access the whole memory
 }
 
 void pmm::init_pmm(void)
@@ -169,7 +172,7 @@ void pmm::init_pmm(void)
 
     vmm::init_vmm();
 
-    vmm::boot_map_kernel_mem();
+    vmm::boot_map_kernel_mem(max_pa_addr);
 
     vmm::install_gdt();
 
@@ -215,4 +218,8 @@ size_t pmm::get_free_page_count(void)
     local_intrrupt_restore(intrrupt_flag);
 
     return ret;
+}
+
+page_info *pmm::pgdir_alloc_page(pde_ptr_t pgdir, uintptr_t va, size_t perm)
+{
 }

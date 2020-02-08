@@ -10,12 +10,9 @@ kern/libcxxrt/new.o
 kern/mm/allocators/boot/bootmm.o
 kern/mm/allocators/buddy/buddy.o
 kern/mm/allocators/slab/slab.o
-kern/mm/mm/vm.o
-kern/mm/mm/vm_seg.o
-kern/mm/mm/kmalloc.o
-kern/mm/mm/vm_utils.o
-kern/mm/mm/pmm.o
-kern/mm/mm/vmm.o
+kern/mm/pmm/pmm.o
+kern/mm/vmm/vmm.o
+kern/mm/vmm/kmalloc.o
 kern/proc/scheduler.o
 drivers/console/cga.o
 drivers/console/console.o

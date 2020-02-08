@@ -1,6 +1,6 @@
 TOP_SRC = ../..
 
-SUBDIRS = allocators mm
+SUBDIRS = allocators pmm vmm
 
 all: $(SUBDIRS)
 

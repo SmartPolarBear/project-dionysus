@@ -39,6 +39,7 @@ constexpr uintptr_t KERNEL_SIZE = KERNEL_VIRTUALEND - KERNEL_VIRTUALBASE + 1;
 constexpr uintptr_t KERNEL_VIRTUALLINK = 0xFFFFFFFF80100000;
 
 // for memory-mapped IO
+// TODO: dynamically map for memory-mapped IO
 constexpr uintptr_t DEVICE_VIRTUALBASE = 0xFFFFFFFF40000000;
 constexpr uintptr_t DEVICE_PHYSICALBASE = 0xFE000000;
 // this value can be change if needed.

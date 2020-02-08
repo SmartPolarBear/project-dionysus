@@ -1,5 +1,5 @@
 /*
- * Last Modified: Fri Feb 07 2020
+ * Last Modified: Sat Feb 08 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -54,8 +54,8 @@ struct vma_struct
 enum VM_FLAGS : size_t
 {
     VM_READ = 0b1,
+    VM_EXEC = 0b100,
     VM_WRITE = 0b10,
-    VM_EXEC = 0b100
 };
 
 vma_struct *find_vma(mm_struct *mm, uintptr_t addr);
@@ -71,10 +71,13 @@ void mm_destroy(mm_struct *mm);
 void init_vmm(void);
 
 // When called by pmm, first map [0,2GiB] to [KERNEL_VIRTUALBASE,KERNEL_VIRTUALEND]
-void boot_map_kernel_mem(void);
+// and then map all the memories to PHYREMAP_VIRTUALBASE
+void boot_map_kernel_mem(uintptr_t max_pa_addr);
 
 // install GDT
 void install_gdt(void);
+// install g_kml4_t to cr3
+void install_kpml4(void);
 } // namespace vmm
 
 #endif // __INCLUDE_SYS_VMM_H

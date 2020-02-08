@@ -1,5 +1,5 @@
 /*
- * Last Modified: Fri Feb 07 2020
+ * Last Modified: Sat Feb 08 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -27,6 +27,7 @@
 
 #include "sys/memlayout.h"
 #include "sys/types.h"
+#include "sys/vmm.h"
 
 #include "drivers/debug/kdebug.h"
 
@@ -56,6 +57,10 @@ void init_pmm(void);
 page_info *alloc_pages(size_t n);
 void free_pages(page_info *base, size_t n);
 size_t get_free_page_count(void);
+
+// insert a free page to pgdir
+page_info *pgdir_alloc_page(vmm::pde_ptr_t pgdir,uintptr_t va,size_t perm);
+
 
 static inline page_info *alloc_page(void)
 {

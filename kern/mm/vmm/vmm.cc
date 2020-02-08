@@ -1,5 +1,5 @@
 /*
- * Last Modified: Fri Feb 07 2020
+ * Last Modified: Sat Feb 08 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -58,6 +58,9 @@ __thread cpu_info *cpu;
 
 // global variable for the sake of access and dynamically mapping
 static pde_ptr_t g_kpml4t;
+
+// the mm structure for the kernel itself
+static vmm::mm_struct *kern_mm_struct = nullptr;
 
 // The design of the new vm manager:
 // 1) When called by pmm, first map [0,2GiB] to [KERNEL_VIRTUALBASE,KERNEL_VIRTUALEND]
@@ -161,6 +164,25 @@ static inline RESULT map_page(pde_ptr_t pml4, uintptr_t va, uintptr_t pa, size_t
     return ERROR_SUCCESS;
 }
 
+static inline hresult map_pages(pde_ptr_t pml4, uintptr_t va_start, uintptr_t va_end, uintptr_t pa_start)
+{
+    hresult ret;
+    // map the kernel memory
+    for (uintptr_t pa = pa_start, va = va_start;
+         va <= va_end;
+         pa += PHYSICAL_PAGE_SIZE, va += PHYSICAL_PAGE_SIZE)
+    {
+        ret = map_page(g_kpml4t, va, pa, PG_W);
+
+        if (ret != ERROR_SUCCESS)
+        {
+            return ret;
+        }
+    }
+
+    return ret;
+}
+
 static inline void check_vma_overlap(struct vma_struct *prev, struct vma_struct *next)
 {
     KDEBUG_ASSERT(prev->vm_start < prev->vm_end);
@@ -168,16 +190,95 @@ static inline void check_vma_overlap(struct vma_struct *prev, struct vma_struct 
     KDEBUG_ASSERT(next->vm_start < next->vm_end);
 }
 
+static inline hresult page_fault_impl(mm_struct *mm, size_t err, uintptr_t addr)
+{
+    auto is_kern = [= addr](void) -> bool;
+    {
+        return addr >= KERNEL_ADDRESS_SPACE_BASE;
+    }
+
+    vma_struct *vma = vmm::find_vma(mm, addr);
+    if (vma == nullptr || vma->vm_start > addr)
+    {
+        return ERROR_VMA_NOT_FOUND_IN_MM;
+    }
+    else
+    {
+        switch (err & 0b11)
+        {
+        default:
+        case 0b10: // write, not persent
+            if (!(vma->flags & vmm::VM_WRITE))
+            {
+                return ERROR_PAGE_NOT_PERSENT;
+            }
+            break;
+        case 0b01: // read, persent
+            return ERROR_UNKOWN;
+            break;
+        case 0b00: // read not persent
+            if (!(vma->flags & (vmm::VM_READ || vmm::VM_EXEC)))
+            {
+                return ERROR_PAGE_NOT_PERSENT;
+            }
+            break;
+        }
+
+        size_t page_perm = PG_U;
+        if (vma->flags & vmm::VM_WRITE)
+        {
+            page_perm |= PG_W;
+        }
+
+        addr = rounddown(addr, PHYSICAL_PAGE_SIZE);
+
+        auto ret = pmm::pgdir_alloc_page(mm->pgdir, addr, page_perm); // map to any free space
+        return ret;
+    }
+}
+
 static hresult handle_pgfault([[maybe_unused]] trap_info info)
 {
     uintptr_t addr = rcr2();
-    //TODO: handle the page fault
+    mm_struct *mm = nullptr;
 
-    KDEBUG_RICHPANIC("Invalid access to some memory or stack overflow.",
-                     "KERNEL PANIC: PAGE FAULT",
-                     false,
-                     "Address: 0x%p\n", addr);
-    return HRES_SUCCESS;
+    // The address belongs to the kernel.
+    if (addr >= KERNEL_ADDRESS_SPACE_BASE)
+    {
+        mm = kern_mm_struct;
+    }
+    // else we should care about user process
+    else
+    {
+        // TODO: handle page fault for current process;
+        KDEBUG_NOT_IMPLEMENTED;
+    }
+
+    hresult ret = page_fault_impl(mm, info.err, addr);
+
+    if (ret == ERROR_VMA_NOT_FOUND_IN_MM)
+    {
+        KDEBUG_RICHPANIC("The addr isn't found in th MM structure.",
+                         "KERNEL PANIC: PAGE FAULT",
+                         false,
+                         "Address: 0x%p\n", addr);
+    }
+    else if (ret == ERROR_PAGE_NOT_PERSENT)
+    {
+        KDEBUG_RICHPANIC("A page's not persent.",
+                         "KERNEL PANIC: PAGE FAULT",
+                         false,
+                         "Address: 0x%p\n", addr);
+    }
+    else if (ret == ERROR_UNKOWN)
+    {
+        KDEBUG_RICHPANIC("Unkown error in paging",
+                         "KERNEL PANIC: PAGE FAULT",
+                         false,
+                         "Address: 0x%p\n", addr);
+    }
+
+    return ret;
 }
 
 void vmm::init_vmm(void)
@@ -192,25 +293,35 @@ void vmm::init_vmm(void)
 }
 
 // When called by pmm, first map [0,2GiB] to [KERNEL_VIRTUALBASE,KERNEL_VIRTUALEND]
-void vmm::boot_map_kernel_mem(void)
+// and then map all the memories to PHYREMAP_VIRTUALBASE
+void vmm::boot_map_kernel_mem(uintptr_t max_pa_addr)
 {
+    // map the kernel memory
+    auto ret map_pages(g_kpml4, KERNEL_VIRTUALBASE, KERNEL_VIRTUALEND, 0);
 
-    for (uintptr_t pa = 0, va = KERNEL_VIRTUALBASE;
-         pa <= KERNEL_VIRTUALEND;
-         pa += PHYSICAL_PAGE_SIZE, va += PHYSICAL_PAGE_SIZE)
+    if (ret == ERROR_SUCCESS)
     {
-        auto ret = map_page(g_kpml4t, va, pa, PG_W);
-
-        if (ret == ERROR_SUCCESS)
-        {
-            KDEBUG_GENERALPANIC("Can't allocate enough space for paging.\n");
-        }
-        else if (ret == ERROR_REMAP)
-        {
-            KDEBUG_RICHPANIC("Remap a mapped page.", "KERNEL PANIC:ERROR_REMAP",
-                             true, " tring to map 0x%x to 0x%x", pa, va);
-        }
+        KDEBUG_GENERALPANIC("Can't allocate enough space for paging.\n");
     }
+    else if (ret == ERROR_REMAP)
+    {
+        KDEBUG_RICHPANIC("Remap a mapped page.", "KERNEL PANIC:ERROR_REMAP",
+                         true, " tring to map 0x%x to 0x%x", pa, va);
+    }
+
+    // remap all the physical memory
+    ret = map_pages(g_kpml4, PHYREMAP_VIRTUALBASE, max_pa_addr, 0);
+
+    if (ret == ERROR_SUCCESS)
+    {
+        KDEBUG_GENERALPANIC("Can't allocate enough space for paging.\n");
+    }
+    else if (ret == ERROR_REMAP)
+    {
+        KDEBUG_RICHPANIC("Remap a mapped page.", "KERNEL PANIC:ERROR_REMAP",
+                         true, " tring to map 0x%x to 0x%x", pa, va);
+    }
+    install_kpml4();
 }
 
 void vmm::install_gdt(void)
@@ -282,7 +393,7 @@ vma_struct *vmm::find_vma(mm_struct *mm, uintptr_t addr)
 
 vma_struct *vmm::vma_create(uintptr_t vm_start, uintptr_t vm_end, size_t vm_flags)
 {
-    vma_struct *vma = reinterpret_cast<decltype(vma)>(memory::kmalloc(sizeof(vma_struct)));
+    vma_struct *vma = reinterpret_cast<decltype(vma)>(memory::kmalloc(sizeof(vma_struct), 0));
 
     if (vma != nullptr)
     {
@@ -332,7 +443,7 @@ void vmm::insert_vma_struct(mm_struct *mm, vma_struct *vma)
 
 mm_struct *vmm::mm_create(void)
 {
-    mm_struct *mm = reinterpret_cast<decltype(mm)>(memory::kmalloc(sizeof(mm_struct)));
+    mm_struct *mm = reinterpret_cast<decltype(mm)>(memory::kmalloc(sizeof(mm_struct), 0));
     if (mm != nullptr)
     {
         list_init(&mm->mmap_list);
@@ -355,4 +466,68 @@ void vmm::mm_destroy(mm_struct *mm)
     }
     memory::kfree(mm);
     mm = nullptr;
+}
+
+void vmm::install_kpml4()
+{
+    lcr3(V2P((uintptr_t)g_kpml4t));
+}
+
+uintptr_t V2P(uintptr_t x)
+{
+    KDEBUG_ASSERT(x >= KERNEL_ADDRESS_SPACE_BASE);
+    if (x >= PHYREMAP_VIRTUALBASE && x <= PHYREMAP_VIRTUALEND)
+    {
+        return x - PHYREMAP_VIRTUALBASE;
+    }
+    else if (x >= KERNEL_VIRTUALBASE && x <= VIRTUALADDR_LIMIT)
+    {
+        return ((x)-KERNEL_VIRTUALBASE);
+    }
+    else
+    {
+        KDEBUG_RICHPANIC("Invalid address for V2P\n",
+                         "KERNEL PANIC: VM",
+                         false,
+                         "The given address is 0x%x", x);
+        return 0;
+    }
+}
+
+uintptr_t P2V(uintptr_t x)
+{
+    if (x <= KERNEL_SIZE)
+    {
+        return P2V_KERNEL(x);
+    }
+    else if (x >= KERNEL_SIZE && x <= PHYMEMORY_SIZE)
+    {
+        return P2V_PHYREMAP(x);
+    }
+    else
+    {
+        KDEBUG_RICHPANIC("Invalid address for V2P\n",
+                         "KERNEL PANIC: VM",
+                         false,
+                         "The given address is 0x%x", x);
+        return 0;
+    }
+}
+
+uintptr_t P2V_KERNEL(uintptr_t x)
+{
+    KDEBUG_ASSERT(x <= KERNEL_SIZE);
+    return x + KERNEL_VIRTUALBASE;
+}
+
+uintptr_t P2V_PHYREMAP(uintptr_t x)
+{
+    KDEBUG_ASSERT(x <= PHYMEMORY_SIZE);
+    return x + PHYREMAP_VIRTUALBASE;
+}
+
+uintptr_t IO2V(uintptr_t x)
+{
+    KDEBUG_ASSERT(x <= PHYMEMORY_SIZE);
+    return (x - 0xFE000000) + DEVICE_VIRTUALBASE;
 }
