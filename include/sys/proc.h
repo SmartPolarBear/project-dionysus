@@ -5,7 +5,7 @@
 #include "arch/amd64/regs.h"
 
 #include "sys/types.h"
-#include "sys/vm.h"
+#include "sys/vmm.h"
 
 namespace process
 {
@@ -39,7 +39,7 @@ struct process
     size_t pid;      // Process ID
     uintptr_t size;  // Size of process memory (bytes)
 
-    vm::pde_t *pgdir;    // Page table
+    vmm::pde_t *pgdir;    // Page table
     char *kernel_stack;  // Bottom of kernel stack for this process
     void *sleep_channel; // If non-zero, sleeping on channel
 

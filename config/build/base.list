@@ -12,6 +12,10 @@ kern/mm/allocators/buddy/buddy.o
 kern/mm/allocators/slab/slab.o
 kern/mm/pmm/pmm.o
 kern/mm/vmm/vmm.o
+kern/mm/vmm/gdt.o
+kern/mm/vmm/address.o
+kern/mm/vmm/paging.o
+kern/mm/vmm/page_fault.o
 kern/mm/vmm/kmalloc.o
 kern/proc/scheduler.o
 drivers/console/cga.o

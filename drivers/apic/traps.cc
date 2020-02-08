@@ -8,7 +8,7 @@
 
 #include "sys/allocators/boot_alloc.h"
 #include "sys/mmu.h"
-#include "sys/vm.h"
+#include "sys/vmm.h"
 
 #include "lib/libc/string.h"
 

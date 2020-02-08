@@ -4,7 +4,7 @@
 #include "sys/memlayout.h"
 #include "sys/mmu.h"
 #include "sys/multiboot.h"
-#include "sys/vm.h"
+
 
 #include "lib/libc/string.h"
 #include "lib/libkern/data/list.h"
@@ -78,7 +78,7 @@ void multiboot::init_mbi(void)
 
     //FIXME: add a barrier to prevent something crack the mboot info
     // I guess the crack is because an imperfect memory layout.
-    [[maybe_unused]] char *p = allocators::boot_allocator::bootmm_alloc();
+    // [[maybe_unused]] char *p = allocators::boot_allocator::bootmm_alloc();
 
     // console::printf("mbootinfo=0x%p,p=0x%p\n", mboot_info, p);
     parse_multiboot_tags();
