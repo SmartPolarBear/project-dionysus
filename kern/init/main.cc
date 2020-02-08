@@ -1,5 +1,5 @@
 /*
- * Last Modified: Fri Jan 31 2020
+ * Last Modified: Sat Feb 08 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -39,24 +39,18 @@
 #include "sys/memory.h"
 #include "sys/multiboot.h"
 #include "sys/param.h"
-#include "sys/vm.h"
+#include "sys/pmm.h"
+#include "sys/vmm.h"
 
 
 // global entry of the kernel
 extern "C" [[noreturn]] void kmain()
 {
-    // memory allocator at boot time, allocating memory within (end+0x1000,P2V(4MB))
-    // the offset is intended to protect multiboot info from overwritten,
-    // which is put *right* after the kernel by grub.
-    // the size of which is expected to be less than 4K.
-    allocators::boot_allocator::bootmm_init(vm::kernel_boot_mem_begin(),
-                                            vm::kernel_boot_mem_end());
+    // initialize physical memory
+    pmm::init_pmm();
 
     // process the multiboot information
     multiboot::init_mbi();
-
-    // initialize the paging
-    vm::init_kernelvm();
 
     // initialize the console
     console::console_init();
@@ -74,16 +68,10 @@ extern "C" [[noreturn]] void kmain()
     trap::initialize_trap_vectors();
 
     // install gdt
-    vm::segment::init_segmentation();
+    vmm::install_gdt();
 
     // initialize I/O APIC
     io_apic::init_ioapic();
-
-    // initialize buddy allocator
-    allocators::buddy_allocator::buddy_init(vm::kernel_mem_begin(), vm::kernel_mem_end());
-
-    // initialize slab allocator, which depends on the buddy allocator
-    allocators::slab_allocator::slab_init();
 
     console::printf("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
 

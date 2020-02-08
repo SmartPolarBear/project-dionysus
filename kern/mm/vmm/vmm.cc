@@ -172,7 +172,7 @@ static inline hresult map_pages(pde_ptr_t pml4, uintptr_t va_start, uintptr_t va
          va <= va_end;
          pa += PHYSICAL_PAGE_SIZE, va += PHYSICAL_PAGE_SIZE)
     {
-        ret = map_page(g_kpml4t, va, pa, PG_W);
+        ret = map_page(pml4, va, pa, PG_W);
 
         if (ret != ERROR_SUCCESS)
         {
@@ -192,11 +192,6 @@ static inline void check_vma_overlap(struct vma_struct *prev, struct vma_struct 
 
 static inline hresult page_fault_impl(mm_struct *mm, size_t err, uintptr_t addr)
 {
-    auto is_kern = [= addr](void) -> bool;
-    {
-        return addr >= KERNEL_ADDRESS_SPACE_BASE;
-    }
-
     vma_struct *vma = vmm::find_vma(mm, addr);
     if (vma == nullptr || vma->vm_start > addr)
     {
@@ -217,7 +212,7 @@ static inline hresult page_fault_impl(mm_struct *mm, size_t err, uintptr_t addr)
             return ERROR_UNKOWN;
             break;
         case 0b00: // read not persent
-            if (!(vma->flags & (vmm::VM_READ || vmm::VM_EXEC)))
+            if (!(vma->flags & (vmm::VM_READ | vmm::VM_EXEC)))
             {
                 return ERROR_PAGE_NOT_PERSENT;
             }
@@ -232,8 +227,11 @@ static inline hresult page_fault_impl(mm_struct *mm, size_t err, uintptr_t addr)
 
         addr = rounddown(addr, PHYSICAL_PAGE_SIZE);
 
-        auto ret = pmm::pgdir_alloc_page(mm->pgdir, addr, page_perm); // map to any free space
-        return ret;
+        if(pmm::pgdir_alloc_page(mm->pgdir, addr, page_perm)==nullptr) // map to any free space
+        {
+            return ERROR_MEMORY_ALLOC;
+        }
+        return ERROR_SUCCESS;
     }
 }
 
@@ -297,29 +295,29 @@ void vmm::init_vmm(void)
 void vmm::boot_map_kernel_mem(uintptr_t max_pa_addr)
 {
     // map the kernel memory
-    auto ret map_pages(g_kpml4, KERNEL_VIRTUALBASE, KERNEL_VIRTUALEND, 0);
+    auto ret= map_pages(g_kpml4t, KERNEL_VIRTUALBASE, KERNEL_VIRTUALEND, 0);
 
-    if (ret == ERROR_SUCCESS)
+    if (ret == ERROR_MEMORY_ALLOC)
     {
         KDEBUG_GENERALPANIC("Can't allocate enough space for paging.\n");
     }
     else if (ret == ERROR_REMAP)
     {
         KDEBUG_RICHPANIC("Remap a mapped page.", "KERNEL PANIC:ERROR_REMAP",
-                         true, " tring to map 0x%x to 0x%x", pa, va);
+                         true, "");
     }
 
     // remap all the physical memory
-    ret = map_pages(g_kpml4, PHYREMAP_VIRTUALBASE, max_pa_addr, 0);
+    ret = map_pages(g_kpml4t, PHYREMAP_VIRTUALBASE, max_pa_addr, 0);
 
-    if (ret == ERROR_SUCCESS)
+    if (ret == ERROR_MEMORY_ALLOC)
     {
         KDEBUG_GENERALPANIC("Can't allocate enough space for paging.\n");
     }
     else if (ret == ERROR_REMAP)
     {
         KDEBUG_RICHPANIC("Remap a mapped page.", "KERNEL PANIC:ERROR_REMAP",
-                         true, " tring to map 0x%x to 0x%x", pa, va);
+                         true, "");
     }
     install_kpml4();
 }

@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sun Feb 02 2020
+ * Last Modified: Sat Feb 08 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -34,7 +34,7 @@
 #include "sys/memlayout.h"
 #include "sys/multiboot.h"
 #include "sys/types.h"
-#include "sys/vm.h"
+#include "sys/vmm.h"
 
 #include "lib/libc/string.h"
 
@@ -115,13 +115,13 @@ void ap::all_processor_main()
 extern "C" [[clang::optnone]] void ap_enter(void)
 {
     // install the kernel vm
-    vm::switch_kernelvm();
+    vmm::install_kpml4();
 
     // install trap vectors
     trap::initialize_trap_vectors();
 
     // initialize segmentation
-    vm::segment::init_segmentation();
+    vmm::install_gdt();
 
     // initialize local APIC
     local_apic::init_lapic();
