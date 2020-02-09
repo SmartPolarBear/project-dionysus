@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sat Feb 08 2020
+ * Last Modified: Sun Feb 09 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -20,8 +20,6 @@
  * ----------	---	----------------------------------------------------------
  */
 
-
-
 #if !defined(__INCLUDE_SYSY_PMM_H)
 #define __INCLUDE_SYSY_PMM_H
 
@@ -31,9 +29,12 @@
 
 #include "drivers/debug/kdebug.h"
 
+using vmm::pde_ptr_t;
 namespace pmm
 {
+
 constexpr size_t PMM_MANAGER_NAME_MAXLEN = 32;
+
 struct pmm_manager_info
 {
     char name[PMM_MANAGER_NAME_MAXLEN];
@@ -58,9 +59,13 @@ page_info *alloc_pages(size_t n);
 void free_pages(page_info *base, size_t n);
 size_t get_free_page_count(void);
 
-// insert a free page to pgdir
-page_info *pgdir_alloc_page(vmm::pde_ptr_t pgdir,uintptr_t va,size_t perm);
+void page_remove(pde_ptr_t pgdir, uintptr_t va_to_page);
+hresult page_insert(pde_ptr_t pgdir, page_info *page, uintptr_t va, size_t perm);
 
+void tlb_invalidate(pde_ptr_t pgdir, uintptr_t va);
+
+// insert a free page to pgdir
+page_info *pgdir_alloc_page(pde_ptr_t pgdir, uintptr_t va, size_t perm);
 
 static inline page_info *alloc_page(void)
 {
@@ -79,7 +84,7 @@ static inline size_t page_to_index(page_info *pg)
 
 static inline uintptr_t page_to_pa(page_info *pg)
 {
-    return page_to_index(pg) << log2(PHYSICAL_PAGE_SIZE);
+    return page_to_index(pg) * PHYSICAL_PAGE_SIZE;
 }
 
 static inline uintptr_t page_to_va(page_info *pg)
@@ -89,7 +94,7 @@ static inline uintptr_t page_to_va(page_info *pg)
 
 static inline page_info *pa_to_page(uintptr_t pa)
 {
-    size_t index = pa >> log2(PHYSICAL_PAGE_SIZE);
+    size_t index = rounddown(pa, PHYSICAL_PAGE_SIZE) / PHYSICAL_PAGE_SIZE;
     KDEBUG_ASSERT(index < page_count);
     return &pages[index];
 }
@@ -97,6 +102,11 @@ static inline page_info *pa_to_page(uintptr_t pa)
 static inline page_info *va_to_page(uintptr_t va)
 {
     return pa_to_page(V2P(va));
+}
+
+static inline page_info *pde_to_page(pde_ptr_t pde)
+{
+    return pa_to_page(vmm::pde_to_pa(pde));
 }
 
 namespace boot_mem

@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sat Feb 08 2020
+ * Last Modified: Sun Feb 09 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -78,6 +78,10 @@ void boot_map_kernel_mem(uintptr_t max_pa_addr);
 void install_gdt(void);
 // install g_kml4_t to cr3
 void install_kpml4(void);
+// get the physical address mapped by a pde
+uintptr_t pde_to_pa(pde_ptr_t pde);
+pde_ptr_t walk_pgdir(pde_ptr_t pgdir, size_t va, bool create);
+
 } // namespace vmm
 
 #endif // __INCLUDE_SYS_VMM_H

@@ -22,12 +22,12 @@
 
 #include "vmm.h"
 
-#include "sys/vmm.h"
 #include "sys/error.h"
 #include "sys/memlayout.h"
 #include "sys/memory.h"
 #include "sys/mmu.h"
 #include "sys/pmm.h"
+#include "sys/vmm.h"
 
 #include "arch/amd64/x86.h"
 
@@ -54,8 +54,6 @@ using libk::list_for_each;
 using libk::list_init;
 using libk::list_remove;
 
-
-
 // The design of the new vm manager:
 // 1) When called by pmm, first map [0,2GiB] to [KERNEL_VIRTUALBASE,KERNEL_VIRTUALEND]
 // 2) provide an interface to dynamically map memory
@@ -67,7 +65,6 @@ static inline void check_vma_overlap(struct vma_struct *prev, struct vma_struct 
     KDEBUG_ASSERT(prev->vm_end <= next->vm_start);
     KDEBUG_ASSERT(next->vm_start < next->vm_end);
 }
-
 
 void vmm::init_vmm(void)
 {
@@ -186,5 +183,3 @@ void vmm::mm_destroy(mm_struct *mm)
     memory::kfree(mm);
     mm = nullptr;
 }
-
-

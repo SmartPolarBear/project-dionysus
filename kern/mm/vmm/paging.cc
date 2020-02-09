@@ -1,3 +1,24 @@
+/*
+ * Last Modified: Sun Feb 09 2020
+ * Modified By: SmartPolarBear
+ * -----
+ * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
+ * 
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+ * REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+ * FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+ * INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ * LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+ * OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ * PERFORMANCE OF THIS SOFTWARE.
+ * -----
+ * HISTORY:
+ * Date      	By	Comments
+ * ----------	---	----------------------------------------------------------
+ */
 
 #include "sys/error.h"
 #include "sys/memlayout.h"
@@ -155,7 +176,6 @@ void vmm::install_kpml4()
     lcr3(V2P((uintptr_t)g_kpml4t));
 }
 
-
 // When called by pmm, first map [0,2GiB] to [KERNEL_VIRTUALBASE,KERNEL_VIRTUALEND]
 // and then map all the memories to PHYREMAP_VIRTUALBASE
 void vmm::boot_map_kernel_mem(uintptr_t max_pa_addr)
@@ -186,4 +206,15 @@ void vmm::boot_map_kernel_mem(uintptr_t max_pa_addr)
                          true, "");
     }
     install_kpml4();
+}
+
+uintptr_t vmm::pde_to_pa(pde_ptr_t pde)
+{
+    constexpr size_t FLAGS_SHIFT = 8;
+    return ((((*pde) >> FLAGS_SHIFT) << FLAGS_SHIFT) & (~PG_PS));
+}
+
+pde_ptr_t vmm::walk_pgdir(pde_ptr_t pgdir, size_t va, bool create)
+{
+    return ::walk_pgdir(pgdir, va, create, PG_U);
 }

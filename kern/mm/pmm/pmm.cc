@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sat Feb 08 2020
+ * Last Modified: Sun Feb 09 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -29,8 +29,11 @@
 #include "sys/multiboot.h"
 #include "sys/pmm.h"
 #include "sys/vmm.h"
+#include "sys/error.h"
 
 #include "drivers/console/console.h"
+#include "drivers/debug/hresult.h"
+#include "drivers/debug/kdebug.h"
 
 #include "lib/libc/stdlib.h"
 #include "lib/libcxx/algorithm"
@@ -74,6 +77,20 @@ static inline void init_pmm_manager()
 static inline void init_memmap(page_info *base, size_t sz)
 {
     pmm_manager->init_memmap(base, sz);
+}
+
+static inline void page_remove_pde(pde_ptr_t pgdir, uintptr_t va, pde_ptr_t pde)
+{
+    if ((*pde) & PG_P)
+    {
+        auto page = pmm::pde_to_page(pde);
+        if ((--page->ref) == 0)
+        {
+            pmm::free_page(page);
+        }
+        *pde = 0;
+        pmm::tlb_invalidate(pgdir, va);
+    }
 }
 
 static inline void init_physical_mem()
@@ -220,6 +237,61 @@ size_t pmm::get_free_page_count(void)
     return ret;
 }
 
+void pmm::page_remove(pde_ptr_t pgdir, uintptr_t va)
+{
+    auto pde = vmm::walk_pgdir(pgdir, va, false);
+    if (pde != nullptr)
+    {
+        page_remove_pde(pgdir, va, pde);
+    }
+}
+
+hresult pmm::page_insert(pde_ptr_t pgdir, page_info *page, uintptr_t va, size_t perm)
+{
+    auto pde = vmm::walk_pgdir(pgdir, va, true);
+    if (pde == nullptr)
+    {
+        return ERROR_MEMORY_ALLOC;
+    }
+
+    page->ref++;
+
+    if ((*pde) & PG_P)
+    {
+        auto p = pde_to_page(pde);
+        if (p == page)
+        {
+            page->ref--;
+        }
+        else
+        {
+            page_remove_pde(pgdir, va, pde);
+        }
+    }
+
+    *pde = page_to_pa(page) | PG_P | perm;
+    tlb_invalidate(pgdir, va);
+    return ERROR_SUCCESS;
+}
+
+void pmm::tlb_invalidate(pde_ptr_t pgdir, uintptr_t va)
+{
+    if (rcr3() == V2P((uintptr_t)pgdir))
+    {
+        invlpg((void *)va);
+    }
+}
+
 page_info *pmm::pgdir_alloc_page(pde_ptr_t pgdir, uintptr_t va, size_t perm)
 {
+    page_info *page = alloc_page();
+    if (page != nullptr)
+    {
+        if (page_insert(pgdir, page, va, perm) != 0)
+        {
+            free_page(page);
+            return nullptr;
+        }
+    }
+    return page;
 }

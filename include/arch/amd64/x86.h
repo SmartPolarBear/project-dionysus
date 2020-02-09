@@ -41,8 +41,7 @@ static inline void outb(uint16_t port, uint8_t data)
                  : "a"(data), "d"(port));
 }
 
-static inline void
-outsl(int port, const void *addr, int cnt)
+static inline void outsl(int port, const void *addr, int cnt)
 {
     asm volatile("cld; rep outsl"
                  : "=S"(addr), "=c"(cnt)
@@ -50,8 +49,7 @@ outsl(int port, const void *addr, int cnt)
                  : "cc");
 }
 
-static inline void
-stosb(void *addr, int data, int cnt)
+static inline void stosb(void *addr, int data, int cnt)
 {
     asm volatile("cld; rep stosb"
                  : "=D"(addr), "=c"(cnt)
@@ -59,8 +57,7 @@ stosb(void *addr, int data, int cnt)
                  : "memory", "cc");
 }
 
-static inline void
-stosl(void *addr, int data, int cnt)
+static inline void stosl(void *addr, int data, int cnt)
 {
     asm volatile("cld; rep stosl"
                  : "=D"(addr), "=c"(cnt)
@@ -68,5 +65,10 @@ stosl(void *addr, int data, int cnt)
                  : "memory", "cc");
 }
 
+static inline void invlpg(void *addr)
+{
+    asm volatile("invlpg (%0)" ::"r"(addr)
+                 : "memory");
+}
 
 #endif // __INCLUDE_ARCH_X86_H

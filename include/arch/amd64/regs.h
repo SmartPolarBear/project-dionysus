@@ -11,6 +11,12 @@ static inline uintptr_t rcr2(void)
     return val;
 }
 
+static inline uintptr_t rcr3(void) {
+    uintptr_t cr3;
+    asm volatile ("mov %%cr3, %0" : "=r" (cr3) :: "memory");
+    return cr3;
+}
+
 static inline void lcr3(uintptr_t val)
 {
     asm volatile("mov %0,%%cr3"
