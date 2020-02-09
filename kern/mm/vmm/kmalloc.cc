@@ -1,5 +1,5 @@
 /*
- * Last Modified: Wed Feb 05 2020
+ * Last Modified: Sun Feb 09 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -102,7 +102,7 @@ void *memory::kmalloc(size_t sz, [[maybe_unused]] size_t flags)
     {
         // use buddy
 
-        size_t npages = roundup(actual_size, PHYSICAL_PAGE_SIZE) / PHYSICAL_PAGE_SIZE;
+        size_t npages = roundup(actual_size, PMM_PAGE_SIZE) / PMM_PAGE_SIZE;
 
         ret = reinterpret_cast<decltype(ret)>(pmm::page_to_va(pmm::alloc_pages(npages)));
 

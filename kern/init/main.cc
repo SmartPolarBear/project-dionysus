@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sat Feb 08 2020
+ * Last Modified: Sun Feb 09 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -42,15 +42,14 @@
 #include "sys/pmm.h"
 #include "sys/vmm.h"
 
-
 // global entry of the kernel
 extern "C" [[noreturn]] void kmain()
 {
-    // initialize physical memory
-    pmm::init_pmm();
-
     // process the multiboot information
     multiboot::init_mbi();
+
+    // initialize physical memory
+    pmm::init_pmm();
 
     // initialize the console
     console::console_init();

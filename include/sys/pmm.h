@@ -84,17 +84,17 @@ static inline size_t page_to_index(page_info *pg)
 
 static inline uintptr_t page_to_pa(page_info *pg)
 {
-    return page_to_index(pg) * PHYSICAL_PAGE_SIZE;
+    return page_to_index(pg) * PMM_PAGE_SIZE;
 }
 
 static inline uintptr_t page_to_va(page_info *pg)
 {
-    return P2V_KERNEL(page_to_pa(pg));
+    return P2V(page_to_pa(pg));
 }
 
 static inline page_info *pa_to_page(uintptr_t pa)
 {
-    size_t index = rounddown(pa, PHYSICAL_PAGE_SIZE) / PHYSICAL_PAGE_SIZE;
+    size_t index = rounddown((pa - (V2P((uintptr_t)&pages[page_count]))), PMM_PAGE_SIZE) / PMM_PAGE_SIZE;
     KDEBUG_ASSERT(index < page_count);
     return &pages[index];
 }

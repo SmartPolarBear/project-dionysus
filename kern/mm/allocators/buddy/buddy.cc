@@ -8,6 +8,7 @@
 #include "lib/libkern/data/list.h"
 
 using libk::list_add;
+using libk::list_add_tail;
 using libk::list_empty;
 using libk::list_for_each;
 using libk::list_init;
@@ -20,6 +21,8 @@ using allocators::buddy_allocator::buddy_init_memmap;
 using allocators::buddy_allocator::init_buddy;
 
 pmm::pmm_manager_info allocators::buddy_allocator::buddy_pmm_manager = {
+    .name = "BUDDY",
+
     .init = init_buddy,
     .init_memmap = buddy_init_memmap,
     .alloc_pages = buddy_alloc_pages,
@@ -138,6 +141,7 @@ static inline page_info *buddy_alloc_pages_impl(size_t order)
                 page_set_flag(buddy, PHYSICAL_PAGE_FLAG_PROPERTY);
 
                 free_areas[cur_order].free_count++;
+
                 list_add(&buddy->page_link, &free_areas[cur_order].freelist);
             }
 
@@ -165,7 +169,13 @@ void allocators::buddy_allocator::buddy_init_memmap(page_info *base, size_t n)
 
     for (page_info *p = base; p != base + n; p++)
     {
-        KDEBUG_ASSERT(page_has_flag(p, PHYSICAL_PAGE_FLAG_RESERVED));
+        // KDEBUG_ASSERT(page_has_flag(p, PHYSICAL_PAGE_FLAG_RESERVED));
+        if (!page_has_flag(p, PHYSICAL_PAGE_FLAG_RESERVED))
+        {
+            KDEBUG_RICHPANIC("page_has_flag(p, PHYSICAL_PAGE_FLAG_RESERVED) should be 1\n",
+                             "ASSERTION", true,
+                             "Page index=%d\n", pmm::page_to_index(p));
+        }
         p->flags = 0;
         p->property = 0;
         p->ref = 0;
@@ -173,9 +183,11 @@ void allocators::buddy_allocator::buddy_init_memmap(page_info *base, size_t n)
     }
 
     zones[zone_count].base = base;
+    zone_count++;
+
     size_t order = MAX_ORDER, order_size = (1 << order);
 
-    for (page_info *p = base; n != 0;)
+    for (page_info *p = base + (n - 1); n != 0;)
     {
         while (n >= order_size)
         {
@@ -185,7 +197,7 @@ void allocators::buddy_allocator::buddy_init_memmap(page_info *base, size_t n)
             list_add(&p->page_link, &free_areas[order].freelist);
 
             n -= order_size;
-            p += order_size;
+            p -= order_size;
 
             free_areas[order].free_count++;
         }
@@ -193,7 +205,6 @@ void allocators::buddy_allocator::buddy_init_memmap(page_info *base, size_t n)
         order--;
         order_size >>= 1;
     }
-    zone_count++;
 }
 
 page_info *allocators::buddy_allocator::buddy_alloc_pages(size_t n)

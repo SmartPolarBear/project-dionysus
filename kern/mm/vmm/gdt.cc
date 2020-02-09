@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sat Feb 08 2020
+ * Last Modified: Sun Feb 09 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -62,14 +62,14 @@ void vmm::install_gdt(void)
     uint64_t *gdt = nullptr;
     uint8_t *local_storage = reinterpret_cast<decltype(local_storage)>(boot_alloc_page());
 
-    memset(local_storage, 0, PHYSICAL_PAGE_SIZE);
+    memset(local_storage, 0, PMM_PAGE_SIZE);
 
     gdt = reinterpret_cast<decltype(gdt)>(local_storage);
 
     tss = reinterpret_cast<decltype(tss)>(local_storage + 1024);
     tss[16] = 0x00680000;
 
-    wrmsr(0xC0000100, ((uintptr_t)local_storage) + ((PHYSICAL_PAGE_SIZE) / 2));
+    wrmsr(0xC0000100, ((uintptr_t)local_storage) + ((PMM_PAGE_SIZE) / 2));
 
     auto c = &cpus[local_apic::get_cpunum()];
     c->local = local_storage;

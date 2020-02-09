@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sat Feb 08 2020
+ * Last Modified: Sun Feb 09 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -70,7 +70,8 @@ void vmm::init_vmm(void)
 {
     // create the global pml4t
     g_kpml4t = reinterpret_cast<pde_ptr_t>(boot_alloc_page());
-    memset(g_kpml4t, 0, PHYSICAL_PAGE_SIZE);
+
+    memset(g_kpml4t, 0, PMM_PAGE_SIZE);
 
     // register the page fault handle
     trap::trap_handle_regsiter(trap::TRAP_PGFLT, trap::trap_handle{

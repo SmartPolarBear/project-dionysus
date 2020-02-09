@@ -1,10 +1,8 @@
 #include "arch/amd64/x86.h"
 
-#include "sys/allocators/boot_alloc.h"
 #include "sys/memlayout.h"
 #include "sys/mmu.h"
 #include "sys/multiboot.h"
-
 
 #include "lib/libc/string.h"
 #include "lib/libkern/data/list.h"
@@ -30,6 +28,8 @@ struct alignas(8) multiboot2_boot_info
 // the *PHYSICAL* address for multiboot2_boot_info and the magic number
 extern "C" void *mbi_structptr = nullptr;
 extern "C" uint32_t mbi_magicnum = 0;
+
+extern uint8_t end[]; // kernel.ld
 
 // the pointer storing the *VIRTUAL* address for multiboot2_boot_info and the magic number
 multiboot2_boot_info *mboot_info = nullptr;
@@ -65,10 +65,10 @@ void multiboot::init_mbi(void)
     }
 
     auto primitive = P2V<decltype(mboot_info)>(mbi_structptr);
-    KDEBUG_ASSERT(primitive->total_size < allocators::boot_allocator::BOOTMM_BLOCKSIZE);
+    KDEBUG_ASSERT(primitive->total_size < PHYSICAL_PAGE_SIZE);
 
-    mboot_info = reinterpret_cast<decltype(mboot_info)>(allocators::boot_allocator::bootmm_alloc());
-    memset(mboot_info, 0, allocators::boot_allocator::BOOTMM_BLOCKSIZE);
+    mboot_info = reinterpret_cast<decltype(mboot_info)>(end + PHYSICAL_PAGE_SIZE);
+    memset(mboot_info, 0, PHYSICAL_PAGE_SIZE);
     memmove(mboot_info, mbi_structptr, primitive->total_size);
 
     for (size_t i = 0; i < TAGS_COUNT_MAX; i++)

@@ -90,7 +90,7 @@ static inline pde_ptr_t walk_pgdir(const pde_ptr_t pml4t,
             return nullptr;
         }
 
-        memset(pdpt, 0, PHYSICAL_PAGE_SIZE);
+        memset(pdpt, 0, PMM_PAGE_SIZE);
         *pml4e = ((V2P((uintptr_t)pdpt)) | PG_P | perm);
     }
     else
@@ -114,7 +114,7 @@ static inline pde_ptr_t walk_pgdir(const pde_ptr_t pml4t,
             return nullptr;
         }
 
-        memset(pgdir, 0, PHYSICAL_PAGE_SIZE);
+        memset(pgdir, 0, PMM_PAGE_SIZE);
         *pdpte = ((V2P((uintptr_t)pgdir)) | PG_P | perm);
     }
     else
@@ -152,12 +152,12 @@ static inline RESULT map_page(pde_ptr_t pml4, uintptr_t va, uintptr_t pa, size_t
     return ERROR_SUCCESS;
 }
 
-static inline hresult map_pages(pde_ptr_t pml4, uintptr_t va_start, uintptr_t va_end, uintptr_t pa_start)
+static inline hresult map_pages(pde_ptr_t pml4, uintptr_t va_start, uintptr_t pa_start, uintptr_t pa_end)
 {
     hresult ret;
     // map the kernel memory
     for (uintptr_t pa = pa_start, va = va_start;
-         va <= va_end;
+         pa < pa_end && pa + PHYSICAL_PAGE_SIZE <= pa_end;
          pa += PHYSICAL_PAGE_SIZE, va += PHYSICAL_PAGE_SIZE)
     {
         ret = map_page(pml4, va, pa, PG_W);
@@ -181,7 +181,7 @@ void vmm::install_kpml4()
 void vmm::boot_map_kernel_mem(uintptr_t max_pa_addr)
 {
     // map the kernel memory
-    auto ret = map_pages(g_kpml4t, KERNEL_VIRTUALBASE, KERNEL_VIRTUALEND, 0);
+    auto ret = map_pages(g_kpml4t, KERNEL_VIRTUALBASE, 0, KERNEL_SIZE);
 
     if (ret == ERROR_MEMORY_ALLOC)
     {
@@ -194,7 +194,7 @@ void vmm::boot_map_kernel_mem(uintptr_t max_pa_addr)
     }
 
     // remap all the physical memory
-    ret = map_pages(g_kpml4t, PHYREMAP_VIRTUALBASE, max_pa_addr, 0);
+    ret = map_pages(g_kpml4t, PHYREMAP_VIRTUALBASE, 0,max_pa_addr);
 
     if (ret == ERROR_MEMORY_ALLOC)
     {

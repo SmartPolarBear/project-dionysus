@@ -48,6 +48,7 @@ constexpr size_t PG_SIZE = 4_KB;
 constexpr size_t PG_PS_SIZE = 2_MB;
 
 constexpr size_t PHYSICAL_PAGE_SIZE = PG_PS_ENABLE ? PG_PS_SIZE : PG_SIZE;
+constexpr size_t PMM_PAGE_SIZE = 4_KB;
 
 constexpr size_t P4_SHIFT = 39;
 constexpr size_t P3_SHIFT = 30;
