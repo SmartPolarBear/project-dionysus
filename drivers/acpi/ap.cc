@@ -32,9 +32,9 @@
 
 #include "sys/memlayout.h"
 #include "sys/multiboot.h"
+#include "sys/pmm.h"
 #include "sys/types.h"
 #include "sys/vmm.h"
-#include "sys/pmm.h"
 
 #include "lib/libc/string.h"
 
@@ -47,19 +47,19 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
 {
 
     auto tag = multiboot::acquire_tag_ptr<multiboot_tag_module>(MULTIBOOT_TAG_TYPE_MODULE,
-                                                               [](auto ptr) -> bool {
-                                                                   multiboot_tag_module *mdl_tag = reinterpret_cast<decltype(mdl_tag)>(ptr);
-                                                                   const char *ap_boot_commandline = "/ap_boot";
-                                                                   auto cmp = strncmp(mdl_tag->cmdline, ap_boot_commandline, strlen(ap_boot_commandline));
-                                                                   return cmp == 0;
-                                                               });
+                                                                [](auto ptr) -> bool {
+                                                                    multiboot_tag_module *mdl_tag = reinterpret_cast<decltype(mdl_tag)>(ptr);
+                                                                    const char *ap_boot_commandline = "/ap_boot";
+                                                                    auto cmp = strncmp(mdl_tag->cmdline, ap_boot_commandline, strlen(ap_boot_commandline));
+                                                                    return cmp == 0;
+                                                                });
     KDEBUG_ASSERT(tag != nullptr);
 
     uint8_t *code = reinterpret_cast<decltype(code)>(P2V(AP_CODE_LOAD_ADDR));
 
     // Attention: not knowing tag->mod_end is the address of the last byte or next to it. May need +1 for code size
     //    Although with or without +1 it runs fine, bugs may occurs if the code changes.
-    
+
     size_t code_size = tag->mod_end - tag->mod_start;
     memmove(code,
             reinterpret_cast<decltype(code)>(P2V_KERNEL(tag->mod_start)),
@@ -69,7 +69,7 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
     {
         if (core.present && core.id != local_apic::get_cpunum())
         {
-            char *stack =(char*) pmm::boot_mem::boot_alloc_page();
+            char *stack = (char *)pmm::boot_mem::boot_alloc_page();
             if (stack == nullptr)
             {
                 KDEBUG_RICHPANIC("Can't allocate enough memory for AP boot.\n",
@@ -88,7 +88,6 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
         }
     }
 }
-
 
 void ap::all_processor_main()
 {
@@ -117,11 +116,11 @@ extern "C" [[clang::optnone]] void ap_enter(void)
     // install the kernel vm
     vmm::install_kpml4();
 
-    // install trap vectors
-    trap::initialize_trap_vectors();
-
     // initialize segmentation
     vmm::install_gdt();
+
+    // install trap vectors
+    trap::initialize_trap_vectors();
 
     // initialize local APIC
     local_apic::init_lapic();
