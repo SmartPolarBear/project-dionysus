@@ -89,7 +89,8 @@ static inline size_t page_to_index(page_info *pg)
 
 static inline uintptr_t page_to_pa(page_info *pg)
 {
-    return page_to_index(pg) * PMM_PAGE_SIZE;
+    auto ret = pavailable_start() + page_to_index(pg) * PMM_PAGE_SIZE;
+    return ret;
 }
 
 static inline uintptr_t page_to_va(page_info *pg)
