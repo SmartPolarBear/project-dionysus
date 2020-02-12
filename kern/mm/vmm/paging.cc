@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sun Feb 09 2020
+ * Last Modified: Wed Feb 12 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -178,8 +178,19 @@ void vmm::install_kpml4()
 
 // When called by pmm, first map [0,2GiB] to [KERNEL_VIRTUALBASE,KERNEL_VIRTUALEND]
 // and then map all the memories to PHYREMAP_VIRTUALBASE
-void vmm::boot_map_kernel_mem(uintptr_t max_pa_addr)
+void vmm::boot_map_kernel_mem()
 {
+    auto memtag = multiboot::acquire_tag_ptr<multiboot_tag_mmap>(MULTIBOOT_TAG_TYPE_MMAP);
+    size_t entry_count = (memtag->size - sizeof(multiboot_uint32_t) * 4ul - sizeof(memtag->entry_size)) / memtag->entry_size;
+
+    auto max_pa = 0ull;
+
+    for (size_t i = 0; i < entry_count; i++)
+    {
+        const auto entry = memtag->entries + i;
+        max_pa = sysstd::max(max_pa, sysstd::min(entry->addr + entry->len, (unsigned long long)PHYMEMORY_SIZE));
+    }
+
     // map the kernel memory
     auto ret = map_pages(g_kpml4t, KERNEL_VIRTUALBASE, 0, KERNEL_SIZE);
 
@@ -194,7 +205,7 @@ void vmm::boot_map_kernel_mem(uintptr_t max_pa_addr)
     }
 
     // remap all the physical memory
-    ret = map_pages(g_kpml4t, PHYREMAP_VIRTUALBASE, 0,max_pa_addr);
+    ret = map_pages(g_kpml4t, PHYREMAP_VIRTUALBASE, 0, max_pa);
 
     if (ret == ERROR_MEMORY_ALLOC)
     {

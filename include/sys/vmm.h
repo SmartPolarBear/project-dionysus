@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sun Feb 09 2020
+ * Last Modified: Wed Feb 12 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -72,7 +72,7 @@ void init_vmm(void);
 
 // When called by pmm, first map [0,2GiB] to [KERNEL_VIRTUALBASE,KERNEL_VIRTUALEND]
 // and then map all the memories to PHYREMAP_VIRTUALBASE
-void boot_map_kernel_mem(uintptr_t max_pa_addr);
+void boot_map_kernel_mem(void);
 
 // install GDT
 void install_gdt(void);

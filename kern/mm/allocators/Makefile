@@ -1,6 +1,6 @@
 TOP_SRC = ../../..
 
-SUBDIRS = boot buddy slab
+SUBDIRS = buddy slab
 
 all: $(SUBDIRS)
 

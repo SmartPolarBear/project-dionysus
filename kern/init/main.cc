@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sun Feb 09 2020
+ * Last Modified: Wed Feb 12 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -65,9 +65,6 @@ extern "C" [[noreturn]] void kmain()
 
     // install trap vectors
     trap::initialize_trap_vectors();
-
-    // install gdt
-    vmm::install_gdt();
 
     // initialize I/O APIC
     io_apic::init_ioapic();

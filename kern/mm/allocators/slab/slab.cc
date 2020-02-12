@@ -1,5 +1,5 @@
 /*
- * Last Modified: Wed Feb 05 2020
+ * Last Modified: Wed Feb 12 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -90,6 +90,7 @@ static inline void *slab_cache_grow(slab_cache *cache)
 
     list_add(&slb->slab_link, &cache->free);
 
+    slb->freelist = reinterpret_cast<decltype(slb->freelist)>(((char *)block) + sizeof(slab));
     slb->obj_ptr = reinterpret_cast<decltype(slb->obj_ptr)>(((char *)block) + sizeof(slab) + sizeof(slab_bufctl) * cache->obj_count);
 
     void *obj = slb->obj_ptr;

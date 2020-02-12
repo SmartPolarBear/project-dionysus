@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sat Feb 08 2020
+ * Last Modified: Wed Feb 12 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -107,6 +107,7 @@ uintptr_t P2V_PHYREMAP(uintptr_t x)
 
 uintptr_t IO2V(uintptr_t x)
 {
-    KDEBUG_ASSERT(x <= PHYMEMORY_SIZE);
-    return (x - 0xFE000000) + DEVICE_VIRTUALBASE;
+    return P2V(x);
+    // KDEBUG_ASSERT(x <= PHYMEMORY_SIZE);
+    // return (x - 0xFE000000) + DEVICE_VIRTUALBASE;
 }

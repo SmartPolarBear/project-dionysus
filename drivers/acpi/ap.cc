@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sat Feb 08 2020
+ * Last Modified: Wed Feb 12 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -30,11 +30,11 @@
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 
-#include "sys/allocators/boot_alloc.h"
 #include "sys/memlayout.h"
 #include "sys/multiboot.h"
 #include "sys/types.h"
 #include "sys/vmm.h"
+#include "sys/pmm.h"
 
 #include "lib/libc/string.h"
 
@@ -69,7 +69,7 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
     {
         if (core.present && core.id != local_apic::get_cpunum())
         {
-            char *stack = allocators::boot_allocator::bootmm_alloc();
+            char *stack =(char*) pmm::boot_mem::boot_alloc_page();
             if (stack == nullptr)
             {
                 KDEBUG_RICHPANIC("Can't allocate enough memory for AP boot.\n",

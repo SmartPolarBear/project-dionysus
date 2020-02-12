@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sun Feb 09 2020
+ * Last Modified: Wed Feb 12 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -57,7 +57,6 @@ pmm::pmm_manager_info *pmm::pmm_manager = &allocators::buddy_allocator::buddy_pm
 
 page_info *pmm::pages = nullptr;
 size_t pmm::page_count = 0;
-size_t max_pa_addr = 0;
 
 constexpr size_t RESERVED_SPACES_MAX_COUNT = 32;
 size_t reserved_spaces_count = 0;
@@ -108,7 +107,7 @@ static inline void init_physical_mem()
             max_pa = sysstd::max(max_pa, sysstd::min(entry->addr + entry->len, (unsigned long long)PHYMEMORY_SIZE));
         }
     }
-    max_pa_addr = max_pa;
+
     page_count = max_pa / PMM_PAGE_SIZE;
     // The page management structure is placed a page after kernel
     // So as to protect the multiboot info
@@ -193,10 +192,10 @@ void pmm::init_pmm(void)
 
     vmm::init_vmm();
 
-    vmm::boot_map_kernel_mem(max_pa_addr);
+    vmm::boot_map_kernel_mem();
 
     create_kernel_vma();
-    
+
     allocators::slab_allocator::slab_init();
 }
 

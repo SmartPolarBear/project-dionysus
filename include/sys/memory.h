@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sat Feb 08 2020
+ * Last Modified: Wed Feb 12 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -25,7 +25,7 @@
 
 #include "sys/types.h"
 
-#include "sys/allocators/boot_alloc.h"
+
 #include "sys/allocators/buddy_alloc.h"
 #include "sys/allocators/slab_alloc.h"
 
@@ -35,42 +35,6 @@
 #include "sys/vmm.h"
 
 #include "lib/libcxx/algorithm"
-
-// extern uint8_t end[]; // kernel.ld
-
-// namespace vm
-// {
-
-// static inline void *kernel_boot_mem_begin(void)
-// {
-//     return end + multiboot::BOOT_INFO_MAX_EXPECTED_SIZE;
-// }
-
-// static inline void *kernel_boot_mem_end(void)
-// {
-//     return (void *)P2V(allocators::boot_allocator::BOOT_MEM_LIMIT);
-// }
-
-// static inline void *kernel_mem_begin(void)
-// {
-//     // with a guard hole sized BOOTMM_BLOCKSIZE
-//     return reinterpret_cast<uint8_t *>(kernel_boot_mem_end()) + allocators::boot_allocator::BOOTMM_BLOCKSIZE;
-// }
-
-// static inline void *kernel_mem_end(void)
-// {
-//     size_t phymem_size = get_physical_mem_size();
-//     if (phymem_size < KERNEL_SIZE)
-//     {
-//         return (void *)P2V(phymem_size);
-//     }
-//     else
-//     {
-//         return (void *)(VIRTUALADDR_LIMIT);
-//     }
-// }
-
-// } // namespace vm
 
 namespace memory
 {
