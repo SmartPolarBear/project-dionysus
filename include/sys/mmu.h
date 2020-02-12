@@ -50,6 +50,9 @@ constexpr size_t PG_PS_SIZE = 2_MB;
 constexpr size_t PHYSICAL_PAGE_SIZE = PG_PS_ENABLE ? PG_PS_SIZE : PG_SIZE;
 constexpr size_t PMM_PAGE_SIZE = 4_KB;
 
+template <size_t size_in_byte>
+using BLOCK = uint8_t[size_in_byte];
+
 constexpr size_t P4_SHIFT = 39;
 constexpr size_t P3_SHIFT = 30;
 constexpr size_t P2_SHIFT = 21;   // for 2mb paging, this is the lowest level.

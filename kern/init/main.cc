@@ -35,8 +35,8 @@
 #include "lib/libcxx/new"
 #include "lib/libkern/data/list.h"
 
-#include "sys/memlayout.h"
 #include "sys/kmalloc.h"
+#include "sys/memlayout.h"
 #include "sys/multiboot.h"
 #include "sys/param.h"
 #include "sys/pmm.h"
@@ -50,6 +50,9 @@ extern "C" [[noreturn]] void kmain()
 
     // initialize physical memory
     pmm::init_pmm();
+    
+    // install trap vectors
+    trap::initialize_trap_vectors();
 
     // initialize the console
     console::console_init();
@@ -62,9 +65,6 @@ extern "C" [[noreturn]] void kmain()
 
     // initialize apic timer
     timer::init_apic_timer();
-
-    // install trap vectors
-    trap::initialize_trap_vectors();
 
     // initialize I/O APIC
     io_apic::init_ioapic();

@@ -30,6 +30,7 @@
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 
+#include "sys/kmalloc.h"
 #include "sys/memlayout.h"
 #include "sys/multiboot.h"
 #include "sys/pmm.h"
@@ -69,7 +70,8 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
     {
         if (core.present && core.id != local_apic::get_cpunum())
         {
-            char *stack = (char *)pmm::boot_mem::boot_alloc_page();
+            uint8_t *stack = new BLOCK<PMM_PAGE_SIZE>;
+
             if (stack == nullptr)
             {
                 KDEBUG_RICHPANIC("Can't allocate enough memory for AP boot.\n",
@@ -118,6 +120,9 @@ extern "C" [[clang::optnone]] void ap_enter(void)
 
     // initialize segmentation
     vmm::install_gdt();
+
+    // the calling sequence of the two functions above is not the same as the boot CPU
+    // because we need paging enabled first.
 
     // install trap vectors
     trap::initialize_trap_vectors();

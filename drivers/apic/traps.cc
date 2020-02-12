@@ -60,7 +60,7 @@ static inline void make_gate(uint32_t *idt_head, uint32_t head_offset, void *kva
 
 void trap::initialize_trap_vectors(void)
 {
-    uint32_t *idt = reinterpret_cast<decltype(idt)>(pmm::boot_mem::boot_alloc_page());
+    uint32_t *idt = reinterpret_cast<uint32_t*>(new BLOCK<PMM_PAGE_SIZE>);
     memset(idt, 0, PMM_PAGE_SIZE);
 
     for (size_t i = 0; i < 256; i++)
