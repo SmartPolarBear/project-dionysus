@@ -50,9 +50,9 @@ extern "C" [[noreturn]] void kmain()
 
     // initialize physical memory
     pmm::init_pmm();
-    
-    // install trap vectors
-    trap::initialize_trap_vectors();
+
+    // install trap vectors nad handle structures
+    trap::init_trap();
 
     // initialize the console
     console::console_init();
@@ -63,11 +63,11 @@ extern "C" [[noreturn]] void kmain()
     // initialize local APIC
     local_apic::init_lapic();
 
-    // initialize apic timer
-    timer::init_apic_timer();
-
     // initialize I/O APIC
     io_apic::init_ioapic();
+
+    // initialize apic timer
+    timer::init_apic_timer();
 
     console::printf("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
 

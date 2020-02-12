@@ -57,7 +57,7 @@ struct trap_handle
     trap_handle_func handle;
 };
 
-void initialize_trap_vectors(void);
+void init_trap(void);
 
 // returns the old handle
 trap_handle trap_handle_regsiter(size_t trapnumber, trap_handle handle);

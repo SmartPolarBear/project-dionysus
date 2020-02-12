@@ -61,8 +61,8 @@ mboot_header_end:
 
 mboot_entry:
 
-// temporary stack for mbi
-    movl $0x10000,%esp
+// stack for mbi
+    movl $0x7000,%esp
 
 // push mbi address
     pushl %ebx
@@ -235,4 +235,3 @@ wrmsr:
     mov %rsi, %rdx     // val.high -> edx
     wrmsr
     retq
-

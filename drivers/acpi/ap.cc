@@ -115,17 +115,17 @@ void ap::all_processor_main()
 
 extern "C" [[clang::optnone]] void ap_enter(void)
 {
+    // the calling sequence of install_kpml4 and install_gdt is not the same as the boot CPU
+    // because we need paging enabled first.
+
     // install the kernel vm
     vmm::install_kpml4();
 
     // initialize segmentation
     vmm::install_gdt();
 
-    // the calling sequence of the two functions above is not the same as the boot CPU
-    // because we need paging enabled first.
-
     // install trap vectors
-    trap::initialize_trap_vectors();
+    trap::init_trap();
 
     // initialize local APIC
     local_apic::init_lapic();
