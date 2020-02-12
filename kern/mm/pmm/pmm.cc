@@ -118,10 +118,9 @@ static inline void init_physical_mem()
         pages[i].flags |= PHYSICAL_PAGE_FLAG_RESERVED; // set all pages as reserved
     }
 
-    uintptr_t physical_available_begin = V2P((uintptr_t)(&pages[page_count]));
 
     // reserve the multiboot info
-    if ((uintptr_t)mbi_structptr >= physical_available_begin)
+    if ((uintptr_t)mbi_structptr >= pmm::pavailable_start())
     {
         reserved_spaces[reserved_spaces_count++] =
             reserved_space{.first = (uintptr_t)mbi_structptr,
@@ -133,7 +132,7 @@ static inline void init_physical_mem()
     for (size_t i = 0; i < module_count; i++)
     {
         multiboot_tag_module *tag = reinterpret_cast<decltype(tag)>(module_tags[i]);
-        if (tag->mod_end >= physical_available_begin)
+        if (tag->mod_end >= pmm::pavailable_start())
         {
             reserved_spaces[reserved_spaces_count++] =
                 reserved_space{.first = (uintptr_t)tag->mod_start,
@@ -151,7 +150,7 @@ static inline void init_physical_mem()
 
     if (reserved_spaces_count == 0)
     {
-        init_memmap(pmm::pa_to_page(physical_available_begin), page_count);
+        init_memmap(pmm::pa_to_page(pmm::pavailable_start()), page_count);
     }
     else
     {
@@ -164,8 +163,8 @@ static inline void init_physical_mem()
             }
             else if (i == 0)
             {
-                init_memmap(pmm::pa_to_page(physical_available_begin),
-                            count_of_pages(physical_available_begin, reserved_spaces[i].first));
+                init_memmap(pmm::pa_to_page(pmm::pavailable_start()),
+                            count_of_pages(pmm::pavailable_start(), reserved_spaces[i].first));
             }
             else
             {

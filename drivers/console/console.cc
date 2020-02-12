@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sat Jan 25 2020
+ * Last Modified: Wed Feb 12 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -325,7 +325,6 @@ void console::printf(const char *fmt, ...)
 void console::console_init(void)
 {
     spinlock_initlock(&conslock.lock, "console");
-    console_setpos(0);
     conslock.lock_enable = true;
 }
 

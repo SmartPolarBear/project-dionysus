@@ -67,7 +67,10 @@ void tlb_invalidate(pde_ptr_t pgdir, uintptr_t va);
 // insert a free page to pgdir
 page_info *pgdir_alloc_page(pde_ptr_t pgdir, uintptr_t va, size_t perm);
 
-
+static inline uintptr_t pavailable_start(void)
+{
+    return V2P(roundup((uintptr_t)(&pages[page_count]), PMM_PAGE_SIZE));
+}
 
 static inline page_info *alloc_page(void)
 {
