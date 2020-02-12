@@ -1,4 +1,4 @@
-#include "sys/memory.h"
+#include "sys/kmalloc.h"
 #include "sys/types.h"
 
 #include "lib/libcxx/new"

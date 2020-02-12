@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sun Feb 09 2020
+ * Last Modified: Wed Feb 12 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -22,7 +22,7 @@
 
 #include "sys/error.h"
 #include "sys/memlayout.h"
-#include "sys/memory.h"
+#include "sys/kmalloc.h"
 #include "sys/mmu.h"
 #include "sys/pmm.h"
 #include "sys/vmm.h"

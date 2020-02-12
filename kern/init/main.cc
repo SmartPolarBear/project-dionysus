@@ -36,7 +36,7 @@
 #include "lib/libkern/data/list.h"
 
 #include "sys/memlayout.h"
-#include "sys/memory.h"
+#include "sys/kmalloc.h"
 #include "sys/multiboot.h"
 #include "sys/param.h"
 #include "sys/pmm.h"

@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sun Feb 09 2020
+ * Last Modified: Wed Feb 12 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -21,7 +21,7 @@
  */
 
 #include "sys/allocators/slab_alloc.h"
-#include "sys/memory.h"
+#include "sys/kmalloc.h"
 
 // slab
 using allocators::slab_allocator::CACHE_NAME_MAXLEN;
