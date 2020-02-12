@@ -49,11 +49,8 @@ using sysstd::simple_pair;
 
 using reserved_space = simple_pair<uintptr_t, uintptr_t>;
 
-extern uint8_t end[];           // kernel.ld
-extern "C" void *mbi_structptr; // multiboot.cc
-
 // use buddy allocator to allocate physical pages
-pmm::pmm_manager_info *pmm::pmm_manager = &allocators::buddy_allocator::buddy_pmm_manager;
+pmm::pmm_manager_info *pmm::pmm_manager = nullptr;
 
 page_info *pmm::pages = nullptr;
 size_t pmm::page_count = 0;
@@ -68,8 +65,7 @@ multiboot::multiboot_tag_ptr module_tags[RESERVED_SPACES_MAX_COUNT];
 static inline void init_pmm_manager()
 {
     // set the physical memory manager
-    // pmm_manager_info=&
-    console::printf("Initialized PMM %s\n", pmm_manager->name);
+    pmm_manager = &allocators::buddy_allocator::buddy_pmm_manager;
     pmm_manager->init();
 }
 
@@ -91,6 +87,35 @@ static inline void page_remove_pde(pde_ptr_t pgdir, uintptr_t va, pde_ptr_t pde)
         pmm::tlb_invalidate(pgdir, va);
     }
 }
+
+/*
+The memory layout for kernel:
+......
+| available     |
+| memory        |
+|               |
+-------------------------- pavailable_start()
+(align to 4K)
+--------------------------
+|               |
+| pages of pmm  |
+|               |
+|               |
+|               |
+|               |
+-------------------------- end+4MB
+| Two           |
+| physical      |
+| pages for     |
+| multiboot     |
+| information   |
+-------------------------- end
+|               |
+|  kernel       |
+|               |
+-------------------------- KERNEL_VIRTUALBASE
+......
+*/
 
 static inline void init_physical_mem()
 {

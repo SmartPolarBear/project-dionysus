@@ -16,6 +16,9 @@
 
 #include "lib/libkern/data/list.h"
 
+// the end of the kernel binary
+extern uint8_t end[]; // kernel.ld
+
 // user's address space limit
 constexpr size_t USER_ADDRESS_SPACE_LIMIT = 0x00007fffffffffff;
 

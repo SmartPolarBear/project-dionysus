@@ -17,24 +17,18 @@ using libk::list_for_each;
 using libk::list_init;
 using libk::list_remove;
 
+// define the multiboot parameters
+extern "C" void *mbi_structptr = nullptr;
+extern "C" uint32_t mbi_magicnum = 0;
+
 // the boot header defined by Multiboot2 , aligned 8 bytes
+// the pointer storing the *VIRTUAL* address for multiboot2_boot_info and the magic number
 struct alignas(8) multiboot2_boot_info
 {
     multiboot_uint32_t total_size;
     multiboot_uint32_t reserved;
     multiboot_tag tags[0];
-};
-
-// the *PHYSICAL* address for multiboot2_boot_info and the magic number
-extern "C" void *mbi_structptr = nullptr;
-extern "C" uint32_t mbi_magicnum = 0;
-
-extern uint8_t end[]; // kernel.ld
-
-// the pointer storing the *VIRTUAL* address for multiboot2_boot_info and the magic number
-multiboot2_boot_info *mboot_info = nullptr;
-
-// multiboot_tag_ptr multiboot_tags[TAGS_COUNT_MAX];
+} *mboot_info = nullptr;
 
 struct multiboot_tag_node
 {
@@ -64,9 +58,11 @@ void multiboot::init_mbi(void)
                          "The multiboot magic number given is %d\n", mbi_magicnum);
     }
 
+    // this is the original mboot info
     auto primitive = P2V<decltype(mboot_info)>(mbi_structptr);
     KDEBUG_ASSERT(primitive->total_size < PHYSICAL_PAGE_SIZE);
 
+    // move it away to avoid being cracked
     mboot_info = reinterpret_cast<decltype(mboot_info)>(end + PHYSICAL_PAGE_SIZE);
     memset(mboot_info, 0, PHYSICAL_PAGE_SIZE);
     memmove(mboot_info, mbi_structptr, primitive->total_size);
@@ -76,14 +72,7 @@ void multiboot::init_mbi(void)
         list_init(&multiboot_tag_heads[i]);
     }
 
-
-    // console::printf("mbootinfo=0x%p,p=0x%p\n", mboot_info, p);
-    parse_multiboot_tags();
-}
-
-//Map the tag type to the corresponding pointer
-void multiboot::parse_multiboot_tags(void)
-{
+    //Map the tag type to the corresponding pointer
     for (multiboot_tag *tag = mboot_info->tags;
          tag->type != MULTIBOOT_TAG_TYPE_END;
          tag = (multiboot_tag *)((multiboot_uint8_t *)tag + ((tag->size + 7) & ~7)))

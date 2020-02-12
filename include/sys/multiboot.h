@@ -4,6 +4,10 @@
 #include "boot/multiboot2.h"
 #include "sys/types.h"
 
+// the *PHYSICAL* address for multiboot2_boot_info and the magic number
+extern "C" void *mbi_structptr;
+extern "C" uint32_t mbi_magicnum;
+
 namespace multiboot
 {
 
@@ -27,7 +31,6 @@ constexpr size_t TAGS_COUNT_MAX = 24;
 constexpr size_t BOOT_INFO_MAX_EXPECTED_SIZE = PHYSICAL_PAGE_SIZE;
 
 void init_mbi(void);
-void parse_multiboot_tags(void);
 
 // if buf==nullptr, regardless of bufsz, this function will return the number of tags with given type
 // or it will copy specified amount of tags to the buf and return the count copied
