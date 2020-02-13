@@ -1,8 +1,14 @@
-TOP_SRC= ../..
-KERN_SRC = ..
+TOP_SRC=../..
+include $(TOP_SRC)/Makefile.mk
 
-OUTDIR = $(BUILD)/drivers/acpi
+SUBDIRS = common v1 v2
 
-OBJS = acpi.o ap.o
+all: $(SUBDIRS)
 
-include $(KERN_SRC)/Makefile.drivers.mk
+clean: 
+	for dir in $(SUBDIRS); do $(MAKE) -C $$dir clean; done
+
+$(SUBDIRS):
+	$(MAKE) -C $@ $(MFLAGS) all
+
+.PHONY: all clean prepare $(SUBDIRS)

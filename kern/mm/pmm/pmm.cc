@@ -200,11 +200,6 @@ static inline void init_physical_mem()
     }
 }
 
-static inline void create_kernel_vma(void)
-{
-    // TODO: load initial vma for kernel usage
-    // I guess I'd better allow kernel to access the whole memory
-}
 
 void pmm::init_pmm(void)
 {
@@ -217,8 +212,6 @@ void pmm::init_pmm(void)
     vmm::init_vmm();
 
     vmm::boot_map_kernel_mem();
-
-    create_kernel_vma();
 
     allocators::slab_allocator::slab_init();
 }

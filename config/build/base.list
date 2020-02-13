@@ -22,8 +22,14 @@ drivers/console/console.o
 drivers/console/uart.o
 drivers/debug/kdebug.o
 drivers/lock/spinlock.o
-drivers/acpi/ap.o
-drivers/acpi/acpi.o
+drivers/acpi/common/ap.o
+drivers/acpi/common/acpi.o
+drivers/acpi/common/madt.o
+drivers/acpi/common/sdt.o
+drivers/acpi/v1/acpi_v1.o
+drivers/acpi/v1/rsdt.o
+drivers/acpi/v2/acpi_v2.o
+drivers/acpi/v2/xsdt.o
 drivers/apic/lapic.o
 drivers/apic/ioapic.o
 drivers/apic/vectors.o
