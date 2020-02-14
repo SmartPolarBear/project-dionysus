@@ -50,7 +50,7 @@ void acpi_madt_init(const acpi_madt *madt)
     };
 
     for (auto entry = const_cast<madt_entry_header *>(begin);
-         entry < end;
+         entry != end;
          entry = next_entry(entry))
     {
         switch (entry->type)

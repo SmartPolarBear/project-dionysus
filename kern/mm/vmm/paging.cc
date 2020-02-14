@@ -1,5 +1,5 @@
 /*
- * Last Modified: Wed Feb 12 2020
+ * Last Modified: Thu Feb 13 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -131,7 +131,7 @@ static inline pde_ptr_t walk_pgdir(const pde_ptr_t pml4t,
 }
 
 // this method maps the specific va
-static inline RESULT map_page(pde_ptr_t pml4, uintptr_t va, uintptr_t pa, size_t perm)
+static inline hresult map_page(pde_ptr_t pml4, uintptr_t va, uintptr_t pa, size_t perm)
 {
     auto pde = walk_pgdir(pml4, va, true, perm);
 
@@ -146,7 +146,7 @@ static inline RESULT map_page(pde_ptr_t pml4, uintptr_t va, uintptr_t pa, size_t
     }
     else
     {
-        return ERROR_REMAP;
+        return ERROR_REWRITE;
     }
 
     return ERROR_SUCCESS;
@@ -198,7 +198,7 @@ void vmm::boot_map_kernel_mem()
     {
         KDEBUG_GENERALPANIC("Can't allocate enough space for paging.\n");
     }
-    else if (ret == ERROR_REMAP)
+    else if (ret == ERROR_REWRITE)
     {
         KDEBUG_RICHPANIC("Remap a mapped page.", "KERNEL PANIC:ERROR_REMAP",
                          true, "");
@@ -211,7 +211,7 @@ void vmm::boot_map_kernel_mem()
     {
         KDEBUG_GENERALPANIC("Can't allocate enough space for paging.\n");
     }
-    else if (ret == ERROR_REMAP)
+    else if (ret == ERROR_REWRITE)
     {
         KDEBUG_RICHPANIC("Remap a mapped page.", "KERNEL PANIC:ERROR_REMAP",
                          true, "");

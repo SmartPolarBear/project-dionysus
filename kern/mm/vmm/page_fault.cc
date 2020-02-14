@@ -1,5 +1,5 @@
 /*
- * Last Modified: Wed Feb 12 2020
+ * Last Modified: Thu Feb 13 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -59,7 +59,7 @@ static inline hresult page_fault_impl(mm_struct *mm, size_t err, uintptr_t addr)
     vma_struct *vma = vmm::find_vma(mm, addr);
     if (vma == nullptr || vma->vm_start > addr)
     {
-        return ERROR_VMA_NOT_FOUND_IN_MM;
+        return ERROR_VMA_NOT_FOUND;
     }
     else
     {
@@ -110,7 +110,7 @@ hresult handle_pgfault([[maybe_unused]] trap_info info)
 
     hresult ret = page_fault_impl(mm, info.err, addr);
 
-    if (ret == ERROR_VMA_NOT_FOUND_IN_MM)
+    if (ret == ERROR_VMA_NOT_FOUND)
     {
         KDEBUG_RICHPANIC("The addr isn't found in th MM structure.",
                          "KERNEL PANIC: PAGE FAULT",

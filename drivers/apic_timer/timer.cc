@@ -57,5 +57,5 @@ hresult handle_tick([[maybe_unused]] trap_info info)
         spinlock_release(&tickslock);
     }
 
-    return HRES_SUCCESS;
+    return ERROR_SUCCESS;
 }

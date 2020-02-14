@@ -2,18 +2,6 @@
 #define __INCLUDE_SYS_ERROR_H
 
 #include "sys/types.h"
-
-using RESULT = uint64_t;
-
-enum ErrorCode : RESULT
-{
-    ERROR_SUCCESS,
-    ERROR_UNKOWN,
-
-    ERROR_MEMORY_ALLOC,
-    ERROR_REMAP,
-    ERROR_VMA_NOT_FOUND_IN_MM,
-    ERROR_PAGE_NOT_PERSENT
-};
+#include "drivers/debug/kerror.h"
 
 #endif // __INCLUDE_SYS_ERROR_H

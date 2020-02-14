@@ -49,5 +49,5 @@ hresult init_xsdt(const acpi::acpi_rsdp *rsdp)
 
     acpi_madt_init(madt);
 
-    return HRES_SUCCESS;
+    return ERROR_SUCCESS;
 }
