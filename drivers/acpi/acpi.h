@@ -3,7 +3,6 @@
 
 #include "drivers/acpi/acpi.h"
 
-#include "drivers/debug/hresult.h"
 #include "sys/error.h"
 
 #include "boot/multiboot2.h"

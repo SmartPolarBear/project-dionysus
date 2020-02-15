@@ -1,5 +1,5 @@
 /*
- * Last Modified: Tue Feb 04 2020
+ * Last Modified: Sat Feb 15 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -35,6 +35,8 @@ using std::log2p1;
 
 using ldbl = long double;
 using ull = unsigned long long;
+
+using hresult = int64_t;
 
 constexpr auto STORAGE_UNIT = 1024ULL;
 

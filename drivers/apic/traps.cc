@@ -9,6 +9,7 @@
 #include "sys/mmu.h"
 #include "sys/vmm.h"
 #include "sys/pmm.h"
+#include "sys/error.h"
 
 #include "lib/libc/string.h"
 

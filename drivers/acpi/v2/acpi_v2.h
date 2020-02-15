@@ -3,7 +3,7 @@
 
 #include "../acpi.h"
 
-#include "drivers/debug/hresult.h"
+#include "sys/error.h"
 
 hresult init_xsdt(const acpi::acpi_rsdp *rsdp);
 

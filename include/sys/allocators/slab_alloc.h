@@ -2,10 +2,10 @@
 #define __INCLUDE_SYS_ALLOCATORS_SLAB_ALLOC_H
 
 #include "sys/types.h"
+#include "sys/error.h"
 
 #include "lib/libkern/data/list.h"
 
-#include "drivers/debug/hresult.h"
 #include "drivers/lock/spinlock.h"
 
 namespace allocators

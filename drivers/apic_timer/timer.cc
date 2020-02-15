@@ -1,6 +1,7 @@
 #include "arch/amd64/regs.h"
 
 #include "sys/types.h"
+#include "sys/error.h"
 
 #include "drivers/acpi/cpu.h"
 #include "drivers/apic/apic.h"

@@ -2,8 +2,8 @@
 #define __KERN_MM_VMM_H
 
 #include "arch/amd64/x86.h"
-#include "drivers/debug/hresult.h"
 
+#include "sys/error.h"
 #include "sys/vmm.h"
 
 // paging.cc
