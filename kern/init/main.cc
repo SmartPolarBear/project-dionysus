@@ -1,5 +1,5 @@
 /*
- * Last Modified: Wed Feb 12 2020
+ * Last Modified: Sun Feb 16 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -30,6 +30,7 @@
 #include "drivers/apic_timer/timer.h"
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
+#include "drivers/debug/kerror.h"
 
 #include "lib/libc/string.h"
 #include "lib/libcxx/new"

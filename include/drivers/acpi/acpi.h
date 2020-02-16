@@ -130,7 +130,7 @@ struct madt_iso
     uint16_t flags;
 } __attribute__((__packed__));
 
-void init_acpi(void);
+PANIC void init_acpi(void);
 
 size_t get_ioapic_count(void);
 void get_ioapics(madt_ioapic res[], size_t bufsz);

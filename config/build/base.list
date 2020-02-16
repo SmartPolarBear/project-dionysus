@@ -21,6 +21,7 @@ drivers/console/cga.o
 drivers/console/console.o
 drivers/console/uart.o
 drivers/debug/kdebug.o
+drivers/debug/kerror.o
 drivers/lock/spinlock.o
 drivers/acpi/common/ap.o
 drivers/acpi/common/acpi.o

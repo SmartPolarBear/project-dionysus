@@ -27,18 +27,25 @@ using acpi::madt_iso;
 
 using trap::TRAP_NUMBERMAX;
 
-
 madt_ioapic ioapics[CPU_COUNT_LIMIT] = {};
 size_t ioapic_count = 0;
 
 madt_iso intr_src_overrides[TRAP_NUMBERMAX] = {};
 size_t iso_count = 0;
 
-
-void acpi_madt_init(const acpi_madt *madt)
+[[nodiscard]] error_code acpi_madt_init(const acpi_madt *madt)
 {
-    KDEBUG_ASSERT(madt != nullptr);
-    KDEBUG_ASSERT(madt->header.length >= sizeof(*madt));
+    // KDEBUG_ASSERT(madt != nullptr);
+    // KDEBUG_ASSERT(madt->header.length >= sizeof(*madt));
+    if (madt == nullptr)
+    {
+        return -ERROR_INVALID_ARG;
+    }
+
+    if (madt->header.length < sizeof(*madt))
+    {
+        return -ERROR_INVALID_DATA;
+    }
 
     local_apic::lapic = IO2V<decltype(local_apic::lapic)>((void *)static_cast<uintptr_t>(madt->lapic_addr_phys));
 
@@ -58,7 +65,11 @@ void acpi_madt_init(const acpi_madt *madt)
         case acpi::MADT_ENTRY_LAPIC:
         {
             acpi::madt_lapic *lapic = reinterpret_cast<decltype(lapic)>(entry);
-            KDEBUG_ASSERT(sizeof(*lapic) == lapic->length);
+            // KDEBUG_ASSERT(sizeof(*lapic) == lapic->length);
+            if (!(sizeof(*lapic) == lapic->length))
+            {
+                return -ERROR_INVALID_DATA;
+            }
 
             if (!(lapic->flags & acpi::APIC_LAPIC_ENABLED))
             {
@@ -72,7 +83,11 @@ void acpi_madt_init(const acpi_madt *madt)
         case acpi::MADT_ENTRY_IOAPIC:
         {
             acpi::madt_ioapic *ioapic = reinterpret_cast<decltype(ioapic)>(entry);
-            KDEBUG_ASSERT(sizeof(*ioapic) == ioapic->length);
+            // KDEBUG_ASSERT(sizeof(*ioapic) == ioapic->length);
+            if (!(sizeof(*ioapic) == ioapic->length))
+            {
+                return -ERROR_INVALID_DATA;
+            }
 
             ioapics[ioapic_count] = madt_ioapic{*ioapic};
             ioapic_count++;
@@ -81,8 +96,11 @@ void acpi_madt_init(const acpi_madt *madt)
         case acpi::MADT_ENTRY_ISO:
         {
             acpi::madt_iso *iso = reinterpret_cast<decltype(iso)>(entry);
-            KDEBUG_ASSERT(sizeof(*iso) == iso->length);
-
+            // KDEBUG_ASSERT(sizeof(*iso) == iso->length);
+            if (!(sizeof(*iso) == iso->length))
+            {
+                return -ERROR_INVALID_DATA;
+            }
             intr_src_overrides[iso_count] = madt_iso{*iso};
             iso_count++;
             break;
@@ -93,9 +111,13 @@ void acpi_madt_init(const acpi_madt *madt)
     }
 
     // the kernel must run with at lease 2 CPUs
-    KDEBUG_ASSERT(cpu_count >= 1);
-}
+    if (cpu_count < 2)
+    {
+        return -ERROR_HARDWARE_NOT_COMPATIBLE;
+    }
 
+    return ERROR_SUCCESS;
+}
 
 size_t acpi::get_ioapic_count(void)
 {

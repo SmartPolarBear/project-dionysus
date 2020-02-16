@@ -21,6 +21,6 @@ extern acpi_version_adapter acpiv2_adapter;
 bool acpi_sdt_checksum(const acpi::acpi_desc_header *header);
 
 // madt.cc
-void acpi_madt_init(const acpi::acpi_madt *madt);
+[[nodiscard]] error_code acpi_madt_init(const acpi::acpi_madt *madt);
 
 #endif // __DRIVERS_ACPI_ACPI_H

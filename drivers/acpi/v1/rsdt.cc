@@ -32,7 +32,11 @@ error_code init_rsdt(const acpi::acpi_rsdp *rsdp)
 
     size_t entrycnt = (rsdt->header.length - sizeof(rsdt->header)) / 4;
 
-    KDEBUG_ASSERT(acpi_sdt_checksum(&rsdt->header) == true);
+    // KDEBUG_ASSERT(acpi_sdt_checksum(&rsdt->header) == true);
+    if (!acpi_sdt_checksum(&rsdt->header))
+    {
+        return -ERROR_INVALID_DATA;
+    }
 
     acpi_madt *madt = nullptr;
     for (size_t i = 0; i < entrycnt; i++)
@@ -45,9 +49,5 @@ error_code init_rsdt(const acpi::acpi_rsdp *rsdp)
         }
     }
 
-    KDEBUG_ASSERT(madt != nullptr);
-
-    acpi_madt_init(madt);
-
-    return ERROR_SUCCESS;
+    return acpi_madt_init(madt);
 }

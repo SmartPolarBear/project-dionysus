@@ -3,27 +3,36 @@
 
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
+#include "drivers/debug/kerror.h"
 
+#include "sys/error.h"
 #include "sys/memlayout.h"
 #include "sys/types.h"
 
 #include "lib/libc/string.h"
 
-using kdebug::error;
+const char *err_msg[] = {
+    [ERROR_UNKOWN] = "Unkown error in kernel.",
+    [ERROR_INVALID_DATA] = "Invalid data value.",
+    [ERROR_MEMORY_ALLOC] = "Can't allocate enough memory.",
+    [ERROR_REWRITE] = "Rewrite unrewritable data",
+    [ERROR_VMA_NOT_FOUND] = "can't find a VMA",
+    [ERROR_PAGE_NOT_PERSENT] = "Page not persent"};
 
-void kdebug::fill_error(error_code code, const char *desc, OUT error &err)
+const char *err_title[] = {
+    [ERROR_UNKOWN] = "ERROR_UNKOWN",
+    [ERROR_INVALID_DATA] = "ERROR_INVALID_DATA",
+    [ERROR_MEMORY_ALLOC] = "ERROR_MEMORY_ALLOC",
+    [ERROR_REWRITE] = "ERROR_REWRITE",
+    [ERROR_VMA_NOT_FOUND] = "ERROR_VMA_NOT_FOUND",
+    [ERROR_PAGE_NOT_PERSENT] = "ERROR_PAGE_NOT_PERSENT"};
+
+const char *kdebug::error_message(error_code code)
 {
-    err.code = code;
+    return err_msg[static_cast<size_t>(code)];
+}
 
-    size_t desc_len = strlen(desc);
-    if (desc_len > error::DESC_LEN)
-    {
-        strncpy(err.desc, desc, error::DESC_LEN);
-        err.desc[error::DESC_LEN] = '\0';
-    }
-    else
-    {
-        strncpy(err.desc, desc, desc_len);
-        err.desc[desc_len] = '\0';
-    }
+const char *kdebug::error_title(error_code code)
+{
+    return err_title[static_cast<size_t>(code)];
 }

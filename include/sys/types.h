@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sat Feb 15 2020
+ * Last Modified: Sun Feb 16 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -30,6 +30,9 @@
 
 // std::log2p1
 #include <bit>
+
+#define PANIC
+#define OUT
 
 using std::log2p1;
 
