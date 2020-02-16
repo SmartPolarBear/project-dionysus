@@ -32,13 +32,13 @@ uint64_t ticks = 0;
 spinlock tickslock;
 
 // defined below
-error_code handle_tick(trap_info info);
+error_code trap_handle_tick(trap_info info);
 
-void timer::init_apic_timer(void)
+PANIC void timer::init_apic_timer(void)
 {
     // register the handle
     trap::trap_handle_regsiter(TRAP_IRQ0 + IRQ_TIMER, trap::trap_handle{
-                                                          .handle = handle_tick});
+                                                          .handle = trap_handle_tick});
     // initialize apic values
     write_lapic(TDCR, TIMER_FLAG_X1);
     write_lapic(TIMER, TIMER_FLAG_PERIODIC | (TRAP_IRQ0 + IRQ_TIMER));
@@ -47,7 +47,7 @@ void timer::init_apic_timer(void)
     spinlock_initlock(&tickslock, "timer_ticks");
 }
 
-error_code handle_tick([[maybe_unused]] trap_info info)
+error_code trap_handle_tick([[maybe_unused]] trap_info info)
 {
     if (cpu->id == 0)
     {

@@ -76,7 +76,7 @@ enum destination_mode
     DTM_LOGICAL = 1,
 };
 
-void write_ioapic(const uintptr_t apic_base, const uint8_t reg, const uint32_t val)
+[[clang::optnone]] static inline void write_ioapic(const uintptr_t apic_base, const uint8_t reg, const uint32_t val)
 {
     // tell IOREGSEL where we want to write to
     *(volatile uint32_t *)(apic_base) = reg;
@@ -84,7 +84,7 @@ void write_ioapic(const uintptr_t apic_base, const uint8_t reg, const uint32_t v
     *(volatile uint32_t *)(apic_base + 0x10) = val;
 }
 
-uint32_t read_ioapic(const uintptr_t apic_base, const uint8_t reg)
+[[clang::optnone]] static inline uint32_t read_ioapic(const uintptr_t apic_base, const uint8_t reg)
 {
     // tell IOREGSEL where we want to read from
     *(volatile uint32_t *)(apic_base) = reg;
@@ -92,7 +92,7 @@ uint32_t read_ioapic(const uintptr_t apic_base, const uint8_t reg)
     return *(volatile uint32_t *)(apic_base + 0x10);
 }
 
-void io_apic::init_ioapic(void)
+PANIC void io_apic::init_ioapic(void)
 {
     pic8259A::initialize_pic();
 
@@ -102,7 +102,6 @@ void io_apic::init_ioapic(void)
 
     write_ioapic(ioapic_addr, IOAPICID, ioapic->id);
 
-    // FIXME: that apicid is always 0 may be reason for crashing on Hyper-V and VBox
     size_t apicid = (read_ioapic(ioapic_addr, IOAPICID) >> 24) & 0b1111;
     size_t redirection_count = (read_ioapic(ioapic_addr, IOAPICVER) >> 16) & 0b11111111;
 
@@ -130,7 +129,7 @@ void io_apic::init_ioapic(void)
 void io_apic::enable_trap(uint32_t trapnum, uint32_t cpu_acpi_id_rounted)
 {
     redirection_entry redir_new;
-    
+
     redir_new.vector = TRAP_IRQ0 + trapnum;
     redir_new.delievery_mode = DLM_FIXED;
     redir_new.destination_mode = DTM_PHYSICAL;

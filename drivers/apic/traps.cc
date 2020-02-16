@@ -31,6 +31,7 @@ struct
 static error_code default_trap_handle([[maybe_unused]] trap_info info)
 {
     //TODO: the handle doesn't exist
+
     return ERROR_SUCCESS;
 }
 
@@ -59,7 +60,7 @@ static inline void make_gate(uint32_t *idt_head, uint32_t head_offset, void *kva
     idt_head[head_offset + 3] = 0;
 }
 
-void trap::init_trap(void)
+PANIC void trap::init_trap(void)
 {
     uint32_t *idt = reinterpret_cast<uint32_t *>(new BLOCK<PMM_PAGE_SIZE>);
     memset(idt, 0, PMM_PAGE_SIZE);
@@ -91,7 +92,7 @@ void trap::init_trap(void)
 }
 
 // returns the old handle
-trap_handle trap::trap_handle_regsiter(size_t number, trap_handle handle)
+PANIC trap_handle trap::trap_handle_regsiter(size_t number, trap_handle handle)
 {
     spinlock_acquire(&handle_table.lock);
 
@@ -124,7 +125,6 @@ extern "C" void trap_body(trap_info info)
 
     if (error != ERROR_SUCCESS)
     {
-        console::printf("** trap number:%d, error code:%d.\n", info.trap_num, error);
-        KDEBUG_FOLLOWPANIC("trap handle reports an error.");
+        KDEBUG_RICHPANIC_CODE(error, true, "");
     }
 }
