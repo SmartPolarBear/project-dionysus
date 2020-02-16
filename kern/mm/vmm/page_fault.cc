@@ -1,5 +1,5 @@
 /*
- * Last Modified: Thu Feb 13 2020
+ * Last Modified: Sat Feb 15 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -54,12 +54,12 @@ using libk::list_for_each;
 using libk::list_init;
 using libk::list_remove;
 
-static inline hresult page_fault_impl(mm_struct *mm, size_t err, uintptr_t addr)
+static inline error_code page_fault_impl(mm_struct *mm, size_t err, uintptr_t addr)
 {
     vma_struct *vma = vmm::find_vma(mm, addr);
     if (vma == nullptr || vma->vm_start > addr)
     {
-        return ERROR_VMA_NOT_FOUND;
+        return -ERROR_VMA_NOT_FOUND;
     }
     else
     {
@@ -69,16 +69,16 @@ static inline hresult page_fault_impl(mm_struct *mm, size_t err, uintptr_t addr)
         case 0b10: // write, not persent
             if (!(vma->flags & vmm::VM_WRITE))
             {
-                return ERROR_PAGE_NOT_PERSENT;
+                return -ERROR_PAGE_NOT_PERSENT;
             }
             break;
         case 0b01: // read, persent
-            return ERROR_UNKOWN;
+            return -ERROR_UNKOWN;
             break;
         case 0b00: // read not persent
             if (!(vma->flags & (vmm::VM_READ | vmm::VM_EXEC)))
             {
-                return ERROR_PAGE_NOT_PERSENT;
+                return -ERROR_PAGE_NOT_PERSENT;
             }
             break;
         }
@@ -93,13 +93,13 @@ static inline hresult page_fault_impl(mm_struct *mm, size_t err, uintptr_t addr)
 
         if (pmm::pgdir_alloc_page(mm->pgdir, addr, page_perm) == nullptr) // map to any free space
         {
-            return ERROR_MEMORY_ALLOC;
+            return -ERROR_MEMORY_ALLOC;
         }
         return ERROR_SUCCESS;
     }
 }
 
-hresult handle_pgfault([[maybe_unused]] trap_info info)
+error_code handle_pgfault([[maybe_unused]] trap_info info)
 {
     uintptr_t addr = rcr2();
     mm_struct *mm = nullptr;
@@ -108,23 +108,23 @@ hresult handle_pgfault([[maybe_unused]] trap_info info)
     // TODO: handle page fault for current process;
     KDEBUG_NOT_IMPLEMENTED;
 
-    hresult ret = page_fault_impl(mm, info.err, addr);
+    error_code ret = page_fault_impl(mm, info.err, addr);
 
-    if (ret == ERROR_VMA_NOT_FOUND)
+    if (ret == -ERROR_VMA_NOT_FOUND)
     {
         KDEBUG_RICHPANIC("The addr isn't found in th MM structure.",
                          "KERNEL PANIC: PAGE FAULT",
                          false,
                          "Address: 0x%p\n", addr);
     }
-    else if (ret == ERROR_PAGE_NOT_PERSENT)
+    else if (ret == -ERROR_PAGE_NOT_PERSENT)
     {
         KDEBUG_RICHPANIC("A page's not persent.",
                          "KERNEL PANIC: PAGE FAULT",
                          false,
                          "Address: 0x%p\n", addr);
     }
-    else if (ret == ERROR_UNKOWN)
+    else if (ret == -ERROR_UNKOWN)
     {
         KDEBUG_RICHPANIC("Unkown error in paging",
                          "KERNEL PANIC: PAGE FAULT",

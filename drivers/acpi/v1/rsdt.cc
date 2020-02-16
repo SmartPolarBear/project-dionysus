@@ -26,7 +26,7 @@ using acpi::madt_iso;
 
 using trap::TRAP_NUMBERMAX;
 
-hresult init_rsdt(const acpi::acpi_rsdp *rsdp)
+error_code init_rsdt(const acpi::acpi_rsdp *rsdp)
 {
     acpi_rsdt *rsdt = reinterpret_cast<acpi_rsdt *>(P2V(rsdp->rsdt_addr_phys));
 

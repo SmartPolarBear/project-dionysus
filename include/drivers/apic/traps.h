@@ -50,7 +50,7 @@ enum irqs
     IRQ_SPURIOUS = 31,
 };
 
-using trap_handle_func = hresult (*)(trap_info);
+using trap_handle_func = error_code (*)(trap_info);
 
 struct trap_handle
 {

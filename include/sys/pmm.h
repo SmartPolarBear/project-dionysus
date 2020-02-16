@@ -1,5 +1,5 @@
 /*
- * Last Modified: Wed Feb 12 2020
+ * Last Modified: Sat Feb 15 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -60,7 +60,7 @@ void free_pages(page_info *base, size_t n);
 size_t get_free_page_count(void);
 
 void page_remove(pde_ptr_t pgdir, uintptr_t va_to_page);
-hresult page_insert(pde_ptr_t pgdir, page_info *page, uintptr_t va, size_t perm);
+error_code page_insert(pde_ptr_t pgdir, page_info *page, uintptr_t va, size_t perm);
 
 void tlb_invalidate(pde_ptr_t pgdir, uintptr_t va);
 

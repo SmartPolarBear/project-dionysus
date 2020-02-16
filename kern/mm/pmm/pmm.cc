@@ -263,12 +263,12 @@ void pmm::page_remove(pde_ptr_t pgdir, uintptr_t va)
     }
 }
 
-hresult pmm::page_insert(pde_ptr_t pgdir, page_info *page, uintptr_t va, size_t perm)
+error_code pmm::page_insert(pde_ptr_t pgdir, page_info *page, uintptr_t va, size_t perm)
 {
     auto pde = vmm::walk_pgdir(pgdir, va, true);
     if (pde == nullptr)
     {
-        return ERROR_MEMORY_ALLOC;
+        return -ERROR_MEMORY_ALLOC;
     }
 
     page->ref++;

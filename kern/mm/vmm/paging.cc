@@ -1,5 +1,5 @@
 /*
- * Last Modified: Thu Feb 13 2020
+ * Last Modified: Sat Feb 15 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -131,13 +131,13 @@ static inline pde_ptr_t walk_pgdir(const pde_ptr_t pml4t,
 }
 
 // this method maps the specific va
-static inline hresult map_page(pde_ptr_t pml4, uintptr_t va, uintptr_t pa, size_t perm)
+static inline error_code map_page(pde_ptr_t pml4, uintptr_t va, uintptr_t pa, size_t perm)
 {
     auto pde = walk_pgdir(pml4, va, true, perm);
 
     if (pde == nullptr)
     {
-        return ERROR_MEMORY_ALLOC;
+        return -ERROR_MEMORY_ALLOC;
     }
 
     if (!(*pde & PG_P))
@@ -146,15 +146,15 @@ static inline hresult map_page(pde_ptr_t pml4, uintptr_t va, uintptr_t pa, size_
     }
     else
     {
-        return ERROR_REWRITE;
+        return -ERROR_REWRITE;
     }
 
     return ERROR_SUCCESS;
 }
 
-static inline hresult map_pages(pde_ptr_t pml4, uintptr_t va_start, uintptr_t pa_start, uintptr_t pa_end)
+static inline error_code map_pages(pde_ptr_t pml4, uintptr_t va_start, uintptr_t pa_start, uintptr_t pa_end)
 {
-    hresult ret;
+    error_code ret;
     // map the kernel memory
     for (uintptr_t pa = pa_start, va = va_start;
          pa < pa_end && pa + PHYSICAL_PAGE_SIZE <= pa_end;
@@ -162,7 +162,7 @@ static inline hresult map_pages(pde_ptr_t pml4, uintptr_t va_start, uintptr_t pa
     {
         ret = map_page(pml4, va, pa, PG_W);
 
-        if (ret != ERROR_SUCCESS)
+        if (ret != -ERROR_SUCCESS)
         {
             return ret;
         }
@@ -194,11 +194,11 @@ void vmm::boot_map_kernel_mem()
     // map the kernel memory
     auto ret = map_pages(g_kpml4t, KERNEL_VIRTUALBASE, 0, KERNEL_SIZE);
 
-    if (ret == ERROR_MEMORY_ALLOC)
+    if (ret == -ERROR_MEMORY_ALLOC)
     {
         KDEBUG_GENERALPANIC("Can't allocate enough space for paging.\n");
     }
-    else if (ret == ERROR_REWRITE)
+    else if (ret == -ERROR_REWRITE)
     {
         KDEBUG_RICHPANIC("Remap a mapped page.", "KERNEL PANIC:ERROR_REMAP",
                          true, "");
@@ -207,11 +207,11 @@ void vmm::boot_map_kernel_mem()
     // remap all the physical memory
     ret = map_pages(g_kpml4t, PHYREMAP_VIRTUALBASE, 0, max_pa);
 
-    if (ret == ERROR_MEMORY_ALLOC)
+    if (ret == -ERROR_MEMORY_ALLOC)
     {
         KDEBUG_GENERALPANIC("Can't allocate enough space for paging.\n");
     }
-    else if (ret == ERROR_REWRITE)
+    else if (ret == -ERROR_REWRITE)
     {
         KDEBUG_RICHPANIC("Remap a mapped page.", "KERNEL PANIC:ERROR_REMAP",
                          true, "");

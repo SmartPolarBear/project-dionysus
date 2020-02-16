@@ -11,7 +11,7 @@
 
 using kdebug::error;
 
-void kdebug::fill_error(hresult code, const char *desc, OUT error &err)
+void kdebug::fill_error(error_code code, const char *desc, OUT error &err)
 {
     err.code = code;
 

@@ -32,7 +32,7 @@ uint64_t ticks = 0;
 spinlock tickslock;
 
 // defined below
-hresult handle_tick(trap_info info);
+error_code handle_tick(trap_info info);
 
 void timer::init_apic_timer(void)
 {
@@ -47,7 +47,7 @@ void timer::init_apic_timer(void)
     spinlock_initlock(&tickslock, "timer_ticks");
 }
 
-hresult handle_tick([[maybe_unused]] trap_info info)
+error_code handle_tick([[maybe_unused]] trap_info info)
 {
     if (cpu->id == 0)
     {

@@ -11,7 +11,7 @@ struct acpi_version_adapter
 {
     multiboot_tag_new_acpi *acpi_tag;
 
-    hresult (*init_sdt)(const acpi::acpi_rsdp *rsdp);
+    error_code (*init_sdt)(const acpi::acpi_rsdp *rsdp);
 };
 
 extern acpi_version_adapter acpiv1_adapter;

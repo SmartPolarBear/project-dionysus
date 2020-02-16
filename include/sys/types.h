@@ -36,7 +36,7 @@ using std::log2p1;
 using ldbl = long double;
 using ull = unsigned long long;
 
-using hresult = int64_t;
+using error_code = int64_t;
 
 constexpr auto STORAGE_UNIT = 1024ULL;
 

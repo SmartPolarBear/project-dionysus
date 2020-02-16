@@ -5,6 +5,6 @@
 
 #include "sys/error.h"
 
-hresult init_xsdt(const acpi::acpi_rsdp *rsdp);
+error_code init_xsdt(const acpi::acpi_rsdp *rsdp);
 
 #endif // __DRIVERS_ACPI_V2_ACPI_V2_H

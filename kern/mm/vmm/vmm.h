@@ -10,6 +10,6 @@
 extern vmm::pde_ptr_t g_kpml4t;
 
 // page_fualt.cc
-extern hresult handle_pgfault([[maybe_unused]] trap_info info);
+extern error_code handle_pgfault([[maybe_unused]] trap_info info);
 
 #endif // __KERN_MM_VMM_H

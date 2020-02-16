@@ -6,10 +6,10 @@
 #include "drivers/debug/kdebug.h"
 #include "drivers/lock/spinlock.h"
 
-#include "sys/mmu.h"
-#include "sys/vmm.h"
-#include "sys/pmm.h"
 #include "sys/error.h"
+#include "sys/mmu.h"
+#include "sys/pmm.h"
+#include "sys/vmm.h"
 
 #include "lib/libc/string.h"
 
@@ -28,13 +28,13 @@ struct
 } handle_table;
 
 // default handle of trap
-static hresult default_trap_handle([[maybe_unused]] trap_info info)
+static error_code default_trap_handle([[maybe_unused]] trap_info info)
 {
     //TODO: the handle doesn't exist
     return ERROR_SUCCESS;
 }
 
-static hresult spurious_trap_handle([[maybe_unused]] trap_info info)
+static error_code spurious_trap_handle([[maybe_unused]] trap_info info)
 {
     return ERROR_SUCCESS;
 }
@@ -61,7 +61,7 @@ static inline void make_gate(uint32_t *idt_head, uint32_t head_offset, void *kva
 
 void trap::init_trap(void)
 {
-    uint32_t *idt = reinterpret_cast<uint32_t*>(new BLOCK<PMM_PAGE_SIZE>);
+    uint32_t *idt = reinterpret_cast<uint32_t *>(new BLOCK<PMM_PAGE_SIZE>);
     memset(idt, 0, PMM_PAGE_SIZE);
 
     for (size_t i = 0; i < 256; i++)
@@ -109,8 +109,8 @@ extern "C" void trap_body(trap_info info)
     if (info.trap_num >= TRAP_NUMBERMAX || info.trap_num < 0)
     {
         KDEBUG_RICHPANIC("trap number is out of range",
-                             "KERNEL PANIC: TRAP",
-                             false, "The given trap number is %d", info.trap_num);
+                         "KERNEL PANIC: TRAP",
+                         false, "The given trap number is %d", info.trap_num);
     }
 
     // it should be assigned with the defualt handle when initialized
@@ -122,9 +122,9 @@ extern "C" void trap_body(trap_info info)
     // finish the trap handle
     local_apic::write_eoi();
 
-    if (FAILED(error))
+    if (error != ERROR_SUCCESS)
     {
-        console::printf("** trap number:%d, error code:%d.\n", info.trap_num, HRESULT_CODE(error));
+        console::printf("** trap number:%d, error code:%d.\n", info.trap_num, error);
         KDEBUG_FOLLOWPANIC("trap handle reports an error.");
     }
 }
