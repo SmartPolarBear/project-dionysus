@@ -7,7 +7,6 @@
 #include "sys/memlayout.h"
 #include "sys/mmu.h"
 
-#include "arch/amd64/sync.h"
 #include "arch/amd64/x86.h"
 
 using trap::IRQ_ERROR;
@@ -81,34 +80,29 @@ PANIC void local_apic::init_lapic(void)
 //          can be highly relavant to lock aquire and release
 size_t local_apic::get_cpunum(void)
 {
-    // if (read_eflags() & EFLAG_IF)
-    // {
-    //     KDEBUG_RICHPANIC("local_apic::get_cpunum can't be called with interrupts enabled\n",
-    //                      "KERNEL PANIC:LAPIC",
-    //                      false,
-    //                      "Return address: 0x%x\n", __builtin_return_address(0));
-    // }
+    if (read_eflags() & EFLAG_IF)
+    {
+        KDEBUG_RICHPANIC("local_apic::get_cpunum can't be called with interrupts enabled\n",
+                         "KERNEL PANIC:LAPIC",
+                         false,
+                         "Return address: 0x%x\n", __builtin_return_address(0));
+    }
 
     if (lapic == nullptr)
     {
         return 0;
     }
 
-    bool intrrupt_flag = false;
-    local_intrrupt_save(intrrupt_flag);
-    
     auto id = lapic[ID] >> 24;
 
-    int ret = 0;
     for (size_t i = 0; i < cpu_count; i++)
     {
         if (id == cpus[i].apicid)
         {
-            ret = i;
-            break;
+            return i;
         }
     }
-    local_intrrupt_restore(intrrupt_flag);
+
     return 0;
 }
 
