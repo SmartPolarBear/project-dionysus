@@ -4,6 +4,8 @@
 
 #include "sys/types.h"
 
+#include "drivers/debug/kdebug.h"
+
 // Intel's advanced configuration and power interface
 namespace acpi
 {
@@ -132,12 +134,25 @@ struct madt_iso
 
 PANIC void init_acpi(void);
 
-size_t get_ioapic_count(void);
-void get_ioapics(madt_ioapic res[], size_t bufsz);
-madt_ioapic get_first_ioapic(void);
+// size_t get_ioapic_count(void);
+// void get_ioapics(madt_ioapic res[], size_t bufsz);
+// madt_ioapic get_first_ioapic(void);
 
-size_t get_iso_count(void);
-void get_isos(madt_iso res[], size_t bufsz);
+// when ret==nullptr, this returns the count of ioapic descriptors
+size_t get_ioapic_descriptors(size_t bufsz, OUT madt_ioapic **buf);
+
+static inline PANIC madt_ioapic *first_ioapic(void)
+{
+    madt_ioapic *buf[2] = {nullptr, nullptr};
+    size_t sz = get_ioapic_descriptors(1, buf);
+    KDEBUG_ASSERT(sz == 1);
+    return buf[0];
+}
+
+// size_t get_iso_count(void);
+// void get_isos(madt_iso res[], size_t bufsz);
+
+size_t get_intr_src_override_descriptors(size_t bufsz, OUT madt_iso **buf);
 
 //TODO: instead of copy madt_lapic to cpus array, directly provide interface to get them
 

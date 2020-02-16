@@ -96,19 +96,19 @@ void io_apic::init_ioapic(void)
 {
     pic8259A::initialize_pic();
 
-    auto ioapic = acpi::get_first_ioapic();
+    auto ioapic = acpi::first_ioapic();
 
-    uintptr_t ioapic_addr = IO2V(ioapic.addr);
+    uintptr_t ioapic_addr = IO2V(ioapic->addr);
 
-    write_ioapic(ioapic_addr, IOAPICID, ioapic.id);
+    write_ioapic(ioapic_addr, IOAPICID, ioapic->id);
 
     // FIXME: that apicid is always 0 may be reason for crashing on Hyper-V and VBox
     size_t apicid = (read_ioapic(ioapic_addr, IOAPICID) >> 24) & 0b1111;
     size_t redirection_count = (read_ioapic(ioapic_addr, IOAPICVER) >> 16) & 0b11111111;
 
-    if (apicid != ioapic.id)
+    if (apicid != ioapic->id)
     {
-        console::printf("WARNING: inconsistence between apicid from IOAPICID register (%d) and ioapic.id (%d)\n", apicid, ioapic.id);
+        console::printf("WARNING: inconsistence between apicid from IOAPICID register (%d) and ioapic.id (%d)\n", apicid, ioapic->id);
     }
 
     for (size_t i = 0; i <= redirection_count; i++)
@@ -139,9 +139,9 @@ void io_apic::enable_trap(uint32_t trapnum, uint32_t cpu_acpi_id_rounted)
     redir_new.mask = true;
     redir_new.destination_id = cpu_acpi_id_rounted;
 
-    auto ioapic = acpi::get_first_ioapic();
+    auto ioapic = acpi::first_ioapic();
 
-    uintptr_t ioapic_addr = IO2V(ioapic.addr);
+    uintptr_t ioapic_addr = IO2V(ioapic->addr);
 
     write_ioapic(ioapic_addr, IOREDTBL_BASE + trapnum * 2 + 0, redir_new.raw_low);
     write_ioapic(ioapic_addr, IOREDTBL_BASE + trapnum * 2 + 1, redir_new.raw_high);

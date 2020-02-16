@@ -14,6 +14,7 @@
 #include "drivers/debug/kdebug.h"
 
 #include "lib/libc/string.h"
+#include "lib/libcxx/algorithm"
 #include "lib/libcxx/new"
 
 using acpi::acpi_desc_header;
@@ -116,36 +117,73 @@ size_t iso_count = 0;
         return -ERROR_HARDWARE_NOT_COMPATIBLE;
     }
 
+    if (ioapic_count < 1)
+    {
+        return -ERROR_INVALID_DATA;
+    }
+
     return ERROR_SUCCESS;
 }
 
-size_t acpi::get_ioapic_count(void)
-{
-    return ioapic_count;
-}
+// size_t acpi::get_ioapic_count(void)
+// {
+//     return ioapic_count;
+// }
 
-void acpi::get_ioapics(madt_ioapic res[], size_t bufsz)
+// void acpi::get_ioapics(madt_ioapic res[], size_t bufsz)
+// {
+//     for (size_t i = 0; i < bufsz; i++)
+//     {
+//         res[i] = madt_ioapic{ioapics[i]};
+//     }
+// }
+
+// madt_ioapic acpi::get_first_ioapic(void)
+// {
+//     return ioapics[0];
+// }
+
+size_t acpi::get_ioapic_descriptors(size_t bufsz, OUT madt_ioapic **buf)
 {
-    for (size_t i = 0; i < bufsz; i++)
+    if (buf == nullptr)
     {
-        res[i] = madt_ioapic{ioapics[i]};
+        return ioapic_count;
     }
-}
 
-madt_ioapic acpi::get_first_ioapic(void)
-{
-    return ioapics[0];
-}
-
-size_t acpi::get_iso_count(void)
-{
-    return iso_count;
-}
-
-void acpi::get_isos(madt_iso res[], size_t bufsz)
-{
-    for (size_t i = 0; i < bufsz; i++)
+    size_t cpy_count = sysstd::min(bufsz, ioapic_count);
+    for (size_t i = 0; i < cpy_count; i++)
     {
-        res[i] = madt_iso{intr_src_overrides[i]};
+        buf[i] = &ioapics[i];
     }
+
+    return cpy_count;
 }
+
+size_t get_intr_src_override_descriptors(size_t bufsz, OUT madt_iso **buf)
+{
+    if (buf == nullptr)
+    {
+        return iso_count;
+    }
+
+    size_t cpy_count = sysstd::min(bufsz, ioapic_count);
+    for (size_t i = 0; i < cpy_count; i++)
+    {
+        buf[i] = &intr_src_overrides[i];
+    }
+
+    return cpy_count;
+}
+
+// size_t acpi::get_iso_count(void)
+// {
+//     return iso_count;
+// }
+
+// void acpi::get_isos(madt_iso res[], size_t bufsz)
+// {
+//     for (size_t i = 0; i < bufsz; i++)
+//     {
+//         res[i] = madt_iso{intr_src_overrides[i]};
+//     }
+// }
