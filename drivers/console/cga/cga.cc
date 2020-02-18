@@ -34,13 +34,6 @@ volatile uint16_t *cga_mem = (uint16_t *)(0xB8000 + KERNEL_VIRTUALBASE);
 constexpr uint16_t KEYCODE_BACKSPACE = 0x100;
 constexpr uint16_t CRT_PORT = 0x3d4;
 
-console_dev cga_dev
-{
-    .write_char=cga_write_char,
-    .set_cursor_pos=set_cursor_pos,
-    .get_cursor_pos=get_cursor_pos
-};
-
 static constexpr uint16_t make_cga_char(char content, uint16_t attr)
 {
     uint16_t ret = content | (attr << 8);
@@ -69,7 +62,7 @@ void set_cursor_pos(cursor_pos pos)
     outb(CRT_PORT + 1, pos);
 }
 
-cursor_pos cga_write_char(uint32_t c, console_colors bk,console_colors fr)
+cursor_pos cga_write_char(uint32_t c, console_colors bk, console_colors fr)
 {
     uint16_t attrib = make_cga_color_attrib(fr, bk); //no background, lightgray foreground
 
@@ -112,10 +105,15 @@ cursor_pos cga_write_char(uint32_t c, console_colors bk,console_colors fr)
                        : "pos out of bound: it should be smaller than 25*80";
 
         KDEBUG_RICHPANIC(msg,
-                             "KERNEL PANIC: BUILTIN CGA",
-                             false,
-                             "The pos now is %d", pos);
+                         "KERNEL PANIC: BUILTIN CGA",
+                         false,
+                         "The pos now is %d", pos);
     }
 
     return pos;
 }
+
+console_dev cga_dev{
+    .write_char = cga_write_char,
+    .set_cursor_pos = set_cursor_pos,
+    .get_cursor_pos = get_cursor_pos};

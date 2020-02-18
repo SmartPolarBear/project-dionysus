@@ -3,6 +3,7 @@ kern/init/main.o
 kern/init/multiboot.o
 kern/libc/string.o
 kern/libc/itoa.o
+kern/libc/print.o
 kern/libc/ftoa.o
 kern/libc/qsort.o
 kern/libcxxrt/cxxbase.o
@@ -17,9 +18,9 @@ kern/mm/vmm/paging.o
 kern/mm/vmm/page_fault.o
 kern/mm/vmm/kmalloc.o
 kern/proc/scheduler.o
-drivers/console/cga.o
-drivers/console/console.o
-drivers/console/uart.o
+drivers/console/cga/cga.o
+drivers/console/console/console.o
+drivers/console/uart/uart.o
 drivers/debug/kdebug.o
 drivers/debug/kerror.o
 drivers/lock/spinlock.o
