@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sun Feb 16 2020
+ * Last Modified: Tue Feb 18 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -43,6 +43,8 @@
 #include "sys/pmm.h"
 #include "sys/vmm.h"
 
+#include "lib/libc/stdio.h"
+
 // global entry of the kernel
 extern "C" [[noreturn]] void kmain()
 {
@@ -70,7 +72,7 @@ extern "C" [[noreturn]] void kmain()
     // initialize apic timer
     timer::init_apic_timer();
 
-    console::printf("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
+    printf("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
 
     // boot other CPU cores
     ap::init_ap();

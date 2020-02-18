@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sat Jan 25 2020
+ * Last Modified: Tue Feb 18 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -34,33 +34,34 @@
 #include "sys/memlayout.h"
 #include "sys/types.h"
 
+#include "lib/libc/stdio.h"
+
 bool kdebug::panicked = false;
 
 static inline void kdebug_vpanic_print_impl(const char *fmt, bool topleft, va_list ap)
 {
     // disable the lock of console
-    console::console_debugdisablelock();
+    console::console_set_lock(false);
 
     // change cga color and reset cursor to draw attention
-    constexpr auto panicked_screencolor = console::TATTR_BKBLUE | console::TATTR_FRYELLOW;
-    console::console_settextattrib(panicked_screencolor);
+    console::console_set_color(console::CONSOLE_COLOR_BLUE, console::CONSOLE_COLOR_LIGHT_BROWN);
 
     // panic2 message is usually on the left-top of the console
     if (topleft)
     {
-        console::console_setpos(0);
+        console::console_set_pos(0);
     }
 
-    console::vprintf(fmt, ap);
+    vprintf(fmt, ap);
 
     constexpr size_t PCS_BUFLEN = 16;
     uintptr_t pcs[PCS_BUFLEN] = {0};
     kdebug::kdebug_getcallerpcs(PCS_BUFLEN, pcs);
 
-    console::printf("\n");
+    printf("\n");
     for (auto pc : pcs)
     {
-        console::printf("%p ", pc);
+        printf("%p ", pc);
     }
 }
 
@@ -130,20 +131,19 @@ void kdebug::kdebug_getcallerpcs(size_t buflen, uintptr_t pcs[])
 void kdebug::kdebug_dump_lock_panic(lock::spinlock *lock)
 {
     // disable the lock of console
-    console::console_debugdisablelock();
-    console::console_setpos(0);
+    console::console_set_lock(false);
+    console::console_set_pos(0);
 
-    constexpr auto panicked_screencolor = console::TATTR_BKBLUE | console::TATTR_FRYELLOW;
-    console::console_settextattrib(panicked_screencolor);
+    console::console_set_color(console::CONSOLE_COLOR_BLUE, console::CONSOLE_COLOR_LIGHT_BROWN);
 
-    console::printf("lock %s has been held.\nCall stack:\n", lock->name);
+    printf("lock %s has been held.\nCall stack:\n", lock->name);
 
     for (auto cs : lock->pcs)
     {
-        console::printf("%p ", cs);
+        printf("%p ", cs);
     }
 
-    console::printf("\n");
+    printf("\n");
 
     KDEBUG_FOLLOWPANIC("acquire");
 }

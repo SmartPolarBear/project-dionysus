@@ -4,8 +4,10 @@
 
 #include "lib/libc/stdlib.h"
 #include "lib/libc/string.h"
+#include "lib/libc/stdio.h"
 
 #include "sys/types.h"
+
 
 void printf(const char *fmt, ...)
 {

@@ -53,7 +53,7 @@ error_code trap_handle_tick([[maybe_unused]] trap_info info)
     {
         spinlock_acquire(&tickslock);
         ticks++;
-        // console::printf("ticks=%d\n", ticks);
+        
         //TODO: wake up processes
         spinlock_release(&tickslock);
     }

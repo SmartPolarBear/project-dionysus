@@ -1,5 +1,5 @@
 /*
- * Last Modified: Wed Feb 12 2020
+ * Last Modified: Tue Feb 18 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -38,6 +38,7 @@
 #include "sys/vmm.h"
 
 #include "lib/libc/string.h"
+#include "lib/libc/stdio.h"
 
 // in boot.S
 extern "C" void entry32mp(void);
@@ -101,7 +102,7 @@ void ap::all_processor_main()
     // simple scheduler loop
     while (!kdebug::panicked)
     {
-        console::printf("cpu %d\n", cpu->id);
+        printf("cpu %d\n", cpu->id);
     }
 
     if (kdebug::panicked)

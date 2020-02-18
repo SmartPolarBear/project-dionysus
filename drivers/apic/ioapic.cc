@@ -10,6 +10,8 @@
 #include "sys/memlayout.h"
 #include "sys/mmu.h"
 
+#include "lib/libc/stdio.h"
+
 using trap::TRAP_IRQ0;
 
 enum ioapic_regs
@@ -107,7 +109,7 @@ PANIC void io_apic::init_ioapic(void)
 
     if (apicid != ioapic->id)
     {
-        console::printf("WARNING: inconsistence between apicid from IOAPICID register (%d) and ioapic.id (%d)\n", apicid, ioapic->id);
+        printf("WARNING: inconsistence between apicid from IOAPICID register (%d) and ioapic.id (%d)\n", apicid, ioapic->id);
     }
 
     for (size_t i = 0; i <= redirection_count; i++)
