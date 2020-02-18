@@ -1,5 +1,4 @@
-#if !defined(__INCLUDE_DRIVERS_SPINLOCK_H)
-#define __INCLUDE_DRIVERS_SPINLOCK_H
+#pragma once
 
 #include "drivers/acpi/cpu.h"
 #include "sys/types.h"
@@ -25,4 +24,3 @@ void popcli(void);
 
 } // namespace lock
 
-#endif // __INCLUDE_DRIVERS_SPINLOCK_H

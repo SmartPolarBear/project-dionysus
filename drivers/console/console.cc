@@ -67,7 +67,8 @@ struct console_dev
          [4] = console::CGACOLOR_MAGENTA,
          [5] = console::CGACOLOR_CYAN,
          [6] = console::CGACOLOR_LIGHT_GREY,
-         [7] = console::CGACOLOR_BLACK}}};
+         [7] = console::CGACOLOR_BLACK
+         }}};
 
 static struct
 {

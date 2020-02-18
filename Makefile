@@ -57,6 +57,9 @@ $(BUILD)/disk.img: $(TOP_SRC)/disk.img $(BUILD)/kernel $(BUILD)/tools/diskimg/di
 $(BUILD)/disk.qcow2: $(BUILD)/disk.img $(BUILD)/tools/diskimg/diskimg.py
 	$(PYTHON) $(DISKIMG_PY) convert $(TOP_SRC) qcow2 $< $@
 
+$(BUILD)/disk.vmdk: $(BUILD)/disk.img $(BUILD)/tools/diskimg/diskimg.py
+	$(PYTHON) $(DISKIMG_PY) convert $(TOP_SRC) vmdk $< $@
+
 $(SUBDIRS):
 	$(MAKE) -C $@ $(MFLAGS) all
 

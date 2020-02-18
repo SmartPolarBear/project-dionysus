@@ -1,13 +1,45 @@
-#include "drivers/console/cga.h"
+#include "cga.h"
+
 #include "arch/amd64/x86.h"
 #include "drivers/debug/kdebug.h"
+
 #include "lib/libc/string.h"
 #include "lib/libcxx/new"
+
 #include "sys/memlayout.h"
 #include "sys/types.h"
 
+enum cga_colors : uint8_t
+{
+    CGACOLOR_BLACK,
+    CGACOLOR_BLUE,
+    CGACOLOR_GREEN,
+    CGACOLOR_CYAN,
+    CGACOLOR_RED,
+    CGACOLOR_MAGENTA,
+    CGACOLOR_BROWN,
+    CGACOLOR_LIGHT_GREY, // default color for foreground
+    CGACOLOR_DARK_GREY,
+    CGACOLOR_LIGHT_BLUE,
+    CGACOLOR_LIGHT_GREEN,
+    CGACOLOR_LIGHT_CYAN,
+    CGACOLOR_LIGHT_RED,
+    CGACOLOR_LIGHT_MAGENTA,
+    CGACOLOR_LIGHT_BROWN, // looks like yellow
+    CGACOLOR_WHITE
+};
+
+volatile uint16_t *cga_mem = (uint16_t *)(0xB8000 + KERNEL_VIRTUALBASE);
+
 constexpr uint16_t KEYCODE_BACKSPACE = 0x100;
 constexpr uint16_t CRT_PORT = 0x3d4;
+
+console_dev cga_dev
+{
+    .write_char=cga_write_char,
+    .set_cursor_pos=set_cursor_pos,
+    .get_cursor_pos=get_cursor_pos
+};
 
 static constexpr uint16_t make_cga_char(char content, uint16_t attr)
 {
@@ -20,16 +52,7 @@ static constexpr uint16_t make_cga_color_attrib(uint8_t freground, uint8_t backg
     return (background << 4) | (freground & 0x0F);
 }
 
-// global state for cga display style
-struct
-{
-    uint8_t foreground = console::CGACOLOR_LIGHT_GREY;
-    uint8_t background = console::CGACOLOR_BLACK;
-} cga_attrib;
-
-volatile uint16_t *cga_mem = (uint16_t *)(0xB8000 + KERNEL_VIRTUALBASE);
-
-static size_t get_cur_pos(void)
+cursor_pos get_cursor_pos(void)
 {
     outb(CRT_PORT, 14);
     size_t pos = inb(CRT_PORT + 1) << 8;
@@ -38,7 +61,7 @@ static size_t get_cur_pos(void)
     return pos;
 }
 
-static void set_cur_pos(size_t pos)
+void set_cursor_pos(cursor_pos pos)
 {
     outb(CRT_PORT, 14);
     outb(CRT_PORT + 1, pos >> 8);
@@ -46,11 +69,11 @@ static void set_cur_pos(size_t pos)
     outb(CRT_PORT + 1, pos);
 }
 
-void console::cga_putc(uint32_t c)
+cursor_pos cga_write_char(uint32_t c, console_colors bk,console_colors fr)
 {
-    uint16_t attrib = make_cga_color_attrib(cga_attrib.foreground, cga_attrib.background); //no background, lightgray foreground
+    uint16_t attrib = make_cga_color_attrib(fr, bk); //no background, lightgray foreground
 
-    auto pos = get_cur_pos();
+    auto pos = get_cursor_pos();
 
     if (c == '\n')
     {
@@ -79,7 +102,7 @@ void console::cga_putc(uint32_t c)
         memset((void *)(cga_mem + pos), 0, sizeof(cga_mem[0]) * (24 * 80 - pos));
     }
 
-    set_cur_pos(pos);
+    set_cursor_pos(pos);
     cga_mem[pos] = make_cga_char(' ', attrib);
 
     if (pos < 0 || pos > 25 * 80)
@@ -93,15 +116,6 @@ void console::cga_putc(uint32_t c)
                              false,
                              "The pos now is %d", pos);
     }
-}
 
-void console::cga_setpos(size_t pos)
-{
-    set_cur_pos(pos);
-}
-
-void console::cga_setcolor(cga_colors fore, cga_colors bk)
-{
-    cga_attrib.foreground = fore;
-    cga_attrib.background = bk;
+    return pos;
 }

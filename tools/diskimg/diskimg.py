@@ -125,14 +125,14 @@ def func_convert_diskimage(main_argv):
     src: str = main_argv[get_argidx(argidx_st, 2)]
     dest: str = main_argv[get_argidx(argidx_st, 3)]
 
-    if any({target_type == "qcow2", target_type == "vhd"}):
+    if any({target_type == "qcow2", target_type == "vmdk", target_type == "vhd"}):
         print("Convert from raw to " + target_type)
     else:
-        print("Target type should only be qcow2 and vhd, but " +
+        print("Target type should only be qcow2 and vmdk, but " +
               target_type + "is given.")
         exit(-1)
 
-    qemuimg_cmd = "qemu-img convert -f raw -O qcow2 "+src + " " + dest
+    qemuimg_cmd = "qemu-img convert -f raw -O "+target_type+" "+src + " " + dest
     subprocess.run(qemuimg_cmd, check=True, shell=True)
     print("COMPLETE: " + qemuimg_cmd)
 
@@ -145,7 +145,7 @@ def main(argv):
     funcname: str = argv[get_argidx(argidx_st, -1)]
 
     if (funcname != "update" and funcname != "convert"):
-        print("Only update and cqcow2 is available, but " + funcname+" is given.")
+        print("Only update and convert is available, but " + funcname+" is given.")
         exit(-1)
 
     if os.path.exists(argv[get_argidx(argidx_st, 0)]) != True:
