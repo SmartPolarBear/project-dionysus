@@ -2,12 +2,36 @@
 #include "drivers/debug/kdebug.h"
 #include "drivers/lock/spinlock.h"
 
+#include "lib/libc/stdio.h"
 #include "lib/libc/stdlib.h"
 #include "lib/libc/string.h"
-#include "lib/libc/stdio.h"
 
 #include "sys/types.h"
 
+// spinlock
+using lock::spinlock;
+using lock::spinlock_acquire;
+using lock::spinlock_holding;
+using lock::spinlock_initlock;
+using lock::spinlock_release;
+
+spinlock printf_lock;
+
+__attribute__((constructor)) void printf_init(void)
+{
+    spinlock_initlock(&printf_lock, "printf");
+}
+
+void puts(const char *str)
+{
+    auto len = strlen(str);
+    console::cosnole_write_string(str, len);
+}
+
+void putc(char c)
+{
+    console::console_write_char(c);
+}
 
 void printf(const char *fmt, ...)
 {
@@ -25,6 +49,11 @@ char nbuf[MAXNUMBER_LEN] = {};
 
 void vprintf(const char *fmt, va_list ap)
 {
+    bool locking = console::console_get_lock();
+    if (locking)
+    {
+        spinlock_acquire(&printf_lock);
+    }
 
     if (fmt == 0)
     {
@@ -169,18 +198,9 @@ void vprintf(const char *fmt, va_list ap)
         }
         }
     }
-}
 
-void puts(const char *str)
-{
-    while (*str != '\0')
+    if (locking)
     {
-        console::console_write_char(*str);
-        ++str;
+        spinlock_release(&printf_lock);
     }
-}
-
-void putc(char c)
-{
-    console::console_write_char(c);
 }

@@ -53,9 +53,14 @@ using char_attribute = size_t;
 void console_init();
 void console_set_color(console_colors background, console_colors foreground);
 void console_write_char(char c);
-void console_set_pos(cursor_pos pos);
-void console_set_lock(bool enable);
 
+void cosnole_write_string(const char *str);
+void cosnole_write_string(const char *str, size_t len);
+
+void console_set_pos(cursor_pos pos);
+
+void console_set_lock(bool enable);
+bool console_get_lock(void);
 } // namespace console
 
 #endif // __INCLUDE_DRIVERS_CONSOLE_H

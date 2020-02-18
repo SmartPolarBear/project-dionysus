@@ -46,8 +46,7 @@
 #include "lib/libc/stdio.h"
 
 // global entry of the kernel
-extern "C" [[noreturn]] void kmain()
-{
+extern "C" [[noreturn]] void kmain() {
     // process the multiboot information
     multiboot::init_mbi();
 
@@ -90,10 +89,16 @@ extern "C" [[noreturn]] void kmain()
 // usually called from boot.S
 extern "C"
 {
-    using constructor_type = void (*)();
-    extern constructor_type start_ctors;
-    extern constructor_type end_ctors;
+    using ctor_type = void (*)();
+    using dtor_type = void (*)();
 
+    extern ctor_type start_ctors;
+    extern ctor_type end_ctors;
+
+    extern dtor_type start_dtors;
+    extern dtor_type end_dtors;
+
+    // IMPORTANT: initialization of libc components such as printf depends on this.
     void call_ctors(void)
     {
         for (auto ctor = &start_ctors; ctor != &end_ctors; ctor++)
@@ -104,6 +109,9 @@ extern "C"
 
     void call_dtors(void)
     {
-        //TODO : call global desturctors
+        for (auto dtor = &start_dtors; dtor != &end_dtors; dtor++)
+        {
+            (*dtor)();
+        }
     }
 }
