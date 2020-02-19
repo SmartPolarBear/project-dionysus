@@ -35,7 +35,7 @@ SHAREDFLAGS += -I$(TOP_SRC)/include
 
 CFLAGS = -std=c17 $(SHAREDFLAGS)
 ASFLAGS = $(SHAREDFLAGS)
-CXXFLAGS = -std=c++2a $(SHAREDFLAGS)
+CXXFLAGS = -std=gnu++2a $(SHAREDFLAGS)
 
 QEMU = qemu-system-x86_64
 QEMU_EXE = $(QEMU).exe

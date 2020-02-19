@@ -1,6 +1,4 @@
-
-#if !defined(__INCLUDE_SYS_PROC_H)
-#define __INCLUDE_SYS_PROC_H
+#pragma once
 
 #include "arch/amd64/regs.h"
 
@@ -54,4 +52,3 @@ struct process
 
 } // namespace process
 
-#endif // __INCLUDE_SYS_PROC_H

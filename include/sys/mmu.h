@@ -1,13 +1,4 @@
-/**
- * @ Author: SmartPolarBear
- * @ Create Time: 2019-09-22 13:11:10
- * @ Modified by: Daniel Lin
- * @ Modified time: 2020-01-03 23:19:16
- * @ Description:
- */
-
-#if !defined(__INCLUDE_SYS_MMU_H)
-#define __INCLUDE_SYS_MMU_H
+#pragma once
 
 #if !defined(__cplusplus) && !defined(__ASSEMBLER__)
 #error "This header is only for C++"
@@ -194,4 +185,3 @@ struct idt_gate
 };
 #endif // __ASSEMBLER__
 
-#endif // __INCLUDE_SYS_MMU_H

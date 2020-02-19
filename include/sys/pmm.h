@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sat Feb 15 2020
+ * Last Modified: Wed Feb 19 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -20,8 +20,8 @@
  * ----------	---	----------------------------------------------------------
  */
 
-#if !defined(__INCLUDE_SYSY_PMM_H)
-#define __INCLUDE_SYSY_PMM_H
+
+#pragma once
 
 #include "sys/memlayout.h"
 #include "sys/types.h"
@@ -127,4 +127,3 @@ static inline void *boot_alloc_page(void)
 
 } // namespace pmm
 
-#endif // __INCLUDE_SYSY_PMM_H

@@ -1,5 +1,4 @@
-#if !defined(__INCLUDE_SYS_ERROR_H)
-#define __INCLUDE_SYS_ERROR_H
+#pragma once
 
 #include "sys/types.h"
 
@@ -23,4 +22,3 @@ enum error_code_values : error_code
 // this should be in the global namespace
 using error_code = int64_t;
 
-#endif // __INCLUDE_SYS_ERROR_H

@@ -1,5 +1,4 @@
-#if !defined(__INCLUDE_LIB_LIBC_STDLIB_H)
-#define __INCLUDE_LIB_LIBC_STDLIB_H
+#pragma once
 
 #include "sys/types.h"
 
@@ -14,5 +13,3 @@ size_t itoa_ex(char *buf, unsigned long long n, int base);
 
 // returns the length of the result string
 size_t ftoa_ex(double f, char *buf, int precision);
-
-#endif // __INCLUDE_LIB_LIBC_STDLIB_H

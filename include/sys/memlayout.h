@@ -1,12 +1,4 @@
-/**
- * @ Author: SmartPolarBear
- * @ Create Time: 2019-09-22 13:11:14
- * @ Modified by: Daniel Lin
- * @ Modified time: 2020-01-03 23:19:14
- * @ Description:
- */
-#if !defined(__INCLUDE_SYS_MEMLAYOUT_H)
-#define __INCLUDE_SYS_MEMLAYOUT_H
+#pragma once
 
 #if !defined(__cplusplus)
 #error "This header is only for C++"
@@ -132,4 +124,3 @@ struct free_area_info
     size_t free_count;
 };
 
-#endif // __INCLUDE_SYS_MEMLAYOUT_H

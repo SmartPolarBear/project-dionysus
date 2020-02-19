@@ -1,5 +1,4 @@
-#if !defined(__INCLUDE_SYS_MULTIBOOT_H)
-#define __INCLUDE_SYS_MULTIBOOT_H
+#pragma once
 
 #include "boot/multiboot2.h"
 #include "sys/types.h"
@@ -57,4 +56,3 @@ static inline auto acquire_tag_ptr(size_t type, aquire_tag_ptr_predicate pred) -
 
 } // namespace multiboot
 
-#endif // __INCLUDE_SYS_MULTIBOOT_H

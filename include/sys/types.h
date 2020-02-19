@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sun Feb 16 2020
+ * Last Modified: Wed Feb 19 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -20,8 +20,7 @@
  * ----------	---	----------------------------------------------------------
  */
 
-#if !defined(__INCLUDE_SYS_TYPES_H)
-#define __INCLUDE_SYS_TYPES_H
+#pragma once
 
 // va_list and some things
 #include <stdarg.h>
@@ -121,4 +120,3 @@ struct list_head
 
 using list_foreach_func = void (*)(list_head *);
 
-#endif // __INCLUDE_SYS_TYPES_H

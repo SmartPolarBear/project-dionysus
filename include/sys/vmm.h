@@ -1,5 +1,5 @@
 /*
- * Last Modified: Wed Feb 12 2020
+ * Last Modified: Wed Feb 19 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -20,8 +20,7 @@
  * ----------	---	----------------------------------------------------------
  */
 
-#if !defined(__INCLUDE_SYS_VMM_H)
-#define __INCLUDE_SYS_VMM_H
+#pragma once
 
 #include "sys/types.h"
 
@@ -84,4 +83,3 @@ pde_ptr_t walk_pgdir(pde_ptr_t pgdir, size_t va, bool create);
 
 } // namespace vmm
 
-#endif // __INCLUDE_SYS_VMM_H
