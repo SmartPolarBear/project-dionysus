@@ -1,5 +1,5 @@
 /*
- * Last Modified: Wed Feb 12 2020
+ * Last Modified: Thu Feb 20 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -21,8 +21,8 @@
  */
 
 #include "sys/error.h"
-#include "sys/memlayout.h"
 #include "sys/kmalloc.h"
+#include "sys/memlayout.h"
 #include "sys/mmu.h"
 #include "sys/pmm.h"
 #include "sys/vmm.h"
@@ -53,31 +53,26 @@ using libk::list_init;
 using libk::list_remove;
 
 // cpu-individual variable containing info about current CPU
-__thread cpu_info *cpu;
 // TODO: lacking records of current proc
+__thread cpu_info *cpu;
 
 void vmm::install_gdt(void)
 {
-    uint32_t *tss = nullptr;
-    uint64_t *gdt = nullptr;
     uint8_t *local_storage = reinterpret_cast<decltype(local_storage)>(boot_alloc_page());
-
     memset(local_storage, 0, PMM_PAGE_SIZE);
 
-    gdt = reinterpret_cast<decltype(gdt)>(local_storage);
+    uint64_t *gdt = reinterpret_cast<decltype(gdt)>(local_storage);
+    uint32_t *tss = reinterpret_cast<decltype(tss)>(local_storage + 1024);
+    uintptr_t tss_addr = (uintptr_t)tss;
 
-    tss = reinterpret_cast<decltype(tss)>(local_storage + 1024);
-    tss[16] = 0x00680000;
+    tss[16] = 0x00680000; // IO map base = 0x68
 
-    wrmsr(0xC0000100, ((uintptr_t)local_storage) + ((PMM_PAGE_SIZE) / 2));
+    wrmsr(MSR_FS_BASE, ((uintptr_t)local_storage) + ((PMM_PAGE_SIZE) / 2));
 
     auto c = &cpus[local_apic::get_cpunum()];
     c->local = local_storage;
-
     cpu = c;
-    // TODO: lacking initialization of proc
 
-    auto tss_addr = (uintptr_t)tss;
     gdt[0] = 0x0000000000000000;
     gdt[SEG_KCODE] = 0x0020980000000000; // Code, DPL=0, R/X
     gdt[SEG_UCODE] = 0x0020F80000000000; // Code, DPL=3, R/X

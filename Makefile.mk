@@ -28,14 +28,14 @@ GDB=gdb
 
 LDFLAGS=-z max-page-size=0x1000 -no-pie -nostdlib
 
-SHAREDFLAGS += --target=x86_64-pc-linux-elf 
+SHAREDFLAGS += --target=x86_64-pc-none-elf 
 SHAREDFLAGS = -fno-pie -fno-exceptions -fno-rtti -ffreestanding -nostdlib -fno-builtin -gdwarf-2 -Wall -Wextra
 SHAREDFLAGS += -march=x86-64 -mtls-direct-seg-refs -mno-sse -mcmodel=large -mno-red-zone -fmodules
 SHAREDFLAGS += -I$(TOP_SRC)/include
 
 CFLAGS = -std=c17 $(SHAREDFLAGS)
 ASFLAGS = $(SHAREDFLAGS)
-CXXFLAGS = -std=gnu++2a $(SHAREDFLAGS)
+CXXFLAGS = -std=c++2a $(SHAREDFLAGS)
 
 QEMU = qemu-system-x86_64
 QEMU_EXE = $(QEMU).exe
