@@ -48,10 +48,9 @@
         "streambuf": "cpp",
         "typeinfo": "cpp",
         "bit": "cpp",
-        "compare": "cpp"
+        "compare": "cpp",
+        "*.cppm": "cpp"
     },
-
-
     "psi-header.config": {
         "forceToTop": true,
         "blankLinesAfter": 6,

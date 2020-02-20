@@ -25,10 +25,10 @@
 #include "sys/pmm.h"
 
 // slab
-using memory::kmem::KMEM_CACHE_NAME_MAXLEN;
-using memory::kmem::KMEM_SIZED_CACHE_COUNT;
 using memory::kmem::kmem_bufctl;
 using memory::kmem::kmem_cache;
+using memory::kmem::KMEM_CACHE_NAME_MAXLEN;
+using memory::kmem::KMEM_SIZED_CACHE_COUNT;
 
 using memory::kmem::kmem_cache_alloc;
 using memory::kmem::kmem_cache_create;
