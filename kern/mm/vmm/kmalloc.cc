@@ -25,22 +25,21 @@
 #include "sys/pmm.h"
 
 // slab
-using allocators::slab_allocator::CACHE_NAME_MAXLEN;
-using allocators::slab_allocator::SIZED_CACHE_COUNT;
-using allocators::slab_allocator::slab;
-using allocators::slab_allocator::slab_bufctl;
-using allocators::slab_allocator::slab_cache;
+using memory::kmem::KMEM_CACHE_NAME_MAXLEN;
+using memory::kmem::KMEM_SIZED_CACHE_COUNT;
+using memory::kmem::kmem_bufctl;
+using memory::kmem::kmem_cache;
 
-using allocators::slab_allocator::slab_cache_alloc;
-using allocators::slab_allocator::slab_cache_create;
-using allocators::slab_allocator::slab_cache_destroy;
-using allocators::slab_allocator::slab_cache_free;
-using allocators::slab_allocator::slab_cache_reap;
-using allocators::slab_allocator::slab_cache_shrink;
-using allocators::slab_allocator::slab_init;
+using memory::kmem::kmem_cache_alloc;
+using memory::kmem::kmem_cache_create;
+using memory::kmem::kmem_cache_destroy;
+using memory::kmem::kmem_cache_free;
+using memory::kmem::kmem_cache_reap;
+using memory::kmem::kmem_cache_shrink;
+using memory::kmem::kmem_init;
 
 // defined in slab.cc
-extern slab_cache *sized_caches[SIZED_CACHE_COUNT];
+extern kmem_cache *sized_caches[KMEM_SIZED_CACHE_COUNT];
 
 // pmm
 using pmm::alloc_page;
@@ -69,16 +68,16 @@ struct memory_block
         struct
         {
             size_t size;
-            slab_cache *cache;
+            kmem_cache *cache;
         } slab;
     } alloc_info;
 
     uint8_t mem[0];
 };
 
-static inline slab_cache *cache_from_size(size_t sz)
+static inline kmem_cache *cache_from_size(size_t sz)
 {
-    slab_cache *cache = nullptr;
+    kmem_cache *cache = nullptr;
 
     // assumption: sized_caches are sorted ascendingly.
     for (auto c : sized_caches)
@@ -99,7 +98,7 @@ void *memory::kmalloc(size_t sz, [[maybe_unused]] size_t flags)
 
     size_t actual_size = sizeof(memory_block) + sz + GUARDIAN_BYTES_AFTER;
 
-    if (actual_size > allocators::slab_allocator::BLOCK_SIZE)
+    if (actual_size > PMM_PAGE_SIZE)
     {
         // use buddy
 
@@ -113,9 +112,9 @@ void *memory::kmalloc(size_t sz, [[maybe_unused]] size_t flags)
     else
     {
         // use slab
-        slab_cache *cache = cache_from_size(actual_size);
+        kmem_cache *cache = cache_from_size(actual_size);
 
-        ret = reinterpret_cast<decltype(ret)>(slab_cache_alloc(cache));
+        ret = reinterpret_cast<decltype(ret)>(kmem_cache_alloc(cache));
         ret->type = allocator_types::SLAB;
         ret->alloc_info.slab = decltype(ret->alloc_info.slab){.size = cache->obj_size, .cache = cache};
     }
@@ -135,6 +134,6 @@ void memory::kfree(void *ptr)
     else if (block->type == allocator_types::SLAB)
     {
         auto cache = block->alloc_info.slab.cache;
-        slab_cache_free(cache, block);
+        kmem_cache_free(cache, block);
     }
 }

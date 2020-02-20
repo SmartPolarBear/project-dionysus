@@ -8,53 +8,43 @@
 
 #include "drivers/lock/spinlock.h"
 
-namespace allocators
+namespace memory
 {
 
-namespace slab_allocator
+namespace kmem
 {
-struct slab_cache;
+struct kmem_cache;
 
-using ctor_type = void (*)(void *, slab_cache *, size_t);
-using dtor_type = ctor_type;
-using slab_bufctl = size_t;
+using kmem_ctor_type = void (*)(void *, kmem_cache *, size_t);
+using kmem_dtor_type = kmem_ctor_type;
+using kmem_bufctl = size_t;
 
-constexpr size_t CACHE_NAME_MAXLEN = 32;
-constexpr size_t BLOCK_SIZE = 4096;
+constexpr size_t KMEM_CACHE_NAME_MAXLEN = 32;
 
-constexpr size_t MAX_SIZED_CACHE_SIZE = 2048;
-constexpr size_t MIN_SIZED_CACHE_SIZE = 16;
-constexpr size_t SIZED_CACHE_COUNT = log2p1(MAX_SIZED_CACHE_SIZE / MIN_SIZED_CACHE_SIZE);
+constexpr size_t KMEM_MAX_SIZED_CACHE_SIZE = 2048;
+constexpr size_t KMEM_MIN_SIZED_CACHE_SIZE = 16;
+constexpr size_t KMEM_SIZED_CACHE_COUNT = log2p1(KMEM_MAX_SIZED_CACHE_SIZE / KMEM_MIN_SIZED_CACHE_SIZE);
 
-struct slab_cache
+struct kmem_cache
 {
     list_head full, partial, free;
     size_t obj_size, obj_count;
-    ctor_type ctor;
-    dtor_type dtor;
-    char name[CACHE_NAME_MAXLEN];
+    kmem_ctor_type ctor;
+    kmem_dtor_type dtor;
+    char name[KMEM_CACHE_NAME_MAXLEN];
     list_head cache_link;
 
     lock::spinlock lock;
 };
 
-struct slab
-{
-    size_t ref;
-    slab_cache *cache;
-    size_t inuse, next_free;
-    void *obj_ptr;
-    slab_bufctl *freelist;
-    list_head slab_link;
-};
 
-void slab_init(void);
-slab_cache *slab_cache_create(const char *name, size_t size, ctor_type ctor, dtor_type dtor);
-void *slab_cache_alloc(slab_cache *cache);
-void slab_cache_destroy(slab_cache *cache);
-void slab_cache_free(slab_cache *cache, void *obj);
-size_t slab_cache_shrink(slab_cache *cache);
-size_t slab_cache_reap();
+void kmem_init(void);
+kmem_cache *kmem_cache_create(const char *name, size_t size, kmem_ctor_type ctor, kmem_dtor_type dtor);
+void *kmem_cache_alloc(kmem_cache *cache);
+void kmem_cache_destroy(kmem_cache *cache);
+void kmem_cache_free(kmem_cache *cache, void *obj);
+size_t kmem_cache_shrink(kmem_cache *cache);
+size_t kmem_cache_reap();
 
 } // namespace slab_allocator
 

@@ -20,7 +20,6 @@
  * ----------	---	----------------------------------------------------------
  */
 
-
 #include "sys/kmem.h"
 #include "sys/pmm.h"
 
@@ -31,12 +30,10 @@
 #include "lib/libc/string.h"
 
 // slab
-using allocators::slab_allocator::BLOCK_SIZE;
-using allocators::slab_allocator::CACHE_NAME_MAXLEN;
-using allocators::slab_allocator::SIZED_CACHE_COUNT;
-using allocators::slab_allocator::slab;
-using allocators::slab_allocator::slab_bufctl;
-using allocators::slab_allocator::slab_cache;
+using memory::kmem::kmem_bufctl;
+using memory::kmem::kmem_cache;
+using memory::kmem::KMEM_CACHE_NAME_MAXLEN;
+using memory::kmem::KMEM_SIZED_CACHE_COUNT;
 
 // physical memory manager
 using pmm::alloc_page;
@@ -57,19 +54,28 @@ using lock::spinlock_holding;
 using lock::spinlock_initlock;
 using lock::spinlock_release;
 
+struct slab
+{
+    size_t ref;
+    kmem_cache *cache;
+    size_t inuse, next_free;
+    void *obj_ptr;
+    kmem_bufctl *freelist;
+    list_head slab_link;
+};
+
 list_head cache_head;
 spinlock cache_head_lock;
+kmem_cache *sized_caches[KMEM_SIZED_CACHE_COUNT];
 
-slab_cache *sized_caches[SIZED_CACHE_COUNT];
-
-slab_cache cache_cache;
+kmem_cache cache_cache;
 
 static inline constexpr size_t cache_obj_count(size_t obj_size)
 {
-    return BLOCK_SIZE / (sizeof(slab_bufctl) + obj_size);
+    return PMM_PAGE_SIZE / (sizeof(kmem_bufctl) + obj_size);
 }
 
-static inline void *slab_cache_grow(slab_cache *cache)
+static inline void *slab_cache_grow(kmem_cache *cache)
 {
     // Precondition: the cache's lock must be held
     KDEBUG_ASSERT(spinlock_holding(&cache->lock));
@@ -91,7 +97,7 @@ static inline void *slab_cache_grow(slab_cache *cache)
     list_add(&slb->slab_link, &cache->free);
 
     slb->freelist = reinterpret_cast<decltype(slb->freelist)>(((char *)block) + sizeof(slab));
-    slb->obj_ptr = reinterpret_cast<decltype(slb->obj_ptr)>(((char *)block) + sizeof(slab) + sizeof(slab_bufctl) * cache->obj_count);
+    slb->obj_ptr = reinterpret_cast<decltype(slb->obj_ptr)>(((char *)block) + sizeof(slab) + sizeof(kmem_bufctl) * cache->obj_count);
 
     void *obj = slb->obj_ptr;
     for (size_t i = 0; i < cache->obj_count; i++)
@@ -109,7 +115,7 @@ static inline void *slab_cache_grow(slab_cache *cache)
     return slb;
 }
 
-static inline void slab_destory(slab_cache *cache, slab *slb)
+static inline void slab_destory(kmem_cache *cache, slab *slb)
 {
     // Precondition: the cache's lock must be held
     KDEBUG_ASSERT(spinlock_holding(&cache->lock));
@@ -132,7 +138,7 @@ static inline void slab_destory(slab_cache *cache, slab *slb)
 
 // ATTENTION: BE CAUTIOUS FOR RACE CONDITION
 // This function should not be a critial section because there's no modifying
-static inline slab *slab_find(slab_cache *cache, void *obj)
+static inline slab *slab_find(kmem_cache *cache, void *obj)
 {
     list_head *heads[] = {&cache->partial, &cache->full};
     slab *slb = nullptr;
@@ -156,7 +162,7 @@ static inline slab *slab_find(slab_cache *cache, void *obj)
     return slb;
 }
 
-void allocators::slab_allocator::slab_init(void)
+void memory::kmem::kmem_init(void)
 {
     cache_cache.obj_size = sizeof(decltype(cache_cache));
     cache_cache.obj_count = cache_obj_count(cache_cache.obj_size);
@@ -164,7 +170,7 @@ void allocators::slab_allocator::slab_init(void)
     cache_cache.dtor = nullptr;
 
     auto cache_cache_name = "cache_cache";
-    strncpy(cache_cache.name, cache_cache_name, CACHE_NAME_MAXLEN);
+    strncpy(cache_cache.name, cache_cache_name, KMEM_CACHE_NAME_MAXLEN);
 
     spinlock_initlock(&cache_cache.lock, cache_cache_name);
     spinlock_initlock(&cache_head_lock, "cache_head");
@@ -176,9 +182,9 @@ void allocators::slab_allocator::slab_init(void)
     list_init(&cache_head);
     list_add(&cache_cache.cache_link, &cache_head);
 
-    char sized_cache_name[CACHE_NAME_MAXLEN];
+    char sized_cache_name[KMEM_CACHE_NAME_MAXLEN];
     size_t sized_cache_count = 0;
-    for (size_t sz = MIN_SIZED_CACHE_SIZE; sz <= MAX_SIZED_CACHE_SIZE; sz *= 2)
+    for (size_t sz = KMEM_MIN_SIZED_CACHE_SIZE; sz <= KMEM_MAX_SIZED_CACHE_SIZE; sz *= 2)
     {
 
         memset(sized_cache_name, 0, sizeof(sized_cache_name));
@@ -191,16 +197,16 @@ void allocators::slab_allocator::slab_init(void)
         sized_cache_name[5] = '-';
 
         [[maybe_unused]] size_t len = itoa_ex(sized_cache_name + 4, sz, 10);
-        sized_caches[sized_cache_count++] = slab_cache_create(sized_cache_name, sz, nullptr, nullptr);
+        sized_caches[sized_cache_count++] = kmem_cache_create(sized_cache_name, sz, nullptr, nullptr);
     }
 
     KDEBUG_ASSERT(sized_cache_count == sized_cache_count);
 }
 
-slab_cache *allocators::slab_allocator::slab_cache_create(const char *name, size_t size, ctor_type ctor, dtor_type dtor)
+kmem_cache *memory::kmem::kmem_cache_create(const char *name, size_t size, kmem_ctor_type ctor, kmem_dtor_type dtor)
 {
-    KDEBUG_ASSERT(size < BLOCK_SIZE - sizeof(slab_bufctl));
-    slab_cache *ret = reinterpret_cast<decltype(ret)>(slab_cache_alloc(&cache_cache));
+    KDEBUG_ASSERT(size < PMM_PAGE_SIZE - sizeof(kmem_bufctl));
+    kmem_cache *ret = reinterpret_cast<decltype(ret)>(kmem_cache_alloc(&cache_cache));
 
     if (ret != nullptr)
     {
@@ -210,7 +216,7 @@ slab_cache *allocators::slab_allocator::slab_cache_create(const char *name, size
         ret->ctor = ctor;
         ret->dtor = dtor;
 
-        strncpy(ret->name, name, CACHE_NAME_MAXLEN);
+        strncpy(ret->name, name, KMEM_CACHE_NAME_MAXLEN);
         spinlock_initlock(&ret->lock, ret->name);
 
         list_init(&ret->full);
@@ -231,7 +237,7 @@ slab_cache *allocators::slab_allocator::slab_cache_create(const char *name, size
     return ret;
 }
 
-void *allocators::slab_allocator::slab_cache_alloc(slab_cache *cache)
+void *memory::kmem::kmem_cache_alloc(kmem_cache *cache)
 {
     spinlock_acquire(&cache->lock);
 
@@ -274,7 +280,7 @@ void *allocators::slab_allocator::slab_cache_alloc(slab_cache *cache)
     return ret;
 }
 
-void allocators::slab_allocator::slab_cache_destroy(slab_cache *cache)
+void memory::kmem::kmem_cache_destroy(kmem_cache *cache)
 {
     spinlock_acquire(&cache->lock);
     list_head *heads[] = {&cache->full, &cache->partial, &cache->free};
@@ -290,10 +296,10 @@ void allocators::slab_allocator::slab_cache_destroy(slab_cache *cache)
     }
     spinlock_release(&cache->lock);
 
-    slab_cache_free(&cache_cache, cache);
+    kmem_cache_free(&cache_cache, cache);
 }
 
-void allocators::slab_allocator::slab_cache_free(slab_cache *cache, void *obj)
+void memory::kmem::kmem_cache_free(kmem_cache *cache, void *obj)
 {
     KDEBUG_ASSERT(obj != nullptr && cache != nullptr);
 
@@ -320,7 +326,7 @@ void allocators::slab_allocator::slab_cache_free(slab_cache *cache, void *obj)
     spinlock_release(&cache->lock);
 }
 
-size_t allocators::slab_allocator::slab_cache_shrink(slab_cache *cache)
+size_t memory::kmem::kmem_cache_shrink(kmem_cache *cache)
 {
     size_t count = 0;
     auto entry = cache->free.next;
@@ -340,13 +346,13 @@ size_t allocators::slab_allocator::slab_cache_shrink(slab_cache *cache)
     return count;
 }
 
-size_t allocators::slab_allocator::slab_cache_reap()
+size_t memory::kmem::kmem_cache_reap()
 {
     size_t count = 0;
     list_head *iter = nullptr;
     list_for(iter, &cache_head)
     {
-        count += slab_cache_shrink(list_entry(iter, slab_cache, cache_link));
+        count += kmem_cache_shrink(list_entry(iter, kmem_cache, cache_link));
     }
     return count;
 }

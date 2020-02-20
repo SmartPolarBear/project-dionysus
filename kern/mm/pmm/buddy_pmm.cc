@@ -23,7 +23,6 @@ using pmm::buddy_pmm::init_buddy;
 
 pmm::pmm_manager_info pmm::buddy_pmm::buddy_pmm_manager = {
     .name = "BUDDY",
-
     .init = init_buddy,
     .init_memmap = buddy_init_memmap,
     .alloc_pages = buddy_alloc_pages,

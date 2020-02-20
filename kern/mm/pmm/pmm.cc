@@ -210,7 +210,7 @@ void pmm::init_pmm(void)
 
     vmm::boot_map_kernel_mem();
 
-    allocators::slab_allocator::slab_init();
+    memory::kmem::kmem_init();
 }
 
 page_info *pmm::alloc_pages(size_t n)
