@@ -1,5 +1,5 @@
 /*
- * Last Modified: Wed Feb 19 2020
+ * Last Modified: Thu Feb 20 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -24,9 +24,7 @@
 
 #include "sys/types.h"
 
-
-#include "sys/allocators/buddy_alloc.h"
-#include "sys/allocators/slab_alloc.h"
+#include "sys/kmem.h"
 
 #include "sys/memlayout.h"
 #include "sys/mmu.h"

@@ -78,6 +78,7 @@ extern "C" [[noreturn]] void kmain() {
 
     // TODO: implement process manager.
     // TODO: after a proper scheduler implementation, this should be the last line of main
+
     ap::all_processor_main();
 
     for (;;)

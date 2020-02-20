@@ -1,5 +1,5 @@
 /*
- * Last Modified: Wed Feb 12 2020
+ * Last Modified: Thu Feb 20 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -20,8 +20,8 @@
  * ----------	---	----------------------------------------------------------
  */
 
-#include "sys/allocators/buddy_alloc.h"
-#include "sys/allocators/slab_alloc.h"
+
+#include "sys/kmem.h"
 #include "sys/pmm.h"
 
 #include "drivers/console/console.h"

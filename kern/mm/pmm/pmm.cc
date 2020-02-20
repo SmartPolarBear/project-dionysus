@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sat Feb 15 2020
+ * Last Modified: Thu Feb 20 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -19,11 +19,11 @@
  * Date      	By	Comments
  * ----------	---	----------------------------------------------------------
  */
+#include "./buddy_pmm.h"
 
 #include "arch/amd64/sync.h"
 
-#include "sys/allocators/buddy_alloc.h"
-#include "sys/allocators/slab_alloc.h"
+#include "sys/kmem.h"
 #include "sys/error.h"
 #include "sys/memlayout.h"
 #include "sys/mmu.h"
@@ -64,7 +64,7 @@ multiboot::multiboot_tag_ptr module_tags[RESERVED_SPACES_MAX_COUNT];
 static inline void init_pmm_manager()
 {
     // set the physical memory manager
-    pmm_manager = &allocators::buddy_allocator::buddy_pmm_manager;
+    pmm_manager = &pmm::buddy_pmm::buddy_pmm_manager;
     pmm_manager->init();
 }
 
@@ -142,7 +142,6 @@ static inline void init_physical_mem()
         pages[i].flags |= PHYSICAL_PAGE_FLAG_RESERVED; // set all pages as reserved
     }
 
-
     // reserve the multiboot info
     if ((uintptr_t)mbi_structptr >= pmm::pavailable_start())
     {
@@ -198,7 +197,6 @@ static inline void init_physical_mem()
         }
     }
 }
-
 
 void pmm::init_pmm(void)
 {

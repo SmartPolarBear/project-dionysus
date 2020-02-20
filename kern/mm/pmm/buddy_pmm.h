@@ -6,10 +6,10 @@
 #include "sys/pmm.h"
 #include "sys/types.h"
 
-namespace allocators
+namespace pmm
 {
 
-namespace buddy_allocator
+namespace buddy_pmm
 {
 
 void init_buddy(void);
