@@ -1,6 +1,6 @@
-
-#if !defined(__INCLUDE_DRIVERS_ACPI_CPU_H)
-#define __INCLUDE_DRIVERS_ACPI_CPU_H
+#pragma once
+// #if !defined(__INCLUDE_DRIVERS_ACPI_CPU_H)
+// #define __INCLUDE_DRIVERS_ACPI_CPU_H
 
 #include "sys/mmu.h"
 #include "sys/types.h"
@@ -44,4 +44,4 @@ void init_ap(void);
 void all_processor_main();
 } // namespace ap
 
-#endif // __INCLUDE_DRIVERS_ACPI_CPU_H
+// #endif // __INCLUDE_DRIVERS_ACPI_CPU_H

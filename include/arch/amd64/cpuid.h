@@ -1,6 +1,4 @@
-#if !defined(__INCLUDE_ARCH_AMD64_CPUID_H)
-#define __INCLUDE_ARCH_AMD64_CPUID_H
-
+#pragma once
 #include <cpuid.h>
 
 #include "sys/types.h"
@@ -29,5 +27,3 @@ static inline auto cpuid(uint32_t code, uint64_t regs[4]) -> decltype(regs[0])
   return regs[0];
 }
 
-
-#endif // __INCLUDE_ARCH_AMD64_CPUID_H

@@ -1,5 +1,4 @@
-#if !defined(__INCLUDE_DRIVERS_APIC_H)
-#define __INCLUDE_DRIVERS_APIC_H
+#pragma once
 
 #include "drivers/acpi/cpu.h"
 #include "sys/types.h"
@@ -78,4 +77,3 @@ void initialize_pic(void);
 
 } // namespace pic8259A
 
-#endif // __INCLUDE_DRIVERS_APIC_H

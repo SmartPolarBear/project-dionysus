@@ -1,5 +1,4 @@
-#if !defined(__INCLUDE_LIB_LIBKERN_DATA_LIST_H)
-#define __INCLUDE_LIB_LIBKERN_DATA_LIST_H
+#pragma once
 
 #include "sys/types.h"
 
@@ -107,4 +106,3 @@ static inline void list_for_each(list_head *head, list_foreach_func func)
 
 } // namespace libk
 
-#endif // __INCLUDE_LIB_LIBKERN_DATA_LIST_H

@@ -1,9 +1,4 @@
-#if !defined(__INCLUDE_ARCH_X86_H)
-#define __INCLUDE_ARCH_X86_H
-
-#if !defined(__cplusplus)
-#error Only available for C++
-#endif
+#pragma once
 
 #include "sys/types.h"
 
@@ -70,5 +65,3 @@ static inline void invlpg(void *addr)
     asm volatile("invlpg (%0)" ::"r"(addr)
                  : "memory");
 }
-
-#endif // __INCLUDE_ARCH_X86_H

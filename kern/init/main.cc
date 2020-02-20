@@ -1,5 +1,5 @@
 /*
- * Last Modified: Tue Feb 18 2020
+ * Last Modified: Thu Feb 20 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -76,10 +76,9 @@ extern "C" [[noreturn]] void kmain() {
     // boot other CPU cores
     ap::init_ap();
 
+    // TODO: implement process manager.
     // TODO: after a proper scheduler implementation, this should be the last line of main
     ap::all_processor_main();
-
-    //TODO: implement process manager.
 
     for (;;)
         ;

@@ -1,5 +1,4 @@
-#if !defined(__INCLUDE_ARCH_AMD64_SYNC)
-#define __INCLUDE_ARCH_AMD64_SYNC
+#pragma once
 
 #include "arch/amd64/regs.h"
 #include "arch/amd64/x86.h"
@@ -32,4 +31,3 @@ __intr_restore(bool flag)
 
 #define local_intrrupt_restore(x) __intr_restore(x);
 
-#endif // __INCLUDE_ARCH_AMD64_SYNC

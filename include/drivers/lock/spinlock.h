@@ -21,6 +21,4 @@ void spinlock_release(spinlock *lock);
 void pushcli(void);
 void popcli(void);
 
-
 } // namespace lock
-

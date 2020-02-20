@@ -1,6 +1,4 @@
-
-#if !defined(__INCLUDE_DRIVERS_ACPI_H)
-#define __INCLUDE_DRIVERS_ACPI_H
+#pragma once
 
 #include "sys/types.h"
 
@@ -157,5 +155,3 @@ size_t get_intr_src_override_descriptors(size_t bufsz, OUT madt_iso **buf);
 //TODO: instead of copy madt_lapic to cpus array, directly provide interface to get them
 
 } // namespace acpi
-
-#endif // __INCLUDE_DRIVERS_ACPI_H

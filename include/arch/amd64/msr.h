@@ -1,6 +1,4 @@
-#if !defined(__INCLUDE_ARCH_AMD64_MSR_H)
-#define __INCLUDE_ARCH_AMD64_MSR_H
-
+#pragma once
 #include <sys/types.h>
 
 // not all MSRs are listed. only a few.
@@ -36,4 +34,3 @@ static inline uint64_t rdmsr(uint64_t msr)
     return ((uint64_t)high << 32) | low;
 }
 
-#endif // __INCLUDE_ARCH_AMD64_MSR_H

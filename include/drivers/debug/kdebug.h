@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sun Feb 16 2020
+ * Last Modified: Thu Feb 20 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -20,8 +20,7 @@
  * ----------	---	----------------------------------------------------------
  */
 
-#if !defined(__INCLUDE_DRIVERS_KDEBUG_H)
-#define __INCLUDE_DRIVERS_KDEBUG_H
+#pragma once
 
 #include "sys/types.h"
 
@@ -79,4 +78,3 @@ void kdebug_getcallerpcs(size_t buflen, uintptr_t pcs[]);
 
 } // namespace kdebug
 
-#endif // __INCLUDE_DRIVERS_KDEBUG_H

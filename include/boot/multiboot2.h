@@ -19,8 +19,8 @@
  *  IN THE SOFTWARE.
  */
 
-#ifndef _MULTIBOOT2_HEADER_H_
-#define _MULTIBOOT2_HEADER_H_
+#pragma once
+
 
 /* How many bytes from the start of the file we search for the header.  */
 #define MULTIBOOT_SEARCH 32768
@@ -412,4 +412,3 @@ struct multiboot_tag_load_base_addr
 
 #endif // __ASSEMBLER__
 
-#endif // _MULTIBOOT2_HEADER_H_

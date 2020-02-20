@@ -8,9 +8,9 @@ kern/libc/ftoa.o
 kern/libc/qsort.o
 kern/libcxxrt/cxxbase.o
 kern/libcxxrt/new.o
-kern/mm/allocators/buddy/buddy.o
-kern/mm/allocators/slab/slab.o
 kern/mm/pmm/pmm.o
+kern/mm/pmm/buddy_pmm.o
+kern/mm/pmm/kmem.o
 kern/mm/vmm/vmm.o
 kern/mm/vmm/gdt.o
 kern/mm/vmm/address.o

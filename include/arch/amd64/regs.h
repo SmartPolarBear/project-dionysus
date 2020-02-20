@@ -1,5 +1,4 @@
-#if !defined(__INCLUDE_ARCH_AMD64_REGS_H)
-#define __INCLUDE_ARCH_AMD64_REGS_H
+#pragma once
 
 #include "sys/types.h"
 
@@ -87,4 +86,3 @@ struct trap_info
     uint64_t ss;        // ds in x86
 };
 
-#endif // __INCLUDE_ARCH_AMD64_REGS_H

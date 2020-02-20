@@ -1,6 +1,4 @@
-#if !defined(__INCLUDE_ARCH_AMD64_CPU_H)
-#define __INCLUDE_ARCH_AMD64_CPU_H
-
+#pragma once
 #include "sys/types.h"
 #include "sys/mmu.h"
 
@@ -53,5 +51,3 @@ static inline void lidt(uintptr_t p, int size)
 
   asm volatile("lidt (%0)" : : "r" (pd));
 }
-
-#endif // __INCLUDE_ARCH_AMD64_CPU_H

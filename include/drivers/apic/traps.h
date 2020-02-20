@@ -1,5 +1,4 @@
-#if !defined(__INCLUDE_DIRVERS_APIC_TRAPS_H__)
-#define __INCLUDE_DIRVERS_APIC_TRAPS_H__
+#pragma once
 
 #include "arch/amd64/regs.h"
 
@@ -63,5 +62,3 @@ PANIC void init_trap(void);
 PANIC trap_handle trap_handle_regsiter(size_t trapnumber, trap_handle handle);
 
 } // namespace trap
-
-#endif // __INCLUDE_DIRVERS_APIC_TRAPS_H__

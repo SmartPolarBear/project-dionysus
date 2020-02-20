@@ -1,6 +1,6 @@
 TOP_SRC = ../..
 
-SUBDIRS = allocators pmm vmm
+SUBDIRS = pmm vmm
 
 all: $(SUBDIRS)
 
