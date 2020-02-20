@@ -49,7 +49,7 @@ extern "C" void trap_ret();
 // defined below. used by trap_entry to futuer process a trap
 extern "C" void trap_body(trap_info info);
 
-static inline void make_gate(uint32_t *idt_head, uint32_t head_offset, void *kva, uint32_t pl, ExceptionType type)
+static inline void make_gate(uint32_t *idt_head, uint32_t head_offset, void *kva, uint32_t pl, exception_type type)
 {
     uintptr_t addr = (uintptr_t)kva;
     head_offset *= 4;
@@ -72,7 +72,7 @@ PANIC void trap::init_trap(void)
 
     make_gate(idt, 64, vectors[64], DPL_USER, IT_TRAP);
 
-    lidt(reinterpret_cast<idt_gate *>(idt), PMM_PAGE_SIZE);
+    lidt((uintptr_t)idt, PMM_PAGE_SIZE);
 
     spinlock_initlock(&handle_table.lock, "traphandles");
 

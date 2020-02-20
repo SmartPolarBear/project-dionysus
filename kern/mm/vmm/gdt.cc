@@ -63,8 +63,6 @@ void vmm::install_gdt(void)
 
     uint64_t *gdt = reinterpret_cast<decltype(gdt)>(local_storage);
     uint32_t *tss = reinterpret_cast<decltype(tss)>(local_storage + 1024);
-    uintptr_t tss_addr = (uintptr_t)tss;
-
     tss[16] = 0x00680000; // IO map base = 0x68
 
     wrmsr(MSR_FS_BASE, ((uintptr_t)local_storage) + ((PMM_PAGE_SIZE) / 2));
@@ -79,11 +77,13 @@ void vmm::install_gdt(void)
     gdt[SEG_KDATA] = 0x0000920000000000; // Data, DPL=0, W
     gdt[SEG_KCPU] = 0x0000000000000000;  // unused
     gdt[SEG_UDATA] = 0x0000F20000000000; // Data, DPL=3, W
+
+    uintptr_t tss_addr = (uintptr_t)tss;
     gdt[SEG_TSS + 0] = (0x0067) | ((tss_addr & 0xFFFFFF) << 16) |
                        (0x00E9LL << 40) | (((tss_addr >> 24) & 0xFF) << 56);
     gdt[SEG_TSS + 1] = (tss_addr >> 32);
 
-    lgdt(reinterpret_cast<gdt_segment *>(gdt), sizeof(uint64_t[8]));
+    lgdt(uintptr_t(gdt), sizeof(uint64_t[8]));
 
     ltr(SEG_TSS << 3);
 }

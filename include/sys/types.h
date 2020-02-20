@@ -1,5 +1,5 @@
 /*
- * Last Modified: Wed Feb 19 2020
+ * Last Modified: Thu Feb 20 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -120,3 +120,5 @@ struct list_head
 
 using list_foreach_func = void (*)(list_head *);
 
+template <size_t size_in_byte>
+using BLOCK = uint8_t[size_in_byte];

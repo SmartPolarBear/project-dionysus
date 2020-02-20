@@ -22,8 +22,6 @@ struct cpu
     uint8_t id;                // index into cpus[] below
     uint8_t apicid;            // Local APIC ID
     context *scheduler;        // swtch() here to enter scheduler
-    machine_state ts;          // Used by x86 to find stack for interrupt
-    gdt_segment gdt[7];        // x86 global descriptor table
     volatile uint32_t started; // Has the CPU started?
     int nest_pushcli_depth;    // Depth of pushcli nesting.
     int intr_enable;           // Were interrupts enabled before pushcli?
