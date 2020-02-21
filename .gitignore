@@ -18,6 +18,7 @@ build
 .gdbinit
 
 compile_commands.json
+.clangd/*
 
 .vscode/*
 !.vscode/settings.json

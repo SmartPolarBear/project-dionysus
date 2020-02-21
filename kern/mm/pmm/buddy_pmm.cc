@@ -53,8 +53,7 @@ static inline bool page_is_buddy(page_info *page, size_t order, size_t zone_num)
         if (page->zone_id == zone_num)
         {
             return !page_has_flag(page, PHYSICAL_PAGE_FLAG_RESERVED) &&
-                   page_has_flag(page, PHYSICAL_PAGE_FLAG_PROPERTY) &&
-                   page->property == order;
+                   page_has_flag(page, PHYSICAL_PAGE_FLAG_PROPERTY) && page->property == order;
         }
     }
     return false;
@@ -121,6 +120,7 @@ static inline page_info *buddy_alloc_pages_impl(size_t order)
     {
         if (!list_empty(&free_areas[cur_order].freelist))
         {
+
             auto entry = free_areas[cur_order].freelist.next;
             page_info *page = list_entry(entry, page_info, page_link);
 
@@ -172,8 +172,7 @@ void pmm::buddy_pmm::buddy_init_memmap(page_info *base, size_t n)
         // KDEBUG_ASSERT(page_has_flag(p, PHYSICAL_PAGE_FLAG_RESERVED));
         if (!page_has_flag(p, PHYSICAL_PAGE_FLAG_RESERVED))
         {
-            KDEBUG_RICHPANIC("page_has_flag(p, PHYSICAL_PAGE_FLAG_RESERVED) should be 1\n",
-                             "ASSERTION", true,
+            KDEBUG_RICHPANIC("page_has_flag(p, PHYSICAL_PAGE_FLAG_RESERVED) should be 1\n", "ASSERTION", true,
                              "Page index=%d\n", pmm::page_to_index(p));
         }
         p->flags = 0;

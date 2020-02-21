@@ -49,8 +49,8 @@
         "typeinfo": "cpp",
         "bit": "cpp",
         "compare": "cpp",
-        "*.cppm": "cpp"
     },
+
     "psi-header.config": {
         "forceToTop": true,
         "blankLinesAfter": 6,
