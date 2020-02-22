@@ -47,7 +47,7 @@ debug4vsc: all
 include $(TOP_SRC)/Makefile.kernbin.mk
 	
 $(BUILD)/kernel: $(BASEOBJS) $(KERNBINOBJS)
-	$(LD) $(LDFLAGS) -Tkern/kernel.ld  -o $@ $^ -b binary $(KERNBINOBJS)
+	$(LD) $(LDFLAGS) -Wl,-T config/build/kernel.ld -o build/kernel $^
 	$(OBJDUMP) -S $@ > $(BUILD)/kernel.asm
 	$(OBJDUMP) -t $@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $(BUILD)/kernel.sym
 

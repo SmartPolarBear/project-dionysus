@@ -21,12 +21,12 @@ GVECTORS_PY=$(BUILD)/tools/vectors/gvectors.py
 
 CC = $(TOOLPREFIX)clang
 CXX = $(TOOLPREFIX)clang++
-LD = $(TOOLPREFIX)ld
+LD = $(TOOLPREFIX)clang++
 OBJCOPY = $(TOOLPREFIX)objcopy
 OBJDUMP = $(TOOLPREFIX)objdump
 GDB=gdb
 
-LDFLAGS=-z max-page-size=0x1000 -no-pie -nostdlib
+LDFLAGS=-z max-page-size=0x1000 -no-pie -nostdlib -ffreestanding -nostartfiles
 
 SHAREDFLAGS += --target=x86_64-pc-none-elf 
 SHAREDFLAGS = -fno-pie -fno-exceptions -fno-rtti -ffreestanding -nostdlib -fno-builtin -gdwarf-2 -Wall -Wextra
