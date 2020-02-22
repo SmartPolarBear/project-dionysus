@@ -1,0 +1,21 @@
+warning: cannot match target(kernel).add_files("kern/**.c") at ./xmake.lua:13
+warning: cannot match target(kernel).add_files("drivers/**.c") at ./xmake.lua:14
+[  0%]: ccache compiling.release kern/init/ap_boot.S
+[  2%]: ccache compiling.release drivers/apic/trapentry_asm.S
+[  4%]: ccache compiling.release kern/init/boot.S
+[  7%]: ccache compiling.release drivers/debug/kerror.cc
+[ 28%]: ccache compiling.release drivers/acpi/common/sdt.cc
+[ 23%]: ccache compiling.release kern/proc/scheduler.cc
+[ 18%]: ccache compiling.release drivers/lock/spinlock.cc
+[ 21%]: ccache compiling.release drivers/apic/traps.cc
+[ 14%]: ccache compiling.release drivers/console/cga/cga.cc
+[ 11%]: ccache compiling.release kern/lib/libcxxrt/cxxbase.cc
+[  9%]: ccache compiling.release kern/mm/pmm/buddy_pmm.cc
+[ 30%]: ccache compiling.release drivers/acpi/v2/xsdt.cc
+[ 33%]: ccache compiling.release kern/mm/vmm/address.cc
+[ 16%]: ccache compiling.release drivers/apic_timer/timer.cc
+[ 25%]: ccache compiling.release kern/lib/libc/string.cc
+error: include/sys/types.h:31:10: fatal error: 'bit' file not found
+#include <bit>
+         ^~~~~
+1 error generated.

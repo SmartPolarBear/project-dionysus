@@ -1,12 +1,12 @@
 /*
- * Last Modified: Thu Feb 20 2020
+ * Last Modified: Fri Feb 21 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
- * 
+ *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
  * REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
  * FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
@@ -27,13 +27,18 @@
 #include <stddef.h>
 #include <stdint.h>
 
-// std::log2p1
-#include <bit>
-
 #define PANIC
 #define OUT
 
-using std::log2p1;
+constexpr size_t log2(size_t n)
+{
+    return ((n < 2) ? 1 : 1 + log2(n / 2));
+}
+
+constexpr size_t log2p1(size_t n)
+{
+    return (log2(n)) + 1;
+}
 
 using ldbl = long double;
 using ull = unsigned long long;
@@ -82,35 +87,30 @@ static inline constexpr ull operator"" _TB(ull sz)
     return sz * STORAGE_UNIT * STORAGE_UNIT * STORAGE_UNIT * STORAGE_UNIT;
 }
 
-template <typename T>
-static inline auto powerof2_roundup(T x) -> T
+template <typename T> static inline auto powerof2_roundup(T x) -> T
 {
     return 1ull << (sizeof(T) * 8 - __builtin_clzll(x));
 }
 
-template <typename T>
-static inline auto log2(T x) -> T
+template <typename T> static inline auto log2(T x) -> T
 {
     unsigned long long val = x;
     return ((T)(8 * sizeof(unsigned long long) - __builtin_clzll((val)) - 1));
 }
 
 // round down to the nearest multiple of n
-template <typename T>
-static inline constexpr T rounddown(T val, T n)
+template <typename T> static inline constexpr T rounddown(T val, T n)
 {
     return val - val % n;
 }
 
 // round up to the nearest multiple of n
-template <typename T>
-static inline constexpr T roundup(T val, T n)
+template <typename T> static inline constexpr T roundup(T val, T n)
 {
     return rounddown(val + n - 1, n);
 }
 
-#define container_of(ptr, type, member) \
-    ((type *)((char *)(ptr)-offsetof(type, member)))
+#define container_of(ptr, type, member) ((type *)((char *)(ptr)-offsetof(type, member)))
 
 // linked list head
 struct list_head
@@ -120,5 +120,4 @@ struct list_head
 
 using list_foreach_func = void (*)(list_head *);
 
-template <size_t size_in_byte>
-using BLOCK = uint8_t[size_in_byte];
+template <size_t size_in_byte> using BLOCK = uint8_t[size_in_byte];
