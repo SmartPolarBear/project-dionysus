@@ -26,7 +26,7 @@ OBJCOPY = $(TOOLPREFIX)objcopy
 OBJDUMP = $(TOOLPREFIX)objdump
 GDB=gdb
 
-LDFLAGS=-z max-page-size=0x1000 -no-pie -nostdlib -ffreestanding -nostartfiles
+LDFLAGS=-z max-page-size=0x1000 -no-pie -nostdlib -ffreestanding -nostartfiles -Wl,--build-id=none
 
 SHAREDFLAGS += --target=x86_64-pc-none-elf 
 SHAREDFLAGS = -fno-pie -fno-exceptions -fno-rtti -ffreestanding -nostdlib -fno-builtin -gdwarf-2 -Wall -Wextra

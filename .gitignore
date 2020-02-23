@@ -19,6 +19,7 @@ build
 
 compile_commands.json
 .clangd/*
+.xmake/*
 
 .vscode/*
 !.vscode/settings.json
