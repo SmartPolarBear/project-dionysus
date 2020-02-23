@@ -4,7 +4,7 @@ target("kernel")
     set_languages("c17", "cxx20")
     set_kind("binary")
 
-    set_toolchain("cc","usr/bin/clang")
+    set_toolchain("cc","clang")
     set_toolchain("as","clang")
     set_toolchain("cxx","clang")
     set_toolchain("ld","clang")
@@ -28,23 +28,10 @@ target("kernel")
                 table.insert(link_args,v) 
             end 
         end
-        -- print(link_args)
-        os.execv("clang",link_args)
+
+        print(link_args)
+        -- os.execv("clang",link_args)
     end)
-
-    -- on_build_file(function (target, sourcefile, opt)
-    --     local build_args={"--target=x86_64-pc-none-elf","-fno-pie","-fno-exceptions" ,"-fno-rtti", "-ffreestanding", "-nostdlib" ,"-fno-builtin" ,"-gdwarf-2" ,"-Wall" ,"-Wextra","-march=x86-64", "-mtls-direct-seg-refs" ,"-mno-sse" ,"-mcmodel=large" ,"-mno-red-zone"}
-    --     if not opt.configs then
-    --         if not opt.configs.cxxflags then
-    --             for i, v in pairs(opt.configs.cxxflags) do  
-    --                 table.insert(build_args,v) 
-    --             end 
-    --         end
-    --     end
-
-
-    --     print(opt)
-    -- end)
     
     set_objectdir("$(buildir)/dionysus/kernel")
 
@@ -57,7 +44,7 @@ target("kernel")
     add_cxflags("--target=x86_64-pc-none-elf")
     add_cxflags("-fno-pie","-fno-exceptions","-fno-rtti","-ffreestanding","-nostdlib","-fno-builtin","-gdwarf-2","-Wall","-Wextra")
     add_cxflags("-march=x86-64","-mtls-direct-seg-refs","-mno-sse","-mcmodel=large","-mno-red-zone")
-    add_cxflags("-std=c++2a","-fmodules",{force = true})
+    add_cxflags("-std=c++2a")
     
     add_asflags("--target=x86_64-pc-none-elf")
     add_asflags("-fno-pie","-fno-exceptions","-fno-rtti","-ffreestanding","-nostdlib","-fno-builtin","-gdwarf-2","-Wall","-Wextra")

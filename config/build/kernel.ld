@@ -40,15 +40,15 @@ SECTIONS
 
 	/* The data segment */
 	.data : {
-    start_ctors = .;
-    KEEP(*( .init_array ));
-    KEEP(*(SORT_BY_INIT_PRIORITY( .init_array.* )));
-    *(.ctor*)
-    end_ctors = .;
-    
-    start_dtors = .;
-    *(.dtor*)
-    end_dtors = .;
+		start_ctors = .;
+		KEEP(*( .init_array ));
+		KEEP(*(SORT_BY_INIT_PRIORITY( .init_array.* )));
+		*(.ctor*)
+		end_ctors = .;
+		
+		start_dtors = .;
+		*(.dtor*)
+		end_dtors = .;
 
 		*(.data)
 	}

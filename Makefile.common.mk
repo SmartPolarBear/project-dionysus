@@ -8,8 +8,8 @@ $(OUTDIR)/%.o: %.cc | $(OUTDIR)
 	@($(CXX) $< $(CXXFLAGS) -c -o $@)
 
 $(OUTDIR)/%.o: %.S | $(OUTDIR)
-	@echo "[CC]" $< "->" $@
-	@($(CC) $< $(CFLAGS) -c -o $@)
+	@echo "[AS]" $< "->" $@
+	@($(AS) $< $(ASFLAGS) -c -o $@)
 
 $(OUTDIR):
 	@echo "[MKDIR]" $@

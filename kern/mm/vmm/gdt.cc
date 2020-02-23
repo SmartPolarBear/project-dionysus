@@ -1,12 +1,12 @@
 /*
- * Last Modified: Thu Feb 20 2020
+ * Last Modified: Sun Feb 23 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
- * 
+ *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
  * REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
  * FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
@@ -67,10 +67,6 @@ void vmm::install_gdt(void)
 
     wrmsr(MSR_FS_BASE, ((uintptr_t)local_storage) + ((PMM_PAGE_SIZE) / 2));
 
-    auto c = &cpus[local_apic::get_cpunum()];
-    c->local = local_storage;
-    cpu = c;
-
     gdt[0] = 0x0000000000000000;
     gdt[SEG_KCODE] = 0x0020980000000000; // Code, DPL=0, R/X
     gdt[SEG_UCODE] = 0x0020F80000000000; // Code, DPL=3, R/X
@@ -79,11 +75,14 @@ void vmm::install_gdt(void)
     gdt[SEG_UDATA] = 0x0000F20000000000; // Data, DPL=3, W
 
     uintptr_t tss_addr = (uintptr_t)tss;
-    gdt[SEG_TSS + 0] = (0x0067) | ((tss_addr & 0xFFFFFF) << 16) |
-                       (0x00E9LL << 40) | (((tss_addr >> 24) & 0xFF) << 56);
+    gdt[SEG_TSS + 0] = (0x0067) | ((tss_addr & 0xFFFFFF) << 16) | (0x00E9LL << 40) | (((tss_addr >> 24) & 0xFF) << 56);
     gdt[SEG_TSS + 1] = (tss_addr >> 32);
 
     lgdt(uintptr_t(gdt), sizeof(uint64_t[8]));
 
     ltr(SEG_TSS << 3);
+
+    auto c = &cpus[local_apic::get_cpunum()];
+    c->local = local_storage;
+    cpu = c;
 }

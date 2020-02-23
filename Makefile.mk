@@ -20,6 +20,7 @@ DISKIMG_PY=$(BUILD)/tools/diskimg/diskimg.py
 GVECTORS_PY=$(BUILD)/tools/vectors/gvectors.py
 
 CC = $(TOOLPREFIX)clang
+AS = $(TOOLPREFIX)clang
 CXX = $(TOOLPREFIX)clang++
 LD = $(TOOLPREFIX)clang++
 OBJCOPY = $(TOOLPREFIX)objcopy
@@ -29,13 +30,13 @@ GDB=gdb
 LDFLAGS=-z max-page-size=0x1000 -no-pie -nostdlib -ffreestanding -nostartfiles -Wl,--build-id=none
 
 SHAREDFLAGS += --target=x86_64-pc-none-elf 
-SHAREDFLAGS = -fno-pie -fno-exceptions -fno-rtti -ffreestanding -nostdlib -fno-builtin -gdwarf-2 -Wall -Wextra
+SHAREDFLAGS = -fno-pie -fno-exceptions -fno-rtti -ffreestanding -nostdlib -fno-builtin -Wall -Wextra
 SHAREDFLAGS += -march=x86-64 -mtls-direct-seg-refs -mno-sse -mcmodel=large -mno-red-zone -fmodules
 SHAREDFLAGS += -I$(TOP_SRC)/include
 
-CFLAGS = -std=c17 $(SHAREDFLAGS)
+CFLAGS = -std=c17  -gdwarf-2  $(SHAREDFLAGS)
 ASFLAGS = $(SHAREDFLAGS)
-CXXFLAGS = -std=c++2a $(SHAREDFLAGS)
+CXXFLAGS = -std=c++2a  -gdwarf-2  $(SHAREDFLAGS)
 
 QEMU = qemu-system-x86_64
 QEMU_EXE = $(QEMU).exe
