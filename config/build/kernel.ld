@@ -16,13 +16,8 @@ SECTIONS
 
 	PROVIDE(begin = .);
 
-	.boot : AT(mboot_load_addr)
-	{
-		*(.mbootheader)
-	}
-
-	.text {
-		*(.mboottext)
+	.text : AT(mboot_load_addr) {
+		*(.mboot)
 		*(.text .rela.text .stub .text.* .gnu.linkonce.t.*)
 	}
 

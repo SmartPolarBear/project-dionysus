@@ -1,3 +1,5 @@
+.section .mboot
+
 #include "boot/multiboot2.h"
 
 
@@ -6,6 +8,7 @@
 
 
 .code32
+
 .global mboot_header
 .global mboot_entry
 
