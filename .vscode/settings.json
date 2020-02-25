@@ -101,7 +101,8 @@
                 "<<dateformat('YYYY-MM-DD')>>\t<<initials>>\t"
             ]
         },
-    ]
+    ],
+    "cmake.configureOnOpen": true
 
     
 }

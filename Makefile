@@ -26,8 +26,8 @@ clean:
 	@rm -f $(BUILD)/kernel*
 	@rm -f $(BUILD)/ap_boot*
 	#@rm -rf $(BUILD)
-
-qemu: all 
+4
+qemu: #all 
 	$(QEMU_EXE) -serial mon:stdio $(QEMUOPTS)
 
 qemu-whpx: all 
