@@ -26,7 +26,7 @@ clean:
 	@rm -f $(BUILD)/kernel*
 	@rm -f $(BUILD)/ap_boot*
 	#@rm -rf $(BUILD)
-4
+
 qemu: #all 
 	$(QEMU_EXE) -serial mon:stdio $(QEMUOPTS)
 
@@ -41,7 +41,7 @@ debug: all
 	@sleep 2
 	@$(GDB) -q -x ./gdbinit
 
-debug4vsc: all
+debug4vsc: #all
 	@$(QEMU) -serial mon:stdio $(QEMUOPTS) -S $(QEMUGDB) &
 
 include $(TOP_SRC)/Makefile.kernbin.mk
