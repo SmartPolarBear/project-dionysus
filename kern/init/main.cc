@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sun Feb 23 2020
+ * Last Modified: Wed Feb 26 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -46,11 +46,12 @@
 
 #include "lib/libc/stdio.h"
 
+
 // global entry of the kernel
 extern "C" [[noreturn]] void kmain() {
     // process the multiboot information
     multiboot::init_mbi();
-
+    
     // initialize physical memory
     pmm::init_pmm();
 

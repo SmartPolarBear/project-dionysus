@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sun Feb 23 2020
+ * Last Modified: Wed Feb 26 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -84,5 +84,8 @@ void vmm::install_gdt(void)
 
     auto c = &cpus[local_apic::get_cpunum()];
     c->local = local_storage;
+
+    // --target=x86_64-pc-none-elf and -mcmodel=large can cause a triple fault here
+    // work it around by building with x86_64-pc-linux-elf
     cpu = c;
 }
