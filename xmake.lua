@@ -4,6 +4,10 @@ target("kernel")
     set_languages("c17", "cxx20")	
     set_kind("binary")	
 
+    before_build(function (target)
+        os.execv("python3",{val("projectdir").."/tools/vectors/gvectors.py",val("projectdir").."/config/codegen/gvectors/gvectors.json",val("projectdir").."/drivers/apic/vectors.S"})
+    end)
+
     after_link(function (target) 
         os.execv("cp",{target:targetfile(),"build/kernel"})
     end)
