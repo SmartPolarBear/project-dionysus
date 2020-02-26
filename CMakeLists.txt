@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(project-dionysus C CXX ASM-ATT)
+project(project-dionysus C CXX)
 
 set(QEMU_CPUS 6)
 set(QEMU_MEM 8G)
