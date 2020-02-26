@@ -1,6 +1,41 @@
 add_rules("mode.debug","mode.release")	
 
-target("kernel")	
+
+
+target("disk.img")
+    add_deps("kernel","ap_boot.elf")
+    set_objectdir("$(buildir)")
+
+    set_default(true)
+
+    on_run(function (target) 
+        -- os.execv("qemu-system-x86_64",
+        --     {"-serial","mon:stdio",
+        --     "-drive","file="..val("buildir").."/disk.img"..",index=0,media=disk,format=raw",
+        --     "-cpu","max",
+        --     "-smp","6",
+        --     "-m","8G"})
+        os.execv("qemu-system-x86_64",
+            {"-serial","mon:stdio",
+            "-drive","file="..val("buildir").."/disk.img"..",index=0,media=disk,format=raw",
+            "-cpu","max",
+            "-smp","6",
+            "-m","8G",
+            "-gdb","tcp::32768",
+            "-S"})
+    end)
+
+    on_build(function (target) 
+        os.execv("python3",{val("projectdir").."/tools/diskimg/diskimg.py","update",val("projectdir"),val("projectdir").."/config/build/hdimage.list"})
+    end)
+
+
+
+-- this target builds the kernel
+target("kernel")
+    on_run(function (target) 
+    end)
+
     set_languages("c17", "cxx20")	
     set_kind("binary")	
 
@@ -37,7 +72,11 @@ target("kernel")
     add_ldflags("-Wl,-T config/build/kernel.ld",{force = true})	
     add_ldflags("-z max-page-size=0x1000" ,"-no-pie" ,"-nostdlib" ,"-ffreestanding", "-nostartfiles" ,"-Wl,--build-id=none",{force = true})
 
+-- this finally output ap_boot
 target("ap_boot.elf")
+    on_run(function (target) 
+    end)
+
     set_languages("c17", "cxx20")	
     set_kind("binary")	
 
