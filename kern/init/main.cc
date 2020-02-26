@@ -46,7 +46,6 @@
 
 #include "lib/libc/stdio.h"
 
-
 // global entry of the kernel
 extern "C" [[noreturn]] void kmain() {
     // process the multiboot information

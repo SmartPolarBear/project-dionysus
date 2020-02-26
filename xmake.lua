@@ -1,6 +1,9 @@
 add_rules("mode.debug","mode.release")	
 
-
+set_config("cc", "clang")
+set_config("as", "clang")
+set_config("cxx", "clang++")
+set_config("ld", "clang++")
 
 target("disk.img")
     add_deps("kernel","ap_boot.elf")
@@ -9,20 +12,12 @@ target("disk.img")
     set_default(true)
 
     on_run(function (target) 
-        -- os.execv("qemu-system-x86_64",
-        --     {"-serial","mon:stdio",
-        --     "-drive","file="..val("buildir").."/disk.img"..",index=0,media=disk,format=raw",
-        --     "-cpu","max",
-        --     "-smp","6",
-        --     "-m","8G"})
         os.execv("qemu-system-x86_64",
             {"-serial","mon:stdio",
             "-drive","file="..val("buildir").."/disk.img"..",index=0,media=disk,format=raw",
             "-cpu","max",
             "-smp","6",
-            "-m","8G",
-            "-gdb","tcp::32768",
-            "-S"})
+            "-m","8G"})
     end)
 
     on_build(function (target) 
@@ -107,3 +102,4 @@ target("ap_boot.elf")
     add_ldflags("-Wl,-T config/build/ap_boot.ld",{force = true})	
     add_ldflags("-Wl,--omagic",{force=true})
     add_ldflags("-z max-page-size=0x1000" ,"-no-pie" ,"-nostdlib" ,"-ffreestanding", "-nostartfiles" ,"-Wl,--build-id=none",{force = true})
+

@@ -1,12 +1,12 @@
 /*
- * Last Modified: Tue Feb 18 2020
+ * Last Modified: Wed Feb 26 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
- * 
+ *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
  * REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
  * FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
@@ -37,8 +37,8 @@
 #include "sys/types.h"
 #include "sys/vmm.h"
 
-#include "lib/libc/string.h"
 #include "lib/libc/stdio.h"
+#include "lib/libc/string.h"
 
 // in boot.S
 extern "C" void entry32mp(void);
@@ -48,13 +48,12 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
 [[clang::optnone]] void ap::init_ap(void)
 {
 
-    auto tag = multiboot::acquire_tag_ptr<multiboot_tag_module>(MULTIBOOT_TAG_TYPE_MODULE,
-                                                                [](auto ptr) -> bool {
-                                                                    multiboot_tag_module *mdl_tag = reinterpret_cast<decltype(mdl_tag)>(ptr);
-                                                                    const char *ap_boot_commandline = "/ap_boot";
-                                                                    auto cmp = strncmp(mdl_tag->cmdline, ap_boot_commandline, strlen(ap_boot_commandline));
-                                                                    return cmp == 0;
-                                                                });
+    auto tag = multiboot::acquire_tag_ptr<multiboot_tag_module>(MULTIBOOT_TAG_TYPE_MODULE, [](auto ptr) -> bool {
+        multiboot_tag_module *mdl_tag = reinterpret_cast<decltype(mdl_tag)>(ptr);
+        const char *ap_boot_commandline = "/ap_boot";
+        auto cmp = strncmp(mdl_tag->cmdline, ap_boot_commandline, strlen(ap_boot_commandline));
+        return cmp == 0;
+    });
     KDEBUG_ASSERT(tag != nullptr);
 
     uint8_t *code = reinterpret_cast<decltype(code)>(P2V(AP_CODE_LOAD_ADDR));
@@ -63,9 +62,7 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
     //    Although with or without +1 it runs fine, bugs may occurs if the code changes.
 
     size_t code_size = tag->mod_end - tag->mod_start;
-    memmove(code,
-            reinterpret_cast<decltype(code)>(P2V_KERNEL(tag->mod_start)),
-            code_size);
+    memmove(code, reinterpret_cast<decltype(code)>(P2V_KERNEL(tag->mod_start)), code_size);
 
     for (const auto &core : cpus)
     {
@@ -75,9 +72,7 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
 
             if (stack == nullptr)
             {
-                KDEBUG_RICHPANIC("Can't allocate enough memory for AP boot.\n",
-                                 "KERNEL PANIC: AP",
-                                 false, "");
+                KDEBUG_RICHPANIC("Can't allocate enough memory for AP boot.\n", "KERNEL PANIC: AP", false, "");
             }
 
             *(uint32_t *)(code - 4) = 0x8000; // just enough stack to get us to entry64mp
@@ -92,11 +87,12 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
     }
 }
 
+
 void ap::all_processor_main()
 {
     xchg(&cpu->started, 1u);
 
-    //FIXME: temporarily enable interrupt
+    // FIXME: temporarily enable interrupt
     sti();
 
     // simple scheduler loop
