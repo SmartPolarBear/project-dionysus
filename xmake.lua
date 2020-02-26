@@ -4,6 +4,10 @@ target("kernel")
     set_languages("c17", "cxx20")	
     set_kind("binary")	
 
+    after_link(function (target) 
+        os.execv("cp",{target:targetfile(),"build/kernel"})
+    end)
+
     set_toolchain("cc","clang")	
     set_toolchain("as","clang")	
     set_toolchain("cxx","clang")	
@@ -29,9 +33,13 @@ target("kernel")
     add_ldflags("-Wl,-T config/build/kernel.ld",{force = true})	
     add_ldflags("-z max-page-size=0x1000" ,"-no-pie" ,"-nostdlib" ,"-ffreestanding", "-nostartfiles" ,"-Wl,--build-id=none",{force = true})
 
-target("ap_boot")
+target("ap_boot.elf")
     set_languages("c17", "cxx20")	
     set_kind("binary")	
+
+    after_link(function (target) 
+        os.execv("objcopy",{"-S","-O","binary","-j",".text",target:targetfile(),"build/ap_boot"})
+    end)
 
     set_toolchain("cc","clang")	
     set_toolchain("as","clang")	
