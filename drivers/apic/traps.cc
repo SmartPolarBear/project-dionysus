@@ -30,7 +30,7 @@ struct
 // default handle of trap
 static error_code default_trap_handle([[maybe_unused]] trap_info info)
 {
-    //TODO: the handle doesn't exist
+    // TODO: the handle doesn't exist
 
     return ERROR_SUCCESS;
 }
@@ -86,7 +86,7 @@ PANIC void trap::init_trap(void)
         }
     }
 
-    handle_table.trap_handles[trap::TRAP_IRQ0 + trap::IRQ_SPURIOUS].handle = spurious_trap_handle;
+    handle_table.trap_handles[trap::irq_to_trap_number(IRQ_SPURIOUS)].handle = spurious_trap_handle;
 
     spinlock_release(&handle_table.lock);
 }
@@ -109,9 +109,8 @@ extern "C" void trap_body(trap_info info)
     // check if the trap number is out of range
     if (info.trap_num >= TRAP_NUMBERMAX || info.trap_num < 0)
     {
-        KDEBUG_RICHPANIC("trap number is out of range",
-                         "KERNEL PANIC: TRAP",
-                         false, "The given trap number is %d", info.trap_num);
+        KDEBUG_RICHPANIC("trap number is out of range", "KERNEL PANIC: TRAP", false, "The given trap number is %d",
+                         info.trap_num);
     }
 
     // it should be assigned with the defualt handle when initialized

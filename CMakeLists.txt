@@ -11,8 +11,8 @@ set(QEMU_ARGS -drive file=build/disk.img,index=0,media=disk,format=raw -cpu max 
 set(QEMU_BIN qemu-system-x86_64)
 set(QEMU_BIN_EXE ${QEMU_BIN}.exe)
 
-file(GLOB_RECURSE DRV_SRC RELATIVE ${CMAKE_SOURCE_DIR} "drivers/*.cc" "drivers/*.S")
-file(GLOB_RECURSE KERN_SRC RELATIVE ${CMAKE_SOURCE_DIR} "kern/*.cc")
+file(GLOB_RECURSE DRV_SRC RELATIVE ${CMAKE_SOURCE_DIR} CONFIGURE_DEPENDS "drivers/*.cc" "drivers/*.S")
+file(GLOB_RECURSE KERN_SRC RELATIVE ${CMAKE_SOURCE_DIR} CONFIGURE_DEPENDS "kern/*.cc")
 
 add_executable(kernel ${CMAKE_SOURCE_DIR}/kern/init/boot.S ${DRV_SRC} ${KERN_SRC})
 
@@ -32,7 +32,7 @@ set_target_properties(kernel PROPERTIES LINK_FLAGS "-Wl,-T ${CMAKE_SOURCE_DIR}/c
 
 add_dependencies(kernel ap_boot.elf)
 
-file(GLOB AP_BOOT_SRC RELATIVE ${CMAKE_SOURCE_DIR} "kern/init/ap_boot.S")
+file(GLOB AP_BOOT_SRC RELATIVE ${CMAKE_SOURCE_DIR} CONFIGURE_DEPENDS "kern/init/ap_boot.S")
 add_executable(ap_boot.elf ${AP_BOOT_SRC})
 
 set_target_properties(ap_boot.elf PROPERTIES

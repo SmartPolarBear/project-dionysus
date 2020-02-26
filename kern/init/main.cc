@@ -3,10 +3,10 @@
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
- * 
+ *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
  * REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
  * FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
@@ -22,7 +22,6 @@
 
 #include "arch/amd64/x86.h"
 #include "boot/multiboot2.h"
-
 
 #include "drivers/acpi/acpi.h"
 #include "drivers/acpi/cpu.h"
@@ -47,10 +46,11 @@
 #include "lib/libc/stdio.h"
 
 // global entry of the kernel
-extern "C" [[noreturn]] void kmain() {
+extern "C" [[noreturn]] void kmain()
+{
     // process the multiboot information
     multiboot::init_mbi();
-    
+
     // initialize physical memory
     pmm::init_pmm();
 

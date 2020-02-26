@@ -35,13 +35,11 @@ PANIC void local_apic::init_lapic(void)
 {
     if (!lapic)
     {
-        KDEBUG_RICHPANIC("LAPIC isn't avaiable.\n",
-                         "KERNEL PANIC: LAPIC",
-                         false, "");
+        KDEBUG_RICHPANIC("LAPIC isn't avaiable.\n", "KERNEL PANIC: LAPIC", false, "");
     }
 
-    //enable local APIC
-    write_lapic(SVR, ENABLE | (TRAP_IRQ0 + IRQ_SPURIOUS));
+    // enable local APIC
+    write_lapic(SVR, ENABLE | (trap::irq_to_trap_number(IRQ_SPURIOUS)));
 
     // disbale logical interrupt lines
     write_lapic(LINT0, INTERRUPT_MASKED);
@@ -55,7 +53,7 @@ PANIC void local_apic::init_lapic(void)
     }
 
     // Map error interrupt to IRQ_ERROR.
-    write_lapic(ERROR, TRAP_IRQ0 + IRQ_ERROR);
+    write_lapic(ERROR, trap::irq_to_trap_number(IRQ_ERROR));
 
     // Clear error status register (requires back-to-back writes).
     write_lapic(ESR, 0);
@@ -82,10 +80,8 @@ size_t local_apic::get_cpunum(void)
 {
     if (read_eflags() & EFLAG_IF)
     {
-        KDEBUG_RICHPANIC("local_apic::get_cpunum can't be called with interrupts enabled\n",
-                         "KERNEL PANIC:LAPIC",
-                         false,
-                         "Return address: 0x%x\n", __builtin_return_address(0));
+        KDEBUG_RICHPANIC("local_apic::get_cpunum can't be called with interrupts enabled\n", "KERNEL PANIC:LAPIC",
+                         false, "Return address: 0x%x\n", __builtin_return_address(0));
     }
 
     if (lapic == nullptr)
