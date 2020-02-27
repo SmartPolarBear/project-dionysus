@@ -13,16 +13,11 @@ set(QEMU_BIN_EXE ${QEMU_BIN}.exe)
 
 # kernel
 
-
-#file(GLOB_RECURSE DRV_SRC RELATIVE ${CMAKE_SOURCE_DIR} CONFIGURE_DEPENDS "drivers/*.cc")
-#file(GLOB_RECURSE KERN_SRC RELATIVE ${CMAKE_SOURCE_DIR} CONFIGURE_DEPENDS "kern/*.cc")
-
-
 add_executable(kernel 
-${CMAKE_SOURCE_DIR}/kern/init/boot.S 
-${CMAKE_SOURCE_DIR}/drivers/apic/vectors.S
-${CMAKE_SOURCE_DIR}/drivers/apic/vectors.S # this is on purpose! or cmake will not include it if it doesn't exist and is created first time
-${CMAKE_SOURCE_DIR}/drivers/apic/trapentry_asm.S)
+    ${CMAKE_SOURCE_DIR}/kern/init/boot.S 
+    ${CMAKE_SOURCE_DIR}/drivers/apic/vectors.S
+    ${CMAKE_SOURCE_DIR}/drivers/apic/vectors.S # this is on purpose! or cmake will not include it if it doesn't exist and is created first time
+    ${CMAKE_SOURCE_DIR}/drivers/apic/trapentry_asm.S)
 
 add_subdirectory(kern)
 add_subdirectory(drivers)
