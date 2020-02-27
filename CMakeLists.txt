@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
 project(project-dionysus C CXX)
 
@@ -11,10 +11,18 @@ set(QEMU_ARGS -drive file=build/disk.img,index=0,media=disk,format=raw -cpu max 
 set(QEMU_BIN qemu-system-x86_64)
 set(QEMU_BIN_EXE ${QEMU_BIN}.exe)
 
-file(GLOB_RECURSE DRV_SRC RELATIVE ${CMAKE_SOURCE_DIR} CONFIGURE_DEPENDS "drivers/*.cc" "drivers/*.S")
+# kernel
+
+file(GLOB_RECURSE DRV_SRC RELATIVE ${CMAKE_SOURCE_DIR} CONFIGURE_DEPENDS "drivers/*.cc")
 file(GLOB_RECURSE KERN_SRC RELATIVE ${CMAKE_SOURCE_DIR} CONFIGURE_DEPENDS "kern/*.cc")
 
-add_executable(kernel ${CMAKE_SOURCE_DIR}/kern/init/boot.S ${DRV_SRC} ${KERN_SRC})
+add_executable(kernel 
+    ${CMAKE_SOURCE_DIR}/kern/init/boot.S 
+    ${CMAKE_SOURCE_DIR}/drivers/apic/vectors.S
+    ${CMAKE_SOURCE_DIR}/drivers/apic/vectors.S # this is on purpose! or cmake will not include it if it doesn't exist and is created first time
+    ${CMAKE_SOURCE_DIR}/drivers/apic/trapentry_asm.S
+    ${DRV_SRC} 
+    ${KERN_SRC})
 
 set_property(SOURCE ${CMAKE_SOURCE_DIR}/kern/init/boot.S PROPERTY LANGUAGE C)
 set_property(SOURCE ${CMAKE_SOURCE_DIR}/drivers/apic/trapentry_asm.S PROPERTY LANGUAGE C)
@@ -32,8 +40,10 @@ set_target_properties(kernel PROPERTIES LINK_FLAGS "-Wl,-T ${CMAKE_SOURCE_DIR}/c
 
 add_dependencies(kernel ap_boot.elf)
 
-file(GLOB AP_BOOT_SRC RELATIVE ${CMAKE_SOURCE_DIR} CONFIGURE_DEPENDS "kern/init/ap_boot.S")
-add_executable(ap_boot.elf ${AP_BOOT_SRC})
+
+# ap_boot
+
+add_executable(ap_boot.elf ${CMAKE_SOURCE_DIR}/kern/init/ap_boot.S)
 
 set_target_properties(ap_boot.elf PROPERTIES
                             CXX_STANDARD 20
@@ -47,12 +57,19 @@ set_target_properties(ap_boot.elf PROPERTIES LINK_DEPENS "${CMAKE_SOURCE_DIR}/co
 set_target_properties(ap_boot.elf PROPERTIES LINK_FLAGS "-Wl,--omagic")
 set_target_properties(ap_boot.elf PROPERTIES LINK_FLAGS "-Wl,-T ${CMAKE_SOURCE_DIR}/config/build/ap_boot.ld")
 
+
+# custom targets
+
 add_custom_target(disk.img ALL
         COMMAND python3 "${CMAKE_SOURCE_DIR}/tools/diskimg/diskimg.py" update "${CMAKE_SOURCE_DIR}" "${CMAKE_SOURCE_DIR}/config/build/hdimage.list" 
         DEPENDS kernel ap_boot.elf
 		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
+add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/drivers/apic/vectors.S
+    COMMAND python3 ${CMAKE_SOURCE_DIR}/tools/vectors/gvectors.py ${CMAKE_SOURCE_DIR}/config/codegen/gvectors/gvectors.json ${CMAKE_SOURCE_DIR}/drivers/apic/vectors.S
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}    
+)
 
 add_custom_command(TARGET ap_boot.elf POST_BUILD
     COMMAND objcopy -S -O binary -j .text $<TARGET_FILE:ap_boot.elf> ${CMAKE_BINARY_DIR}/ap_boot
@@ -76,5 +93,3 @@ add_custom_target(qemu-gdb
         DEPENDS kernel ap_boot.elf disk.img
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
-
-
