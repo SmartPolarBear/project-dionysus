@@ -13,11 +13,17 @@ set(QEMU_BIN_EXE ${QEMU_BIN}.exe)
 
 # kernel
 
+file(WRITE ${CMAKE_SOURCE_DIR}/drivers/apic/vectors.S "")
+
 add_executable(kernel 
     ${CMAKE_SOURCE_DIR}/kern/init/boot.S 
-    ${CMAKE_SOURCE_DIR}/drivers/apic/vectors.S
-    ${CMAKE_SOURCE_DIR}/drivers/apic/vectors.S # this is on purpose! or cmake will not include it if it doesn't exist and is created first time
-    ${CMAKE_SOURCE_DIR}/drivers/apic/trapentry_asm.S)
+    ${CMAKE_SOURCE_DIR}/drivers/apic/trapentry_asm.S
+    ${CMAKE_SOURCE_DIR}/drivers/apic/vectors.S)
+
+add_dependencies(kernel vectors_S)
+add_dependencies(kernel ap_boot.elf)
+
+target_sources(kernel PRIVATE ${CMAKE_SOURCE_DIR}/drivers/apic/vectors.S)
 
 add_subdirectory(kern)
 add_subdirectory(drivers)
@@ -36,7 +42,6 @@ target_include_directories(kernel PRIVATE "${CMAKE_SOURCE_DIR}/include")
 set_target_properties(kernel PROPERTIES LINK_DEPENS "${CMAKE_SOURCE_DIR}/config/build/kernel.ld")
 set_target_properties(kernel PROPERTIES LINK_FLAGS "-Wl,-T ${CMAKE_SOURCE_DIR}/config/build/kernel.ld")
 
-add_dependencies(kernel ap_boot.elf)
 
 
 # ap_boot
@@ -58,15 +63,17 @@ set_target_properties(ap_boot.elf PROPERTIES LINK_FLAGS "-Wl,-T ${CMAKE_SOURCE_D
 
 # custom targets
 
+add_custom_target(
+    vectors_S ALL
+    COMMAND python3 ${CMAKE_SOURCE_DIR}/tools/vectors/gvectors.py ${CMAKE_SOURCE_DIR}/config/codegen/gvectors/gvectors.json ${CMAKE_SOURCE_DIR}/drivers/apic/vectors.S
+    BYPRODUCTS ${CMAKE_SOURCE_DIR}/drivers/apic/vectors.S
+    COMMENT "Generating vectors"
+)
+
 add_custom_target(disk.img ALL
         COMMAND python3 "${CMAKE_SOURCE_DIR}/tools/diskimg/diskimg.py" update "${CMAKE_SOURCE_DIR}" "${CMAKE_SOURCE_DIR}/config/build/hdimage.list" 
         DEPENDS kernel ap_boot.elf
 		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-)
-
-add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/drivers/apic/vectors.S
-    COMMAND python3 ${CMAKE_SOURCE_DIR}/tools/vectors/gvectors.py ${CMAKE_SOURCE_DIR}/config/codegen/gvectors/gvectors.json ${CMAKE_SOURCE_DIR}/drivers/apic/vectors.S
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}    
 )
 
 add_custom_command(TARGET ap_boot.elf POST_BUILD
