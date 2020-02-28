@@ -28,14 +28,14 @@ struct
 } handle_table;
 
 // default handle of trap
-static error_code default_trap_handle([[maybe_unused]] trap_info info)
+static error_code default_trap_handle([[maybe_unused]] trap_frame info)
 {
     // TODO: the handle doesn't exist
 
     return ERROR_SUCCESS;
 }
 
-static error_code spurious_trap_handle([[maybe_unused]] trap_info info)
+static error_code spurious_trap_handle([[maybe_unused]] trap_frame info)
 {
     return ERROR_SUCCESS;
 }
@@ -47,7 +47,7 @@ extern "C" void trap_entry();
 extern "C" void trap_ret();
 
 // defined below. used by trap_entry to futuer process a trap
-extern "C" void trap_body(trap_info info);
+extern "C" void trap_body(trap_frame info);
 
 static inline void make_gate(uint32_t *idt_head, uint32_t head_offset, void *kva, uint32_t pl, exception_type type)
 {
@@ -104,7 +104,7 @@ PANIC trap_handle trap::trap_handle_regsiter(size_t number, trap_handle handle)
     return old;
 }
 
-extern "C" void trap_body(trap_info info)
+extern "C" void trap_body(trap_frame info)
 {
     // check if the trap number is out of range
     if (info.trap_num >= TRAP_NUMBERMAX || info.trap_num < 0)

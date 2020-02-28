@@ -58,7 +58,7 @@ enum eflags_value
     EFLAG_ID = 0x00200000,        // ID flag
 };
 
-struct trap_info
+struct trap_frame
 {
     uint64_t rax;       // eax in x86
     uint64_t rbx;

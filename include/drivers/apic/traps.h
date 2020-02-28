@@ -54,7 +54,7 @@ static inline constexpr size_t irq_to_trap_number(irqs irq)
     return static_cast<size_t>(irq) + static_cast<size_t>(TRAP_IRQ0);
 }
 
-using trap_handle_func = error_code (*)(trap_info);
+using trap_handle_func = error_code (*)(trap_frame);
 
 struct trap_handle
 {
