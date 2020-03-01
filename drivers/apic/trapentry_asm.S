@@ -43,3 +43,10 @@ trap_ret:
   # discard trapnum and errorcode
   add $16, %rsp
   iretq
+
+
+.globl childproc_ret_asm
+childproc_ret_asm:
+    # set stack to this new process's trapframe
+    movq %rdi, %rsp
+    jmp trap_ret

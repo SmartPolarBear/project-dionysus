@@ -11,12 +11,15 @@ enum error_code_values : error_code
     ERROR_INVALID_DATA, // invalid data
     ERROR_NOT_IMPL,     // not implemented
     ERROR_INVALID_ARG,  // invalid args
+    ERROR_LOCK_STATUS,  // lock is not at a right status
 
     ERROR_MEMORY_ALLOC,           // insufficient memory
     ERROR_REWRITE,                // rewrite the data that shouldn't be done so
     ERROR_VMA_NOT_FOUND,          // can't find a VMA
     ERROR_PAGE_NOT_PERSENT,       // page isn't persent
-    ERROR_HARDWARE_NOT_COMPATIBLE // the hardware isn't compatible with the kernel
+    ERROR_HARDWARE_NOT_COMPATIBLE, // the hardware isn't compatible with the kernel
+    ERROR_TOO_MANY_PROC,          // too many processes
+    ERROR_CANNOT_WAKEUP             // process's state isn't valid for waking up
 };
 
 // this should be in the global namespace
