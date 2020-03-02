@@ -67,17 +67,17 @@ struct process_dispatcher
     size_t flags;
     char name[PROC_NAME_LEN + 1];
 
-    list_head proc_link;
+    // list_head proc_link;
 
-    process_dispatcher(process::pid pid, const char *name);
-    ~process_dispatcher();
+    // process_dispatcher(process::pid pid, const char *name);
+    // ~process_dispatcher();
 
-    error_code init_kernel_stack();
-    error_code copy_mm_from(vmm::mm_struct *src, size_t flags);
-    error_code wakeup();
-    error_code setup_context(size_t rsp, trap_frame *tf);
+    // error_code init_kernel_stack();
+    // error_code copy_mm_from(vmm::mm_struct *src, size_t flags);
+    // error_code wakeup();
+    // error_code setup_context(size_t rsp, trap_frame *tf);
 
-    void run();
+    // void run();
 };
 
 extern process_dispatcher *initial;
