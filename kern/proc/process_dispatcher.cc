@@ -1,5 +1,7 @@
 #include "proc.h"
+
 #include "arch/amd64/regs.h"
+#include "arch/amd64/sync.h"
 
 #include "sys/error.h"
 #include "sys/pmm.h"
@@ -70,7 +72,7 @@ error_code process::process_dispatcher::copy_mm_from(vmm::mm_struct *src, size_t
 error_code process::process_dispatcher::setup_context(size_t rsp, trap_frame *tf)
 {
     uintptr_t kstacktop = this->kstack + KERNSTACK_SIZE;
-    this->trapframe = ( trap_frame *)kstacktop - 1;
+    this->trapframe = (trap_frame *)kstacktop - 1;
     *(this->trapframe) = *tf;
     this->trapframe->rax = 0;
     this->trapframe->rsp = (rsp != 0) ? rsp : kstacktop;
@@ -80,4 +82,9 @@ error_code process::process_dispatcher::setup_context(size_t rsp, trap_frame *tf
     this->context.rsp = (uintptr_t)(this->trapframe);
 
     return ERROR_SUCCESS;
+}
+
+void process::process_dispatcher::run()
+{
+    
 }

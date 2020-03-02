@@ -13,8 +13,8 @@ struct context
     uintptr_t r12;
     uintptr_t r11;
     uintptr_t rbx;
-    uintptr_t ebp; //rbp
-    uintptr_t eip; //rip;
+    uintptr_t ebp; // rbp
+    uintptr_t eip; // rip;
 };
 
 struct cpu
@@ -26,7 +26,21 @@ struct cpu
     int nest_pushcli_depth;    // Depth of pushcli nesting.
     int intr_enable;           // Were interrupts enabled before pushcli?
     bool present;              // Is this core available
-    void *local;               //Cpu-local storage variables
+    void *local;               // Cpu-local storage variables
+
+    // get tss from cpu local storage
+    uint32_t *get_tss()
+    {
+        if (local == nullptr)
+        {
+            return nullptr;
+        }
+
+        uint8_t *local_storage=reinterpret_cast<decltype(local_storage)>(local);
+        uint32_t *tss = reinterpret_cast<decltype(tss)>(local_storage + 1024);
+        
+        return tss;
+    }
 };
 
 using cpu_info = struct cpu;

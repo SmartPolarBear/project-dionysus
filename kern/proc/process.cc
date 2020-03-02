@@ -30,6 +30,12 @@ using lock::spinlock_release;
 
 using process::process_dispatcher;
 
+process_dispatcher *initial = nullptr;
+__thread process_dispatcher *idle = nullptr;
+__thread process_dispatcher *current = nullptr;
+
+process_list plist{};
+
 // trapentry_asm.S
 extern "C" void childproc_ret_asm(trap_frame *tf);
 
@@ -38,12 +44,6 @@ void childproc_ret()
 {
     childproc_ret_asm(current->trapframe);
 }
-
-process_dispatcher *initial = nullptr;
-__thread process_dispatcher *idle = nullptr;
-__thread process_dispatcher *current = nullptr;
-
-process_list plist{};
 
 // precondition: the plist's lock is held
 // ret: the variable to hold the new pid

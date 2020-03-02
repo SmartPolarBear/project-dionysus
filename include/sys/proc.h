@@ -76,6 +76,8 @@ struct process_dispatcher
     error_code copy_mm_from(vmm::mm_struct *src, size_t flags);
     error_code wakeup();
     error_code setup_context(size_t rsp, trap_frame *tf);
+
+    void run();
 };
 
 extern process_dispatcher *initial;
