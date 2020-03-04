@@ -29,8 +29,8 @@ add_subdirectory(kern)
 add_subdirectory(drivers)
 
 set_property(SOURCE ${CMAKE_SOURCE_DIR}/kern/init/boot.S PROPERTY LANGUAGE C)
-set_property(SOURCE ${CMAKE_SOURCE_DIR}/drivers/apic/trapentry_asm.S PROPERTY LANGUAGE C)
-set_property(SOURCE ${CMAKE_SOURCE_DIR}/drivers/apic/vectors.S PROPERTY LANGUAGE C)
+set_property(SOURCE ${CMAKE_SOURCE_DIR}/kern/drv/apic/trapentry_asm.S PROPERTY LANGUAGE C)
+set_property(SOURCE ${CMAKE_SOURCE_DIR}/kern/drv/apic/vectors.S PROPERTY LANGUAGE C)
 
 set_target_properties(kernel PROPERTIES
                             CXX_STANDARD 20
