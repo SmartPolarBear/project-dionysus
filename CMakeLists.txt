@@ -13,17 +13,17 @@ set(QEMU_BIN_EXE ${QEMU_BIN}.exe)
 
 # kernel
 
-file(WRITE ${CMAKE_SOURCE_DIR}/drivers/apic/vectors.S "")
+file(WRITE ${CMAKE_SOURCE_DIR}/kern/drv/apic/vectors.S "")
 
 add_executable(kernel 
     ${CMAKE_SOURCE_DIR}/kern/init/boot.S 
-    ${CMAKE_SOURCE_DIR}/drivers/apic/trapentry_asm.S
-    ${CMAKE_SOURCE_DIR}/drivers/apic/vectors.S)
+    ${CMAKE_SOURCE_DIR}/kern/drv/apic/trapentry_asm.S
+    ${CMAKE_SOURCE_DIR}/kern/drv/apic/vectors.S)
 
 add_dependencies(kernel vectors_S)
 add_dependencies(kernel ap_boot.elf)
 
-target_sources(kernel PRIVATE ${CMAKE_SOURCE_DIR}/drivers/apic/vectors.S)
+target_sources(kernel PRIVATE ${CMAKE_SOURCE_DIR}/kern/drv/apic/vectors.S)
 
 add_subdirectory(kern)
 add_subdirectory(drivers)
@@ -65,8 +65,8 @@ set_target_properties(ap_boot.elf PROPERTIES LINK_FLAGS "-Wl,-T ${CMAKE_SOURCE_D
 
 add_custom_target(
     vectors_S ALL
-    COMMAND python3 ${CMAKE_SOURCE_DIR}/tools/vectors/gvectors.py ${CMAKE_SOURCE_DIR}/config/codegen/gvectors/gvectors.json ${CMAKE_SOURCE_DIR}/drivers/apic/vectors.S
-    BYPRODUCTS ${CMAKE_SOURCE_DIR}/drivers/apic/vectors.S
+    COMMAND python3 ${CMAKE_SOURCE_DIR}/tools/vectors/gvectors.py ${CMAKE_SOURCE_DIR}/config/codegen/gvectors/gvectors.json ${CMAKE_SOURCE_DIR}/kern/drv/apic/vectors.S
+    BYPRODUCTS ${CMAKE_SOURCE_DIR}/kern/drv/apic/vectors.S
     COMMENT "Generating vectors"
 )
 

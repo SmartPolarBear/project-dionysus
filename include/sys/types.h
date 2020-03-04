@@ -1,5 +1,5 @@
 /*
- * Last Modified: Fri Feb 21 2020
+ * Last Modified: Wed Mar 04 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -29,6 +29,7 @@
 
 #define PANIC
 #define OUT
+#define IN
 
 constexpr size_t log2(size_t n)
 {
