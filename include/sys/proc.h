@@ -80,8 +80,5 @@ struct process_dispatcher
     // void run();
 };
 
-extern process_dispatcher *initial;
-extern __thread process_dispatcher *idle;
-extern __thread process_dispatcher *current;
 
 } // namespace process
