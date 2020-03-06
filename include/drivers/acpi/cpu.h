@@ -5,17 +5,6 @@
 #include "sys/mmu.h"
 #include "sys/types.h"
 
-struct context
-{
-    uintptr_t r15;
-    uintptr_t r14;
-    uintptr_t r13;
-    uintptr_t r12;
-    uintptr_t r11;
-    uintptr_t rbx;
-    uintptr_t ebp; // rbp
-    uintptr_t eip; // rip;
-};
 
 struct cpu
 {
