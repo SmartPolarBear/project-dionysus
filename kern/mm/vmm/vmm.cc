@@ -1,5 +1,5 @@
 /*
- * Last Modified: Wed Feb 12 2020
+ * Last Modified: Sat Mar 07 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -23,8 +23,8 @@
 #include "vmm.h"
 
 #include "sys/error.h"
-#include "sys/memlayout.h"
 #include "sys/kmalloc.h"
+#include "sys/memlayout.h"
 #include "sys/mmu.h"
 #include "sys/pmm.h"
 #include "sys/vmm.h"
@@ -171,6 +171,79 @@ mm_struct *vmm::mm_create(void)
     }
 
     return mm;
+}
+
+error_code vmm::mm_map(IN mm_struct *mm, IN uintptr_t addr, IN size_t len, IN uint32_t vm_flags,
+                       OPTIONAL OUT vma_struct **vma_store)
+{
+    if (mm == nullptr)
+    {
+        return -ERROR_INVALID_ARG;
+    }
+
+    uintptr_t start = rounddown(addr, PMM_PAGE_SIZE), end = roundup(addr + len, PMM_PAGE_SIZE);
+    if (!VALID_USER_REGION(start, end))
+    {
+        return -ERROR_INVALID_ADDR;
+    }
+
+    error_code ret = ERROR_SUCCESS;
+
+    vma_struct *vma = nullptr;
+    if ((vma = find_vma(mm, start)) != nullptr && end > vma->vm_start)
+    {
+        // the vma exists
+        return ret;
+    }
+    else
+    {
+        vm_flags &= ~VM_SHARE;
+        if ((vma = vma_create(start, end, vm_flags)) == nullptr)
+        {
+            return -ERROR_MEMORY_ALLOC;
+        }
+
+        insert_vma_struct(mm, vma);
+
+        if (vma_store != nullptr)
+        {
+            *vma_store = vma;
+        }
+    }
+
+    return ret;
+}
+
+error_code vmm::mm_unmap(IN mm_struct *mm, IN uintptr_t addr, IN size_t len)
+{
+    KDEBUG_NOT_IMPLEMENTED;
+    return ERROR_SUCCESS;
+}
+
+error_code vmm::mm_duplicate(IN mm_struct *to, IN const mm_struct *from)
+{
+    if (to != nullptr && from != nullptr)
+    {
+        return -ERROR_INVALID_ARG;
+    }
+
+    list_head *iter = nullptr;
+    list_for(iter, &from->mmap_list)
+    {
+        auto vma = container_of(iter, vma_struct, vma_link);
+        auto new_vma = vma_create(vma->vm_start, vma->vm_end, vma->flags);
+        if(new_vma==nullptr)
+        {
+            return -ERROR_MEMORY_ALLOC;
+        }
+        
+        //TODO: process shared memory
+
+        insert_vma_struct(to, new_vma);
+        
+        //TODO: copy pgdir content
+    }
+    return ERROR_SUCCESS;
 }
 
 void vmm::mm_destroy(mm_struct *mm)

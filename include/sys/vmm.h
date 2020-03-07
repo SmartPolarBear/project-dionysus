@@ -24,8 +24,6 @@
 
 #include "sys/types.h"
 
-
-
 namespace vmm
 {
 using pde_t = size_t;
@@ -54,9 +52,11 @@ struct vma_struct
 
 enum VM_FLAGS : size_t
 {
-    VM_READ = 0b1,
-    VM_EXEC = 0b100,
-    VM_WRITE = 0b10,
+    VM_READ = 0x00000001,
+    VM_WRITE = 0x00000002,
+    VM_EXEC = 0x00000004,
+    VM_STACK = 0x00000008,
+    VM_SHARE = 0x00000010,
 };
 
 vma_struct *find_vma(mm_struct *mm, uintptr_t addr);
@@ -64,6 +64,11 @@ vma_struct *vma_create(uintptr_t vm_start, uintptr_t vm_end, size_t vm_flags);
 void insert_vma_struct(mm_struct *mm, vma_struct *vma);
 
 mm_struct *mm_create(void);
+error_code mm_map(IN mm_struct *mm, IN uintptr_t addr, IN size_t len, IN uint32_t vm_flags,
+                  OPTIONAL OUT vma_struct **vma_store);
+error_code mm_unmap(IN mm_struct *mm, IN uintptr_t addr, IN size_t len);
+error_code mm_duplicate(IN mm_struct *to, IN const mm_struct *from);
+
 void mm_destroy(mm_struct *mm);
 
 // initialize the vmm
@@ -87,4 +92,3 @@ pde_ptr_t walk_pgdir(pde_ptr_t pgdir, size_t va, bool create);
 
 // paging.cc
 extern vmm::pde_ptr_t g_kpml4t;
-

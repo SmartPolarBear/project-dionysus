@@ -34,9 +34,15 @@ constexpr uintptr_t KERNEL_SIZE = KERNEL_VIRTUALEND - KERNEL_VIRTUALBASE + 1;
 constexpr uintptr_t KERNEL_VIRTUALLINK = 0xFFFFFFFF80100000;
 
 constexpr uintptr_t USER_TOP = 0x00007fffffffffff;
+constexpr bool VALID_USER_REGION(uintptr_t start,uintptr_t end)
+{
+    return start < end && end <= USER_TOP;
+}
 
 // leave a page guard hole
 constexpr uintptr_t USER_STACK_TOP = USER_TOP - 2 * PHYSICAL_PAGE_SIZE;
+
+
 
 // for memory-mapped IO
 // TODO: dynamically map for memory-mapped IO

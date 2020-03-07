@@ -14,6 +14,7 @@ enum error_code_values : error_code
     ERROR_LOCK_STATUS,  // lock is not at a right status
 
     ERROR_MEMORY_ALLOC,           // insufficient memory
+    ERROR_INVALID_ADDR,           // invalid address
     ERROR_REWRITE,                // rewrite the data that shouldn't be done so
     ERROR_VMA_NOT_FOUND,          // can't find a VMA
     ERROR_PAGE_NOT_PERSENT,       // page isn't persent

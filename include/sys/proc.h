@@ -43,7 +43,7 @@ struct process_dispatcher
 	pid id;
 	pid parent_id;
 
-	size_t run_times;
+	size_t runs;
 	uintptr_t kstack;
 
 	vmm::mm_struct *mm;
@@ -57,11 +57,11 @@ struct process_dispatcher
 
 	process_dispatcher(const char *name, pid id, pid parent_id, size_t flags)
 		: flags(flags), id(id), parent_id(parent_id), state(PROC_STATE_EMBRYO),
-		  run_times(0), kstack(0), mm(nullptr)
+		  runs(0), kstack(0), mm(nullptr)
 	{
 
 		memset(&proc->trapframe, 0, sizeof(proc->trapframe));
-		
+
 		strncpy(this->name, name, sysstd::min((size_t)strlen(name), PROC_NAME_LEN));
 	}
 };

@@ -31,6 +31,13 @@ struct
 	size_t proc_count;
 } proc_list;
 
+[[noreturn]] static inline void proc_restore_trapframe(IN trap_frame *tf)
+{
+	// restore trapframe to registers
+	// TODO: refer to trap entry
+}
+
+// precondition: the lock must be held
 static inline process::pid alloc_pid(void)
 {
 	return proc_list.proc_count++;
@@ -41,14 +48,14 @@ static inline error_code setup_mm(process::process_dispatcher *proc)
 	proc->mm = vmm::mm_create();
 	if (proc->mm == nullptr)
 	{
-		return ERROR_MEMORY_ALLOC;
+		return -ERROR_MEMORY_ALLOC;
 	}
 
 	vmm::pde_ptr_t pgdir = reinterpret_cast<vmm::pde_ptr_t>(new BLOCK<PMM_PAGE_SIZE>);
 	if (proc->mm == nullptr)
 	{
 		vmm::mm_destroy(proc->mm);
-		return ERROR_MEMORY_ALLOC;
+		return -ERROR_MEMORY_ALLOC;
 	}
 
 	memmove(pgdir, g_kpml4t, PMM_PAGE_SIZE);
@@ -70,10 +77,11 @@ error_code process::create_process(IN const char *name,
 								   IN bool inherit_parent,
 								   OUT process_dispatcher *proc)
 {
+	spinlock_acquire(&proc_list.lock);
 
 	if (proc_list.proc_count >= process::PROC_MAX_COUNT)
 	{
-		return ERROR_TOO_MANY_PROC;
+		return -ERROR_TOO_MANY_PROC;
 	}
 
 	proc = new process_dispatcher(name, alloc_pid(), current->id, flags);
@@ -84,7 +92,7 @@ error_code process::create_process(IN const char *name,
 	if (!proc->kstack)
 	{
 		delete proc;
-		return ERROR_MEMORY_ALLOC;
+		return -ERROR_MEMORY_ALLOC;
 	}
 
 	error_code ret = ERROR_SUCCESS;
@@ -93,7 +101,6 @@ error_code process::create_process(IN const char *name,
 		delete proc;
 		return ret;
 	}
-
 
 	proc->trapframe.cs = (SEG_UCODE << 3) | DPL_USER;
 	proc->trapframe.ss = (SEG_UDATA << 3) | DPL_USER;
@@ -111,8 +118,6 @@ error_code process::create_process(IN const char *name,
 		// TODO: copy data from parent process
 	}
 
-	spinlock_acquire(&proc_list.lock);
-
 	list_add(&proc->link, &proc_list.head);
 
 	spinlock_release(&proc_list.lock);
@@ -127,6 +132,21 @@ error_code process::process_load_binary(IN process_dispatcher *porc,
 {
 }
 
-error_code process::process_run(IN process_dispatcher *porc)
+error_code process::process_run(IN process_dispatcher *proc)
 {
+	if (current != nullptr && current->state == PROC_STATE_RUNNING)
+	{
+		current->state = PROC_STATE_RUNNABLE;
+	}
+
+	current = proc;
+	current->state = PROC_STATE_RUNNING;
+	current->runs++;
+
+	lcr3(V2P((uintptr_t)current->mm->pgdir));
+
+	// TODO: unlock kernel
+	spinlock_release(&proc_list.lock);
+
+	proc_restore_trapframe(&proc->trapframe);
 }
