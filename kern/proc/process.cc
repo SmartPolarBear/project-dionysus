@@ -1,5 +1,7 @@
 #include "sys/error.h"
+#include "sys/memlayout.h"
 #include "sys/proc.h"
+#include "sys/vmm.h"
 
 #include "drivers/apic/traps.h"
 #include "drivers/lock/spinlock.h"
@@ -31,7 +33,29 @@ struct
 
 static inline process::pid alloc_pid(void)
 {
-	return proc_list.proc_count;
+	return proc_list.proc_count++;
+}
+
+static inline error_code setup_mm(process::process_dispatcher *proc)
+{
+	proc->mm = vmm::mm_create();
+	if (proc->mm == nullptr)
+	{
+		return ERROR_MEMORY_ALLOC;
+	}
+
+	vmm::pde_ptr_t pgdir = reinterpret_cast<vmm::pde_ptr_t>(new BLOCK<PMM_PAGE_SIZE>);
+	if (proc->mm == nullptr)
+	{
+		vmm::mm_destroy(proc->mm);
+		return ERROR_MEMORY_ALLOC;
+	}
+
+	memmove(pgdir, g_kpml4t, PMM_PAGE_SIZE);
+
+	proc->mm->pgdir = pgdir;
+
+	return ERROR_SUCCESS;
 }
 
 void process::process_init(void)
@@ -63,26 +87,23 @@ error_code process::create_process(IN const char *name,
 		return ERROR_MEMORY_ALLOC;
 	}
 
-	uintptr_t stk_top = proc->kstack;
-	stk_top -= sizeof(trap_frame);
+	error_code ret = ERROR_SUCCESS;
+	if ((ret = setup_mm(proc)) != ERROR_SUCCESS)
+	{
+		delete proc;
+		return ret;
+	}
 
-	// set trap frame
-	proc->trapframe = reinterpret_cast<decltype(proc->trapframe)>(stk_top);
 
-	stk_top -= sizeof(uintptr_t);
-	//set trap return point
-	*((uintptr_t *)stk_top) = (uintptr_t)trap_ret;
+	proc->trapframe.cs = (SEG_UCODE << 3) | DPL_USER;
+	proc->trapframe.ss = (SEG_UDATA << 3) | DPL_USER;
+	proc->trapframe.rsp = USER_STACK_TOP;
 
-	stk_top -= sizeof(process::process_context);
-	proc->context = reinterpret_cast<decltype(proc->context)>(stk_top);
-	memset(proc->context, 0, sizeof(process::process_context));
-	proc->context->rip = (uintptr_t)scheduler_ret;
-
-	proc->trapframe->rflags |= EFLAG_IF;
+	proc->trapframe.rflags |= EFLAG_IF;
 
 	if (flags & PROC_SYS_SERVER)
 	{
-		proc->trapframe->rflags |= EFLAG_IOPL_MASK;
+		proc->trapframe.rflags |= EFLAG_IOPL_MASK;
 	}
 
 	if (inherit_parent)
@@ -108,5 +129,4 @@ error_code process::process_load_binary(IN process_dispatcher *porc,
 
 error_code process::process_run(IN process_dispatcher *porc)
 {
-	
 }

@@ -1,5 +1,5 @@
 /*
- * Last Modified: Wed Feb 19 2020
+ * Last Modified: Sat Mar 07 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -23,6 +23,8 @@
 #pragma once
 
 #include "sys/types.h"
+
+
 
 namespace vmm
 {
@@ -82,4 +84,7 @@ uintptr_t pde_to_pa(pde_ptr_t pde);
 pde_ptr_t walk_pgdir(pde_ptr_t pgdir, size_t va, bool create);
 
 } // namespace vmm
+
+// paging.cc
+extern vmm::pde_ptr_t g_kpml4t;
 

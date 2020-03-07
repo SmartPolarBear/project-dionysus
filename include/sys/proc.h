@@ -30,7 +30,6 @@ constexpr size_t PROC_MAX_COUNT = INT32_MAX;
 
 constexpr pid PID_MAX = INT64_MAX;
 
-
 // Per-process state
 struct process_dispatcher
 {
@@ -58,8 +57,11 @@ struct process_dispatcher
 
 	process_dispatcher(const char *name, pid id, pid parent_id, size_t flags)
 		: flags(flags), id(id), parent_id(parent_id), state(PROC_STATE_EMBRYO),
-		  run_times(0), kstack(0), mm(nullptr), trapframe(nullptr)
+		  run_times(0), kstack(0), mm(nullptr)
 	{
+
+		memset(&proc->trapframe, 0, sizeof(proc->trapframe));
+		
 		strncpy(this->name, name, sysstd::min((size_t)strlen(name), PROC_NAME_LEN));
 	}
 };

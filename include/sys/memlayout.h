@@ -33,6 +33,11 @@ constexpr uintptr_t KERNEL_SIZE = KERNEL_VIRTUALEND - KERNEL_VIRTUALBASE + 1;
 // Be greatly cautious not to overwrite it !!!!
 constexpr uintptr_t KERNEL_VIRTUALLINK = 0xFFFFFFFF80100000;
 
+constexpr uintptr_t USER_TOP = 0x00007fffffffffff;
+
+// leave a page guard hole
+constexpr uintptr_t USER_STACK_TOP = USER_TOP - 2 * PHYSICAL_PAGE_SIZE;
+
 // for memory-mapped IO
 // TODO: dynamically map for memory-mapped IO
 constexpr uintptr_t DEVICE_VIRTUALBASE = 0xFFFFFFFF40000000;
