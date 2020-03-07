@@ -1,5 +1,6 @@
 #include "arch/amd64/x86.h"
 
+#include "drivers/apic/traps.h"
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 #include "drivers/lock/spinlock.h"
@@ -15,7 +16,7 @@ void lock::spinlock_initlock(spinlock *splk, const char *name)
 
 void lock::spinlock_acquire(spinlock *lock)
 {
-    pushcli();
+    trap::pushcli();
     if (spinlock_holding(lock))
     {
         kdebug::kdebug_dump_lock_panic(lock);
@@ -33,9 +34,9 @@ void lock::spinlock_release(spinlock *lock)
     if (!spinlock_holding(lock))
     {
         KDEBUG_RICHPANIC("Release a not-held spinlock.\n",
-                             "KERNEL PANIC",
-                             false,
-                             "Lock's name: %s", lock->name);
+                         "KERNEL PANIC",
+                         false,
+                         "Lock's name: %s", lock->name);
     }
 
     lock->pcs[0] = 0;
@@ -43,40 +44,10 @@ void lock::spinlock_release(spinlock *lock)
 
     xchg(&lock->locked, 0u);
 
-    popcli();
+    trap::popcli();
 }
 
 bool lock::spinlock_holding(spinlock *lock)
 {
     return lock->locked && lock->cpu == cpu;
-}
-
-void lock::pushcli(void)
-{
-    auto eflags = read_eflags();
-    cli();
-    if (cpu->nest_pushcli_depth++ == 0)
-    {
-        cpu->intr_enable = eflags & EFLAG_IF;
-    }
-}
-
-void lock::popcli(void)
-{
-    if (read_eflags() & EFLAG_IF)
-    {
-        KDEBUG_RICHPANIC("Can't be called if interrupts are enabled",
-                             "KERNEL PANIC: SPINLOCK",
-                             false,
-                             "");
-    }
-
-    --cpu->nest_pushcli_depth;
-    KDEBUG_ASSERT(cpu->nest_pushcli_depth >= 0);
-
-
-    if (cpu->nest_pushcli_depth == 0 && cpu->intr_enable)
-    {
-        sti();
-    }
 }

@@ -123,3 +123,36 @@ extern "C" void trap_body(trap_frame info)
         KDEBUG_RICHPANIC_CODE(error, true, "");
     }
 }
+
+// only works after gdt installation
+void trap::pushcli(void)
+{
+    auto eflags = read_eflags();
+
+    cli();
+    if (cpu->nest_pushcli_depth++ == 0)
+    {
+        cpu->intr_enable = eflags & EFLAG_IF;
+    }
+}
+
+// only works after gdt installation
+
+void trap::popcli(void)
+{
+    if (read_eflags() & EFLAG_IF)
+    {
+        KDEBUG_RICHPANIC("Can't be called if interrupts are enabled",
+                         "KERNEL PANIC: SPINLOCK",
+                         false,
+                         "");
+    }
+
+    --cpu->nest_pushcli_depth;
+    KDEBUG_ASSERT(cpu->nest_pushcli_depth >= 0);
+
+    if (cpu->nest_pushcli_depth == 0 && cpu->intr_enable)
+    {
+        sti();
+    }
+}

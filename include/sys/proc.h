@@ -60,7 +60,7 @@ struct process_dispatcher
 		  runs(0), kstack(0), mm(nullptr)
 	{
 
-		memset(&proc->trapframe, 0, sizeof(proc->trapframe));
+		memset(&this->trapframe, 0, sizeof(this->trapframe));
 
 		strncpy(this->name, name, sysstd::min((size_t)strlen(name), PROC_NAME_LEN));
 	}

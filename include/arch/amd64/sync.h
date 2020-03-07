@@ -23,11 +23,14 @@ __intr_restore(bool flag)
     }
 }
 
-#define local_intrrupt_save(x) \
-    do                     \
-    {                      \
-        x = __intr_save(); \
+#define software_pushcli(x) \
+    do                      \
+    {                       \
+        x = __intr_save();  \
     } while (0)
 
-#define local_intrrupt_restore(x) __intr_restore(x);
-
+#define software_popcli(x) \
+    do                     \
+    {                      \
+        __intr_restore(x); \
+    } while (0)

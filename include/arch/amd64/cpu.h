@@ -2,6 +2,8 @@
 #include "sys/types.h"
 #include "sys/mmu.h"
 
+
+
 static inline void hlt(void)
 {
     asm volatile("hlt");

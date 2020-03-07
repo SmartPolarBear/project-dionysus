@@ -18,7 +18,6 @@ void spinlock_acquire(spinlock *lock);
 bool spinlock_holding(spinlock *lock);
 void spinlock_initlock(spinlock *lock, const char *name);
 void spinlock_release(spinlock *lock);
-void pushcli(void);
-void popcli(void);
+
 
 } // namespace lock

@@ -70,4 +70,8 @@ PANIC void init_trap(void);
 // returns the old handle
 PANIC trap_handle trap_handle_regsiter(size_t trapnumber, trap_handle handle);
 
+PANIC void pushcli(void);
+PANIC void popcli(void);
+
+
 } // namespace trap

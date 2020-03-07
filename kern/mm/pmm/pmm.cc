@@ -1,5 +1,5 @@
 /*
- * Last Modified: Thu Feb 20 2020
+ * Last Modified: Sun Mar 08 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -45,6 +45,9 @@ using pmm::pmm_manager;
 using vmm::pde_ptr_t;
 
 using sysstd::simple_pair;
+
+// TODO: use lock
+// TODO: i need to manually enable locks because popcli and pushcli relies on gdt
 
 using reserved_space = simple_pair<uintptr_t, uintptr_t>;
 
@@ -218,11 +221,11 @@ page_info *pmm::alloc_pages(size_t n)
     bool intrrupt_flag = false;
     page_info *ret = nullptr;
 
-    local_intrrupt_save(intrrupt_flag);
+    software_pushcli(intrrupt_flag);
 
     ret = pmm_manager->alloc_pages(n);
 
-    local_intrrupt_restore(intrrupt_flag);
+    software_popcli(intrrupt_flag);
 
     return ret;
 }
@@ -231,11 +234,11 @@ void pmm::free_pages(page_info *base, size_t n)
 {
     bool intrrupt_flag = false;
 
-    local_intrrupt_save(intrrupt_flag);
+    software_pushcli(intrrupt_flag);
 
     pmm_manager->free_pages(base, n);
 
-    local_intrrupt_restore(intrrupt_flag);
+    software_popcli(intrrupt_flag);
 }
 
 size_t pmm::get_free_page_count(void)
@@ -243,11 +246,11 @@ size_t pmm::get_free_page_count(void)
     bool intrrupt_flag = false;
     size_t ret = 0;
 
-    local_intrrupt_save(intrrupt_flag);
+    software_pushcli(intrrupt_flag);
 
     ret = pmm_manager->get_free_pages_count();
 
-    local_intrrupt_restore(intrrupt_flag);
+    software_popcli(intrrupt_flag);
 
     return ret;
 }
