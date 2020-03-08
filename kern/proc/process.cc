@@ -1,3 +1,5 @@
+#include "process.hpp"
+
 #include "sys/error.h"
 #include "sys/memlayout.h"
 #include "sys/proc.h"
@@ -24,17 +26,34 @@ __thread process::process_dispatcher *current;
 // scheduler.cc
 void scheduler_ret();
 
-struct
-{
-	spinlock lock;
-	list_head head;
-	size_t proc_count;
-} proc_list;
+process_list_struct proc_list;
+
 
 [[noreturn]] static inline void proc_restore_trapframe(IN trap_frame *tf)
 {
 	// restore trapframe to registers
-	// TODO: refer to trap entry
+	asm volatile(
+		"\tmovq %0,%%rsp\n"
+		"\tpop %%rax\n"
+		"\tpop %%rbx\n"
+		"\tpop %%rcx\n"
+		"\tpop %%rdx\n"
+		"\tpop %%rbp\n"
+		"\tpop %%rsi\n"
+		"\tpop %%rdi\n"
+		"\tpop %%r8 \n"
+		"\tpop %%r9 \n"
+		"\tpop %%r10\n"
+		"\tpop %%r11\n"
+		"\tpop %%r12\n"
+		"\tpop %%r13\n"
+		"\tpop %%r14\n"
+		"\tpop %%r15\n"
+		"\tadd $16, %%rsp\n" //discard trapnum and errorcode
+		"\tiretq\n" ::"g"(tf)
+		: "memory");
+
+	KDEBUG_GENERALPANIC("iretq failed.");
 }
 
 // precondition: the lock must be held
@@ -130,6 +149,7 @@ error_code process::process_load_binary(IN process_dispatcher *porc,
 										IN size_t binsize,
 										IN binary_types type)
 {
+	return ERROR_SUCCESS;
 }
 
 error_code process::process_run(IN process_dispatcher *proc)
@@ -145,8 +165,9 @@ error_code process::process_run(IN process_dispatcher *proc)
 
 	lcr3(V2P((uintptr_t)current->mm->pgdir));
 
-	// TODO: unlock kernel
 	spinlock_release(&proc_list.lock);
+
+	vmm::tss_set_rsp(cpu->get_tss(), 0, proc->kstack + process_dispatcher::KERNSTACK_SIZE);
 
 	proc_restore_trapframe(&proc->trapframe);
 }

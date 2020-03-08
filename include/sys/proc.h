@@ -56,8 +56,8 @@ struct process_dispatcher
 	list_head link;
 
 	process_dispatcher(const char *name, pid id, pid parent_id, size_t flags)
-		: flags(flags), id(id), parent_id(parent_id), state(PROC_STATE_EMBRYO),
-		  runs(0), kstack(0), mm(nullptr)
+		: state(PROC_STATE_EMBRYO), id(id), parent_id(parent_id),
+		  runs(0), kstack(0), mm(nullptr), flags(flags)
 	{
 
 		memset(&this->trapframe, 0, sizeof(this->trapframe));

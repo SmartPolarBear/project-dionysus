@@ -1,5 +1,5 @@
 /*
- * Last Modified: Mon Mar 02 2020
+ * Last Modified: Sun Mar 08 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -55,6 +55,19 @@ using libk::list_remove;
 // cpu-individual variable containing info about current CPU
 // TODO: lacking records of current proc
 __thread cpu_info *cpu;
+
+
+void vmm::tss_set_rsp(uint32_t *tss, size_t n, uint64_t rsp)
+{
+	tss[n * 2 + 1] = rsp;
+	tss[n * 2 + 2] = rsp >> 32;
+}
+
+uint64_t vmm::tss_get_rsp(uint32_t *tss, size_t n)
+{
+	uint64_t ret = (((uint64_t)tss[n * 2 + 2]) << 32ull) | ((uint64_t)tss[n * 2 + 1]);
+	return ret;
+}
 
 void vmm::install_gdt(void)
 {
