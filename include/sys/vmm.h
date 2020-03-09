@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sun Mar 08 2020
+ * Last Modified: Mon Mar 09 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -38,6 +38,9 @@ struct mm_struct
     vma_struct *mmap_cache; // for quicker search of vma
     pde_ptr_t pgdir;
     size_t map_count;
+    size_t locked_by;
+    uintptr_t brk_start, brk;
+
 };
 
 struct vma_struct

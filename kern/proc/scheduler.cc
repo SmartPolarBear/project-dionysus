@@ -25,7 +25,7 @@ using lock::spinlock_acquire;
 using lock::spinlock_initlock;
 using lock::spinlock_release;
 
-[[noreturn]] void scheduler_halt()
+[[clang::optnone]] void scheduler_halt()
 {
     bool has_proc = false;
 
@@ -67,7 +67,7 @@ using lock::spinlock_release;
         : "a"(vmm::tss_get_rsp(cpu->get_tss(), 0)));
 }
 
-[[noreturn]] void scheduler_yield()
+[[clang::optnone]] void scheduler_yield()
 {
     spinlock_acquire(&proc_list.lock);
 
