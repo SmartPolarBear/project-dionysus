@@ -34,8 +34,7 @@ void scheduler_ret();
 process_list_struct proc_list;
 
 static inline error_code elf_load_binary(IN process::process_dispatcher *proc,
-										 IN uint8_t *bin,
-										 IN size_t binsize)
+										 IN uint8_t *bin)
 {
 	error_code ret = ERROR_SUCCESS;
 
@@ -87,7 +86,7 @@ static inline error_code elf_load_binary(IN process::process_dispatcher *proc,
 			while (start < end)
 			{
 				page = pmm::pgdir_alloc_page(proc->mm->pgdir, la, perms);
-				if (page = nullptr)
+				if (page == nullptr)
 				{
 					//TODO do clean-ups
 					return -ERROR_MEMORY_ALLOC;
@@ -100,7 +99,7 @@ static inline error_code elf_load_binary(IN process::process_dispatcher *proc,
 					size -= la - end;
 				}
 
-				memmove((void *)pmm::page_to_va(page) + off, bin + offset, size);
+				memmove(((uint8_t *)pmm::page_to_va(page)) + off, bin + offset, size);
 				start += size, offset += size;
 			}
 
@@ -160,6 +159,8 @@ static inline error_code elf_load_binary(IN process::process_dispatcher *proc,
 		uintptr_t va = USER_TOP - process::process_dispatcher::KERNSTACK_SIZE + i * PMM_PAGE_SIZE;
 		pmm::pgdir_alloc_page(proc->mm->pgdir, va, PG_W | PG_U);
 	}
+
+	return ret;
 }
 
 [[noreturn]] static inline void proc_restore_trapframe(IN trap_frame *tf)
@@ -279,12 +280,12 @@ error_code process::create_process(IN const char *name,
 
 error_code process::process_load_binary(IN process_dispatcher *proc,
 										IN uint8_t *bin,
-										IN size_t binsize,
+										[[maybe_unused]] IN size_t binsize OPTIONAL,
 										IN binary_types type)
 {
 	if (type == BINARY_ELF)
 	{
-		return elf_load_binary(proc, bin, binsize);
+		return elf_load_binary(proc, bin);
 	}
 	else
 	{
