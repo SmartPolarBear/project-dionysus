@@ -27,7 +27,6 @@ target_sources(kernel PRIVATE ${CMAKE_SOURCE_DIR}/kern/drv/apic/vectors.S)
 
 add_subdirectory(kern)
 add_subdirectory(drivers)
-add_subdirectory(bin)
 
 set_property(SOURCE ${CMAKE_SOURCE_DIR}/kern/init/boot.S PROPERTY LANGUAGE C)
 set_property(SOURCE ${CMAKE_SOURCE_DIR}/kern/drv/apic/trapentry_asm.S PROPERTY LANGUAGE C)
@@ -69,8 +68,6 @@ target_include_directories(kernel PRIVATE "${CMAKE_SOURCE_DIR}/include")
 set_target_properties(kernel PROPERTIES LINK_DEPENS "${CMAKE_SOURCE_DIR}/config/build/kernel.ld")
 set_target_properties(kernel PROPERTIES LINK_FLAGS "-Wl,-T ${CMAKE_SOURCE_DIR}/config/build/kernel.ld")
 
-
-
 # ap_boot
 
 add_executable(ap_boot.elf ${CMAKE_SOURCE_DIR}/kern/init/ap_boot.S)
@@ -106,12 +103,16 @@ target_compile_options(ap_boot.elf BEFORE
     PRIVATE -fmodules
     PRIVATE -std=c17)
 
-target_link_options(ap_boot.elf BEFORE
+target_link_options(ap_boot.elf
     PRIVATE -no-pie 
     PRIVATE -nostdlib 
     PRIVATE -ffreestanding 
     PRIVATE -nostartfiles 
     PRIVATE -Wl,--build-id=none)
+
+# other subdirectories
+add_subdirectory(bin)
+add_subdirectory(libs)
 
 # custom targets
 
