@@ -27,6 +27,7 @@ target_sources(kernel PRIVATE ${CMAKE_SOURCE_DIR}/kern/drv/apic/vectors.S)
 
 add_subdirectory(kern)
 add_subdirectory(drivers)
+add_subdirectory(bin)
 
 set_property(SOURCE ${CMAKE_SOURCE_DIR}/kern/init/boot.S PROPERTY LANGUAGE C)
 set_property(SOURCE ${CMAKE_SOURCE_DIR}/kern/drv/apic/trapentry_asm.S PROPERTY LANGUAGE C)
