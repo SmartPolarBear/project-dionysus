@@ -38,6 +38,32 @@ set_target_properties(kernel PROPERTIES
                             CXX_STANDARD_REQUIRED ON
                             CXX_EXTENSIONS ON)
 
+target_compile_options(kernel BEFORE
+    PRIVATE --target=x86_64-pc-linux-elf
+    PRIVATE -gdwarf-2
+    PRIVATE -fno-pie
+    PRIVATE -fno-exceptions
+    PRIVATE -fno-rtti
+    PRIVATE -ffreestanding
+    PRIVATE -nostdlib
+    PRIVATE -fno-builtin
+    PRIVATE -Wall
+    PRIVATE -Wextra
+    PRIVATE -march=x86-64
+    PRIVATE -mtls-direct-seg-refs
+    PRIVATE -mno-sse
+    PRIVATE -mcmodel=large
+    PRIVATE -mno-red-zone
+    PRIVATE -fmodules
+    PRIVATE -std=c++2a)
+
+target_link_options(kernel
+    PRIVATE -no-pie
+    PRIVATE -nostdlib
+    PRIVATE -ffreestanding
+    PRIVATE -nostartfiles
+    PRIVATE -Wl,--build-id=none)
+
 target_include_directories(kernel PRIVATE "${CMAKE_SOURCE_DIR}/include")
 
 set_target_properties(kernel PROPERTIES LINK_DEPENS "${CMAKE_SOURCE_DIR}/config/build/kernel.ld")
@@ -61,6 +87,31 @@ set_target_properties(ap_boot.elf PROPERTIES LINK_DEPENS "${CMAKE_SOURCE_DIR}/co
 set_target_properties(ap_boot.elf PROPERTIES LINK_FLAGS "-Wl,--omagic")
 set_target_properties(ap_boot.elf PROPERTIES LINK_FLAGS "-Wl,-T ${CMAKE_SOURCE_DIR}/config/build/ap_boot.ld")
 
+target_compile_options(ap_boot.elf BEFORE
+    PRIVATE --target=x86_64-pc-linux-elf
+    PRIVATE -gdwarf-2
+    PRIVATE -fno-pie
+    PRIVATE -fno-exceptions
+    PRIVATE -fno-rtti
+    PRIVATE -ffreestanding
+    PRIVATE -nostdlib
+    PRIVATE -fno-builtin
+    PRIVATE -Wall
+    PRIVATE -Wextra
+    PRIVATE -march=x86-64
+    PRIVATE -mtls-direct-seg-refs
+    PRIVATE -mno-sse
+    PRIVATE -mcmodel=large
+    PRIVATE -mno-red-zone
+    PRIVATE -fmodules
+    PRIVATE -std=c17)
+
+target_link_options(ap_boot.elf BEFORE
+    PRIVATE -no-pie 
+    PRIVATE -nostdlib 
+    PRIVATE -ffreestanding 
+    PRIVATE -nostartfiles 
+    PRIVATE -Wl,--build-id=none)
 
 # custom targets
 
