@@ -72,10 +72,10 @@ using lock::spinlock_release;
 {
     spinlock_acquire(&proc_list.lock);
 
-    list_head *iter = current != nullptr
-                          ? current->link.next
-                          : &proc_list.head;
-
+    list_head *start = current != nullptr
+                           ? current->link.next
+                           : &proc_list.head;
+    list_head *iter = start;
     if (iter->next != iter)
     {
         do
@@ -88,7 +88,7 @@ using lock::spinlock_release;
             }
 
             iter = iter->next;
-        } while (iter != current->link.next);
+        } while (iter != start);
     }
 
     if (current != nullptr && current->state == process::PROC_STATE_RUNNING)

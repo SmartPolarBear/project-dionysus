@@ -34,7 +34,7 @@ struct vma_struct;
 struct mm_struct
 {
     // TODO: optimize with trees
-    list_head mmap_list;    // linked list of vma structures
+    list_head vma_list;    // linked list of vma structures
     vma_struct *mmap_cache; // for quicker search of vma
     pde_ptr_t pgdir;
     size_t map_count;

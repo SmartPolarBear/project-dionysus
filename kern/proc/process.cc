@@ -1,5 +1,5 @@
 /*
- * Last Modified: Wed Mar 11 2020
+ * Last Modified: Thu Mar 12 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -23,6 +23,7 @@
 #include "process.hpp"
 
 #include "sys/error.h"
+#include "sys/kmalloc.h"
 #include "sys/memlayout.h"
 #include "sys/pmm.h"
 #include "sys/proc.h"
@@ -70,107 +71,107 @@ static inline error_code elf_load_binary(IN process::process_dispatcher *proc,
 
 	for (size_t i = 0; i < header->phnum; i++)
 	{
-		if (prog_header[i].type == elf::ELF_PROG_LOAD)
-		{
-			size_t vm_flags = 0, perms = PG_U;
-			if (prog_header[i].type & elf::ELF_PROG_FLAG_EXEC)
-			{
-				vm_flags |= vmm::VM_EXEC;
-			}
+		// if (prog_header[i].type == elf::ELF_PROG_LOAD)
+		// {
+		// 	size_t vm_flags = 0, perms = PG_U;
+		// 	if (prog_header[i].type & elf::ELF_PROG_FLAG_EXEC)
+		// 	{
+		// 		vm_flags |= vmm::VM_EXEC;
+		// 	}
 
-			if (prog_header[i].type & elf::ELF_PROG_FLAG_READ)
-			{
-				vm_flags |= vmm::VM_READ;
-			}
+		// 	if (prog_header[i].type & elf::ELF_PROG_FLAG_READ)
+		// 	{
+		// 		vm_flags |= vmm::VM_READ;
+		// 	}
 
-			if (prog_header[i].type & elf::ELF_PROG_FLAG_WRITE)
-			{
-				vm_flags |= vmm::VM_WRITE;
-				perms |= PG_W;
-			}
+		// 	if (prog_header[i].type & elf::ELF_PROG_FLAG_WRITE)
+		// 	{
+		// 		vm_flags |= vmm::VM_WRITE;
+		// 		perms |= PG_W;
+		// 	}
 
-			if ((ret = vmm::mm_map(proc->mm, prog_header[i].vaddr, prog_header[i].memsz, vm_flags, nullptr)) != ERROR_SUCCESS)
-			{
-				//TODO do clean-ups
-				return ret;
-			}
+		// 	if ((ret = vmm::mm_map(proc->mm, prog_header[i].vaddr, prog_header[i].memsz, vm_flags, nullptr)) != ERROR_SUCCESS)
+		// 	{
+		// 		//TODO do clean-ups
+		// 		return ret;
+		// 	}
 
-			if (proc->mm->brk_start < prog_header[i].vaddr + prog_header[i].memsz)
-			{
-				proc->mm->brk_start = prog_header[i].vaddr + prog_header[i].memsz;
-			}
+		// 	if (proc->mm->brk_start < prog_header[i].vaddr + prog_header[i].memsz)
+		// 	{
+		// 		proc->mm->brk_start = prog_header[i].vaddr + prog_header[i].memsz;
+		// 	}
 
-			uintptr_t start = prog_header[i].vaddr, end = prog_header[i].vaddr + prog_header[i].filesz;
-			uintptr_t la = rounddown(start, PMM_PAGE_SIZE);
-			uintptr_t offset = prog_header[i].off;
-			page_info *page = nullptr;
+		// 	uintptr_t start = prog_header[i].vaddr, end = prog_header[i].vaddr + prog_header[i].filesz;
+		// 	uintptr_t la = rounddown(start, PMM_PAGE_SIZE);
+		// 	uintptr_t offset = prog_header[i].off;
+		// 	page_info *page = nullptr;
 
-			while (start < end)
-			{
-				page = pmm::pgdir_alloc_page(proc->mm->pgdir, la, perms);
-				if (page == nullptr)
-				{
-					//TODO do clean-ups
-					return -ERROR_MEMORY_ALLOC;
-				}
+		// while (start < end)
+		// {
+		// 	page = pmm::pgdir_alloc_page(proc->mm->pgdir, la, perms);
+		// 	if (page == nullptr)
+		// 	{
+		// 		//TODO do clean-ups
+		// 		return -ERROR_MEMORY_ALLOC;
+		// 	}
 
-				size_t off = start - la, size = PMM_PAGE_SIZE - off;
-				la += PMM_PAGE_SIZE;
-				if (end < la)
-				{
-					size -= la - end;
-				}
+		// 	size_t off = start - la, size = PMM_PAGE_SIZE - off;
+		// 	la += PMM_PAGE_SIZE;
+		// 	if (end < la)
+		// 	{
+		// 		size -= la - end;
+		// 	}
 
-				memmove(((uint8_t *)pmm::page_to_va(page)) + off, bin + offset, size);
-				start += size, offset += size;
-			}
+		// 	memmove(((uint8_t *)pmm::page_to_va(page)) + off, bin + offset, size);
+		// 	start += size, offset += size;
+		// }
 
-			end = prog_header[i].vaddr + prog_header[i].memsz;
+		// end = prog_header[i].vaddr + prog_header[i].memsz;
 
-			if (start < la)
-			{
-				/* ph->p_memsz == ph->p_filesz */
-				if (start == end)
-				{
-					continue;
-				}
-				size_t off = start + PMM_PAGE_SIZE - la, size = PMM_PAGE_SIZE - off;
-				if (end < la)
-				{
-					size -= la - end;
-				}
-				memset(((uint8_t *)pmm::page_to_va(page)) + off, 0, size);
-				start += size;
-				if ((end < la && start == end) || (end >= la && start == la))
-				{
-					//TODO do clean-ups
-					return -ERROR_INVALID_DATA;
-				}
-			}
+		// if (start < la)
+		// {
+		// 	/* ph->p_memsz == ph->p_filesz */
+		// 	if (start == end)
+		// 	{
+		// 		continue;
+		// 	}
+		// 	size_t off = start + PMM_PAGE_SIZE - la, size = PMM_PAGE_SIZE - off;
+		// 	if (end < la)
+		// 	{
+		// 		size -= la - end;
+		// 	}
+		// 	memset(((uint8_t *)pmm::page_to_va(page)) + off, 0, size);
+		// 	start += size;
+		// 	if ((end < la && start == end) || (end >= la && start == la))
+		// 	{
+		// 		//TODO do clean-ups
+		// 		return -ERROR_INVALID_DATA;
+		// 	}
+		// }
 
-			while (start < end)
-			{
-				page = pmm::pgdir_alloc_page(proc->mm->pgdir, la, perms);
-				if (page == NULL)
-				{
-					//TODO do clean-ups
-					return -ERROR_MEMORY_ALLOC;
-				}
-				size_t off = start - la, size = PMM_PAGE_SIZE - off;
+		// while (start < end)
+		// {
+		// 	page = pmm::pgdir_alloc_page(proc->mm->pgdir, la, perms);
+		// 	if (page == NULL)
+		// 	{
+		// 		//TODO do clean-ups
+		// 		return -ERROR_MEMORY_ALLOC;
+		// 	}
+		// 	size_t off = start - la, size = PMM_PAGE_SIZE - off;
 
-				la += PMM_PAGE_SIZE;
-				if (end < la)
-				{
-					size -= la - end;
-				}
-				memset(((uint8_t *)pmm::page_to_va(page)) + off, 0, size);
-				start += size;
-			}
-		}
-		else
-		{
-			//TODO: handle more header types
-		}
+		// 	la += PMM_PAGE_SIZE;
+		// 	if (end < la)
+		// 	{
+		// 		size -= la - end;
+		// 	}
+		// 	memset(((uint8_t *)pmm::page_to_va(page)) + off, 0, size);
+		// 	start += size;
+		// }
+		// }
+		// else
+		// {
+		// 	//TODO: handle more header types
+		// }
 	}
 
 	proc->trapframe.rip = header->entry;
@@ -178,8 +179,8 @@ static inline error_code elf_load_binary(IN process::process_dispatcher *proc,
 	// allocate an stack
 	for (size_t i = 0; i < process::process_dispatcher::KERNSTACK_PAGES; i++)
 	{
-		uintptr_t va = USER_TOP - process::process_dispatcher::KERNSTACK_SIZE + i * PMM_PAGE_SIZE;
-		pmm::pgdir_alloc_page(proc->mm->pgdir, va, PG_W | PG_U);
+		// uintptr_t va = USER_TOP - process::process_dispatcher::KERNSTACK_SIZE + i * PMM_PAGE_SIZE;
+		// pmm::pgdir_alloc_page(proc->mm->pgdir, va, PG_W | PG_U);
 	}
 
 	return ret;
@@ -226,7 +227,8 @@ static inline error_code setup_mm(process::process_dispatcher *proc)
 		return -ERROR_MEMORY_ALLOC;
 	}
 
-	vmm::pde_ptr_t pgdir = reinterpret_cast<vmm::pde_ptr_t>(new BLOCK<PMM_PAGE_SIZE>);
+	// vmm::pde_ptr_t pgdir = reinterpret_cast<vmm::pde_ptr_t>(new BLOCK<PMM_PAGE_SIZE>);
+	vmm::pde_ptr_t pgdir = (vmm::pde_ptr_t)pmm::boot_mem::boot_alloc_page();
 	if (proc->mm == nullptr)
 	{
 		vmm::mm_destroy(proc->mm);
@@ -306,14 +308,22 @@ error_code process::process_load_binary(IN process_dispatcher *proc,
 										[[maybe_unused]] IN size_t binsize OPTIONAL,
 										IN binary_types type)
 {
+	error_code ret = ERROR_SUCCESS;
 	if (type == BINARY_ELF)
 	{
-		return elf_load_binary(proc, bin);
+		ret = elf_load_binary(proc, bin);
 	}
 	else
 	{
-		return ERROR_INVALID_ADDR;
+		ret = ERROR_INVALID_ADDR;
 	}
+
+	if (ret == ERROR_SUCCESS)
+	{
+		proc->state = PROC_STATE_RUNNABLE;
+	}
+
+	return ret;
 }
 
 error_code process::process_run(IN process_dispatcher *proc)
@@ -329,7 +339,28 @@ error_code process::process_run(IN process_dispatcher *proc)
 	current->state = PROC_STATE_RUNNING;
 	current->runs++;
 
-	lcr3(V2P((uintptr_t)current->mm->pgdir));
+	lcr3(V2P((uintptr_t)proc->mm->pgdir));
+
+	// vmm::pde_ptr_t pgdir = (vmm::pde_ptr_t)pmm::boot_mem::boot_alloc_page();
+	// vmm::pde_ptr_t pgdir = (vmm::pde_ptr_t)memory::kmalloc(PMM_PAGE_SIZE, 0);
+
+	// memset(pgdir, 0, PMM_PAGE_SIZE);
+
+	// // memmove(pgdir, g_kpml4t, PMM_PAGE_SIZE);
+
+	// uint8_t *dst = (uint8_t *)pgdir, *src = (uint8_t *)g_kpml4t;
+	// for (int i = 0; i < 4096; i++)
+	// {
+	// 	dst[i] = src[i];
+	// 	KDEBUG_ASSERT(dst[i] == src[i]);
+	// }
+
+	// int a = memcmp(pgdir, g_kpml4t, PMM_PAGE_SIZE);
+	// int b = memcmp(g_kpml4t, pgdir, PMM_PAGE_SIZE);
+	// KDEBUG_ASSERT(a == 0 && b == 0);
+
+	// lcr3(V2P((uintptr_t)pgdir));
+	// lcr3(V2P((uintptr_t)g_kpml4t));
 
 	spinlock_release(&proc_list.lock);
 

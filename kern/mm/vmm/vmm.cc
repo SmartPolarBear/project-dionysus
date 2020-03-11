@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sat Mar 07 2020
+ * Last Modified: Wed Mar 11 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -89,7 +89,7 @@ vma_struct *vmm::find_vma(mm_struct *mm, uintptr_t addr)
     {
         ret = nullptr;
         list_head *entry = nullptr;
-        list_for(entry, &mm->mmap_list)
+        list_for(entry, &mm->vma_list)
         {
             auto vma = container_of(entry, vma_struct, vma_link);
             if (vma->vm_start <= addr && addr < vma->vm_end)
@@ -127,10 +127,10 @@ void vmm::insert_vma_struct(mm_struct *mm, vma_struct *vma)
     KDEBUG_ASSERT(vma->vm_start < vma->vm_end);
 
     // find the place to insert to
-    list_head *prev = nullptr;
+    list_head *prev = &mm->vma_list;
 
     list_head *iter = nullptr;
-    list_for(iter, &mm->mmap_list)
+    list_for(iter, &mm->vma_list)
     {
         auto prev_vma = container_of(iter, vma_struct, vma_link);
         if (prev_vma->vm_start > vma->vm_start)
@@ -142,12 +142,12 @@ void vmm::insert_vma_struct(mm_struct *mm, vma_struct *vma)
 
     auto next = prev->next;
 
-    if (prev != &mm->mmap_list)
+    if (prev != &mm->vma_list)
     {
         check_vma_overlap(container_of(prev, vma_struct, vma_link), vma);
     }
 
-    if (next != &mm->mmap_list)
+    if (next != &mm->vma_list)
     {
         check_vma_overlap(vma, container_of(next, vma_struct, vma_link));
     }
@@ -163,7 +163,7 @@ mm_struct *vmm::mm_create(void)
     mm_struct *mm = reinterpret_cast<decltype(mm)>(memory::kmalloc(sizeof(mm_struct), 0));
     if (mm != nullptr)
     {
-        list_init(&mm->mmap_list);
+        list_init(&mm->vma_list);
 
         mm->mmap_cache = nullptr;
         mm->pgdir = nullptr;
@@ -228,7 +228,7 @@ error_code vmm::mm_duplicate(IN mm_struct *to, IN const mm_struct *from)
     }
 
     list_head *iter = nullptr;
-    list_for(iter, &from->mmap_list)
+    list_for(iter, &from->vma_list)
     {
         auto vma = container_of(iter, vma_struct, vma_link);
         auto new_vma = vma_create(vma->vm_start, vma->vm_end, vma->flags);
@@ -249,7 +249,7 @@ error_code vmm::mm_duplicate(IN mm_struct *to, IN const mm_struct *from)
 void vmm::mm_destroy(mm_struct *mm)
 {
     list_head *iter = nullptr;
-    list_for(iter, &mm->mmap_list)
+    list_for(iter, &mm->vma_list)
     {
         list_remove(iter);
         memory::kfree(container_of(iter, vma_struct, vma_link));
