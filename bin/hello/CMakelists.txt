@@ -3,7 +3,11 @@ cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 add_executable(hello 
     hello.cc)
 
+target_link_libraries(hello libuser)
+
 set_target_properties(hello PROPERTIES LINK_FLAGS "-Wl,-T ${CMAKE_SOURCE_DIR}/config/build/user.ld")
+
+target_include_directories(hello PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 target_compile_options(hello BEFORE
     PRIVATE --target=x86_64-pc-linux-elf
