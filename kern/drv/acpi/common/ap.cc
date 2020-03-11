@@ -1,5 +1,5 @@
 /*
- * Last Modified: Fri Feb 28 2020
+ * Last Modified: Wed Mar 11 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -36,6 +36,8 @@
 #include "sys/pmm.h"
 #include "sys/types.h"
 #include "sys/vmm.h"
+#include "sys/proc.h"
+#include "sys/scheduler.h"
 
 #include "lib/libc/stdio.h"
 #include "lib/libc/string.h"
@@ -96,18 +98,20 @@ void ap::all_processor_main()
     sti();
 
     // simple scheduler loop
-    while (!kdebug::panicked)
-    {
-        // printf("cpu %d\n", cpu->id);
-    }
+    // while (!kdebug::panicked)
+    // {
+    //     printf("cpu %d\n", cpu->id);
+    // }
 
-    if (kdebug::panicked)
-    {
-        cli();
-        hlt();
-        for (;;)
-            ;
-    }
+    // if (kdebug::panicked)
+    // {
+    //     cli();
+    //     hlt();
+    //     for (;;)
+    //         ;
+    // }
+
+    scheduler::scheduler_yield();
 }
 
 extern "C" [[clang::optnone]] void ap_enter(void)

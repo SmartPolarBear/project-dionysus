@@ -8,6 +8,7 @@
 #include "sys/proc.h"
 #include "sys/types.h"
 #include "sys/vmm.h"
+#include "sys/scheduler.h"
 
 #include "drivers/apic/traps.h"
 #include "drivers/lock/spinlock.h"
@@ -25,7 +26,7 @@ using lock::spinlock_acquire;
 using lock::spinlock_initlock;
 using lock::spinlock_release;
 
-[[clang::optnone]] void scheduler_halt()
+[[clang::optnone]] void scheduler::scheduler_halt()
 {
     bool has_proc = false;
 
@@ -67,7 +68,7 @@ using lock::spinlock_release;
         : "a"(vmm::tss_get_rsp(cpu->get_tss(), 0)));
 }
 
-[[clang::optnone]] void scheduler_yield()
+[[clang::optnone]] void scheduler::scheduler_yield()
 {
     spinlock_acquire(&proc_list.lock);
 

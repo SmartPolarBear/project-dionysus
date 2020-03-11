@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sun Mar 01 2020
+ * Last Modified: Wed Mar 11 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -41,11 +41,10 @@
 #include "sys/multiboot.h"
 #include "sys/param.h"
 #include "sys/pmm.h"
+#include "sys/proc.h"
 #include "sys/vmm.h"
 
 #include "lib/libc/stdio.h"
-
-
 
 // global entry of the kernel
 extern "C" [[noreturn]] void kmain()
@@ -74,13 +73,13 @@ extern "C" [[noreturn]] void kmain()
     // initialize apic timer
     timer::init_apic_timer();
 
+    // initialize user process manager
+    process::process_init();
+
     printf("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
 
     // boot other CPU cores
     ap::init_ap();
-
-    // TODO: implement process manager.
-    // TODO: after a proper scheduler implementation, this should be the last line of main
 
     ap::all_processor_main();
 

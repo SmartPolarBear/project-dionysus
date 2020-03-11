@@ -1,6 +1,10 @@
 #include "../console.h"
 #include "../cga/cga.h"
 
+#include "arch/amd64/cpu.h"
+
+#include "drivers/debug/kdebug.h"
+
 #include "drivers/lock/spinlock.h"
 
 using libk::list_add;
@@ -24,6 +28,17 @@ struct kconsole
     console_colors background;
     console_colors foreground;
 } cons;
+
+static inline void check_panicked()
+{
+    if (kdebug::panicked)
+    {
+        cli();
+        hlt();
+        for (;;)
+            ;
+    }
+}
 
 void console::console_init()
 {
@@ -49,6 +64,7 @@ void console::console_set_color(console_colors background, console_colors foregr
 
 void console::console_write_char(char c)
 {
+    check_panicked();
     // acquire the lock
     bool locking = cons.lock_enable;
     if (locking)
@@ -73,6 +89,7 @@ void console::console_write_char(char c)
 
 void console::cosnole_write_string(const char *str, size_t len)
 {
+    check_panicked();
     // acquire the lock
     bool locking = cons.lock_enable;
     if (locking)
@@ -101,6 +118,7 @@ void console::cosnole_write_string(const char *str, size_t len)
 
 void console::cosnole_write_string(const char *str)
 {
+    check_panicked();
     // acquire the lock
     bool locking = cons.lock_enable;
     if (locking)
@@ -159,4 +177,3 @@ bool console::console_get_lock(void)
 {
     return cons.lock_enable;
 }
-

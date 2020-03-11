@@ -2,6 +2,7 @@
 
 #include "sys/error.h"
 #include "sys/types.h"
+#include "sys/scheduler.h"
 
 #include "drivers/acpi/cpu.h"
 #include "drivers/apic/apic.h"
@@ -53,8 +54,9 @@ error_code trap_handle_tick([[maybe_unused]] trap_frame info)
         spinlock_acquire(&tickslock);
         ticks++;
 
-        // TODO: wake up processes
         spinlock_release(&tickslock);
+
+        scheduler::scheduler_yield();
     }
 
     return ERROR_SUCCESS;
