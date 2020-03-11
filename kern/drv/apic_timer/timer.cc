@@ -56,7 +56,7 @@ error_code trap_handle_tick([[maybe_unused]] trap_frame info)
 
         spinlock_release(&tickslock);
 
-        scheduler::scheduler_yield();
+        // scheduler::scheduler_yield();
     }
 
     return ERROR_SUCCESS;

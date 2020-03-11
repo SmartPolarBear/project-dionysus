@@ -46,6 +46,26 @@
 
 #include "lib/libc/stdio.h"
 
+void run_hello()
+{
+    auto tag = multiboot::acquire_tag_ptr<multiboot_tag_module>(MULTIBOOT_TAG_TYPE_MODULE, [](auto ptr) -> bool {
+        multiboot_tag_module *mdl_tag = reinterpret_cast<decltype(mdl_tag)>(ptr);
+        const char *ap_boot_commandline = "/hello";
+        auto cmp = strncmp(mdl_tag->cmdline, ap_boot_commandline, strlen(ap_boot_commandline));
+        return cmp == 0;
+    });
+
+    KDEBUG_ASSERT(tag != nullptr);
+
+    process::process_dispatcher *proc_he = nullptr;
+    process::create_process("hello", 0, false, &proc_he);
+    KDEBUG_ASSERT(proc_he != nullptr);
+
+    process::process_load_binary(proc_he, (uint8_t *)P2V(tag->mod_start), tag->mod_end - tag->mod_start + 1, process::BINARY_ELF);
+
+    printf("load binary: hello\n");
+}
+
 // global entry of the kernel
 extern "C" [[noreturn]] void kmain()
 {
@@ -75,6 +95,8 @@ extern "C" [[noreturn]] void kmain()
 
     // initialize user process manager
     process::process_init();
+
+    run_hello();
 
     printf("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
 

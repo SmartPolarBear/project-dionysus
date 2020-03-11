@@ -78,9 +78,10 @@ extern "C" int strncmp(const char *p, const char *q, size_t n)
     return (uint8_t)*p - (uint8_t)*q;
 }
 
-extern "C" char *strncpy(char *s, const char *t, size_t n)
+extern "C" char *strncpy(char *s, const char *t, size_t _n)
 {
     char *os;
+    int64_t n = _n; //signed, for below code may get into infinite loop because overflowing to INTMAX
 
     os = s;
     while (n-- > 0 && (*s++ = *t++) != 0)

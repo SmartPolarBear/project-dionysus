@@ -62,7 +62,7 @@ struct process_dispatcher
 
 		memset(&this->trapframe, 0, sizeof(this->trapframe));
 
-		strncpy(this->name, name, sysstd::min((size_t)strlen(name), PROC_NAME_LEN));
+		memmove(this->name, name, sysstd::min((size_t)strlen(name), PROC_NAME_LEN));
 	}
 };
 
@@ -84,7 +84,7 @@ void process_init(void);
 error_code create_process(IN const char *name,
 						  IN size_t flags,
 						  IN bool inherit_parent,
-						  OUT process_dispatcher *proc);
+						  OUT process_dispatcher **ret);
 
 error_code process_load_binary(IN process_dispatcher *porc,
 							   IN uint8_t *bin,

@@ -6,9 +6,9 @@
 #include "sys/error.h"
 #include "sys/memlayout.h"
 #include "sys/proc.h"
+#include "sys/scheduler.h"
 #include "sys/types.h"
 #include "sys/vmm.h"
-#include "sys/scheduler.h"
 
 #include "drivers/apic/traps.h"
 #include "drivers/lock/spinlock.h"
@@ -72,21 +72,24 @@ using lock::spinlock_release;
 {
     spinlock_acquire(&proc_list.lock);
 
-    list_head *iter = current == nullptr
+    list_head *iter = current != nullptr
                           ? current->link.next
                           : &proc_list.head;
 
-    do
+    if (iter->next != iter)
     {
-        auto proc = list_entry(iter, process::process_dispatcher, link);
-
-        if (proc->state == process::PROC_STATE_RUNNABLE)
+        do
         {
-            process::process_run(proc);
-        }
+            auto proc = list_entry(iter, process::process_dispatcher, link);
 
-        iter = iter->next;
-    } while (iter != current->link.next);
+            if (proc->state == process::PROC_STATE_RUNNABLE)
+            {
+                process::process_run(proc);
+            }
+
+            iter = iter->next;
+        } while (iter != current->link.next);
+    }
 
     if (current != nullptr && current->state == process::PROC_STATE_RUNNING)
     {

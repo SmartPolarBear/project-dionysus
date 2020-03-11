@@ -1,5 +1,5 @@
 /*
- * Last Modified: Tue Mar 10 2020
+ * Last Modified: Wed Mar 11 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -19,8 +19,6 @@
  * Date      	By	Comments
  * ----------	---	----------------------------------------------------------
  */
-
-
 
 #include "process.hpp"
 
@@ -252,7 +250,7 @@ void process::process_init(void)
 error_code process::create_process(IN const char *name,
 								   IN size_t flags,
 								   IN bool inherit_parent,
-								   OUT process_dispatcher *proc)
+								   OUT process_dispatcher **retproc)
 {
 	spinlock_acquire(&proc_list.lock);
 
@@ -261,7 +259,7 @@ error_code process::create_process(IN const char *name,
 		return -ERROR_TOO_MANY_PROC;
 	}
 
-	proc = new process_dispatcher(name, alloc_pid(), current->id, flags);
+	auto proc = new process_dispatcher(name, alloc_pid(), current == nullptr ? 0 : current->id, flags);
 
 	//setup kernel stack
 	proc->kstack = (uintptr_t) new BLOCK<process::process_dispatcher::KERNSTACK_SIZE>;
@@ -299,6 +297,7 @@ error_code process::create_process(IN const char *name,
 
 	spinlock_release(&proc_list.lock);
 
+	*retproc = proc;
 	return ERROR_SUCCESS;
 }
 
