@@ -32,6 +32,8 @@ set_property(SOURCE ${CMAKE_SOURCE_DIR}/kern/init/boot.S PROPERTY LANGUAGE C)
 set_property(SOURCE ${CMAKE_SOURCE_DIR}/kern/drv/apic/trapentry_asm.S PROPERTY LANGUAGE C)
 set_property(SOURCE ${CMAKE_SOURCE_DIR}/kern/drv/apic/vectors.S PROPERTY LANGUAGE C)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -gdwarf-2")
+
 set_target_properties(kernel PROPERTIES
                             CXX_STANDARD 20
                             CXX_STANDARD_REQUIRED ON
@@ -39,7 +41,6 @@ set_target_properties(kernel PROPERTIES
 
 target_compile_options(kernel BEFORE
     PRIVATE --target=x86_64-pc-linux-elf
-    PRIVATE -gdwarf-2
     PRIVATE -fno-pie
     PRIVATE -fno-exceptions
     PRIVATE -fno-rtti
@@ -53,8 +54,7 @@ target_compile_options(kernel BEFORE
     PRIVATE -mno-sse
     PRIVATE -mcmodel=large
     PRIVATE -mno-red-zone
-    PRIVATE -fmodules
-    PRIVATE -std=c++2a)
+    PRIVATE -fmodules)
 
 target_link_options(kernel
     PRIVATE -no-pie
