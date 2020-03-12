@@ -1,3 +1,5 @@
+.code64
+
 #include "sys/mmu_asm.h"
 #include "sys/memlayout_asm.h"
 
@@ -18,6 +20,7 @@
 .text
 .globl _start
 _start:
+	int $128
 	call libmain
 spin:
  jmp spin

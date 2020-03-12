@@ -44,10 +44,12 @@ error_code init_rsdt(const acpi::acpi_rsdp *rsdp)
         auto header = reinterpret_cast<acpi_desc_header *>(P2V(rsdt->entry[i]));
         if (strncmp((char *)header->signature, acpi::SIGNATURE_MADT, strlen(acpi::SIGNATURE_MADT)) == 0)
         {
+
             madt = reinterpret_cast<decltype(madt)>(header);
             break;
         }
     }
+
 
     return acpi_madt_init(madt);
 }

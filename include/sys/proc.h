@@ -94,3 +94,5 @@ error_code process_load_binary(IN process_dispatcher *porc,
 error_code process_run(IN process_dispatcher *porc);
 
 } // namespace process
+
+extern __thread process::process_dispatcher *current;

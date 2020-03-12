@@ -84,6 +84,7 @@ using lock::spinlock_release;
 
             if (proc->state == process::PROC_STATE_RUNNABLE)
             {
+                
                 process::process_run(proc);
             }
 

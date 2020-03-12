@@ -1,5 +1,5 @@
 /*
- * Last Modified: Wed Mar 11 2020
+ * Last Modified: Thu Mar 12 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -42,6 +42,7 @@
 #include "sys/param.h"
 #include "sys/pmm.h"
 #include "sys/proc.h"
+#include "sys/scheduler.h"
 #include "sys/vmm.h"
 
 #include "lib/libc/stdio.h"
@@ -74,7 +75,6 @@ extern "C" [[noreturn]] void kmain()
 
     // initialize physical memory
     pmm::init_pmm();
-
     // install trap vectors nad handle structures
     trap::init_trap();
 
@@ -102,6 +102,8 @@ extern "C" [[noreturn]] void kmain()
 
     // boot other CPU cores
     ap::init_ap();
+
+    scheduler::scheduler_yield();
 
     ap::all_processor_main();
 

@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sun Feb 16 2020
+ * Last Modified: Thu Mar 12 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -59,6 +59,7 @@ using trap::TRAP_NUMBERMAX;
 
 PANIC void acpi::init_acpi(void)
 {
+
     auto acpi_new_tag = multiboot::acquire_tag_ptr<multiboot_tag_new_acpi>(MULTIBOOT_TAG_TYPE_ACPI_NEW);
     auto acpi_old_tag = multiboot::acquire_tag_ptr<multiboot_tag_old_acpi>(MULTIBOOT_TAG_TYPE_ACPI_OLD);
 
@@ -92,7 +93,7 @@ PANIC void acpi::init_acpi(void)
 
     auto ret = acpi_ver_adapter->init_sdt(rsdp);
 
-    if(ret!=ERROR_SUCCESS)
+    if (ret != ERROR_SUCCESS)
     {
         KDEBUG_RICHPANIC_CODE(ret, true, "");
     }

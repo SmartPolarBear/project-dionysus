@@ -1,5 +1,5 @@
 /*
- * Last Modified: Wed Mar 11 2020
+ * Last Modified: Thu Mar 12 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -20,13 +20,12 @@
  * ----------	---	----------------------------------------------------------
  */
 
-
-
 #include "sys/error.h"
-#include "sys/memlayout.h"
 #include "sys/kmalloc.h"
+#include "sys/memlayout.h"
 #include "sys/mmu.h"
 #include "sys/pmm.h"
+#include "sys/proc.h"
 #include "sys/vmm.h"
 
 #include "arch/amd64/x86.h"
@@ -102,11 +101,18 @@ static inline error_code page_fault_impl(mm_struct *mm, size_t err, uintptr_t ad
 error_code handle_pgfault([[maybe_unused]] trap_frame info)
 {
     uintptr_t addr = rcr2();
-    mm_struct *mm = nullptr;
+    mm_struct *mm = current != nullptr ? current->mm : nullptr;
+
+    KDEBUG_ASSERT(current != nullptr && current->mm != nullptr);
 
     // The address belongs to the kernel.
-    // TODO: handle page fault for current process;
-    KDEBUG_NOT_IMPLEMENTED;
+    if (mm == nullptr)
+    {
+        KDEBUG_RICHPANIC("Unkown error in paging",
+                         "KERNEL PANIC: PAGE FAULT",
+                         false,
+                         "Address: 0x%p\n", addr);
+    }
 
     error_code ret = page_fault_impl(mm, info.err, addr);
 

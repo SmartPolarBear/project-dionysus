@@ -71,107 +71,107 @@ static inline error_code elf_load_binary(IN process::process_dispatcher *proc,
 
 	for (size_t i = 0; i < header->phnum; i++)
 	{
-		// if (prog_header[i].type == elf::ELF_PROG_LOAD)
-		// {
-		// 	size_t vm_flags = 0, perms = PG_U;
-		// 	if (prog_header[i].type & elf::ELF_PROG_FLAG_EXEC)
-		// 	{
-		// 		vm_flags |= vmm::VM_EXEC;
-		// 	}
+		if (prog_header[i].type == elf::ELF_PROG_LOAD)
+		{
+			size_t vm_flags = 0, perms = PG_U;
+			if (prog_header[i].type & elf::ELF_PROG_FLAG_EXEC)
+			{
+				vm_flags |= vmm::VM_EXEC;
+			}
 
-		// 	if (prog_header[i].type & elf::ELF_PROG_FLAG_READ)
-		// 	{
-		// 		vm_flags |= vmm::VM_READ;
-		// 	}
+			if (prog_header[i].type & elf::ELF_PROG_FLAG_READ)
+			{
+				vm_flags |= vmm::VM_READ;
+			}
 
-		// 	if (prog_header[i].type & elf::ELF_PROG_FLAG_WRITE)
-		// 	{
-		// 		vm_flags |= vmm::VM_WRITE;
-		// 		perms |= PG_W;
-		// 	}
+			if (prog_header[i].type & elf::ELF_PROG_FLAG_WRITE)
+			{
+				vm_flags |= vmm::VM_WRITE;
+				perms |= PG_W;
+			}
 
-		// 	if ((ret = vmm::mm_map(proc->mm, prog_header[i].vaddr, prog_header[i].memsz, vm_flags, nullptr)) != ERROR_SUCCESS)
-		// 	{
-		// 		//TODO do clean-ups
-		// 		return ret;
-		// 	}
+			if ((ret = vmm::mm_map(proc->mm, prog_header[i].vaddr, prog_header[i].memsz, vm_flags, nullptr)) != ERROR_SUCCESS)
+			{
+				//TODO do clean-ups
+				return ret;
+			}
 
-		// 	if (proc->mm->brk_start < prog_header[i].vaddr + prog_header[i].memsz)
-		// 	{
-		// 		proc->mm->brk_start = prog_header[i].vaddr + prog_header[i].memsz;
-		// 	}
+			if (proc->mm->brk_start < prog_header[i].vaddr + prog_header[i].memsz)
+			{
+				proc->mm->brk_start = prog_header[i].vaddr + prog_header[i].memsz;
+			}
 
-		// 	uintptr_t start = prog_header[i].vaddr, end = prog_header[i].vaddr + prog_header[i].filesz;
-		// 	uintptr_t la = rounddown(start, PMM_PAGE_SIZE);
-		// 	uintptr_t offset = prog_header[i].off;
-		// 	page_info *page = nullptr;
+			uintptr_t start = prog_header[i].vaddr, end = prog_header[i].vaddr + prog_header[i].filesz;
+			uintptr_t la = rounddown(start, PMM_PAGE_SIZE);
+			uintptr_t offset = prog_header[i].off;
+			page_info *page = nullptr;
 
-		// while (start < end)
-		// {
-		// 	page = pmm::pgdir_alloc_page(proc->mm->pgdir, la, perms);
-		// 	if (page == nullptr)
-		// 	{
-		// 		//TODO do clean-ups
-		// 		return -ERROR_MEMORY_ALLOC;
-		// 	}
+			while (start < end)
+			{
+				page = pmm::pgdir_alloc_page(proc->mm->pgdir, la, perms);
+				if (page == nullptr)
+				{
+					//TODO do clean-ups
+					return -ERROR_MEMORY_ALLOC;
+				}
 
-		// 	size_t off = start - la, size = PMM_PAGE_SIZE - off;
-		// 	la += PMM_PAGE_SIZE;
-		// 	if (end < la)
-		// 	{
-		// 		size -= la - end;
-		// 	}
+				size_t off = start - la, size = PMM_PAGE_SIZE - off;
+				la += PMM_PAGE_SIZE;
+				if (end < la)
+				{
+					size -= la - end;
+				}
 
-		// 	memmove(((uint8_t *)pmm::page_to_va(page)) + off, bin + offset, size);
-		// 	start += size, offset += size;
-		// }
+				memmove(((uint8_t *)pmm::page_to_va(page)) + off, bin + offset, size);
+				start += size, offset += size;
+			}
 
-		// end = prog_header[i].vaddr + prog_header[i].memsz;
+			end = prog_header[i].vaddr + prog_header[i].memsz;
 
-		// if (start < la)
-		// {
-		// 	/* ph->p_memsz == ph->p_filesz */
-		// 	if (start == end)
-		// 	{
-		// 		continue;
-		// 	}
-		// 	size_t off = start + PMM_PAGE_SIZE - la, size = PMM_PAGE_SIZE - off;
-		// 	if (end < la)
-		// 	{
-		// 		size -= la - end;
-		// 	}
-		// 	memset(((uint8_t *)pmm::page_to_va(page)) + off, 0, size);
-		// 	start += size;
-		// 	if ((end < la && start == end) || (end >= la && start == la))
-		// 	{
-		// 		//TODO do clean-ups
-		// 		return -ERROR_INVALID_DATA;
-		// 	}
-		// }
+			if (start < la)
+			{
+				/* ph->p_memsz == ph->p_filesz */
+				if (start == end)
+				{
+					continue;
+				}
+				size_t off = start + PMM_PAGE_SIZE - la, size = PMM_PAGE_SIZE - off;
+				if (end < la)
+				{
+					size -= la - end;
+				}
+				memset(((uint8_t *)pmm::page_to_va(page)) + off, 0, size);
+				start += size;
+				if ((end < la && start == end) || (end >= la && start == la))
+				{
+					//TODO do clean-ups
+					return -ERROR_INVALID_DATA;
+				}
+			}
 
-		// while (start < end)
-		// {
-		// 	page = pmm::pgdir_alloc_page(proc->mm->pgdir, la, perms);
-		// 	if (page == NULL)
-		// 	{
-		// 		//TODO do clean-ups
-		// 		return -ERROR_MEMORY_ALLOC;
-		// 	}
-		// 	size_t off = start - la, size = PMM_PAGE_SIZE - off;
+			while (start < end)
+			{
+				page = pmm::pgdir_alloc_page(proc->mm->pgdir, la, perms);
+				if (page == NULL)
+				{
+					//TODO do clean-ups
+					return -ERROR_MEMORY_ALLOC;
+				}
+				size_t off = start - la, size = PMM_PAGE_SIZE - off;
 
-		// 	la += PMM_PAGE_SIZE;
-		// 	if (end < la)
-		// 	{
-		// 		size -= la - end;
-		// 	}
-		// 	memset(((uint8_t *)pmm::page_to_va(page)) + off, 0, size);
-		// 	start += size;
-		// }
-		// }
-		// else
-		// {
-		// 	//TODO: handle more header types
-		// }
+				la += PMM_PAGE_SIZE;
+				if (end < la)
+				{
+					size -= la - end;
+				}
+				memset(((uint8_t *)pmm::page_to_va(page)) + off, 0, size);
+				start += size;
+			}
+		}
+		else
+		{
+			//TODO: handle more header types
+		}
 	}
 
 	proc->trapframe.rip = header->entry;
@@ -179,8 +179,8 @@ static inline error_code elf_load_binary(IN process::process_dispatcher *proc,
 	// allocate an stack
 	for (size_t i = 0; i < process::process_dispatcher::KERNSTACK_PAGES; i++)
 	{
-		// uintptr_t va = USER_TOP - process::process_dispatcher::KERNSTACK_SIZE + i * PMM_PAGE_SIZE;
-		// pmm::pgdir_alloc_page(proc->mm->pgdir, va, PG_W | PG_U);
+		uintptr_t va = USER_TOP - process::process_dispatcher::KERNSTACK_SIZE + i * PMM_PAGE_SIZE;
+		pmm::pgdir_alloc_page(proc->mm->pgdir, va, PG_W | PG_U);
 	}
 
 	return ret;
@@ -189,8 +189,9 @@ static inline error_code elf_load_binary(IN process::process_dispatcher *proc,
 [[noreturn]] static inline void proc_restore_trapframe(IN trap_frame *tf)
 {
 	// restore trapframe to registers
+
 	asm volatile(
-		"\tmovq %0,%%rsp\n"
+		"\tmov %0,%%rsp\n"
 		"\tpop %%rax\n"
 		"\tpop %%rbx\n"
 		"\tpop %%rcx\n"
@@ -207,7 +208,7 @@ static inline error_code elf_load_binary(IN process::process_dispatcher *proc,
 		"\tpop %%r14\n"
 		"\tpop %%r15\n"
 		"\tadd $16, %%rsp\n" //discard trapnum and errorcode
-		"\tiretq\n" ::"g"(tf)
+		"\tiret\n" ::"g"(tf)
 		: "memory");
 
 	KDEBUG_GENERALPANIC("iretq failed.");
@@ -229,7 +230,7 @@ static inline error_code setup_mm(process::process_dispatcher *proc)
 
 	// vmm::pde_ptr_t pgdir = reinterpret_cast<vmm::pde_ptr_t>(new BLOCK<PMM_PAGE_SIZE>);
 	vmm::pde_ptr_t pgdir = (vmm::pde_ptr_t)pmm::boot_mem::boot_alloc_page();
-	if (proc->mm == nullptr)
+	if (pgdir == nullptr)
 	{
 		vmm::mm_destroy(proc->mm);
 		return -ERROR_MEMORY_ALLOC;
@@ -328,6 +329,7 @@ error_code process::process_load_binary(IN process_dispatcher *proc,
 
 error_code process::process_run(IN process_dispatcher *proc)
 {
+
 	if (current != nullptr && current->state == PROC_STATE_RUNNING)
 	{
 		current->state = PROC_STATE_RUNNABLE;
@@ -339,14 +341,15 @@ error_code process::process_run(IN process_dispatcher *proc)
 	current->state = PROC_STATE_RUNNING;
 	current->runs++;
 
+	KDEBUG_ASSERT(current != nullptr && current->mm != nullptr);
+	
+
 	lcr3(V2P((uintptr_t)proc->mm->pgdir));
 
 	// vmm::pde_ptr_t pgdir = (vmm::pde_ptr_t)pmm::boot_mem::boot_alloc_page();
 	// vmm::pde_ptr_t pgdir = (vmm::pde_ptr_t)memory::kmalloc(PMM_PAGE_SIZE, 0);
 
 	// memset(pgdir, 0, PMM_PAGE_SIZE);
-
-	// // memmove(pgdir, g_kpml4t, PMM_PAGE_SIZE);
 
 	// uint8_t *dst = (uint8_t *)pgdir, *src = (uint8_t *)g_kpml4t;
 	// for (int i = 0; i < 4096; i++)

@@ -77,7 +77,10 @@ size_t iso_count = 0;
                 break;
             }
 
-            cpus[cpu_count] = {.id = cpu_count, .apicid = lapic->apic_id, .present = true};
+            cpus[cpu_count].id = cpu_count;
+            cpus[cpu_count].apicid = lapic->apic_id;
+            cpus[cpu_count].present = true;
+
             cpu_count++;
             break;
         }

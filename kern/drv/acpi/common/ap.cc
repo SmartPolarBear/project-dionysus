@@ -1,5 +1,5 @@
 /*
- * Last Modified: Wed Mar 11 2020
+ * Last Modified: Thu Mar 12 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -98,20 +98,20 @@ void ap::all_processor_main()
     sti();
 
     // simple scheduler loop
-    // while (!kdebug::panicked)
-    // {
-    //     printf("cpu %d\n", cpu->id);
-    // }
+    while (!kdebug::panicked)
+    {
+        // printf("cpu %d\n", cpu->id);
+    }
 
-    // if (kdebug::panicked)
-    // {
-    //     cli();
-    //     hlt();
-    //     for (;;)
-    //         ;
-    // }
+    if (kdebug::panicked)
+    {
+        cli();
+        hlt();
+        for (;;)
+            ;
+    }
 
-    scheduler::scheduler_yield();
+   
 }
 
 extern "C" [[clang::optnone]] void ap_enter(void)
