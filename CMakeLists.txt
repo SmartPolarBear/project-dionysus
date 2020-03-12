@@ -134,6 +134,11 @@ add_custom_command(TARGET ap_boot.elf POST_BUILD
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
 
+add_custom_command(TARGET kernel POST_BUILD
+    COMMAND objdump -S $<TARGET_FILE:kernel> > ${CMAKE_BINARY_DIR}/kernel.asm
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+)
+
 add_custom_target(qemu
 		COMMAND ${QEMU_BIN_EXE} -serial mon:stdio ${QEMU_ARGS}
         DEPENDS kernel ap_boot.elf disk.img

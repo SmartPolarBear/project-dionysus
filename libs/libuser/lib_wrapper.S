@@ -20,7 +20,6 @@
 .text
 .globl _start
 _start:
-	int $128
 	call libmain
 spin:
- jmp spin
+  jmp spin

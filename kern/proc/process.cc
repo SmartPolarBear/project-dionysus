@@ -1,5 +1,5 @@
 /*
- * Last Modified: Thu Mar 12 2020
+ * Last Modified: Fri Mar 13 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -186,30 +186,32 @@ static inline error_code elf_load_binary(IN process::process_dispatcher *proc,
 	return ret;
 }
 
+
 [[noreturn]] static inline void proc_restore_trapframe(IN trap_frame *tf)
 {
 	// restore trapframe to registers
-
+	
 	asm volatile(
-		"\tmov %0,%%rsp\n"
-		"\tpop %%rax\n"
-		"\tpop %%rbx\n"
-		"\tpop %%rcx\n"
-		"\tpop %%rdx\n"
-		"\tpop %%rbp\n"
-		"\tpop %%rsi\n"
-		"\tpop %%rdi\n"
-		"\tpop %%r8 \n"
-		"\tpop %%r9 \n"
-		"\tpop %%r10\n"
-		"\tpop %%r11\n"
-		"\tpop %%r12\n"
-		"\tpop %%r13\n"
-		"\tpop %%r14\n"
-		"\tpop %%r15\n"
-		"\tadd $16, %%rsp\n" //discard trapnum and errorcode
+		"\tmovq %0,%%rsp\n"
+		"\tpopq %%rax\n"
+		"\tpopq %%rbx\n"
+		"\tpopq %%rcx\n"
+		"\tpopq %%rdx\n"
+		"\tpopq %%rbp\n"
+		"\tpopq %%rsi\n"
+		"\tpopq %%rdi\n"
+		"\tpopq %%r8 \n"
+		"\tpopq %%r9 \n"
+		"\tpopq %%r10\n"
+		"\tpopq %%r11\n"
+		"\tpopq %%r12\n"
+		"\tpopq %%r13\n"
+		"\tpopq %%r14\n"
+		"\tpopq %%r15\n"
+		"\taddq $16, %%rsp\n" //discard trapnum and errorcode
 		"\tiret\n" ::"g"(tf)
 		: "memory");
+
 
 	KDEBUG_GENERALPANIC("iretq failed.");
 }
@@ -327,6 +329,8 @@ error_code process::process_load_binary(IN process_dispatcher *proc,
 	return ret;
 }
 
+
+extern "C" void trap_ret(trap_frame tf);
 error_code process::process_run(IN process_dispatcher *proc)
 {
 
@@ -342,34 +346,17 @@ error_code process::process_run(IN process_dispatcher *proc)
 	current->runs++;
 
 	KDEBUG_ASSERT(current != nullptr && current->mm != nullptr);
-	
 
-	lcr3(V2P((uintptr_t)proc->mm->pgdir));
-
-	// vmm::pde_ptr_t pgdir = (vmm::pde_ptr_t)pmm::boot_mem::boot_alloc_page();
-	// vmm::pde_ptr_t pgdir = (vmm::pde_ptr_t)memory::kmalloc(PMM_PAGE_SIZE, 0);
-
-	// memset(pgdir, 0, PMM_PAGE_SIZE);
-
-	// uint8_t *dst = (uint8_t *)pgdir, *src = (uint8_t *)g_kpml4t;
-	// for (int i = 0; i < 4096; i++)
-	// {
-	// 	dst[i] = src[i];
-	// 	KDEBUG_ASSERT(dst[i] == src[i]);
-	// }
-
-	// int a = memcmp(pgdir, g_kpml4t, PMM_PAGE_SIZE);
-	// int b = memcmp(g_kpml4t, pgdir, PMM_PAGE_SIZE);
-	// KDEBUG_ASSERT(a == 0 && b == 0);
-
-	// lcr3(V2P((uintptr_t)pgdir));
-	// lcr3(V2P((uintptr_t)g_kpml4t));
+	lcr3(V2P((uintptr_t)current->mm->pgdir));
 
 	spinlock_release(&proc_list.lock);
 
-	vmm::tss_set_rsp(cpu->get_tss(), 0, proc->kstack + process_dispatcher::KERNSTACK_SIZE);
+	vmm::tss_set_rsp(cpu->get_tss(), 0, current->kstack + process_dispatcher::KERNSTACK_SIZE);
 
 	trap::popcli();
 
-	proc_restore_trapframe(&proc->trapframe);
+	// proc_restore_trapframe(&current->trapframe);
+	trap_ret(current->trapframe);
+
+	KDEBUG_FOLLOWPANIC("iret failed");
 }

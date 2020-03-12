@@ -6,7 +6,7 @@
 
 // defined in trapentry_asm.S
 extern "C" void trap_entry();
-extern "C" void trap_ret();
+// extern "C" void trap_ret();
 
 namespace trap
 {
