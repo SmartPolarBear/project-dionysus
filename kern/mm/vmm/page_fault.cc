@@ -1,5 +1,5 @@
 /*
- * Last Modified: Thu Mar 12 2020
+ * Last Modified: Fri Mar 13 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -62,6 +62,8 @@ static inline error_code page_fault_impl(mm_struct *mm, size_t err, uintptr_t ad
     }
     else
     {
+        auto pde = vmm::walk_pgdir(mm->pgdir, addr, false);
+
         switch (err & 0b11)
         {
         default:

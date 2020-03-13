@@ -32,6 +32,7 @@
 #include "drivers/apic/traps.h"
 #include "drivers/lock/spinlock.h"
 
+#include "lib/libc/stdio.h"
 #include "lib/libelf/elf.h"
 #include "lib/libkern/data/list.h"
 
@@ -186,11 +187,10 @@ static inline error_code elf_load_binary(IN process::process_dispatcher *proc,
 	return ret;
 }
 
-
 [[noreturn]] static inline void proc_restore_trapframe(IN trap_frame *tf)
 {
 	// restore trapframe to registers
-	
+
 	asm volatile(
 		"\tmovq %0,%%rsp\n"
 		"\tpopq %%rax\n"
@@ -211,7 +211,6 @@ static inline error_code elf_load_binary(IN process::process_dispatcher *proc,
 		"\taddq $16, %%rsp\n" //discard trapnum and errorcode
 		"\tiret\n" ::"g"(tf)
 		: "memory");
-
 
 	KDEBUG_GENERALPANIC("iretq failed.");
 }
@@ -329,8 +328,32 @@ error_code process::process_load_binary(IN process_dispatcher *proc,
 	return ret;
 }
 
+void do_iret(trap_frame tf)
+{
+	asm volatile(
+		"\tmovq %0,%%rsp\n"
+		"\tpopq %%rax\n"
+		"\tpopq %%rbx\n"
+		"\tpopq %%rcx\n"
+		"\tpopq %%rdx\n"
+		"\tpopq %%rbp\n"
+		"\tpopq %%rsi\n"
+		"\tpopq %%rdi\n"
+		"\tpopq %%r8 \n"
+		"\tpopq %%r9 \n"
+		"\tpopq %%r10\n"
+		"\tpopq %%r11\n"
+		"\tpopq %%r12\n"
+		"\tpopq %%r13\n"
+		"\tpopq %%r14\n"
+		"\tpopq %%r15\n"
+		"\taddq $16, %%rsp\n" //discard trapnum and errorcode
+		"\tiretq\n" ::"g"(&tf)
+		: "memory");
 
-extern "C" void trap_ret(trap_frame tf);
+	KDEBUG_GENERALPANIC("iretq failed.");
+}
+
 error_code process::process_run(IN process_dispatcher *proc)
 {
 
@@ -342,21 +365,21 @@ error_code process::process_run(IN process_dispatcher *proc)
 	trap::pushcli();
 
 	current = proc;
-	current->state = PROC_STATE_RUNNING;
-	current->runs++;
+	proc->state = PROC_STATE_RUNNING;
+	proc->runs++;
 
 	KDEBUG_ASSERT(current != nullptr && current->mm != nullptr);
 
-	lcr3(V2P((uintptr_t)current->mm->pgdir));
+	lcr3(V2P((uintptr_t)proc->mm->pgdir));
 
 	spinlock_release(&proc_list.lock);
 
-	vmm::tss_set_rsp(cpu->get_tss(), 0, current->kstack + process_dispatcher::KERNSTACK_SIZE);
+	vmm::tss_set_rsp(cpu->get_tss(), 0, proc->kstack + process_dispatcher::KERNSTACK_SIZE);
 
 	trap::popcli();
 
 	// proc_restore_trapframe(&current->trapframe);
-	trap_ret(current->trapframe);
+	do_iret(current->trapframe);
 
 	KDEBUG_FOLLOWPANIC("iret failed");
 }

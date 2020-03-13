@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sun Mar 08 2020
+ * Last Modified: Fri Mar 13 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -23,8 +23,8 @@
 
 #include "arch/amd64/sync.h"
 
-#include "sys/kmem.h"
 #include "sys/error.h"
+#include "sys/kmem.h"
 #include "sys/memlayout.h"
 #include "sys/mmu.h"
 #include "sys/multiboot.h"
@@ -272,20 +272,20 @@ error_code pmm::page_insert(pde_ptr_t pgdir, page_info *page, uintptr_t va, size
         return -ERROR_MEMORY_ALLOC;
     }
 
-    page->ref++;
+    ++page->ref;
 
-    if ((*pde) & PG_P)
+    do
     {
-        auto p = pde_to_page(pde);
-        if (p == page)
+        if (*pde != 0)
         {
-            page->ref--;
-        }
-        else
-        {
+            if ((*pde & PG_P) && pde_to_page(pde) == page)
+            {
+                --page->ref;
+                break;
+            }
             page_remove_pde(pgdir, va, pde);
         }
-    }
+    } while (0);
 
     *pde = page_to_pa(page) | PG_P | perm;
     tlb_invalidate(pgdir, va);

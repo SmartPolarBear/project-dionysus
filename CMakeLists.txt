@@ -40,6 +40,7 @@ set_target_properties(kernel PROPERTIES
                             CXX_EXTENSIONS ON)
 
 target_compile_options(kernel BEFORE
+    PRIVATE -g
     PRIVATE --target=x86_64-pc-linux-elf
     PRIVATE -fno-pie
     PRIVATE -fno-exceptions
