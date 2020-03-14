@@ -1,5 +1,5 @@
 /*
- * Last Modified: Fri Mar 13 2020
+ * Last Modified: Sat Mar 14 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -258,5 +258,5 @@ uintptr_t vmm::pde_to_pa(pde_ptr_t pde)
 
 pde_ptr_t vmm::walk_pgdir(pde_ptr_t pgdir, size_t va, bool create)
 {
-    return ::walk_pgdir(pgdir, va, create, PG_U);
+    return ::walk_pgdir(pgdir, va, create, 0);
 }

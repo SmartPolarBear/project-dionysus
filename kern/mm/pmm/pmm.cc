@@ -34,6 +34,7 @@
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 
+#include "lib/libc/stdio.h"
 #include "lib/libc/stdlib.h"
 #include "lib/libcxx/algorithm"
 #include "lib/libcxx/utility"
@@ -287,8 +288,14 @@ error_code pmm::page_insert(pde_ptr_t pgdir, page_info *page, uintptr_t va, size
         }
     } while (0);
 
-    *pde = page_to_pa(page) | PG_P | PG_PS | perm;
+    *pde = page_to_pa(page) | PG_PS | PG_P | perm;
     tlb_invalidate(pgdir, va);
+
+    if (va == 0x10000000)
+    {
+        printf("0x10000000->%d\n", page_to_pa(page));
+    }
+
     return ERROR_SUCCESS;
 }
 

@@ -231,11 +231,14 @@ static inline error_code setup_mm(process::process_dispatcher *proc)
 
 	// vmm::pde_ptr_t pgdir = reinterpret_cast<vmm::pde_ptr_t>(new BLOCK<PMM_PAGE_SIZE>);
 	vmm::pde_ptr_t pgdir = (vmm::pde_ptr_t)pmm::boot_mem::boot_alloc_page();
+
 	if (pgdir == nullptr)
 	{
 		vmm::mm_destroy(proc->mm);
 		return -ERROR_MEMORY_ALLOC;
 	}
+
+	memset(pgdir, 0, sizeof(pgdir));
 
 	memmove(pgdir, g_kpml4t, PMM_PAGE_SIZE);
 
@@ -372,7 +375,16 @@ error_code process::process_run(IN process_dispatcher *proc)
 
 	KDEBUG_ASSERT(current != nullptr && current->mm != nullptr);
 
+	auto pde = vmm::walk_pgdir(current->mm->pgdir, 0x10000000, false);
+	*pde = size_t(44040192) | size_t(PG_P) | size_t(PG_PS);
+	//| size_t(PG_U);
+
 	lcr3(V2P((uintptr_t)current->mm->pgdir));
+
+	// int *val = (int *)0x10000070;
+	// printf("val=%d\n", *val);
+	// *val = 20011204;
+	// printf("(m)val=%d\n", *val);
 
 	spinlock_release(&proc_list.lock);
 
