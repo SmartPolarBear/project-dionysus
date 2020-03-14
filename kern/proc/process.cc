@@ -1,5 +1,5 @@
 /*
- * Last Modified: Fri Mar 13 2020
+ * Last Modified: Sat Mar 14 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -330,6 +330,8 @@ error_code process::process_load_binary(IN process_dispatcher *proc,
 
 void do_iret(trap_frame tf)
 {
+	auto pde = vmm::walk_pgdir(current->mm->pgdir, 0x10000000, false);
+
 	asm volatile(
 		"\tmovq %0,%%rsp\n"
 		"\tpopq %%rax\n"
@@ -365,16 +367,16 @@ error_code process::process_run(IN process_dispatcher *proc)
 	trap::pushcli();
 
 	current = proc;
-	proc->state = PROC_STATE_RUNNING;
-	proc->runs++;
+	current->state = PROC_STATE_RUNNING;
+	current->runs++;
 
 	KDEBUG_ASSERT(current != nullptr && current->mm != nullptr);
 
-	lcr3(V2P((uintptr_t)proc->mm->pgdir));
+	lcr3(V2P((uintptr_t)current->mm->pgdir));
 
 	spinlock_release(&proc_list.lock);
 
-	vmm::tss_set_rsp(cpu->get_tss(), 0, proc->kstack + process_dispatcher::KERNSTACK_SIZE);
+	vmm::tss_set_rsp(cpu->get_tss(), 0, current->kstack + process_dispatcher::KERNSTACK_SIZE);
 
 	trap::popcli();
 

@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sat Feb 15 2020
+ * Last Modified: Fri Mar 13 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -21,8 +21,8 @@
  */
 
 #include "sys/error.h"
-#include "sys/memlayout.h"
 #include "sys/kmalloc.h"
+#include "sys/memlayout.h"
 #include "sys/mmu.h"
 #include "sys/pmm.h"
 #include "sys/vmm.h"
@@ -35,6 +35,7 @@
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 
+#include "lib/libc/stdio.h"
 #include "lib/libc/string.h"
 #include "lib/libcxx/algorithm"
 
@@ -54,6 +55,8 @@ using libk::list_remove;
 
 // global variable for the sake of access and dynamically mapping
 pde_ptr_t g_kpml4t;
+
+// #define WALK_PGDIR_PRINT_INTERMEDIATE_VAL
 
 // find the pde corresponding to the given va
 // perm is only valid when create_if_not_exist = true
@@ -76,6 +79,13 @@ static inline pde_ptr_t walk_pgdir(const pde_ptr_t pml4t,
               pgdir = nullptr,
               pde = nullptr;
 
+#ifdef WALK_PGDIR_PRINT_INTERMEDIATE_VAL
+    if (vaddr == 0x10000000)
+    {
+        printf("pml4e=0x%p\n", pml4e);
+    }
+#endif
+
     if (!(*pml4e & PG_P))
     {
         if (!create_if_not_exist)
@@ -97,6 +107,13 @@ static inline pde_ptr_t walk_pgdir(const pde_ptr_t pml4t,
     {
         pdpt = reinterpret_cast<decltype(pdpt)>(P2V(remove_flags(*pml4e)));
     }
+
+#ifdef WALK_PGDIR_PRINT_INTERMEDIATE_VAL
+    if (vaddr == 0x10000000)
+    {
+        printf("pdpt=0x%p\n", pdpt);
+    }
+#endif
 
     // find the 2nd page directory from PGPT
     pdpte = &pdpt[P3X(vaddr)];
@@ -122,10 +139,24 @@ static inline pde_ptr_t walk_pgdir(const pde_ptr_t pml4t,
         pgdir = reinterpret_cast<decltype(pgdir)>(P2V(remove_flags(*pdpte)));
     }
 
+#ifdef WALK_PGDIR_PRINT_INTERMEDIATE_VAL
+    if (vaddr == 0x10000000)
+    {
+        printf("pdpte=0x%p\n", pdpte);
+    }
+#endif
+
     // find the page from 2nd page directory.
     // because we use page size extension (2mb pages)
     // this is the last level.
     pde = &pgdir[P2X(vaddr)];
+
+#ifdef WALK_PGDIR_PRINT_INTERMEDIATE_VAL
+    if (vaddr == 0x10000000)
+    {
+        printf("pde=0x%p\n", pde);
+    }
+#endif
 
     return pde;
 }

@@ -1,5 +1,5 @@
 /*
- * Last Modified: Fri Mar 13 2020
+ * Last Modified: Sat Mar 14 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -287,7 +287,7 @@ error_code pmm::page_insert(pde_ptr_t pgdir, page_info *page, uintptr_t va, size
         }
     } while (0);
 
-    *pde = page_to_pa(page) | PG_P | perm;
+    *pde = page_to_pa(page) | PG_P | PG_PS | perm;
     tlb_invalidate(pgdir, va);
     return ERROR_SUCCESS;
 }
