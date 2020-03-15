@@ -1,5 +1,5 @@
 /*
- * Last Modified: Thu Feb 20 2020
+ * Last Modified: Sun Mar 15 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -205,7 +205,7 @@ void memory::kmem::kmem_init(void)
 
 kmem_cache *memory::kmem::kmem_cache_create(const char *name, size_t size, kmem_ctor_type ctor, kmem_dtor_type dtor)
 {
-    KDEBUG_ASSERT(size < PMM_PAGE_SIZE - sizeof(kmem_bufctl));
+    // KDEBUG_ASSERT(size < PMM_PAGE_SIZE - sizeof(kmem_bufctl));
     kmem_cache *ret = reinterpret_cast<decltype(ret)>(kmem_cache_alloc(&cache_cache));
 
     if (ret != nullptr)

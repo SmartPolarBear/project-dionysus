@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sat Mar 14 2020
+ * Last Modified: Sun Mar 15 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -20,6 +20,7 @@
  * ----------	---	----------------------------------------------------------
  */
 #include "./buddy_pmm.h"
+#include "./pmm.h"
 
 #include "arch/amd64/sync.h"
 
@@ -207,6 +208,8 @@ void pmm::init_pmm(void)
     init_pmm_manager();
 
     init_physical_mem();
+
+    pgdir_cache_init();
 
     vmm::install_gdt();
 
