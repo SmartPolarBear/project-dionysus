@@ -1,5 +1,5 @@
 /*
- * Last Modified: Wed Mar 11 2020
+ * Last Modified: Tue Mar 17 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -69,9 +69,50 @@ static inline void check_vma_overlap(struct vma_struct *prev, struct vma_struct 
 void vmm::init_vmm(void)
 {
     // create the global pml4t
+    pgdir_cache_init();
+
+    // g_kpml4t = pgdir_entry_alloc();
     g_kpml4t = reinterpret_cast<pde_ptr_t>(boot_alloc_page());
 
     memset(g_kpml4t, 0, PMM_PAGE_SIZE);
+
+    vmm::boot_map_kernel_mem();
+
+    auto sonofbitch = g_kpml4t;
+
+    g_kpml4t = pgdir_entry_alloc();
+
+    memset(g_kpml4t, 0, PMM_PAGE_SIZE);
+
+    vmm::boot_map_kernel_mem();
+
+    auto sonofbitch2 = g_kpml4t;
+
+    int fuck = memcmp(sonofbitch2, sonofbitch, 4096);
+
+    size_t diff[10] = {0}, diff_count = 0;
+    uintptr_t *s1 = reinterpret_cast<decltype(s1)>(sonofbitch);
+    uintptr_t *s2 = reinterpret_cast<decltype(s2)>(sonofbitch2);
+    for (int i = 0; i < 512; i++)
+    {
+        if (*s1 != *s2)
+        {
+            diff[diff_count++] = (s1 - (uintptr_t *)sonofbitch);
+        }
+        s1++, s2++;
+    }
+
+    g_kpml4t = sonofbitch;
+
+    g_kpml4t[diff[0]] = sonofbitch2[diff[0]];
+
+    g_kpml4t[diff[1]] = sonofbitch2[diff[1]];
+
+    // code above verifies that the exception must be cause by the top level.
+
+    int fuck2 = memcmp(sonofbitch2, sonofbitch, 4096);
+
+    vmm::install_kpml4();
 
     // register the page fault handle
     trap::trap_handle_regsiter(trap::TRAP_PGFLT, trap::trap_handle{
@@ -232,15 +273,15 @@ error_code vmm::mm_duplicate(IN mm_struct *to, IN const mm_struct *from)
     {
         auto vma = container_of(iter, vma_struct, vma_link);
         auto new_vma = vma_create(vma->vm_start, vma->vm_end, vma->flags);
-        if(new_vma==nullptr)
+        if (new_vma == nullptr)
         {
             return -ERROR_MEMORY_ALLOC;
         }
-        
+
         //TODO: process shared memory
 
         insert_vma_struct(to, new_vma);
-        
+
         //TODO: copy pgdir content
     }
     return ERROR_SUCCESS;

@@ -70,9 +70,16 @@ kmem_cache *sized_caches[KMEM_SIZED_CACHE_COUNT];
 
 kmem_cache cache_cache;
 
+static page_info *alloc_page_2()
+{
+    auto ret = pmm::alloc_pages(512);
+    return ret;
+}
+
 static inline constexpr size_t cache_obj_count(size_t obj_size)
 {
-    return PMM_PAGE_SIZE / (sizeof(kmem_bufctl) + obj_size);
+    // return PMM_PAGE_SIZE / (sizeof(kmem_bufctl) + obj_size);
+    return 2_MB / (sizeof(kmem_bufctl) + obj_size);
 }
 
 static inline void *slab_cache_grow(kmem_cache *cache)
@@ -80,7 +87,7 @@ static inline void *slab_cache_grow(kmem_cache *cache)
     // Precondition: the cache's lock must be held
     KDEBUG_ASSERT(spinlock_holding(&cache->lock));
 
-    auto page = alloc_page();
+    auto page = alloc_page_2();
 
     auto block = (void *)pmm::page_to_va(page);
 
@@ -97,7 +104,7 @@ static inline void *slab_cache_grow(kmem_cache *cache)
     list_add(&slb->slab_link, &cache->free);
 
     slb->freelist = reinterpret_cast<decltype(slb->freelist)>(((char *)block) + sizeof(slab));
-    slb->obj_ptr = reinterpret_cast<decltype(slb->obj_ptr)>(((char *)block) + sizeof(slab) + sizeof(kmem_bufctl) * cache->obj_count);
+    slb->obj_ptr = reinterpret_cast<decltype(slb->obj_ptr)>(((char *)block) + sizeof(slab) + sizeof(kmem_bufctl) * cache->obj_count + 16);
 
     void *obj = slb->obj_ptr;
     for (size_t i = 0; i < cache->obj_count; i++)

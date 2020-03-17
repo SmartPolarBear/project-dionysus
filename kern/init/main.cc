@@ -1,5 +1,5 @@
 /*
- * Last Modified: Thu Mar 12 2020
+ * Last Modified: Sun Mar 15 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -75,6 +75,7 @@ extern "C" [[noreturn]] void kmain()
 
     // initialize physical memory
     pmm::init_pmm();
+    
     // install trap vectors nad handle structures
     trap::init_trap();
 

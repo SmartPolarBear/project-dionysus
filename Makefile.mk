@@ -20,7 +20,7 @@ QEMUGDB = -gdb tcp::$(GDBPORT)
 
 CPUS = 2
 
-QEMUOPTS =  -drive file=$(BUILD)/disk.img,index=0,media=disk,format=raw -cpu max
+QEMUOPTS = -no-reboot -drive file=$(BUILD)/disk.img,index=0,media=disk,format=raw -cpu max -d int,cpu_reset
 #QEMUOPTS +=  -accel whpx
 QEMUOPTS += -smp $(CPUS) -m 8G $(QEMUEXTRA)
 

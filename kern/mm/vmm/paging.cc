@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sat Mar 14 2020
+ * Last Modified: Tue Mar 17 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -247,7 +247,7 @@ void vmm::boot_map_kernel_mem()
         KDEBUG_RICHPANIC("Remap a mapped page.", "KERNEL PANIC:ERROR_REMAP",
                          true, "");
     }
-    install_kpml4();
+
 }
 
 uintptr_t vmm::pde_to_pa(pde_ptr_t pde)

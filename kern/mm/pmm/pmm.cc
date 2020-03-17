@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sun Mar 15 2020
+ * Last Modified: Tue Mar 17 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -19,8 +19,8 @@
  * Date      	By	Comments
  * ----------	---	----------------------------------------------------------
  */
-#include "./buddy_pmm.h"
 #include "./pmm.h"
+#include "./buddy_pmm.h"
 
 #include "arch/amd64/sync.h"
 
@@ -209,15 +209,15 @@ void pmm::init_pmm(void)
 
     init_physical_mem();
 
-    pgdir_cache_init();
-
     vmm::install_gdt();
+
+    memory::kmem::kmem_init();
 
     vmm::init_vmm();
 
     vmm::boot_map_kernel_mem();
 
-    memory::kmem::kmem_init();
+    vmm::install_kpml4();
 }
 
 page_info *pmm::alloc_pages(size_t n)
