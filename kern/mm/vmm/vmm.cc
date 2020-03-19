@@ -1,5 +1,5 @@
 /*
- * Last Modified: Tue Mar 17 2020
+ * Last Modified: Thu Mar 19 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -80,7 +80,7 @@ void vmm::init_vmm(void)
 
     auto sonofbitch = g_kpml4t;
 
-    g_kpml4t = pgdir_entry_alloc();
+    g_kpml4t = (pde_ptr_t)roundup((uintptr_t)pgdir_entry_alloc(), 4096ul);
 
     memset(g_kpml4t, 0, PMM_PAGE_SIZE);
 
@@ -102,13 +102,15 @@ void vmm::init_vmm(void)
         s1++, s2++;
     }
 
-    g_kpml4t = sonofbitch;
+    g_kpml4t = sonofbitch2;
 
-    g_kpml4t[diff[0]] = sonofbitch2[diff[0]];
+    g_kpml4t[diff[0]] = sonofbitch[diff[0]];
 
-    g_kpml4t[diff[1]] = sonofbitch2[diff[1]];
+    g_kpml4t[diff[1]] = sonofbitch[diff[1]];
 
-    // code above verifies that the exception must be cause by the top level.
+    // TODO: code above verifies that the exception must be cause by the top level.
+    // TODO: allocate *sublevels*(1. a certain sublevel, 2. all sublevels) with slab allocator and toplevel with buddy and try
+    // TODO: 19/3: the address of cr3 must be 4k aligned.!!!!
 
     int fuck2 = memcmp(sonofbitch2, sonofbitch, 4096);
 
