@@ -3,6 +3,11 @@ cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 add_executable(hello 
     hello.cc)
 
+add_custom_command(TARGET hello POST_BUILD
+    COMMAND objdump -S $<TARGET_FILE:hello> > $<TARGET_FILE_DIR:hello>/hello.asm
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+)
+
 target_link_libraries(hello libuser)
 
 set_target_properties(hello PROPERTIES LINK_FLAGS "-Wl,-T ${CMAKE_SOURCE_DIR}/config/build/user.ld")

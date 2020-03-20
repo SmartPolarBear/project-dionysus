@@ -46,7 +46,6 @@ using vmm::pde_ptr_t;
 using vmm::pde_t;
 using vmm::vma_struct;
 
-
 // linked list
 using libk::list_add;
 using libk::list_empty;
@@ -56,7 +55,6 @@ using libk::list_remove;
 
 // global variable for the sake of access and dynamically mapping
 pde_ptr_t g_kpml4t;
-
 
 // #define WALK_PGDIR_PRINT_INTERMEDIATE_VAL
 
@@ -103,7 +101,7 @@ static inline pde_ptr_t walk_pgdir(const pde_ptr_t pml4t,
         }
 
         memset(pdpt, 0, PGTABLE_SIZE);
-        *pml4e = ((V2P((uintptr_t)pdpt)) | PG_P | perm);
+        *pml4e = ((V2P((uintptr_t)pdpt)) | PG_P | PG_U | perm);
     }
     else
     {
@@ -126,7 +124,7 @@ static inline pde_ptr_t walk_pgdir(const pde_ptr_t pml4t,
             return nullptr;
         }
 
-        pgdir =  vmm::pgdir_entry_alloc();
+        pgdir = vmm::pgdir_entry_alloc();
         KDEBUG_ASSERT(pgdir != nullptr);
         if (pgdir == nullptr)
         {
@@ -134,7 +132,7 @@ static inline pde_ptr_t walk_pgdir(const pde_ptr_t pml4t,
         }
 
         memset(pgdir, 0, PGTABLE_SIZE);
-        *pdpte = ((V2P((uintptr_t)pgdir)) | PG_P | perm);
+        *pdpte = ((V2P((uintptr_t)pgdir)) | PG_P | PG_U | perm);
     }
     else
     {
@@ -175,7 +173,7 @@ static inline error_code map_page(pde_ptr_t pml4, uintptr_t va, uintptr_t pa, si
 
     if (!(*pde & PG_P))
     {
-        *pde = ((pa) | PG_PS | PG_P | perm);
+        *pde = ((pa) | PG_PS | PG_P|PG_U | perm);
     }
     else
     {
@@ -187,8 +185,8 @@ static inline error_code map_page(pde_ptr_t pml4, uintptr_t va, uintptr_t pa, si
 
 static inline error_code map_pages(pde_ptr_t pml4, uintptr_t va_start, uintptr_t pa_start, uintptr_t pa_end)
 {
-    error_code ret=ERROR_SUCCESS;
-    
+    error_code ret = ERROR_SUCCESS;
+
     // map the kernel memory
     for (uintptr_t pa = pa_start, va = va_start;
          pa < pa_end && pa + PAGE_SIZE <= pa_end;
@@ -250,7 +248,6 @@ void vmm::boot_map_kernel_mem()
         KDEBUG_RICHPANIC("Remap a mapped page.", "KERNEL PANIC:ERROR_REMAP",
                          true, "");
     }
-
 }
 
 uintptr_t vmm::pde_to_pa(pde_ptr_t pde)

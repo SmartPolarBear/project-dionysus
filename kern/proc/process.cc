@@ -131,7 +131,6 @@ static inline error_code elf_load_binary(IN process::process_dispatcher *proc,
 
 			if (start < la)
 			{
-				/* ph->p_memsz == ph->p_filesz */
 				if (start == end)
 				{
 					continue;
@@ -229,8 +228,7 @@ static inline error_code setup_mm(process::process_dispatcher *proc)
 		return -ERROR_MEMORY_ALLOC;
 	}
 
-	// vmm::pde_ptr_t pgdir = reinterpret_cast<vmm::pde_ptr_t>(new BLOCK<PMM_PAGE_SIZE>);
-	vmm::pde_ptr_t pgdir = (vmm::pde_ptr_t)pmm::boot_mem::boot_alloc_page();
+	vmm::pde_ptr_t pgdir = vmm::pgdir_entry_alloc();
 
 	if (pgdir == nullptr)
 	{
@@ -376,8 +374,6 @@ error_code process::process_run(IN process_dispatcher *proc)
 	KDEBUG_ASSERT(current != nullptr && current->mm != nullptr);
 
 	auto pde = vmm::walk_pgdir(current->mm->pgdir, 0x10000000, false);
-	*pde = size_t(44040192) | size_t(PG_P) | size_t(PG_PS);
-	//| size_t(PG_U);
 
 	lcr3(V2P((uintptr_t)current->mm->pgdir));
 
