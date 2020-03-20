@@ -1,5 +1,5 @@
 /*
- * Last Modified: Mon Mar 09 2020
+ * Last Modified: Fri Mar 20 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -61,6 +61,9 @@ enum VM_FLAGS : size_t
     VM_STACK = 0x00000008,
     VM_SHARE = 0x00000010,
 };
+
+vmm::pde_ptr_t pgdir_entry_alloc();
+void pgdir_entry_free(vmm::pde_ptr_t entry);
 
 vma_struct *find_vma(mm_struct *mm, uintptr_t addr);
 vma_struct *vma_create(uintptr_t vm_start, uintptr_t vm_end, size_t vm_flags);

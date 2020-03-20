@@ -56,12 +56,12 @@ void pgdir_cache_init()
     pgdir_cache = kmem_cache_create("pgdir", 4_KB, nullptr, nullptr, KMEM_CACHE_4KALIGN);
 }
 
-vmm::pde_ptr_t pgdir_entry_alloc()
+vmm::pde_ptr_t vmm::pgdir_entry_alloc()
 {
     return (vmm::pde_ptr_t)kmem_cache_alloc(pgdir_cache);
 }
 
-void pgdir_entry_free(vmm::pde_ptr_t entry)
+void vmm::pgdir_entry_free(vmm::pde_ptr_t entry)
 {
     kmem_cache_free(pgdir_cache, entry);
 }

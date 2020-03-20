@@ -294,11 +294,6 @@ error_code pmm::page_insert(pde_ptr_t pgdir, page_info *page, uintptr_t va, size
     *pde = page_to_pa(page) | PG_PS | PG_P | perm;
     tlb_invalidate(pgdir, va);
 
-    if (va == 0x10000000)
-    {
-        printf("0x10000000->%d\n", page_to_pa(page));
-    }
-
     return ERROR_SUCCESS;
 }
 

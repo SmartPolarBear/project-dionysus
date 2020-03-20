@@ -95,7 +95,7 @@ static inline pde_ptr_t walk_pgdir(const pde_ptr_t pml4t,
             return nullptr;
         }
 
-        pdpt = pgdir_entry_alloc();
+        pdpt = vmm::pgdir_entry_alloc();
         KDEBUG_ASSERT(pdpt != nullptr);
         if (pdpt == nullptr)
         {
@@ -126,7 +126,7 @@ static inline pde_ptr_t walk_pgdir(const pde_ptr_t pml4t,
             return nullptr;
         }
 
-        pgdir =  pgdir_entry_alloc();
+        pgdir =  vmm::pgdir_entry_alloc();
         KDEBUG_ASSERT(pgdir != nullptr);
         if (pgdir == nullptr)
         {
