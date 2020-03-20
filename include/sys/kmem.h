@@ -21,7 +21,7 @@ using kmem_bufctl = size_t;
 
 constexpr size_t KMEM_CACHE_NAME_MAXLEN = 32;
 
-constexpr size_t KMEM_MAX_SIZED_CACHE_SIZE = 2048;
+constexpr size_t KMEM_MAX_SIZED_CACHE_SIZE = 10240;
 constexpr size_t KMEM_MIN_SIZED_CACHE_SIZE = 16;
 constexpr size_t KMEM_SIZED_CACHE_COUNT = log2p1(KMEM_MAX_SIZED_CACHE_SIZE / KMEM_MIN_SIZED_CACHE_SIZE);
 
@@ -49,7 +49,7 @@ kmem_cache *kmem_cache_create(const char *name,
                               kmem_ctor_type ctor = nullptr,
                               kmem_dtor_type dtor = nullptr,
                               size_t flags = 0);
-                              
+
 void *kmem_cache_alloc(kmem_cache *cache);
 void kmem_cache_destroy(kmem_cache *cache);
 void kmem_cache_free(kmem_cache *cache, void *obj);

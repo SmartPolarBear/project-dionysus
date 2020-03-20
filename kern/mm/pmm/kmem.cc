@@ -80,7 +80,7 @@ static inline constexpr size_t cache_obj_count(kmem_cache *cache, size_t obj_siz
         header_size = roundup(header_size, (uintptr_t)4_KB);
     }
 
-    return PHYSICAL_PAGE_SIZE / (sizeof(kmem_bufctl) + obj_size);
+    return PHYSICAL_PAGE_SIZE / header_size;
 }
 
 static inline void *slab_cache_grow(kmem_cache *cache)
@@ -220,7 +220,7 @@ void memory::kmem::kmem_init(void)
 
 kmem_cache *memory::kmem::kmem_cache_create(const char *name, size_t size, kmem_ctor_type ctor, kmem_dtor_type dtor, size_t flags)
 {
-    // KDEBUG_ASSERT(size < PMM_PAGE_SIZE - sizeof(kmem_bufctl));
+    KDEBUG_ASSERT(size < PMM_PAGE_SIZE - sizeof(kmem_bufctl));
     kmem_cache *ret = reinterpret_cast<decltype(ret)>(kmem_cache_alloc(&cache_cache));
 
     if (ret != nullptr)

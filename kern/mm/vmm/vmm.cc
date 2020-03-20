@@ -73,7 +73,7 @@ void vmm::init_vmm(void)
 
     g_kpml4t = pgdir_entry_alloc();
 
-    memset(g_kpml4t, 0, PMM_PAGE_SIZE);
+    memset(g_kpml4t, 0, PGTABLE_SIZE);
 
     // register the page fault handle
     trap::trap_handle_regsiter(trap::TRAP_PGFLT, trap::trap_handle{

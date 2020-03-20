@@ -1,5 +1,5 @@
 /*
- * Last Modified: Thu Feb 20 2020
+ * Last Modified: Fri Mar 20 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -98,7 +98,7 @@ void *memory::kmalloc(size_t sz, [[maybe_unused]] size_t flags)
 
     size_t actual_size = sizeof(memory_block) + sz + GUARDIAN_BYTES_AFTER;
 
-    if (actual_size > PMM_PAGE_SIZE)
+    if (actual_size > memory::kmem::KMEM_MAX_SIZED_CACHE_SIZE)
     {
         // use buddy
 

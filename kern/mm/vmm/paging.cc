@@ -57,6 +57,7 @@ using libk::list_remove;
 // global variable for the sake of access and dynamically mapping
 pde_ptr_t g_kpml4t;
 
+
 // #define WALK_PGDIR_PRINT_INTERMEDIATE_VAL
 
 // find the pde corresponding to the given va
@@ -101,7 +102,7 @@ static inline pde_ptr_t walk_pgdir(const pde_ptr_t pml4t,
             return nullptr;
         }
 
-        memset(pdpt, 0, PMM_PAGE_SIZE);
+        memset(pdpt, 0, PGTABLE_SIZE);
         *pml4e = ((V2P((uintptr_t)pdpt)) | PG_P | perm);
     }
     else
@@ -132,7 +133,7 @@ static inline pde_ptr_t walk_pgdir(const pde_ptr_t pml4t,
             return nullptr;
         }
 
-        memset(pgdir, 0, PMM_PAGE_SIZE);
+        memset(pgdir, 0, PGTABLE_SIZE);
         *pdpte = ((V2P((uintptr_t)pgdir)) | PG_P | perm);
     }
     else

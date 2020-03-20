@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sat Mar 14 2020
+ * Last Modified: Fri Mar 20 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -240,7 +240,7 @@ static inline error_code setup_mm(process::process_dispatcher *proc)
 
 	memset(pgdir, 0, sizeof(pgdir));
 
-	memmove(pgdir, g_kpml4t, PMM_PAGE_SIZE);
+	memmove(pgdir, g_kpml4t, PGTABLE_SIZE);
 
 	proc->mm->pgdir = pgdir;
 

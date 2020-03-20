@@ -9,6 +9,8 @@ constexpr bool PG_PS_ENABLE = true;
 constexpr size_t PG_SIZE = 4_KB;
 constexpr size_t PG_PS_SIZE = 2_MB;
 
+constexpr size_t PGTABLE_SIZE = 4_KB;
+
 constexpr size_t PHYSICAL_PAGE_SIZE = PG_PS_ENABLE ? PG_PS_SIZE : PG_SIZE;
 constexpr size_t PMM_PAGE_SIZE = PHYSICAL_PAGE_SIZE;
 
@@ -77,4 +79,3 @@ enum SegmentIndex
     SEG_UDATA = 5,
     SEG_TSS = 6,
 };
-

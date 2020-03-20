@@ -21,6 +21,8 @@ using lock::spinlock_acquire;
 using lock::spinlock_initlock;
 using lock::spinlock_release;
 
+constexpr size_t IDT_SIZE = 4_KB;
+
 struct
 {
     spinlock lock;
@@ -58,8 +60,8 @@ static inline void make_gate(uint32_t *idt_head, uint32_t head_offset, void *kva
 
 PANIC void trap::init_trap(void)
 {
-    uint32_t *idt = reinterpret_cast<uint32_t *>(new BLOCK<PMM_PAGE_SIZE>);
-    memset(idt, 0, PMM_PAGE_SIZE);
+    uint32_t *idt = reinterpret_cast<uint32_t *>(new BLOCK<IDT_SIZE>);
+    memset(idt, 0, IDT_SIZE);
 
     for (size_t i = 0; i < 256; i++)
     {
@@ -68,7 +70,7 @@ PANIC void trap::init_trap(void)
 
     make_gate(idt, 64, vectors[64], DPL_USER, IT_TRAP);
 
-    lidt((uintptr_t)idt, PMM_PAGE_SIZE);
+    lidt((uintptr_t)idt, IDT_SIZE);
 
     spinlock_initlock(&handle_table.lock, "traphandles");
 
