@@ -103,7 +103,7 @@ static inline error_code elf_load_binary(IN process::process_dispatcher *proc,
 			}
 
 			uintptr_t start = prog_header[i].vaddr, end = prog_header[i].vaddr + prog_header[i].filesz;
-			uintptr_t la = rounddown(start, PMM_PAGE_SIZE);
+			uintptr_t la = rounddown(start, PAGE_SIZE);
 			uintptr_t offset = prog_header[i].off;
 			page_info *page = nullptr;
 
@@ -116,8 +116,8 @@ static inline error_code elf_load_binary(IN process::process_dispatcher *proc,
 					return -ERROR_MEMORY_ALLOC;
 				}
 
-				size_t off = start - la, size = PMM_PAGE_SIZE - off;
-				la += PMM_PAGE_SIZE;
+				size_t off = start - la, size = PAGE_SIZE - off;
+				la += PAGE_SIZE;
 				if (end < la)
 				{
 					size -= la - end;
@@ -136,7 +136,7 @@ static inline error_code elf_load_binary(IN process::process_dispatcher *proc,
 				{
 					continue;
 				}
-				size_t off = start + PMM_PAGE_SIZE - la, size = PMM_PAGE_SIZE - off;
+				size_t off = start + PAGE_SIZE - la, size = PAGE_SIZE - off;
 				if (end < la)
 				{
 					size -= la - end;
@@ -158,9 +158,9 @@ static inline error_code elf_load_binary(IN process::process_dispatcher *proc,
 					//TODO do clean-ups
 					return -ERROR_MEMORY_ALLOC;
 				}
-				size_t off = start - la, size = PMM_PAGE_SIZE - off;
+				size_t off = start - la, size = PAGE_SIZE - off;
 
-				la += PMM_PAGE_SIZE;
+				la += PAGE_SIZE;
 				if (end < la)
 				{
 					size -= la - end;
@@ -180,7 +180,7 @@ static inline error_code elf_load_binary(IN process::process_dispatcher *proc,
 	// allocate an stack
 	for (size_t i = 0; i < process::process_dispatcher::KERNSTACK_PAGES; i++)
 	{
-		uintptr_t va = USER_TOP - process::process_dispatcher::KERNSTACK_SIZE + i * PMM_PAGE_SIZE;
+		uintptr_t va = USER_TOP - process::process_dispatcher::KERNSTACK_SIZE + i * PAGE_SIZE;
 		pmm::pgdir_alloc_page(proc->mm->pgdir, va, PG_W | PG_U);
 	}
 

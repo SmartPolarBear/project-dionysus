@@ -1,5 +1,5 @@
 /*
- * Last Modified: Thu Mar 12 2020
+ * Last Modified: Fri Mar 20 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -70,7 +70,7 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
     {
         if (core.present && core.id != local_apic::get_cpunum())
         {
-            uint8_t *stack = new BLOCK<PMM_PAGE_SIZE>;
+            uint8_t *stack = new BLOCK<PAGE_SIZE>;
 
             if (stack == nullptr)
             {

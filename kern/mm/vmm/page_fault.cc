@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sat Mar 14 2020
+ * Last Modified: Fri Mar 20 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -89,7 +89,7 @@ static inline error_code page_fault_impl(mm_struct *mm, size_t err, uintptr_t ad
             page_perm |= PG_W;
         }
 
-        addr = rounddown(addr, PHYSICAL_PAGE_SIZE);
+        addr = rounddown(addr, PAGE_SIZE);
 
         auto pde = vmm::walk_pgdir(mm->pgdir, addr, false);
         if (pmm::pgdir_alloc_page(mm->pgdir, addr, page_perm) == nullptr) // map to any free space

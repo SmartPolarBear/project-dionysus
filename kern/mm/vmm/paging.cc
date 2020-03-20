@@ -191,8 +191,8 @@ static inline error_code map_pages(pde_ptr_t pml4, uintptr_t va_start, uintptr_t
     
     // map the kernel memory
     for (uintptr_t pa = pa_start, va = va_start;
-         pa < pa_end && pa + PHYSICAL_PAGE_SIZE <= pa_end;
-         pa += PHYSICAL_PAGE_SIZE, va += PHYSICAL_PAGE_SIZE)
+         pa < pa_end && pa + PAGE_SIZE <= pa_end;
+         pa += PAGE_SIZE, va += PAGE_SIZE)
     {
         ret = map_page(pml4, va, pa, PG_W);
 

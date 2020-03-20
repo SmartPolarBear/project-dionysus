@@ -60,11 +60,11 @@ void multiboot::init_mbi(void)
 
     // this is the original mboot info
     auto primitive = P2V<decltype(mboot_info)>(mbi_structptr);
-    KDEBUG_ASSERT(primitive->total_size < PHYSICAL_PAGE_SIZE);
+    KDEBUG_ASSERT(primitive->total_size < PAGE_SIZE);
 
     // move it away to avoid being cracked
-    mboot_info = reinterpret_cast<decltype(mboot_info)>(end + PHYSICAL_PAGE_SIZE);
-    memset(mboot_info, 0, PHYSICAL_PAGE_SIZE);
+    mboot_info = reinterpret_cast<decltype(mboot_info)>(end + PAGE_SIZE);
+    memset(mboot_info, 0, PAGE_SIZE);
     memmove(mboot_info, mbi_structptr, primitive->total_size);
 
     for (size_t i = 0; i < TAGS_COUNT_MAX; i++)

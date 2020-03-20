@@ -1,5 +1,5 @@
 /*
- * Last Modified: Thu Mar 12 2020
+ * Last Modified: Fri Mar 20 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -72,13 +72,13 @@ uint64_t vmm::tss_get_rsp(uint32_t *tss, size_t n)
 void vmm::install_gdt(void)
 {
     uint8_t *local_storage = reinterpret_cast<decltype(local_storage)>(boot_alloc_page());
-    memset(local_storage, 0, PMM_PAGE_SIZE);
+    memset(local_storage, 0, PAGE_SIZE);
 
     uint64_t *gdt = reinterpret_cast<decltype(gdt)>(local_storage);
     uint32_t *tss = reinterpret_cast<decltype(tss)>(local_storage + 1024);
     tss[16] = 0x00680000; // IO map base = 0x68
 
-    wrmsr(MSR_FS_BASE, ((uintptr_t)local_storage) + ((PMM_PAGE_SIZE) / 2));
+    wrmsr(MSR_FS_BASE, ((uintptr_t)local_storage) + ((PAGE_SIZE) / 2));
 
     gdt[0] = 0x0000000000000000;
     gdt[SEG_KCODE] = 0x0020980000000000; // Code, DPL=0, R/X

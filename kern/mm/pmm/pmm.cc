@@ -1,5 +1,5 @@
 /*
- * Last Modified: Tue Mar 17 2020
+ * Last Modified: Fri Mar 20 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -137,10 +137,10 @@ static inline void init_physical_mem()
         }
     }
 
-    page_count = max_pa / PMM_PAGE_SIZE;
+    page_count = max_pa / PAGE_SIZE;
     // The page management structure is placed a page after kernel
     // So as to protect the multiboot info
-    pages = (page_info *)roundup((uintptr_t)(end + PHYSICAL_PAGE_SIZE * 2), PHYSICAL_PAGE_SIZE);
+    pages = (page_info *)roundup((uintptr_t)(end + PAGE_SIZE * 2), PAGE_SIZE);
 
     for (size_t i = 0; i < page_count; i++)
     {
@@ -152,7 +152,7 @@ static inline void init_physical_mem()
     {
         reserved_spaces[reserved_spaces_count++] =
             reserved_space{.first = (uintptr_t)mbi_structptr,
-                           .second = (uintptr_t)mbi_structptr + PHYSICAL_PAGE_SIZE};
+                           .second = (uintptr_t)mbi_structptr + PAGE_SIZE};
     }
 
     // reserve all the boot modules
@@ -173,7 +173,7 @@ static inline void init_physical_mem()
     });
 
     auto count_of_pages = [](uintptr_t st, uintptr_t ed) {
-        return (ed - st) / PMM_PAGE_SIZE;
+        return (ed - st) / PAGE_SIZE;
     };
 
     if (reserved_spaces_count == 0)

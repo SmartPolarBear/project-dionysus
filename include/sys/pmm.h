@@ -1,5 +1,5 @@
 /*
- * Last Modified: Wed Feb 19 2020
+ * Last Modified: Fri Mar 20 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -69,7 +69,7 @@ page_info *pgdir_alloc_page(pde_ptr_t pgdir, uintptr_t va, size_t perm);
 
 static inline uintptr_t pavailable_start(void)
 {
-    return V2P(roundup((uintptr_t)(&pages[page_count]), PMM_PAGE_SIZE));
+    return V2P(roundup((uintptr_t)(&pages[page_count]), PAGE_SIZE));
 }
 
 static inline page_info *alloc_page(void)
@@ -89,7 +89,7 @@ static inline size_t page_to_index(page_info *pg)
 
 static inline uintptr_t page_to_pa(page_info *pg)
 {
-    auto ret = pavailable_start() + page_to_index(pg) * PMM_PAGE_SIZE;
+    auto ret = pavailable_start() + page_to_index(pg) * PAGE_SIZE;
     return ret;
 }
 
@@ -100,7 +100,7 @@ static inline uintptr_t page_to_va(page_info *pg)
 
 static inline page_info *pa_to_page(uintptr_t pa)
 {
-    size_t index = rounddown((pa - (V2P((uintptr_t)&pages[page_count]))), PMM_PAGE_SIZE) / PMM_PAGE_SIZE;
+    size_t index = rounddown((pa - (V2P((uintptr_t)&pages[page_count]))), PAGE_SIZE) / PAGE_SIZE;
     KDEBUG_ASSERT(index < page_count);
     return &pages[index];
 }

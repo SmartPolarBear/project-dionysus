@@ -102,7 +102,7 @@ void *memory::kmalloc(size_t sz, [[maybe_unused]] size_t flags)
     {
         // use buddy
 
-        size_t npages = roundup(actual_size, PMM_PAGE_SIZE) / PMM_PAGE_SIZE;
+        size_t npages = roundup(actual_size, PAGE_SIZE) / PAGE_SIZE;
 
         ret = reinterpret_cast<decltype(ret)>(pmm::page_to_va(pmm::alloc_pages(npages)));
 

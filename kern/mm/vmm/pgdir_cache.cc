@@ -1,3 +1,31 @@
+/*
+ * Last Modified: Fri Mar 20 2020
+ * Modified By: SmartPolarBear
+ * -----
+ * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
+ * 
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+ * REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+ * FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+ * INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ * LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+ * OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ * PERFORMANCE OF THIS SOFTWARE.
+ * -----
+ * HISTORY:
+ * Date      	By	Comments
+ * ----------	---	----------------------------------------------------------
+ */
+
+
+
+
+
+
+
 
 #include "vmm.h"
 
@@ -25,7 +53,7 @@ kmem_cache *pgdir_cache = nullptr;
 
 void pgdir_cache_init()
 {
-    pgdir_cache = kmem_cache_create("pgdir", 4096, nullptr, nullptr, KMEM_CACHE_4KALIGN);
+    pgdir_cache = kmem_cache_create("pgdir", 4_KB, nullptr, nullptr, KMEM_CACHE_4KALIGN);
 }
 
 vmm::pde_ptr_t pgdir_entry_alloc()

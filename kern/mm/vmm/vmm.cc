@@ -183,7 +183,7 @@ error_code vmm::mm_map(IN mm_struct *mm, IN uintptr_t addr, IN size_t len, IN ui
         return -ERROR_INVALID_ARG;
     }
 
-    uintptr_t start = rounddown(addr, PMM_PAGE_SIZE), end = roundup(addr + len, PMM_PAGE_SIZE);
+    uintptr_t start = rounddown(addr, PAGE_SIZE), end = roundup(addr + len, PAGE_SIZE);
     if (!VALID_USER_REGION(start, end))
     {
         return -ERROR_INVALID_ADDR;

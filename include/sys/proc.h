@@ -34,7 +34,7 @@ constexpr pid PID_MAX = INT64_MAX;
 struct process_dispatcher
 {
 	static constexpr size_t KERNSTACK_PAGES = 2;
-	static constexpr size_t KERNSTACK_SIZE = KERNSTACK_PAGES * PMM_PAGE_SIZE;
+	static constexpr size_t KERNSTACK_SIZE = KERNSTACK_PAGES * PAGE_SIZE;
 
 	char name[PROC_NAME_LEN + 1];
 
