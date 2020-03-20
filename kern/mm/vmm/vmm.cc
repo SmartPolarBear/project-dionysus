@@ -1,5 +1,5 @@
 /*
- * Last Modified: Thu Mar 19 2020
+ * Last Modified: Fri Mar 20 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -71,50 +71,9 @@ void vmm::init_vmm(void)
     // create the global pml4t
     pgdir_cache_init();
 
-    // g_kpml4t = pgdir_entry_alloc();
-    g_kpml4t = reinterpret_cast<pde_ptr_t>(boot_alloc_page());
+    g_kpml4t = pgdir_entry_alloc();
 
     memset(g_kpml4t, 0, PMM_PAGE_SIZE);
-
-    vmm::boot_map_kernel_mem();
-
-    auto sonofbitch = g_kpml4t;
-
-    g_kpml4t = (pde_ptr_t)roundup((uintptr_t)pgdir_entry_alloc(), 4096ul);
-
-    memset(g_kpml4t, 0, PMM_PAGE_SIZE);
-
-    vmm::boot_map_kernel_mem();
-
-    auto sonofbitch2 = g_kpml4t;
-
-    int fuck = memcmp(sonofbitch2, sonofbitch, 4096);
-
-    size_t diff[10] = {0}, diff_count = 0;
-    uintptr_t *s1 = reinterpret_cast<decltype(s1)>(sonofbitch);
-    uintptr_t *s2 = reinterpret_cast<decltype(s2)>(sonofbitch2);
-    for (int i = 0; i < 512; i++)
-    {
-        if (*s1 != *s2)
-        {
-            diff[diff_count++] = (s1 - (uintptr_t *)sonofbitch);
-        }
-        s1++, s2++;
-    }
-
-    g_kpml4t = sonofbitch2;
-
-    g_kpml4t[diff[0]] = sonofbitch[diff[0]];
-
-    g_kpml4t[diff[1]] = sonofbitch[diff[1]];
-
-    // TODO: code above verifies that the exception must be cause by the top level.
-    // TODO: allocate *sublevels*(1. a certain sublevel, 2. all sublevels) with slab allocator and toplevel with buddy and try
-    // TODO: 19/3: the address of cr3 must be 4k aligned.!!!!
-
-    int fuck2 = memcmp(sonofbitch2, sonofbitch, 4096);
-
-    vmm::install_kpml4();
 
     // register the page fault handle
     trap::trap_handle_regsiter(trap::TRAP_PGFLT, trap::trap_handle{

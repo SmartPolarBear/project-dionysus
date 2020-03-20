@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sun Mar 15 2020
+ * Last Modified: Fri Mar 20 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -70,16 +70,17 @@ kmem_cache *sized_caches[KMEM_SIZED_CACHE_COUNT];
 
 kmem_cache cache_cache;
 
-static page_info *alloc_page_2()
-{
-    auto ret = pmm::alloc_pages(512);
-    return ret;
-}
 
-static inline constexpr size_t cache_obj_count(size_t obj_size)
+static inline constexpr size_t cache_obj_count(kmem_cache *cache, size_t obj_size)
 {
     // return PMM_PAGE_SIZE / (sizeof(kmem_bufctl) + obj_size);
-    return 2_MB / (sizeof(kmem_bufctl) + obj_size);
+    size_t header_size = (sizeof(kmem_bufctl) + obj_size);
+    if (cache->flags & memory::kmem::KMEM_CACHE_4KALIGN)
+    {
+        header_size = roundup(header_size, (uintptr_t)4_KB);
+    }
+
+    return PHYSICAL_PAGE_SIZE / (sizeof(kmem_bufctl) + obj_size);
 }
 
 static inline void *slab_cache_grow(kmem_cache *cache)
@@ -87,7 +88,7 @@ static inline void *slab_cache_grow(kmem_cache *cache)
     // Precondition: the cache's lock must be held
     KDEBUG_ASSERT(spinlock_holding(&cache->lock));
 
-    auto page = alloc_page_2();
+    auto page = alloc_page();
 
     auto block = (void *)pmm::page_to_va(page);
 
@@ -104,7 +105,14 @@ static inline void *slab_cache_grow(kmem_cache *cache)
     list_add(&slb->slab_link, &cache->free);
 
     slb->freelist = reinterpret_cast<decltype(slb->freelist)>(((char *)block) + sizeof(slab));
-    slb->obj_ptr = reinterpret_cast<decltype(slb->obj_ptr)>(((char *)block) + sizeof(slab) + sizeof(kmem_bufctl) * cache->obj_count + 16);
+
+    uintptr_t after_freelist_addr = (uintptr_t)(((char *)block) + sizeof(slab) + sizeof(kmem_bufctl) * cache->obj_count + 16);
+    if (cache->flags & memory::kmem::KMEM_CACHE_4KALIGN)
+    {
+        after_freelist_addr = roundup(after_freelist_addr, (uintptr_t)4_KB);
+    }
+
+    slb->obj_ptr = reinterpret_cast<decltype(slb->obj_ptr)>(after_freelist_addr);
 
     void *obj = slb->obj_ptr;
     for (size_t i = 0; i < cache->obj_count; i++)
@@ -172,7 +180,7 @@ static inline slab *slab_find(kmem_cache *cache, void *obj)
 void memory::kmem::kmem_init(void)
 {
     cache_cache.obj_size = sizeof(decltype(cache_cache));
-    cache_cache.obj_count = cache_obj_count(cache_cache.obj_size);
+    cache_cache.obj_count = cache_obj_count(&cache_cache, cache_cache.obj_size);
     cache_cache.ctor = nullptr;
     cache_cache.dtor = nullptr;
 
@@ -210,7 +218,7 @@ void memory::kmem::kmem_init(void)
     KDEBUG_ASSERT(sized_cache_count == sized_cache_count);
 }
 
-kmem_cache *memory::kmem::kmem_cache_create(const char *name, size_t size, kmem_ctor_type ctor, kmem_dtor_type dtor)
+kmem_cache *memory::kmem::kmem_cache_create(const char *name, size_t size, kmem_ctor_type ctor, kmem_dtor_type dtor, size_t flags)
 {
     // KDEBUG_ASSERT(size < PMM_PAGE_SIZE - sizeof(kmem_bufctl));
     kmem_cache *ret = reinterpret_cast<decltype(ret)>(kmem_cache_alloc(&cache_cache));
@@ -218,10 +226,12 @@ kmem_cache *memory::kmem::kmem_cache_create(const char *name, size_t size, kmem_
     if (ret != nullptr)
     {
         ret->obj_size = size;
-        ret->obj_count = cache_obj_count(size);
+        ret->obj_count = cache_obj_count(ret, size);
 
         ret->ctor = ctor;
         ret->dtor = dtor;
+
+        ret->flags = flags;
 
         strncpy(ret->name, name, KMEM_CACHE_NAME_MAXLEN);
         spinlock_initlock(&ret->lock, ret->name);
@@ -283,6 +293,11 @@ void *memory::kmem::kmem_cache_alloc(kmem_cache *cache)
     }
 
     spinlock_release(&cache->lock);
+
+    if (cache->flags & KMEM_CACHE_4KALIGN)
+    {
+        KDEBUG_ASSERT((((uintptr_t)ret) % 4_KB) == 0);
+    }
 
     return ret;
 }

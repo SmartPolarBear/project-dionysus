@@ -25,7 +25,7 @@ kmem_cache *pgdir_cache = nullptr;
 
 void pgdir_cache_init()
 {
-    pgdir_cache = kmem_cache_create("pgdir", 4096, nullptr, nullptr);
+    pgdir_cache = kmem_cache_create("pgdir", 4096, nullptr, nullptr, KMEM_CACHE_4KALIGN);
 }
 
 vmm::pde_ptr_t pgdir_entry_alloc()

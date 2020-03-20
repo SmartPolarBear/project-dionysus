@@ -1,5 +1,5 @@
 /*
- * Last Modified: Tue Mar 17 2020
+ * Last Modified: Fri Mar 20 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -19,6 +19,8 @@
  * Date      	By	Comments
  * ----------	---	----------------------------------------------------------
  */
+
+#include "vmm.h"
 
 #include "sys/error.h"
 #include "sys/kmalloc.h"
@@ -44,7 +46,6 @@ using vmm::pde_ptr_t;
 using vmm::pde_t;
 using vmm::vma_struct;
 
-using pmm::boot_mem::boot_alloc_page;
 
 // linked list
 using libk::list_add;
@@ -93,7 +94,7 @@ static inline pde_ptr_t walk_pgdir(const pde_ptr_t pml4t,
             return nullptr;
         }
 
-        pdpt = reinterpret_cast<pde_ptr_t>(boot_alloc_page());
+        pdpt = pgdir_entry_alloc();
         KDEBUG_ASSERT(pdpt != nullptr);
         if (pdpt == nullptr)
         {
@@ -124,7 +125,7 @@ static inline pde_ptr_t walk_pgdir(const pde_ptr_t pml4t,
             return nullptr;
         }
 
-        pgdir = reinterpret_cast<pde_ptr_t>(boot_alloc_page());
+        pgdir =  pgdir_entry_alloc();
         KDEBUG_ASSERT(pgdir != nullptr);
         if (pgdir == nullptr)
         {
@@ -185,7 +186,8 @@ static inline error_code map_page(pde_ptr_t pml4, uintptr_t va, uintptr_t pa, si
 
 static inline error_code map_pages(pde_ptr_t pml4, uintptr_t va_start, uintptr_t pa_start, uintptr_t pa_end)
 {
-    error_code ret;
+    error_code ret=ERROR_SUCCESS;
+    
     // map the kernel memory
     for (uintptr_t pa = pa_start, va = va_start;
          pa < pa_end && pa + PHYSICAL_PAGE_SIZE <= pa_end;
