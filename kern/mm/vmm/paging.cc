@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sat Mar 21 2020
+ * Last Modified: Sun Mar 22 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -173,7 +173,7 @@ static inline error_code map_page(pde_ptr_t pml4, uintptr_t va, uintptr_t pa, si
 
     if (!(*pde & PG_P))
     {
-        *pde = ((pa) | PG_PS | PG_P|PG_U | perm);
+        *pde = ((pa) | PG_PS | PG_P | PG_U | perm);
     }
     else
     {
@@ -192,7 +192,7 @@ static inline error_code map_pages(pde_ptr_t pml4, uintptr_t va_start, uintptr_t
          pa < pa_end && pa + PAGE_SIZE <= pa_end;
          pa += PAGE_SIZE, va += PAGE_SIZE)
     {
-        ret = map_page(pml4, va, pa, PG_W|PG_U);
+        ret = map_page(pml4, va, pa, PG_W | PG_U);
 
         if (ret != -ERROR_SUCCESS)
         {
@@ -258,5 +258,5 @@ uintptr_t vmm::pde_to_pa(pde_ptr_t pde)
 
 pde_ptr_t vmm::walk_pgdir(pde_ptr_t pgdir, size_t va, bool create)
 {
-    return ::walk_pgdir(pgdir, va, create, 0);
+    return ::walk_pgdir(pgdir, va, create, PG_U | PG_W );
 }

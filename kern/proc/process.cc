@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sat Mar 21 2020
+ * Last Modified: Sun Mar 22 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -187,34 +187,6 @@ static inline error_code elf_load_binary(IN process::process_dispatcher *proc,
 	return ret;
 }
 
-[[noreturn]] static inline void proc_restore_trapframe(IN trap_frame *tf)
-{
-	// restore trapframe to registers
-
-	asm volatile(
-		"\tmovq %0,%%rsp\n"
-		"\tpopq %%rax\n"
-		"\tpopq %%rbx\n"
-		"\tpopq %%rcx\n"
-		"\tpopq %%rdx\n"
-		"\tpopq %%rbp\n"
-		"\tpopq %%rsi\n"
-		"\tpopq %%rdi\n"
-		"\tpopq %%r8 \n"
-		"\tpopq %%r9 \n"
-		"\tpopq %%r10\n"
-		"\tpopq %%r11\n"
-		"\tpopq %%r12\n"
-		"\tpopq %%r13\n"
-		"\tpopq %%r14\n"
-		"\tpopq %%r15\n"
-		"\taddq $16, %%rsp\n" //discard trapnum and errorcode
-		"\tiret\n" ::"g"(tf)
-		: "memory");
-
-	KDEBUG_GENERALPANIC("iretq failed.");
-}
-
 // precondition: the lock must be held
 static inline process::pid alloc_pid(void)
 {
@@ -371,13 +343,6 @@ error_code process::process_run(IN process_dispatcher *proc)
 	KDEBUG_ASSERT(current != nullptr && current->mm != nullptr);
 
 	lcr3(V2P((uintptr_t)current->mm->pgdir));
-
-	auto pde = vmm::walk_pgdir(current->mm->pgdir, 140737484161015, false);
-
-	uint64_t *val = (uint64_t *)140737484161015;
-	// printf("val=%d\n", *val);
-	// *val = 20011204;
-	// printf("(m)val=%d\n", *val);
 
 	pmm::tlb_invalidate(current->mm->pgdir, 140737484161015);
 
