@@ -1,5 +1,5 @@
 /*
- * Last Modified: Fri Mar 20 2020
+ * Last Modified: Sat Mar 21 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -192,7 +192,7 @@ static inline error_code map_pages(pde_ptr_t pml4, uintptr_t va_start, uintptr_t
          pa < pa_end && pa + PAGE_SIZE <= pa_end;
          pa += PAGE_SIZE, va += PAGE_SIZE)
     {
-        ret = map_page(pml4, va, pa, PG_W);
+        ret = map_page(pml4, va, pa, PG_W|PG_U);
 
         if (ret != -ERROR_SUCCESS)
         {

@@ -1,5 +1,5 @@
 /*
- * Last Modified: Fri Mar 20 2020
+ * Last Modified: Sat Mar 21 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -140,7 +140,7 @@ static inline error_code elf_load_binary(IN process::process_dispatcher *proc,
 				{
 					size -= la - end;
 				}
-				memset(((uint8_t *)pmm::page_to_va(page)) + off, 0, size);
+				// memset(((uint8_t *)pmm::page_to_va(page)) + off, 0, size);
 				start += size;
 				if ((end < la && start == end) || (end >= la && start == la))
 				{
@@ -149,24 +149,24 @@ static inline error_code elf_load_binary(IN process::process_dispatcher *proc,
 				}
 			}
 
-			while (start < end)
-			{
-				page = pmm::pgdir_alloc_page(proc->mm->pgdir, la, perms);
-				if (page == NULL)
-				{
-					//TODO do clean-ups
-					return -ERROR_MEMORY_ALLOC;
-				}
-				size_t off = start - la, size = PAGE_SIZE - off;
+			// while (start < end)
+			// {
+			// 	page = pmm::pgdir_alloc_page(proc->mm->pgdir, la, perms);
+			// 	if (page == NULL)
+			// 	{
+			// 		//TODO do clean-ups
+			// 		return -ERROR_MEMORY_ALLOC;
+			// 	}
+			// 	size_t off = start - la, size = PAGE_SIZE - off;
 
-				la += PAGE_SIZE;
-				if (end < la)
-				{
-					size -= la - end;
-				}
-				memset(((uint8_t *)pmm::page_to_va(page)) + off, 0, size);
-				start += size;
-			}
+			// 	la += PAGE_SIZE;
+			// 	if (end < la)
+			// 	{
+			// 		size -= la - end;
+			// 	}
+			// 	// memset(((uint8_t *)pmm::page_to_va(page)) + off, 0, size);
+			// 	start += size;
+			// }
 		}
 		else
 		{
@@ -180,7 +180,8 @@ static inline error_code elf_load_binary(IN process::process_dispatcher *proc,
 	for (size_t i = 0; i < process::process_dispatcher::KERNSTACK_PAGES; i++)
 	{
 		uintptr_t va = USER_TOP - process::process_dispatcher::KERNSTACK_SIZE + i * PAGE_SIZE;
-		pmm::pgdir_alloc_page(proc->mm->pgdir, va, PG_W | PG_U);
+		printf("stack va=%lld\n", va);
+		pmm::pgdir_alloc_page(proc->mm->pgdir, va, PG_W | PG_U | PG_PS | PG_P);
 	}
 
 	return ret;
@@ -235,8 +236,6 @@ static inline error_code setup_mm(process::process_dispatcher *proc)
 		vmm::mm_destroy(proc->mm);
 		return -ERROR_MEMORY_ALLOC;
 	}
-
-	memset(pgdir, 0, sizeof(pgdir));
 
 	memmove(pgdir, g_kpml4t, PGTABLE_SIZE);
 
@@ -331,8 +330,6 @@ error_code process::process_load_binary(IN process_dispatcher *proc,
 
 void do_iret(trap_frame tf)
 {
-	auto pde = vmm::walk_pgdir(current->mm->pgdir, 0x10000000, false);
-
 	asm volatile(
 		"\tmovq %0,%%rsp\n"
 		"\tpopq %%rax\n"
@@ -373,14 +370,16 @@ error_code process::process_run(IN process_dispatcher *proc)
 
 	KDEBUG_ASSERT(current != nullptr && current->mm != nullptr);
 
-	auto pde = vmm::walk_pgdir(current->mm->pgdir, 0x10000000, false);
-
 	lcr3(V2P((uintptr_t)current->mm->pgdir));
 
-	// int *val = (int *)0x10000070;
+	auto pde = vmm::walk_pgdir(current->mm->pgdir, 140737484161015, false);
+
+	uint64_t *val = (uint64_t *)140737484161015;
 	// printf("val=%d\n", *val);
 	// *val = 20011204;
 	// printf("(m)val=%d\n", *val);
+
+	pmm::tlb_invalidate(current->mm->pgdir, 140737484161015);
 
 	spinlock_release(&proc_list.lock);
 
