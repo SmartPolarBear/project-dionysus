@@ -343,8 +343,6 @@ error_code process::process_run(IN process_dispatcher *proc)
 
 	lcr3(V2P((uintptr_t)current->mm->pgdir));
 
-	pmm::tlb_invalidate(current->mm->pgdir, 140737484161015);
-
 	spinlock_release(&proc_list.lock);
 
 	vmm::tss_set_rsp(cpu->get_tss(), 0, current->kstack + process_dispatcher::KERNSTACK_SIZE);
