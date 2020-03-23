@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sun Mar 22 2020
+ * Last Modified: Mon Mar 23 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -180,7 +180,6 @@ static inline error_code elf_load_binary(IN process::process_dispatcher *proc,
 	for (size_t i = 0; i < process::process_dispatcher::KERNSTACK_PAGES; i++)
 	{
 		uintptr_t va = USER_TOP - process::process_dispatcher::KERNSTACK_SIZE + i * PAGE_SIZE;
-		printf("stack va=%lld\n", va);
 		pmm::pgdir_alloc_page(proc->mm->pgdir, va, PG_W | PG_U | PG_PS | PG_P);
 	}
 

@@ -41,7 +41,7 @@ constexpr bool VALID_USER_REGION(uintptr_t start, uintptr_t end)
 }
 
 // leave a page guard hole
-constexpr uintptr_t USER_STACK_TOP = USER_TOP - 2 * PAGE_SIZE;
+constexpr uintptr_t USER_STACK_TOP = USER_TOP - PAGE_SIZE;
 
 // for memory-mapped IO
 // TODO: dynamically map for memory-mapped IO
