@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sun Mar 15 2020
+ * Last Modified: Wed Mar 25 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -44,6 +44,7 @@
 #include "sys/proc.h"
 #include "sys/scheduler.h"
 #include "sys/vmm.h"
+#include "sys/syscall.h"
 
 #include "lib/libc/stdio.h"
 
@@ -93,6 +94,8 @@ extern "C" [[noreturn]] void kmain()
 
     // initialize apic timer
     timer::init_apic_timer();
+
+    syscall::system_call_init();
 
     // initialize user process manager
     process::process_init();

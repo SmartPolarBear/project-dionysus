@@ -78,3 +78,6 @@ enum SegmentIndex
     SEG_UDATA = 5,
     SEG_TSS = 6,
 };
+
+constexpr size_t KERNEL_CS = 0x0020980000000000;
+constexpr size_t USER_CS = 0x0020F80000000000;
