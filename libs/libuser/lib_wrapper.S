@@ -20,6 +20,9 @@
 .text
 .globl _start
 _start:
+  int $64
+  syscall
+
 	call libmain
 spin:
   jmp spin

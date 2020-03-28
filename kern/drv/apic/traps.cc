@@ -11,6 +11,7 @@
 #include "sys/pmm.h"
 #include "sys/vmm.h"
 
+#include "lib/libc/stdio.h"
 #include "lib/libc/string.h"
 
 using trap::trap_handle;
@@ -23,16 +24,25 @@ using lock::spinlock_release;
 
 constexpr size_t IDT_SIZE = 4_KB;
 
+static error_code default_trap_handle([[maybe_unused]] trap_frame info);
+
 struct
 {
     spinlock lock;
-    trap_handle trap_handles[TRAP_NUMBERMAX] = {};
+    trap_handle trap_handles[TRAP_NUMBERMAX] =
+        {
+            [0 ... TRAP_NUMBERMAX - 1] = trap_handle{
+                .handle = default_trap_handle,
+            },
+    };
 } handle_table;
 
 // default handle of trap
 static error_code default_trap_handle([[maybe_unused]] trap_frame info)
 {
     // TODO: the handle doesn't exist
+
+    printf("trap %d caused but not handled.\nerror=%d, ip=0x%p, sp=0x%p\n", info.trap_num, info.err, info.rip, info.rsp);
 
     return ERROR_SUCCESS;
 }
@@ -75,14 +85,6 @@ PANIC void trap::init_trap(void)
     spinlock_initlock(&handle_table.lock, "traphandles");
 
     spinlock_acquire(&handle_table.lock);
-
-    for (auto &handle : handle_table.trap_handles)
-    {
-        if (handle.handle == nullptr)
-        {
-            handle.handle = default_trap_handle;
-        }
-    }
 
     handle_table.trap_handles[trap::irq_to_trap_number(IRQ_SPURIOUS)].handle = spurious_trap_handle;
 

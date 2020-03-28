@@ -9,6 +9,5 @@ void infinite(long long b)
 extern "C" int main(int argc, const char **argv)
 {
     // infinite(0);
-    asm("syscall");
     return 0;
 }

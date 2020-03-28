@@ -1,5 +1,5 @@
 /*
- * Last Modified: Wed Mar 25 2020
+ * Last Modified: Thu Mar 26 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -81,8 +81,8 @@ void vmm::install_gdt(void)
     wrmsr(MSR_FS_BASE, ((uintptr_t)local_storage) + ((PAGE_SIZE) / 2));
 
     gdt[0] = 0x0000000000000000;
-    gdt[SEG_KCODE] = KERNEL_CS; // Code, DPL=0, R/X
-    gdt[SEG_UCODE] = USER_CS; // Code, DPL=3, R/X
+    gdt[SEG_KCODE] = 0x0020980000000000; // Code, DPL=0, R/X
+    gdt[SEG_UCODE] = 0x0020F80000000000; // Code, DPL=3, R/X
     gdt[SEG_KDATA] = 0x0000920000000000; // Data, DPL=0, W
     gdt[SEG_KCPU] = 0x0000000000000000;  // unused
     gdt[SEG_UDATA] = 0x0000F20000000000; // Data, DPL=3, W

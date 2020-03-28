@@ -22,7 +22,7 @@ CPUS = 2
 
 QEMUOPTS = -no-reboot -drive file=$(BUILD)/disk.img,index=0,media=disk,format=raw -cpu max 
 #QEMUOPTS +=  -accel whpx
-#QEMUOPTS += -d int,cpu_reset
+QEMUOPTS += -d int,cpu_reset
 QEMUOPTS += -smp $(CPUS) -m 8G $(QEMUEXTRA)
 
 VBOX_MACHINENAME = Test

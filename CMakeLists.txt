@@ -6,7 +6,7 @@ set(QEMU_CPUS 6)
 set(QEMU_MEM 8G)
 set(QEMU_DEBUG_PORT 32768)
 set(QEMU_GDB -S -gdb tcp::${QEMU_DEBUG_PORT})
-set(QEMU_ARGS -d -no-reboot -drive file=build/disk.img,index=0,media=disk,format=raw -cpu max -smp ${QEMU_CPUS} -m ${QEMU_MEM})
+set(QEMU_ARGS -d int,cpu_reset -d -no-reboot -drive file=build/disk.img,index=0,media=disk,format=raw -cpu max -smp ${QEMU_CPUS} -m ${QEMU_MEM})
 
 set(QEMU_BIN qemu-system-x86_64)
 set(QEMU_BIN_EXE ${QEMU_BIN}.exe)

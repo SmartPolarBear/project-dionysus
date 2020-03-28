@@ -1,5 +1,5 @@
 /*
- * Last Modified: Mon Mar 23 2020
+ * Last Modified: Thu Mar 26 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -21,6 +21,8 @@
  */
 
 #include "process.hpp"
+
+#include "arch/amd64/cpu.h"
 
 #include "sys/error.h"
 #include "sys/kmalloc.h"
@@ -301,6 +303,7 @@ error_code process::process_load_binary(IN process_dispatcher *proc,
 
 void do_iret(trap_frame tf)
 {
+	sti();
 	asm volatile(
 		"\tmovq %0,%%rsp\n"
 		"\tpopq %%rax\n"

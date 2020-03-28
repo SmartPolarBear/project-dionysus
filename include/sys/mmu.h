@@ -79,5 +79,5 @@ enum SegmentIndex
     SEG_TSS = 6,
 };
 
-constexpr size_t KERNEL_CS = 0x0020980000000000;
-constexpr size_t USER_CS = 0x0020F80000000000;
+constexpr size_t KERNEL_CS = (SEG_KCODE << 3) | DPL_KERNEL;
+constexpr size_t USER_CS = (SEG_UCODE << 3) | DPL_USER;
