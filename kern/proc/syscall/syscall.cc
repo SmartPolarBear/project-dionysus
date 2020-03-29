@@ -1,5 +1,8 @@
+#include "./syscall.hpp"
+
 #include "sys/syscall.h"
 #include "sys/mmu.h"
+#include "sys/proc.h"
 
 #include "drivers/debug/kdebug.h"
 
@@ -27,14 +30,10 @@ extern "C" syscall_entry syscall_table[SYSCALL_COUNT + 1] = {
     [0] = sys_hello,
 };
 
-void system_call_entry_x64()
+error_code syscall_body()
 {
-    printf("system_call_entry\n");
-}
-
-void system_call_entry_x86()
-{
-    printf("system_call_entry\n");
+    printf("syscall_body");
+    return ERROR_SUCCESS;
 }
 
 PANIC void syscall::system_call_init()
@@ -58,8 +57,8 @@ PANIC void syscall::system_call_init()
     }
 
     wrmsr(MSR_STAR, (USER_CS << 48) | (KERNEL_CS << 32));
-    wrmsr(MSR_LSTAR, (uintptr_t)system_call_entry_x64);
-    wrmsr(MSR_CSTAR, (uintptr_t)system_call_entry_x86);
+    wrmsr(MSR_LSTAR, (uintptr_t)syscall_entry_amd64);
+    // wrmsr(MSR_CSTAR, (uintptr_t)system_call_entry_x86);
     wrmsr(MSR_SYSCALL_MASK, EFLAG_TF | EFLAG_DF | EFLAG_IF |
                                 EFLAG_IOPL_MASK | EFLAG_AC | EFLAG_NT);
 }
