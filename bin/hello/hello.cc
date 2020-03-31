@@ -10,5 +10,10 @@ extern "C" int main(int argc, const char **argv)
 {
     // infinite(0);
     asm volatile("syscall");
+    while (true)
+    {
+        ;
+    }
+
     return 0;
 }

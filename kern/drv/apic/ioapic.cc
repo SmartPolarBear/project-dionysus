@@ -35,7 +35,8 @@ Mask	            16	        Just like in the old PIC, you can temporary disable 
 Destination	        56 - 63	    This field is interpreted according to the Destination Format bit. If Physical destination is choosen, then this field is limited to bits 56 - 59 (only 16 CPUs addressable). You put here the APIC ID of the CPU that you want to receive the interrupt. TODO: Logical destination format...
 */
 
-union redirection_entry {
+union redirection_entry
+{
     struct
     {
         uint64_t vector : 8;
@@ -114,13 +115,14 @@ PANIC void io_apic::init_ioapic(void)
 
     for (size_t i = 0; i <= redirection_count; i++)
     {
-        redirection_entry redir;
+        redirection_entry redir{};
+
         redir.vector = TRAP_IRQ0 + i;
         redir.delievery_mode = DLM_FIXED;
         redir.destination_mode = DTM_PHYSICAL;
         redir.polarity = 0;
         redir.trigger_mode = TRG_EDGE;
-        redir.mask = false;
+        redir.mask = true; // set to true to disable it
         redir.destination_id = 0;
 
         write_ioapic(ioapic_addr, IOREDTBL_BASE + i * 2 + 0, redir.raw_low);
@@ -137,7 +139,7 @@ void io_apic::enable_trap(uint32_t trapnum, uint32_t cpu_acpi_id_rounted)
     redir_new.destination_mode = DTM_PHYSICAL;
     redir_new.polarity = 0;
     redir_new.trigger_mode = TRG_EDGE;
-    redir_new.mask = true;
+    redir_new.mask = false;
     redir_new.destination_id = cpu_acpi_id_rounted;
 
     auto ioapic = acpi::first_ioapic();
