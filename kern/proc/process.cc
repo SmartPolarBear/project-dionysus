@@ -1,5 +1,5 @@
 /*
- * Last Modified: Thu Mar 26 2020
+ * Last Modified: Tue Mar 31 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -303,7 +303,6 @@ error_code process::process_load_binary(IN process_dispatcher *proc,
 
 void do_iret(trap_frame tf)
 {
-	sti();
 	asm volatile(
 		"\tmovq %0,%%rsp\n"
 		"\tpopq %%rax\n"

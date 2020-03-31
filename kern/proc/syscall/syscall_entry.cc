@@ -67,5 +67,5 @@
             : "memory");
 
     // return to user mode
-    asm volatile("sysret");
+    asm volatile("sysretq");
 }
