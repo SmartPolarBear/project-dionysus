@@ -38,11 +38,11 @@ error_code trap_handle_tick(trap_frame info);
 PANIC void timer::init_apic_timer(void)
 {
     // register the handle
-    trap::trap_handle_regsiter(trap::irq_to_trap_number(IRQ_TIMER), trap::trap_handle{.handle = trap_handle_tick});
-    // initialize apic values
-    write_lapic(TDCR, TIMER_FLAG_X1);
-    write_lapic(TIMER, TIMER_FLAG_PERIODIC | (trap::irq_to_trap_number(IRQ_TIMER)));
-    write_lapic(TICR, TIC_DEFUALT_VALUE);
+    // trap::trap_handle_regsiter(trap::irq_to_trap_number(IRQ_TIMER), trap::trap_handle{.handle = trap_handle_tick});
+    // // initialize apic values
+    // write_lapic(TDCR, TIMER_FLAG_X1);
+    // write_lapic(TIMER, TIMER_FLAG_PERIODIC | (trap::irq_to_trap_number(IRQ_TIMER)));
+    // write_lapic(TICR, TIC_DEFUALT_VALUE);
 
     spinlock_initlock(&tickslock, "timer_ticks");
 }

@@ -21,5 +21,6 @@
 .globl _start
 _start:
 	call libmain
+  syscall
 spin:
   jmp spin

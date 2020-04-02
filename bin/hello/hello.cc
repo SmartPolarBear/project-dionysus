@@ -9,7 +9,7 @@ void infinite(long long b)
 extern "C" int main(int argc, const char **argv)
 {
     // infinite(0);
-    asm volatile("syscall");
-
+    asm volatile("syscall" ::
+                     : "memory");
     return 0;
 }
