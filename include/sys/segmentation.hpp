@@ -12,7 +12,13 @@ struct gdt_entry
     uint8_t base31_24;
 } __attribute__((__packed__));
 
-struct tss
+struct gdt_table_ptr
+{
+    uint16_t limit;
+    uint64_t base;
+} __attribute__((__packed__));
+
+struct task_state_segment
 {
     uint32_t reserved0;
     uint64_t rsp0;
@@ -30,3 +36,17 @@ struct tss
     uint16_t reserved3;
     uint16_t iopb_offset;
 } __attribute__((__packed__));
+
+struct gdt_table
+{
+    struct gdt_entry null;
+    struct gdt_entry kernel_code;
+    struct gdt_entry kernel_data;
+    struct gdt_entry null2;
+    struct gdt_entry user_data;
+    struct gdt_entry user_code;
+    struct gdt_entry ovmf_data;
+    struct gdt_entry ovmf_code;
+    struct gdt_entry tss_low;
+    struct gdt_entry tss_high;
+} __attribute__((aligned(4096)));

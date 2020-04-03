@@ -49,6 +49,7 @@
         "typeinfo": "cpp",
         "bit": "cpp",
         "compare": "cpp",
+        "segmentation.C": "cpp"
     },
 
     "psi-header.config": {

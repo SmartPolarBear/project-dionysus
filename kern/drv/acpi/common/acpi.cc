@@ -1,5 +1,5 @@
 /*
- * Last Modified: Thu Mar 12 2020
+ * Last Modified: Fri Apr 03 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -41,7 +41,7 @@
 acpi_version_adapter *acpi_ver_adapter = nullptr;
 
 // declared in cpu.h
-cpu_info cpus[CPU_COUNT_LIMIT] = {};
+cpu_struct cpus[CPU_COUNT_LIMIT] = {};
 
 // the numbers of cpu (cores) should be within the range of uint8_t
 uint8_t cpu_count = 0;

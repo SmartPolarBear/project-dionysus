@@ -65,7 +65,7 @@ using lock::spinlock_release;
         "hlt\n"
         "jmp spin\n"
         :
-        : "a"(vmm::tss_get_rsp(cpu->get_tss(), 0)));
+        : "a"(cpu->tss.rsp0 /*(vmm::tss_get_rsp(cpu->get_tss(), 0)*/));
 }
 
 [[clang::optnone]] void scheduler::scheduler_yield()
@@ -84,7 +84,7 @@ using lock::spinlock_release;
 
             if (proc->state == process::PROC_STATE_RUNNABLE)
             {
-                
+
                 process::process_run(proc);
             }
 

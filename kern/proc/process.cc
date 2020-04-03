@@ -1,5 +1,5 @@
 /*
- * Last Modified: Thu Apr 02 2020
+ * Last Modified: Fri Apr 03 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -348,7 +348,8 @@ error_code process::process_run(IN process_dispatcher *proc)
 
 	spinlock_release(&proc_list.lock);
 
-	vmm::tss_set_rsp(cpu->get_tss(), 0, current->kstack + process_dispatcher::KERNSTACK_SIZE);
+	// vmm::tss_set_rsp(cpu->get_tss(), 0, current->kstack + process_dispatcher::KERNSTACK_SIZE);
+	cpu->tss.rsp0 = current->kstack + process_dispatcher::KERNSTACK_SIZE;
 
 	trap::popcli();
 

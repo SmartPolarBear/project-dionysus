@@ -10,7 +10,7 @@ struct spinlock
     uint32_t locked;
 
     const char *name;
-    cpu_info *cpu;
+    cpu_struct *cpu;
     uintptr_t pcs[16];
 };
 
