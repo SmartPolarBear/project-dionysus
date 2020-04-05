@@ -50,3 +50,15 @@ struct gdt_table
     struct gdt_entry tss_low;
     struct gdt_entry tss_high;
 } __attribute__((aligned(4096)));
+
+enum GDT_SEGMENTS
+{
+    SEGMENT_KCODE = 0x08,
+    SEGMENT_KDATA = 0x10,
+    SEGMENT_UDATA = 0x20,
+    SEGMENT_UCODE = 0x28,
+    SEGMENT_OVMFDATA = 0x30,
+    SEGMENT_OVMFCODE = 0x38,
+    SEGMENT_TSSLOW = 0x40,
+    SEGMENT_TSSHIGH = 0x48
+};

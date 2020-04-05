@@ -254,8 +254,10 @@ error_code process::create_process(IN const char *name,
 		return ret;
 	}
 
-	proc->trapframe.cs = (SEG_UCODE << 3) | DPL_USER;
-	proc->trapframe.ss = (SEG_UDATA << 3) | DPL_USER;
+	// proc->trapframe.cs = (SEG_UCODE << 3) | DPL_USER;
+	// proc->trapframe.ss = (SEG_UDATA << 3) | DPL_USER;
+	proc->trapframe.cs = 8;
+	proc->trapframe.ss = 8 + 8;
 	proc->trapframe.rsp = USER_STACK_TOP;
 
 	proc->trapframe.rflags |= EFLAG_IF;
@@ -303,7 +305,6 @@ error_code process::process_load_binary(IN process_dispatcher *proc,
 
 void do_iret(trap_frame tf)
 {
-	cli();
 	asm volatile(
 		"\tmovq %0,%%rsp\n"
 		"\tpopq %%rax\n"

@@ -11,6 +11,9 @@ set(QEMU_ARGS -d int,cpu_reset -d -no-reboot -drive file=build/disk.img,index=0,
 set(QEMU_BIN qemu-system-x86_64)
 set(QEMU_BIN_EXE ${QEMU_BIN}.exe)
 
+# arch libaraies for kernel
+add_subdirectory(arch)
+
 # kernel
 
 file(WRITE ${CMAKE_SOURCE_DIR}/kern/drv/apic/vectors.S "")
@@ -65,6 +68,8 @@ target_link_options(kernel
     PRIVATE -Wl,--build-id=none)
 
 target_include_directories(kernel PRIVATE "${CMAKE_SOURCE_DIR}/include")
+
+target_link_libraries(kernel arch_amd64)
 
 set_target_properties(kernel PROPERTIES LINK_DEPENS "${CMAKE_SOURCE_DIR}/config/build/kernel.ld")
 set_target_properties(kernel PROPERTIES LINK_FLAGS "-Wl,-T ${CMAKE_SOURCE_DIR}/config/build/kernel.ld")

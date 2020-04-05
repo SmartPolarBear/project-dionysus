@@ -2,6 +2,7 @@
 #include "sys/types.h"
 #include "sys/mmu.h"
 
+#include "sys/segmentation.hpp"
 
 
 static inline void hlt(void)
@@ -25,20 +26,13 @@ static inline void ltr(uint16_t sel)
                  :
                  : "r"(sel));
 }
+extern "C" void load_gdt(gdt_table_ptr *gdt_ptr);
 
-static inline void lgdt(uintptr_t p, size_t size)
+static inline void lgdt(gdt_table_ptr *gdt_ptr)
 {
-    volatile uint16_t pd[5] = {0};
-
-    pd[0] = size - 1;
-    pd[1] = p;
-    pd[2] = p >> 16;
-    pd[3] = p >> 32;
-    pd[4] = p >> 48;
-
     asm volatile("lgdt (%0)"
                  :
-                 : "r"(pd));
+                 : "r"(gdt_ptr));
 }
 
 static inline void lidt(uintptr_t p, int size)

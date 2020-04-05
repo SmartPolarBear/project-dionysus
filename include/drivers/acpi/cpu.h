@@ -18,7 +18,7 @@ struct cpu_struct
     int intr_enable;           // Were interrupts enabled before pushcli?
     bool present;              // Is this core available
 
-    void *local_fs;               // Cpu-local storage variables
+    void *local_fs; // Cpu-local storage variables
     void *local_gs;
 
     task_state_segment tss;
@@ -46,7 +46,8 @@ struct cpu_struct
 
     void install_gdt_and_tss()
     {
-        lgdt(uintptr_t(&gdt_table), sizeof(gdt_table));
+        gdt_table_ptr gdt_ptr = {sizeof(gdt_table) - 1, (uintptr_t)&gdt_table};
+        lgdt(&gdt_ptr);
         ltr(0x40);
     }
 };
