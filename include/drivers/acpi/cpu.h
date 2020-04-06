@@ -47,8 +47,9 @@ struct cpu_struct
     void install_gdt_and_tss()
     {
         gdt_table_ptr gdt_ptr = {sizeof(gdt_table) - 1, (uintptr_t)&gdt_table};
-        lgdt(&gdt_ptr);
-        ltr(0x40);
+        load_gdt(&gdt_ptr);
+        // lgdt(&gdt_ptr);
+        // ltr(0x40);
     }
 };
 

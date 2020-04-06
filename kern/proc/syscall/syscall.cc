@@ -59,6 +59,5 @@ PANIC void syscall::system_call_init()
     wrmsr(MSR_STAR, 0x00180008ull << 32ull);
     wrmsr(MSR_LSTAR, (uintptr_t)syscall_entry_amd64);
     // wrmsr(MSR_CSTAR, (uintptr_t)system_call_entry_x86);
-    wrmsr(MSR_SYSCALL_MASK, /*EFLAG_IF |*/ EFLAG_DF | EFLAG_IF |
-                                EFLAG_IOPL_MASK | EFLAG_AC | EFLAG_NT);
+    wrmsr(MSR_SYSCALL_MASK, 0x0202);
 }

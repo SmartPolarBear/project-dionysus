@@ -1,5 +1,5 @@
 /*
- * Last Modified: Fri Apr 03 2020
+ * Last Modified: Mon Apr 06 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -23,6 +23,7 @@
 #include "process.hpp"
 
 #include "arch/amd64/cpu.h"
+#include "arch/amd64/msr.h"
 
 #include "sys/error.h"
 #include "sys/kmalloc.h"
@@ -303,28 +304,46 @@ error_code process::process_load_binary(IN process_dispatcher *proc,
 	return ret;
 }
 
+void iuserspace()
+{
+	asm volatile("syscall");
+}
+
 void do_iret(trap_frame tf)
 {
+
+	
 	asm volatile(
-		"\tmovq %0,%%rsp\n"
-		"\tpopq %%rax\n"
-		"\tpopq %%rbx\n"
-		"\tpopq %%rcx\n"
-		"\tpopq %%rdx\n"
-		"\tpopq %%rbp\n"
-		"\tpopq %%rsi\n"
-		"\tpopq %%rdi\n"
-		"\tpopq %%r8 \n"
-		"\tpopq %%r9 \n"
-		"\tpopq %%r10\n"
-		"\tpopq %%r11\n"
-		"\tpopq %%r12\n"
-		"\tpopq %%r13\n"
-		"\tpopq %%r14\n"
-		"\tpopq %%r15\n"
-		"\taddq $16, %%rsp\n" //discard trapnum and errorcode
-		"\tiretq\n" ::"g"(&tf)
+		"\tmovq %0, %%rsp\n"
+		"\tmovq %1, %%rcx\n"
+		"\tmovq %2, %%r11\n" ::"g"(tf.rsp),
+		"g"(iuserspace/*tf.rip*/), "g"(0x0202)
 		: "memory");
+
+	asm volatile(
+		"\tsysretq\n" ::
+			: "memory");
+
+	// asm volatile(
+	// 	"\tmovq %0,%%rsp\n"
+	// 	"\tpopq %%rax\n"
+	// 	"\tpopq %%rbx\n"
+	// 	"\tpopq %%rcx\n"
+	// 	"\tpopq %%rdx\n"
+	// 	"\tpopq %%rbp\n"
+	// 	"\tpopq %%rsi\n"
+	// 	"\tpopq %%rdi\n"
+	// 	"\tpopq %%r8 \n"
+	// 	"\tpopq %%r9 \n"
+	// 	"\tpopq %%r10\n"
+	// 	"\tpopq %%r11\n"
+	// 	"\tpopq %%r12\n"
+	// 	"\tpopq %%r13\n"
+	// 	"\tpopq %%r14\n"
+	// 	"\tpopq %%r15\n"
+	// 	"\taddq $16, %%rsp\n" //discard trapnum and errorcode
+	// 	"\tiretq\n" ::"g"(&tf)
+	// 	: "memory");
 
 	KDEBUG_GENERALPANIC("iretq failed.");
 }
