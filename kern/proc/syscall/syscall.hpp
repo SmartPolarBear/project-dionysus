@@ -5,4 +5,4 @@
 
 extern error_code syscall_body();
 
-extern void syscall_entry_amd64();
+extern "C" void syscall_x64_entry();

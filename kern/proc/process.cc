@@ -1,5 +1,5 @@
 /*
- * Last Modified: Mon Apr 06 2020
+ * Last Modified: Tue Apr 07 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -304,20 +304,50 @@ error_code process::process_load_binary(IN process_dispatcher *proc,
 	return ret;
 }
 
+int iuserfunc1(int c)
+{
+	int a = 0;
+	for (int i = 0; i <= c; i++)
+	{
+		a += i * c;
+	}
+	return a;
+}
+
+int iusermain()
+{
+	auto a = iuserfunc1(4);
+	asm volatile("syscall");
+	auto b = iuserfunc1(8);
+	asm volatile("syscall");
+	auto c = iuserfunc1(12);
+	return a + b + c;
+}
+
 void iuserspace()
 {
-	asm volatile("syscall");
+	/* TODO:
+	1. problems should occur only when the function returns
+	2. try these:
+		a) two syscalls
+		b) two syscalls with a sub-func called in between
+		c) wrong cs and ss becuase bit 48 and 49 is not set in MSR but is calculated into cs
+			so why not set them in msr and see what's happening?
+		d) check if the gdt is good.
+	*/
+	iusermain();
+	for (;;)
+		;
 }
 
 void do_iret(trap_frame tf)
 {
 
-	
 	asm volatile(
 		"\tmovq %0, %%rsp\n"
 		"\tmovq %1, %%rcx\n"
 		"\tmovq %2, %%r11\n" ::"g"(tf.rsp),
-		"g"(iuserspace/*tf.rip*/), "g"(0x0202)
+		"g"(/*iuserspace*/ tf.rip), "g"(0x0202)
 		: "memory");
 
 	asm volatile(

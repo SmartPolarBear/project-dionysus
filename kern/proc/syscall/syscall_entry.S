@@ -1,12 +1,3 @@
-#include "./syscall.hpp"
-
-#include "arch/amd64/cpu.h"
-
-#include "sys/proc.h"
-#include "sys/types.h"
-
-[[clang::optnone]] void syscall_entry_amd64()
-{
     // // save user rsp in %r8 register, which is pushed to user stack
     // asm volatile(
     //     "\tpush %%r8\n"
@@ -69,5 +60,7 @@
     //         : "memory");
 
     // return to user mode
-    asm volatile("sysretq");
-}
+
+.global syscall_x64_entry
+syscall_x64_entry:
+    sysretq
