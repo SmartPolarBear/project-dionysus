@@ -1,5 +1,5 @@
 /*
- * Last Modified: Tue Apr 07 2020
+ * Last Modified: Wed Apr 08 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -21,6 +21,7 @@
  */
 
 #include "process.hpp"
+#include "syscall.h"
 
 #include "arch/amd64/cpu.h"
 #include "arch/amd64/msr.h"
@@ -400,6 +401,12 @@ error_code process::process_run(IN process_dispatcher *proc)
 
 	// vmm::tss_set_rsp(cpu->get_tss(), 0, current->kstack + process_dispatcher::KERNSTACK_SIZE);
 	cpu->tss.rsp0 = current->kstack + process_dispatcher::KERNSTACK_SIZE;
+
+	// set kernel gs value
+	asm volatile(
+		"movq %0, %%gs:%1" ::"g"(current->kstack + process_dispatcher::KERNSTACK_SIZE),
+		"g"(KERNEL_GS_KSTACK)
+		: "memory");
 
 	trap::popcli();
 

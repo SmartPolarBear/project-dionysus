@@ -1,4 +1,4 @@
-#include "./syscall.hpp"
+#include "syscall.h"
 
 #include "sys/mmu.h"
 #include "sys/proc.h"
@@ -30,7 +30,7 @@ extern "C" syscall_entry syscall_table[SYSCALL_COUNT + 1] = {
     [0] = sys_hello,
 };
 
-error_code syscall_body()
+extern "C" error_code syscall_body()
 {
     printf("syscall_body");
     return ERROR_SUCCESS;
