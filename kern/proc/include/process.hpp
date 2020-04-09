@@ -1,5 +1,7 @@
 #pragma once
 
+#include "arch/amd64/regs.h"
+
 #include "sys/proc.h"
 
 #include "drivers/lock/spinlock.h"
@@ -19,3 +21,5 @@ struct process_list_struct
 extern process_list_struct proc_list;
 
 extern __thread process::process_dispatcher *current;
+
+extern "C" [[noreturn]] void do_run_process(trap_frame tf, uintptr_t kstack);

@@ -7,8 +7,8 @@ swap_gs:
 
 .global safe_swap_gs
 safe_swap_gs:
-    cmpq $0x08, 0x8(%rsp)
-    je end_safe_swap_gs
+    // cmpq $0x08, 0x8(%rsp)
+    // je end_safe_swap_gs
     call swap_gs
 end_safe_swap_gs:
     ret
@@ -20,10 +20,10 @@ load_gdt:
     ltr %ax
 
     mov $0x10, %ax
-    ;// mov %ax,%ds
-    ;// mov %ax,%es
-    ;// mov %ax,%fs
-    ;// mov %ax,%gs
+    // mov %ax,%ds
+    // mov %ax,%es
+    // mov %ax,%fs
+    // mov %ax,%gs
     mov %ax,%ss
 
     popq %rdi

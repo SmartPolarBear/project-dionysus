@@ -32,7 +32,7 @@ extern "C" syscall_entry syscall_table[SYSCALL_COUNT + 1] = {
 
 extern "C" error_code syscall_body()
 {
-    printf("syscall_body");
+    printf("syscall_body\n");
     return ERROR_SUCCESS;
 }
 

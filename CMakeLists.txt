@@ -22,7 +22,8 @@ add_executable(kernel
     ${CMAKE_SOURCE_DIR}/kern/init/boot.S 
     ${CMAKE_SOURCE_DIR}/kern/drv/apic/trapentry_asm.S
     ${CMAKE_SOURCE_DIR}/kern/drv/apic/vectors.S
-    ${CMAKE_SOURCE_DIR}/kern/proc/syscall/syscall_entry.S)
+    ${CMAKE_SOURCE_DIR}/kern/proc/syscall/syscall_entry.S
+    ${CMAKE_SOURCE_DIR}/kern/proc/process_manager/process_run.S )
 
 add_dependencies(kernel vectors_S)
 add_dependencies(kernel ap_boot.elf)
@@ -36,6 +37,7 @@ set_property(SOURCE ${CMAKE_SOURCE_DIR}/kern/init/boot.S PROPERTY LANGUAGE C)
 set_property(SOURCE ${CMAKE_SOURCE_DIR}/kern/drv/apic/trapentry_asm.S PROPERTY LANGUAGE C)
 set_property(SOURCE ${CMAKE_SOURCE_DIR}/kern/drv/apic/vectors.S PROPERTY LANGUAGE C)
 set_property(SOURCE ${CMAKE_SOURCE_DIR}/kern/proc/syscall/syscall_entry.S PROPERTY LANGUAGE C)
+set_property(SOURCE ${CMAKE_SOURCE_DIR}/kern/proc/process_manager/process_run.S PROPERTY LANGUAGE C)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -gdwarf-2")
 

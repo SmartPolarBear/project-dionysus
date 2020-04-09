@@ -1,5 +1,5 @@
 /*
- * Last Modified: Wed Apr 08 2020
+ * Last Modified: Thu Apr 09 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -341,43 +341,45 @@ void iuserspace()
 		;
 }
 
-void do_iret(trap_frame tf)
-{
+// void do_iret(trap_frame tf)
+// {
 
-	asm volatile(
-		"\tmovq %0, %%rsp\n"
-		"\tmovq %1, %%rcx\n"
-		"\tmovq %2, %%r11\n" ::"g"(tf.rsp),
-		"g"(/*iuserspace*/ tf.rip), "g"(0x0202)
-		: "memory");
+// 	*((uintptr_t *)(((char *)cpu->local_gs) + KERNEL_GS_KSTACK)) = current->kstack + process::process_dispatcher::KERNSTACK_SIZE;
 
-	asm volatile(
-		"\tsysretq\n" ::
-			: "memory");
+// 	asm volatile(
+// 		"\tmovq %0, %%rsp\n"
+// 		"\tmovq %1, %%rcx\n"
+// 		"\tmovq %2, %%r11\n" ::"g"(tf.rsp),
+// 		"g"(/*iuserspace*/ tf.rip), "g"(0x0202)
+// 		: "memory");
 
-	// asm volatile(
-	// 	"\tmovq %0,%%rsp\n"
-	// 	"\tpopq %%rax\n"
-	// 	"\tpopq %%rbx\n"
-	// 	"\tpopq %%rcx\n"
-	// 	"\tpopq %%rdx\n"
-	// 	"\tpopq %%rbp\n"
-	// 	"\tpopq %%rsi\n"
-	// 	"\tpopq %%rdi\n"
-	// 	"\tpopq %%r8 \n"
-	// 	"\tpopq %%r9 \n"
-	// 	"\tpopq %%r10\n"
-	// 	"\tpopq %%r11\n"
-	// 	"\tpopq %%r12\n"
-	// 	"\tpopq %%r13\n"
-	// 	"\tpopq %%r14\n"
-	// 	"\tpopq %%r15\n"
-	// 	"\taddq $16, %%rsp\n" //discard trapnum and errorcode
-	// 	"\tiretq\n" ::"g"(&tf)
-	// 	: "memory");
+// 	asm volatile(
+// 		"\tsysretq\n" ::
+// 			: "memory");
 
-	KDEBUG_GENERALPANIC("iretq failed.");
-}
+// 	// asm volatile(
+// 	// 	"\tmovq %0,%%rsp\n"
+// 	// 	"\tpopq %%rax\n"
+// 	// 	"\tpopq %%rbx\n"
+// 	// 	"\tpopq %%rcx\n"
+// 	// 	"\tpopq %%rdx\n"
+// 	// 	"\tpopq %%rbp\n"
+// 	// 	"\tpopq %%rsi\n"
+// 	// 	"\tpopq %%rdi\n"
+// 	// 	"\tpopq %%r8 \n"
+// 	// 	"\tpopq %%r9 \n"
+// 	// 	"\tpopq %%r10\n"
+// 	// 	"\tpopq %%r11\n"
+// 	// 	"\tpopq %%r12\n"
+// 	// 	"\tpopq %%r13\n"
+// 	// 	"\tpopq %%r14\n"
+// 	// 	"\tpopq %%r15\n"
+// 	// 	"\taddq $16, %%rsp\n" //discard trapnum and errorcode
+// 	// 	"\tiretq\n" ::"g"(&tf)
+// 	// 	: "memory");
+
+// 	KDEBUG_GENERALPANIC("iretq failed.");
+// }
 
 error_code process::process_run(IN process_dispatcher *proc)
 {
@@ -402,16 +404,12 @@ error_code process::process_run(IN process_dispatcher *proc)
 	// vmm::tss_set_rsp(cpu->get_tss(), 0, current->kstack + process_dispatcher::KERNSTACK_SIZE);
 	cpu->tss.rsp0 = current->kstack + process_dispatcher::KERNSTACK_SIZE;
 
-	// set kernel gs value
-	asm volatile(
-		"movq %0, %%gs:%1" ::"g"(current->kstack + process_dispatcher::KERNSTACK_SIZE),
-		"g"(KERNEL_GS_KSTACK)
-		: "memory");
-
 	trap::popcli();
 
 	// proc_restore_trapframe(&current->trapframe);
-	do_iret(current->trapframe);
+	// do_iret(current->trapframe);
+
+	do_run_process(current->trapframe, current->kstack);
 
 	KDEBUG_FOLLOWPANIC("iret failed");
 }
