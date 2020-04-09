@@ -7,7 +7,12 @@
 
 .global do_run_process
 do_run_process:
+    call safe_swap_gs
+
     movq %rsi, %gs:(KERNEL_GS_KSTACK)
+
+    call safe_swap_gs
+
     movq %rdi, %rsp
 
     popq %rax
@@ -40,5 +45,5 @@ do_run_process:
     popq %rsp
 
     // switch to user model
-    syscall
+    sysretq
 

@@ -408,8 +408,10 @@ error_code process::process_run(IN process_dispatcher *proc)
 
 	// proc_restore_trapframe(&current->trapframe);
 	// do_iret(current->trapframe);
-
-	do_run_process(current->trapframe, current->kstack);
+	current->trapframe.rflags = 0x0202;
+	auto tf = &current->trapframe;
+	auto ks = current->kstack;
+	do_run_process(tf, ks);
 
 	KDEBUG_FOLLOWPANIC("iret failed");
 }
