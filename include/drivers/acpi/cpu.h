@@ -9,6 +9,7 @@
 
 #include "sys/segmentation.hpp"
 
+
 struct cpu_struct
 {
     uint8_t id;                // index into cpus[] below
@@ -48,8 +49,6 @@ struct cpu_struct
     {
         gdt_table_ptr gdt_ptr = {sizeof(gdt_table) - 1, (uintptr_t)&gdt_table};
         load_gdt(&gdt_ptr);
-        // lgdt(&gdt_ptr);
-        // ltr(0x40);
     }
 };
 

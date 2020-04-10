@@ -68,16 +68,3 @@ enum dpl_values
     DPL_KERNEL = 0x0,
     DPL_USER = 0x3
 };
-
-enum SegmentIndex
-{
-    SEG_KCODE = 1,
-    SEG_KDATA = 2,
-    SEG_UCODE = 3,
-    SEG_UDATA = 4,
-    SEG_KCPU = 5,
-    SEG_TSS = 6,
-};
-
-constexpr size_t KERNEL_CS = (SEG_KCODE << 3) | DPL_KERNEL;
-constexpr size_t USER_CS = (SEG_UCODE << 3) | DPL_USER;

@@ -9,6 +9,7 @@
 #include "sys/error.h"
 #include "sys/mmu.h"
 #include "sys/pmm.h"
+#include "sys/segmentation.hpp"
 #include "sys/vmm.h"
 
 #include "lib/libc/stdio.h"
@@ -62,7 +63,7 @@ static inline void make_gate(uint32_t *idt_head, uint32_t head_offset, void *kva
     uintptr_t addr = (uintptr_t)kva;
     head_offset *= 4;
     uint32_t trap = static_cast<decltype(trap)>(type);
-    idt_head[head_offset + 0] = (addr & 0xFFFF) | ((SEG_KCODE << 3) << 16);
+    idt_head[head_offset + 0] = (addr & 0xFFFF) | ((SEGMENTSEL_KCODE) << 16);
     idt_head[head_offset + 1] = (addr & 0xFFFF0000) | trap | ((pl & 3) << 13); // P=1 DPL=pl
     idt_head[head_offset + 2] = addr >> 32;
     idt_head[head_offset + 3] = 0;
