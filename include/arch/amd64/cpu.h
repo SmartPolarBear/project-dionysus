@@ -4,7 +4,7 @@
 
 #include "sys/segmentation.hpp"
 
-extern "C" void load_gdt(gdt_table_ptr *gdt_ptr);
+extern "C" void load_gdt(gdt_table_ptr *gdt_ptr,uint64_t tss_sel);
 extern "C" void safe_swap_gs();
 extern "C" void swap_gs();
 

@@ -16,7 +16,7 @@ end_safe_swap_gs:
 .global load_gdt
 load_gdt:
     lgdt (%rdi)
-    mov $0x40, %ax
+    movw %si, %ax
     ltr %ax
 
     mov $0x10, %ax

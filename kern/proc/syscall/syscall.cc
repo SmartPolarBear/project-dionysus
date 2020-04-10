@@ -60,7 +60,8 @@ PANIC void syscall::system_call_init()
     wrmsr(MSR_LSTAR, (uintptr_t)syscall_x64_entry);
     wrmsr(MSR_SYSCALL_MASK, EFLAG_TF | EFLAG_DF | EFLAG_IF |
                                 EFLAG_IOPL_MASK | EFLAG_AC | EFLAG_NT);
-    // we do not support 32bit compatibility mode now
+
     // TODO:support 32bit compatibility mode
+    // we do not support 32bit compatibility mode now
     //// wrmsr(MSR_CSTAR, (uintptr_t)system_call_entry_x86);
 }
