@@ -5,6 +5,7 @@
 #include "sys/proc.h"
 
 #include "drivers/lock/spinlock.h"
+#include "drivers/apic/traps.h"
 
 using lock::spinlock;
 using lock::spinlock_acquire;
@@ -22,4 +23,4 @@ extern process_list_struct proc_list;
 
 extern __thread process::process_dispatcher *current;
 
-extern "C" [[noreturn]] void do_run_process(trap_frame *tf, uintptr_t kstack);
+extern "C" [[noreturn]] void do_run_process(trap::trap_frame *tf, uintptr_t kstack);

@@ -7,6 +7,7 @@ swap_gs:
 
 .global safe_swap_gs
 safe_swap_gs:
+    // TODO: check if already in kernel
     // cmpq $0x08, 0x8(%rsp)
     // je end_safe_swap_gs
     call swap_gs
@@ -20,10 +21,6 @@ load_gdt:
     ltr %ax
 
     mov $0x10, %ax
-    // mov %ax,%ds
-    // mov %ax,%es
-    // mov %ax,%fs
-    // mov %ax,%gs
     mov %ax,%ss
 
     popq %rdi
@@ -31,3 +28,4 @@ load_gdt:
     pushq %rax
     pushq %rdi
     lretq
+

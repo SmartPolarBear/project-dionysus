@@ -3,7 +3,7 @@
 .code64
 
 
-// void do_run_process(trap_frame tf, uintptr_t kstack)
+// void do_run_process(trap::trap_frame tf, uintptr_t kstack)
 
 .global do_run_process
 do_run_process:

@@ -6,8 +6,11 @@
 #include "sys/types.h"
 #include "sys/vmm.h"
 
+#include "drivers/apic/traps.h"
+
 #include "lib/libc/string.h"
 #include "lib/libcxx/algorithm"
+
 
 namespace process
 {
@@ -48,7 +51,7 @@ struct process_dispatcher
 
 	vmm::mm_struct *mm;
 
-	trap_frame trapframe;
+	trap::trap_frame trapframe;
 	uintptr_t pgdir_addr;
 
 	size_t flags;

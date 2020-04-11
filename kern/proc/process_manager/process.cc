@@ -1,5 +1,5 @@
 /*
- * Last Modified: Thu Apr 09 2020
+ * Last Modified: Sat Apr 11 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -262,11 +262,11 @@ error_code process::create_process(IN const char *name,
 	proc->trapframe.ss = 8 + 8;
 	proc->trapframe.rsp = USER_STACK_TOP;
 
-	proc->trapframe.rflags |= EFLAG_IF;
+	proc->trapframe.rflags |= trap::EFLAG_IF;
 
 	if (flags & PROC_SYS_SERVER)
 	{
-		proc->trapframe.rflags |= EFLAG_IOPL_MASK;
+		proc->trapframe.rflags |= trap::EFLAG_IOPL_MASK;
 	}
 
 	if (inherit_parent)
@@ -408,10 +408,8 @@ error_code process::process_run(IN process_dispatcher *proc)
 
 	// proc_restore_trapframe(&current->trapframe);
 	// do_iret(current->trapframe);
-	current->trapframe.rflags = 0x0202;
-	auto tf = &current->trapframe;
-	auto ks = current->kstack;
-	do_run_process(tf, ks);
+
+	do_run_process(&current->trapframe, current->kstack);
 
 	KDEBUG_FOLLOWPANIC("iret failed");
 }

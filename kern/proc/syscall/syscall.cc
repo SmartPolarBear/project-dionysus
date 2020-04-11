@@ -58,6 +58,8 @@ PANIC void syscall::system_call_init()
 
     wrmsr(MSR_STAR, (SEGMENTSEL_UNULL << 48ull) | (SEGMENTSEL_KCODE << 32ull));
     wrmsr(MSR_LSTAR, (uintptr_t)syscall_x64_entry);
+
+    using namespace trap;
     wrmsr(MSR_SYSCALL_MASK, EFLAG_TF | EFLAG_DF | EFLAG_IF |
                                 EFLAG_IOPL_MASK | EFLAG_AC | EFLAG_NT);
 

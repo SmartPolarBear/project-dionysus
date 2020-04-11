@@ -1,5 +1,5 @@
 /*
- * Last Modified: Fri Mar 20 2020
+ * Last Modified: Sat Apr 11 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -22,7 +22,7 @@
 #include "./pmm.h"
 #include "./buddy_pmm.h"
 
-#include "arch/amd64/sync.h"
+#include "arch/amd64/x86.h"
 
 #include "sys/error.h"
 #include "sys/kmem.h"
@@ -32,8 +32,10 @@
 #include "sys/pmm.h"
 #include "sys/vmm.h"
 
+
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
+#include "drivers/apic/traps.h"
 
 #include "lib/libc/stdio.h"
 #include "lib/libc/stdlib.h"

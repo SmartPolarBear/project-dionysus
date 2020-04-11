@@ -1,5 +1,5 @@
 /*
- * Last Modified: Tue Mar 31 2020
+ * Last Modified: Sat Apr 11 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -99,7 +99,7 @@ static inline error_code page_fault_impl(mm_struct *mm, size_t err, uintptr_t ad
     }
 }
 
-error_code handle_pgfault([[maybe_unused]] trap_frame info)
+error_code handle_pgfault([[maybe_unused]] trap::trap_frame info)
 {
     uintptr_t addr = rcr2();
     mm_struct *mm = current != nullptr ? current->mm : nullptr;
