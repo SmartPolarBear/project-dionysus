@@ -1,9 +1,8 @@
 #pragma once
 
+#include "sys/proc.h"
 #include "sys/types.h"
 
-namespace elf
-{
 constexpr size_t ELF_MAGIC = 0x464C457FU;
 
 struct elfhdr
@@ -50,4 +49,6 @@ enum prog_header_flags
     ELF_PROG_FLAG_READ = 4,
 };
 
-} // namespace elf
+error_code elf_load_binary(IN process::process_dispatcher *proc,
+                           IN uint8_t *bin,
+                           OUT uintptr_t *entry_addr);

@@ -14,8 +14,8 @@ safe_swap_gs:
 end_safe_swap_gs:
     ret
 
-.global load_gdt
-load_gdt:
+.global load_gdt_and_tr
+load_gdt_and_tr:
     lgdt (%rdi)
     movw %si, %ax
     ltr %ax
@@ -29,3 +29,17 @@ load_gdt:
     pushq %rdi
     lretq
 
+.global cli
+cli:
+    cli
+    ret
+
+.global sti
+sti:
+    sti
+    ret
+
+.global hlt
+hlt:
+    hlt
+    ret

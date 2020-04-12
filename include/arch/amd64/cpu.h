@@ -4,38 +4,14 @@
 
 #include "sys/segmentation.hpp"
 
-extern "C" void load_gdt(gdt_table_ptr *gdt_ptr,uint64_t tss_sel);
+extern "C" void load_gdt_and_tr(gdt_table_ptr *gdt_ptr, uint64_t tss_sel);
+
 extern "C" void safe_swap_gs();
 extern "C" void swap_gs();
 
-static inline void hlt(void)
-{
-    asm volatile("hlt");
-}
-
-static inline void cli(void)
-{
-    asm volatile("cli");
-}
-
-static inline void sti(void)
-{
-    asm volatile("sti");
-}
-
-static inline void ltr(uint16_t sel)
-{
-    asm volatile("ltr %0"
-                 :
-                 : "r"(sel));
-}
-
-static inline void lgdt(gdt_table_ptr *gdt_ptr)
-{
-    asm volatile("lgdt (%0)"
-                 :
-                 : "r"(gdt_ptr));
-}
+extern "C" void cli();
+extern "C" void sti();
+extern "C" void hlt();
 
 static inline void lidt(uintptr_t p, int size)
 {

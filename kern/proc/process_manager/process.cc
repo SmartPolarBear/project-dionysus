@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sat Apr 11 2020
+ * Last Modified: Sun Apr 12 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -21,6 +21,7 @@
  */
 
 #include "process.hpp"
+#include "elf.hpp"
 #include "syscall.h"
 
 #include "arch/amd64/cpu.h"
@@ -37,7 +38,6 @@
 #include "drivers/lock/spinlock.h"
 
 #include "lib/libc/stdio.h"
-#include "lib/libelf/elf.h"
 #include "lib/libkern/data/list.h"
 
 using libk::list_add;
@@ -51,144 +51,12 @@ using lock::spinlock_acquire;
 using lock::spinlock_initlock;
 using lock::spinlock_release;
 
-using elf::elfhdr;
-using elf::proghdr;
-
 __thread process::process_dispatcher *current;
 
 // scheduler.cc
 void scheduler_ret();
 
 process_list_struct proc_list;
-
-static inline error_code elf_load_binary(IN process::process_dispatcher *proc,
-										 IN uint8_t *bin)
-{
-	error_code ret = ERROR_SUCCESS;
-
-	elf::elfhdr *header = (elfhdr *)bin;
-	if (header->magic != elf::ELF_MAGIC)
-	{
-		return ERROR_INVALID_ARG;
-	}
-
-	proghdr *prog_header = (proghdr *)(bin + header->phoff);
-
-	for (size_t i = 0; i < header->phnum; i++)
-	{
-		if (prog_header[i].type == elf::ELF_PROG_LOAD)
-		{
-			size_t vm_flags = 0, perms = PG_U;
-			if (prog_header[i].type & elf::ELF_PROG_FLAG_EXEC)
-			{
-				vm_flags |= vmm::VM_EXEC;
-			}
-
-			if (prog_header[i].type & elf::ELF_PROG_FLAG_READ)
-			{
-				vm_flags |= vmm::VM_READ;
-			}
-
-			if (prog_header[i].type & elf::ELF_PROG_FLAG_WRITE)
-			{
-				vm_flags |= vmm::VM_WRITE;
-				perms |= PG_W;
-			}
-
-			if ((ret = vmm::mm_map(proc->mm, prog_header[i].vaddr, prog_header[i].memsz, vm_flags, nullptr)) != ERROR_SUCCESS)
-			{
-				//TODO do clean-ups
-				return ret;
-			}
-
-			if (proc->mm->brk_start < prog_header[i].vaddr + prog_header[i].memsz)
-			{
-				proc->mm->brk_start = prog_header[i].vaddr + prog_header[i].memsz;
-			}
-
-			uintptr_t start = prog_header[i].vaddr, end = prog_header[i].vaddr + prog_header[i].filesz;
-			uintptr_t la = rounddown(start, PAGE_SIZE);
-			uintptr_t offset = prog_header[i].off;
-			page_info *page = nullptr;
-
-			while (start < end)
-			{
-				page = pmm::pgdir_alloc_page(proc->mm->pgdir, la, perms);
-				if (page == nullptr)
-				{
-					//TODO do clean-ups
-					return -ERROR_MEMORY_ALLOC;
-				}
-
-				size_t off = start - la, size = PAGE_SIZE - off;
-				la += PAGE_SIZE;
-				if (end < la)
-				{
-					size -= la - end;
-				}
-
-				memmove(((uint8_t *)pmm::page_to_va(page)) + off, bin + offset, size);
-				start += size, offset += size;
-			}
-
-			end = prog_header[i].vaddr + prog_header[i].memsz;
-
-			if (start < la)
-			{
-				if (start == end)
-				{
-					continue;
-				}
-				size_t off = start + PAGE_SIZE - la, size = PAGE_SIZE - off;
-				if (end < la)
-				{
-					size -= la - end;
-				}
-				// memset(((uint8_t *)pmm::page_to_va(page)) + off, 0, size);
-				start += size;
-				if ((end < la && start == end) || (end >= la && start == la))
-				{
-					//TODO do clean-ups
-					return -ERROR_INVALID_DATA;
-				}
-			}
-
-			// while (start < end)
-			// {
-			// 	page = pmm::pgdir_alloc_page(proc->mm->pgdir, la, perms);
-			// 	if (page == NULL)
-			// 	{
-			// 		//TODO do clean-ups
-			// 		return -ERROR_MEMORY_ALLOC;
-			// 	}
-			// 	size_t off = start - la, size = PAGE_SIZE - off;
-
-			// 	la += PAGE_SIZE;
-			// 	if (end < la)
-			// 	{
-			// 		size -= la - end;
-			// 	}
-			// 	// memset(((uint8_t *)pmm::page_to_va(page)) + off, 0, size);
-			// 	start += size;
-			// }
-		}
-		else
-		{
-			//TODO: handle more header types
-		}
-	}
-
-	proc->trapframe.rip = header->entry;
-
-	// allocate an stack
-	for (size_t i = 0; i < process::process_dispatcher::KERNSTACK_PAGES; i++)
-	{
-		uintptr_t va = USER_TOP - process::process_dispatcher::KERNSTACK_SIZE + i * PAGE_SIZE;
-		pmm::pgdir_alloc_page(proc->mm->pgdir, va, PG_W | PG_U | PG_PS | PG_P);
-	}
-
-	return ret;
-}
 
 // precondition: the lock must be held
 static inline process::pid alloc_pid(void)
@@ -258,6 +126,7 @@ error_code process::create_process(IN const char *name,
 
 	// proc->trapframe.cs = (SEG_UCODE << 3) | DPL_USER;
 	// proc->trapframe.ss = (SEG_UDATA << 3) | DPL_USER;
+	//TODO: load real user segment selectors
 	proc->trapframe.cs = 8;
 	proc->trapframe.ss = 8 + 8;
 	proc->trapframe.rsp = USER_STACK_TOP;
@@ -288,9 +157,11 @@ error_code process::process_load_binary(IN process_dispatcher *proc,
 										IN binary_types type)
 {
 	error_code ret = ERROR_SUCCESS;
+	uintptr_t entry_addr = 0;
 	if (type == BINARY_ELF)
 	{
-		ret = elf_load_binary(proc, bin);
+
+		ret = elf_load_binary(proc, bin, &entry_addr);
 	}
 	else
 	{
@@ -299,87 +170,20 @@ error_code process::process_load_binary(IN process_dispatcher *proc,
 
 	if (ret == ERROR_SUCCESS)
 	{
+		proc->trapframe.rip = entry_addr;
+
+		// allocate an stack
+		for (size_t i = 0; i < process::process_dispatcher::KERNSTACK_PAGES; i++)
+		{
+			uintptr_t va = USER_TOP - process::process_dispatcher::KERNSTACK_SIZE + i * PAGE_SIZE;
+			pmm::pgdir_alloc_page(proc->mm->pgdir, va, PG_W | PG_U | PG_PS | PG_P);
+		}
+
 		proc->state = PROC_STATE_RUNNABLE;
 	}
 
 	return ret;
 }
-
-int iuserfunc1(int c)
-{
-	int a = 0;
-	for (int i = 0; i <= c; i++)
-	{
-		a += i * c;
-	}
-	return a;
-}
-
-int iusermain()
-{
-	auto a = iuserfunc1(4);
-	asm volatile("syscall");
-	auto b = iuserfunc1(8);
-	asm volatile("syscall");
-	auto c = iuserfunc1(12);
-	return a + b + c;
-}
-
-void iuserspace()
-{
-	/* TODO:
-	1. problems should occur only when the function returns
-	2. try these:
-		a) two syscalls
-		b) two syscalls with a sub-func called in between
-		c) wrong cs and ss becuase bit 48 and 49 is not set in MSR but is calculated into cs
-			so why not set them in msr and see what's happening?
-		d) check if the gdt is good.
-	*/
-	iusermain();
-	for (;;)
-		;
-}
-
-// void do_iret(trap_frame tf)
-// {
-
-// 	*((uintptr_t *)(((char *)cpu->local_gs) + KERNEL_GS_KSTACK)) = current->kstack + process::process_dispatcher::KERNSTACK_SIZE;
-
-// 	asm volatile(
-// 		"\tmovq %0, %%rsp\n"
-// 		"\tmovq %1, %%rcx\n"
-// 		"\tmovq %2, %%r11\n" ::"g"(tf.rsp),
-// 		"g"(/*iuserspace*/ tf.rip), "g"(0x0202)
-// 		: "memory");
-
-// 	asm volatile(
-// 		"\tsysretq\n" ::
-// 			: "memory");
-
-// 	// asm volatile(
-// 	// 	"\tmovq %0,%%rsp\n"
-// 	// 	"\tpopq %%rax\n"
-// 	// 	"\tpopq %%rbx\n"
-// 	// 	"\tpopq %%rcx\n"
-// 	// 	"\tpopq %%rdx\n"
-// 	// 	"\tpopq %%rbp\n"
-// 	// 	"\tpopq %%rsi\n"
-// 	// 	"\tpopq %%rdi\n"
-// 	// 	"\tpopq %%r8 \n"
-// 	// 	"\tpopq %%r9 \n"
-// 	// 	"\tpopq %%r10\n"
-// 	// 	"\tpopq %%r11\n"
-// 	// 	"\tpopq %%r12\n"
-// 	// 	"\tpopq %%r13\n"
-// 	// 	"\tpopq %%r14\n"
-// 	// 	"\tpopq %%r15\n"
-// 	// 	"\taddq $16, %%rsp\n" //discard trapnum and errorcode
-// 	// 	"\tiretq\n" ::"g"(&tf)
-// 	// 	: "memory");
-
-// 	KDEBUG_GENERALPANIC("iretq failed.");
-// }
 
 error_code process::process_run(IN process_dispatcher *proc)
 {

@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sat Apr 11 2020
+ * Last Modified: Sun Apr 12 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -48,12 +48,12 @@ using pmm::pmm_manager;
 
 using vmm::pde_ptr_t;
 
-using sysstd::simple_pair;
+using sysstd::value_pair;
 
 // TODO: use lock
 // TODO: i need to manually enable locks because popcli and pushcli relies on gdt
 
-using reserved_space = simple_pair<uintptr_t, uintptr_t>;
+using reserved_space = value_pair<uintptr_t, uintptr_t>;
 
 // use buddy allocator to allocate physical pages
 pmm::pmm_manager_info *pmm::pmm_manager = nullptr;

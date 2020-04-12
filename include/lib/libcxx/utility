@@ -4,7 +4,7 @@
 namespace sysstd
 {
 template <typename TFirst, typename TSecond>
-struct simple_pair
+struct value_pair
 {
     TFirst first;
     TSecond second;
