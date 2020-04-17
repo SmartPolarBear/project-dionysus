@@ -1,5 +1,5 @@
 /*
- * Last Modified: Fri Mar 20 2020
+ * Last Modified: Tue Apr 14 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -79,7 +79,7 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
 
             *(uint32_t *)(code - 4) = 0x8000; // just enough stack to get us to entry64mp
             *(uint32_t *)(code - 8) = V2P(uintptr_t(entry32mp));
-            *(uint64_t *)(code - 16) = (uint64_t)(stack + PG_SIZE);
+            *(uint64_t *)(code - 16) = (uint64_t)(stack + 4_KB);
 
             local_apic::start_ap(core.apicid, V2P((uintptr_t)code));
 

@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sun Apr 12 2020
+ * Last Modified: Thu Apr 16 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -33,9 +33,9 @@
 #include "lib/libcxx/utility"
 #include "lib/libkern/data/list.h"
 
-static inline auto get_vm_properties_for_header(const proghdr &prog_header)
+static inline auto get_vm_properties_for_header(proghdr prog_header)
 {
-    size_t vm_flags = 0, perms = 0;
+    size_t vm_flags = 0, perms = PG_U;
     if (prog_header.type & ELF_PROG_FLAG_EXEC)
     {
         vm_flags |= vmm::VM_EXEC;
@@ -53,6 +53,36 @@ static inline auto get_vm_properties_for_header(const proghdr &prog_header)
     }
 
     return sysstd::value_pair<size_t, size_t>{vm_flags, perms};
+}
+
+static inline error_code load_section(IN proghdr prog_header,
+                                      IN uint8_t *bin,
+                                      IN process::process_dispatcher *proc)
+{
+    error_code ret = ERROR_SUCCESS;
+
+    auto [vm_flags, perms] = get_vm_properties_for_header(prog_header);
+
+    if ((ret = vmm::mm_map(proc->mm, prog_header.vaddr, prog_header.memsz, vm_flags, nullptr)) != ERROR_SUCCESS)
+    {
+        //TODO do clean-ups
+        return ret;
+    }
+
+    if (proc->mm->brk_start < prog_header.vaddr + prog_header.memsz)
+    {
+        proc->mm->brk_start = prog_header.vaddr + prog_header.memsz;
+    }
+
+    // ph->p_filesz <= ph->p_memsz
+    size_t page_count = PAGE_ROUNDUP(prog_header.memsz) / PAGE_SIZE;
+    auto pages = pmm::pgdir_alloc_pages(proc->mm->pgdir, page_count, prog_header.vaddr, perms);
+
+    memset((uint8_t *)pmm::page_to_va(pages), 0, page_count * PAGE_SIZE);
+
+    memmove((uint8_t *)pmm::page_to_va(pages), bin + prog_header.off, prog_header.filesz);
+
+    return ret;
 }
 
 error_code elf_load_binary(IN process::process_dispatcher *proc,
@@ -73,100 +103,16 @@ error_code elf_load_binary(IN process::process_dispatcher *proc,
     {
         if (prog_header[i].type == ELF_PROG_LOAD)
         {
-            auto [vm_flags, perms] = get_vm_properties_for_header(prog_header[i]);
-
-            if ((ret = vmm::mm_map(proc->mm, prog_header[i].vaddr, prog_header[i].memsz, vm_flags, nullptr)) != ERROR_SUCCESS)
+            ret = load_section(prog_header[i], bin, proc);
+            break;//TODO: it's again a problem caused by loading the second section.
+            if (ret != ERROR_SUCCESS)
             {
-                //TODO do clean-ups
-                return ret;
+                break;
             }
-
-            if (proc->mm->brk_start < prog_header[i].vaddr + prog_header[i].memsz)
-            {
-                proc->mm->brk_start = prog_header[i].vaddr + prog_header[i].memsz;
-            }
-
-            uintptr_t start = prog_header[i].vaddr, end = prog_header[i].vaddr + prog_header[i].filesz;
-            uintptr_t la = rounddown(start, PAGE_SIZE);
-            uintptr_t offset = prog_header[i].off;
-            page_info *page = nullptr;
-
-            while (start < end)
-            {
-                page = pmm::pgdir_alloc_page(proc->mm->pgdir, la, perms);
-                if (page == nullptr)
-                {
-                    //TODO do clean-ups
-                    return -ERROR_MEMORY_ALLOC;
-                }
-
-                size_t off = start - la, size = PAGE_SIZE - off;
-                la += PAGE_SIZE;
-                if (end < la)
-                {
-                    size -= la - end;
-                }
-
-                memmove(((uint8_t *)pmm::page_to_va(page)) + off, bin + offset, size);
-                start += size, offset += size;
-            }
-
-            end = prog_header[i].vaddr + prog_header[i].memsz;
-
-            if (start < la)
-            {
-                if (start == end)
-                {
-                    continue;
-                }
-                size_t off = start + PAGE_SIZE - la, size = PAGE_SIZE - off;
-                if (end < la)
-                {
-                    size -= la - end;
-                }
-                // memset(((uint8_t *)pmm::page_to_va(page)) + off, 0, size);
-                start += size;
-                if ((end < la && start == end) || (end >= la && start == la))
-                {
-                    //TODO do clean-ups
-                    return -ERROR_INVALID_DATA;
-                }
-            }
-
-            // while (start < end)
-            // {
-            // 	page = pmm::pgdir_alloc_page(proc->mm->pgdir, la, perms);
-            // 	if (page == NULL)
-            // 	{
-            // 		//TODO do clean-ups
-            // 		return -ERROR_MEMORY_ALLOC;
-            // 	}
-            // 	size_t off = start - la, size = PAGE_SIZE - off;
-
-            // 	la += PAGE_SIZE;
-            // 	if (end < la)
-            // 	{
-            // 		size -= la - end;
-            // 	}
-            // 	// memset(((uint8_t *)pmm::page_to_va(page)) + off, 0, size);
-            // 	start += size;
-            // }
-        }
-        else
-        {
-            //TODO: handle more header types
         }
     }
 
     *entry_addr = header->entry;
-    // proc->trapframe.rip = header->entry;
-
-    // // allocate an stack
-    // for (size_t i = 0; i < process::process_dispatcher::KERNSTACK_PAGES; i++)
-    // {
-    //     uintptr_t va = USER_TOP - process::process_dispatcher::KERNSTACK_SIZE + i * PAGE_SIZE;
-    //     pmm::pgdir_alloc_page(proc->mm->pgdir, va, PG_W | PG_U | PG_PS | PG_P);
-    // }
 
     return ret;
 }

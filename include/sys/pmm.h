@@ -1,5 +1,5 @@
 /*
- * Last Modified: Fri Mar 20 2020
+ * Last Modified: Tue Apr 14 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -66,6 +66,7 @@ void tlb_invalidate(pde_ptr_t pgdir, uintptr_t va);
 
 // insert a free page to pgdir
 page_info *pgdir_alloc_page(pde_ptr_t pgdir, uintptr_t va, size_t perm);
+page_info *pgdir_alloc_pages(pde_ptr_t pgdir, size_t n, uintptr_t va, size_t perm);
 
 static inline uintptr_t pavailable_start(void)
 {

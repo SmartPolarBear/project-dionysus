@@ -1,5 +1,5 @@
 /*
- * Last Modified: Thu Feb 20 2020
+ * Last Modified: Thu Apr 16 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -85,7 +85,7 @@ uintptr_t P2V(uintptr_t x)
     }
     else
     {
-        KDEBUG_RICHPANIC("Invalid address for V2P\n",
+        KDEBUG_RICHPANIC("Invalid address for P2V\n",
                          "KERNEL PANIC: VM",
                          false,
                          "The given address is 0x%x", x);

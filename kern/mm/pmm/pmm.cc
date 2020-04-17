@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sun Apr 12 2020
+ * Last Modified: Thu Apr 16 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -32,10 +32,9 @@
 #include "sys/pmm.h"
 #include "sys/vmm.h"
 
-
+#include "drivers/apic/traps.h"
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
-#include "drivers/apic/traps.h"
 
 #include "lib/libc/stdio.h"
 #include "lib/libc/stdlib.h"
@@ -312,11 +311,29 @@ page_info *pmm::pgdir_alloc_page(pde_ptr_t pgdir, uintptr_t va, size_t perm)
     page_info *page = alloc_page();
     if (page != nullptr)
     {
-        if (page_insert(pgdir, page, va, perm) != 0)
+        if (page_insert(pgdir, page, va, perm) != ERROR_SUCCESS)
         {
             free_page(page);
             return nullptr;
         }
     }
     return page;
+}
+
+page_info *pmm::pgdir_alloc_pages(pde_ptr_t pgdir, size_t n, uintptr_t va, size_t perm)
+{
+    page_info *pages = alloc_pages(n);
+    if (pages != nullptr)
+    {
+        for (size_t i = 0; i < n; i++)
+        {
+            if (page_insert(pgdir, pages + i, va + i * PAGE_SIZE, perm) != ERROR_SUCCESS)
+            {
+                free_pages(pages, n);
+                return nullptr;
+            }
+        }
+    }
+
+    return pages;
 }
