@@ -17,7 +17,7 @@ SECTIONS {
     }
 
     /* Adjust the address for the data segment to the next page */
-    . = ALIGN(0x1000);
+    . = ALIGN(0x200000);
 
     .data : {
         *(.data)

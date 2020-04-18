@@ -1,5 +1,5 @@
 /*
- * Last Modified: Thu Apr 16 2020
+ * Last Modified: Sat Apr 18 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -56,7 +56,7 @@ static inline auto get_vm_properties_for_header(proghdr prog_header)
 }
 
 static inline error_code load_section(IN proghdr prog_header,
-                                      IN uint8_t *bin,
+                                      IN const uint8_t *bin,
                                       IN process::process_dispatcher *proc)
 {
     error_code ret = ERROR_SUCCESS;
@@ -79,7 +79,6 @@ static inline error_code load_section(IN proghdr prog_header,
     auto pages = pmm::pgdir_alloc_pages(proc->mm->pgdir, page_count, prog_header.vaddr, perms);
 
     memset((uint8_t *)pmm::page_to_va(pages), 0, page_count * PAGE_SIZE);
-
     memmove((uint8_t *)pmm::page_to_va(pages), bin + prog_header.off, prog_header.filesz);
 
     return ret;
@@ -104,7 +103,7 @@ error_code elf_load_binary(IN process::process_dispatcher *proc,
         if (prog_header[i].type == ELF_PROG_LOAD)
         {
             ret = load_section(prog_header[i], bin, proc);
-            break;//TODO: it's again a problem caused by loading the second section.
+
             if (ret != ERROR_SUCCESS)
             {
                 break;

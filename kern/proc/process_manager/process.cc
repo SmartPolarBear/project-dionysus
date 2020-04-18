@@ -1,5 +1,5 @@
 /*
- * Last Modified: Thu Apr 16 2020
+ * Last Modified: Sat Apr 18 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -209,15 +209,6 @@ error_code process::process_run(IN process_dispatcher *proc)
 	cpu->tss.rsp0 = current->kstack + process_dispatcher::KERNSTACK_SIZE;
 
 	trap::popcli();
-
-	// proc_restore_trapframe(&current->trapframe);
-	// do_iret(current->trapframe);
-
-	// char *mem = (char *)0x10000000;
-	// for (int i = 0; i < 147; i++)
-	// {
-	// 	printf("%x ", mem[i]);
-	// }
 
 	do_run_process(&current->trapframe, current->kstack);
 
