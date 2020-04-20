@@ -1,5 +1,5 @@
 /*
- * Last Modified: Tue Apr 14 2020
+ * Last Modified: Sun Apr 19 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -19,7 +19,6 @@
  * Date      	By	Comments
  * ----------	---	----------------------------------------------------------
  */
-
 
 #pragma once
 
@@ -60,13 +59,12 @@ void free_pages(page_info *base, size_t n);
 size_t get_free_page_count(void);
 
 void page_remove(pde_ptr_t pgdir, uintptr_t va_to_page);
-error_code page_insert(pde_ptr_t pgdir, page_info *page, uintptr_t va, size_t perm);
-
 void tlb_invalidate(pde_ptr_t pgdir, uintptr_t va);
+error_code page_insert(pde_ptr_t pgdir, bool allow_rewrite, page_info *page, uintptr_t va, size_t perm);
 
 // insert a free page to pgdir
-page_info *pgdir_alloc_page(pde_ptr_t pgdir, uintptr_t va, size_t perm);
-page_info *pgdir_alloc_pages(pde_ptr_t pgdir, size_t n, uintptr_t va, size_t perm);
+error_code pgdir_alloc_page(IN pde_ptr_t pgdir, bool rewrite_if_exist, uintptr_t va, size_t perm, OUT page_info *page);
+error_code pgdir_alloc_pages(IN pde_ptr_t pgdir, bool rewrite_if_exist, size_t n, uintptr_t va, size_t perm, OUT page_info *page);
 
 static inline uintptr_t pavailable_start(void)
 {
@@ -127,4 +125,3 @@ static inline void *boot_alloc_page(void)
 } // namespace boot_mem
 
 } // namespace pmm
-

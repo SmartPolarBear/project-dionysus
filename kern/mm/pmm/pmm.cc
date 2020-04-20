@@ -1,5 +1,5 @@
 /*
- * Last Modified: Thu Apr 16 2020
+ * Last Modified: Mon Apr 20 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -269,7 +269,7 @@ void pmm::page_remove(pde_ptr_t pgdir, uintptr_t va)
     }
 }
 
-error_code pmm::page_insert(pde_ptr_t pgdir, page_info *page, uintptr_t va, size_t perm)
+error_code pmm::page_insert(pde_ptr_t pgdir, bool allow_rewrite, page_info *page, uintptr_t va, size_t perm)
 {
     auto pde = vmm::walk_pgdir(pgdir, va, true);
     if (pde == nullptr)
@@ -279,18 +279,22 @@ error_code pmm::page_insert(pde_ptr_t pgdir, page_info *page, uintptr_t va, size
 
     ++page->ref;
 
-    do
+    if (*pde != 0)
     {
-        if (*pde != 0)
+        if ((!allow_rewrite) && (pde_to_page(pde) != page))
         {
-            if ((*pde & PG_P) && pde_to_page(pde) == page)
-            {
-                --page->ref;
-                break;
-            }
+            return -ERROR_REWRITE;
+        }
+
+        if ((*pde & PG_P) && pde_to_page(pde) == page)
+        {
+            --page->ref;
+        }
+        else
+        {
             page_remove_pde(pgdir, va, pde);
         }
-    } while (0);
+    }
 
     *pde = page_to_pa(page) | PG_PS | PG_P | perm;
     tlb_invalidate(pgdir, va);
@@ -306,34 +310,68 @@ void pmm::tlb_invalidate(pde_ptr_t pgdir, uintptr_t va)
     }
 }
 
-page_info *pmm::pgdir_alloc_page(pde_ptr_t pgdir, uintptr_t va, size_t perm)
+error_code pmm::pgdir_alloc_page(IN pde_ptr_t pgdir,
+                                 bool rewrite_if_exist,
+                                 uintptr_t va,
+                                 size_t perm,
+                                 OUT page_info *ret_page)
 {
     page_info *page = alloc_page();
+    error_code ret = ERROR_SUCCESS;
     if (page != nullptr)
     {
-        if (page_insert(pgdir, page, va, perm) != ERROR_SUCCESS)
+        if ((ret = page_insert(pgdir, rewrite_if_exist, page, va, perm)) != ERROR_SUCCESS)
         {
             free_page(page);
-            return nullptr;
+            ret_page = nullptr;
+            return ret;
         }
     }
-    return page;
+    ret_page = page;
+    return ret;
 }
 
-page_info *pmm::pgdir_alloc_pages(pde_ptr_t pgdir, size_t n, uintptr_t va, size_t perm)
+error_code pmm::pgdir_alloc_pages(IN pde_ptr_t pgdir,
+                                  bool rewrite_if_exist,
+                                  size_t n,
+                                  uintptr_t va,
+                                  size_t perm,
+                                  OUT page_info *ret_page)
 {
     page_info *pages = alloc_pages(n);
+    error_code ret = ERROR_SUCCESS;
     if (pages != nullptr)
     {
-        for (size_t i = 0; i < n; i++)
+        page_info *p = pages;
+        size_t va_cnt = 0;
+        do
         {
-            if (page_insert(pgdir, pages + i, va + i * PAGE_SIZE, perm) != ERROR_SUCCESS)
+            if ((ret = page_insert(pgdir, rewrite_if_exist, p, va + va_cnt * PAGE_SIZE, perm)) != ERROR_SUCCESS)
             {
-                free_pages(pages, n);
-                return nullptr;
+                if (ret == -ERROR_REWRITE)
+                {
+                    va_cnt++;
+                }
+                else
+                {
+                    free_pages(pages, n);
+                    ret_page = nullptr;
+                    return ret;
+                }
             }
+            else
+            {
+                p++;
+                va_cnt++;
+            }
+        } while (p != pages + n);
+
+        for (; p != pages + n; p++)
+        {
+            free_page(p);
         }
     }
 
-    return pages;
+    ret_page = pages;
+    return ret;
 }

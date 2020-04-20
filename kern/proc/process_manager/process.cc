@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sat Apr 18 2020
+ * Last Modified: Mon Apr 20 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -165,7 +165,7 @@ error_code process::process_load_binary(IN process_dispatcher *proc,
 	}
 	else
 	{
-		ret = ERROR_INVALID_ADDR;
+		ret =- ERROR_INVALID_ADDR;
 	}
 
 	if (ret == ERROR_SUCCESS)
@@ -176,7 +176,12 @@ error_code process::process_load_binary(IN process_dispatcher *proc,
 		for (size_t i = 0; i < process::process_dispatcher::KERNSTACK_PAGES; i++)
 		{
 			uintptr_t va = USER_TOP - process::process_dispatcher::KERNSTACK_SIZE + i * PAGE_SIZE;
-			pmm::pgdir_alloc_page(proc->mm->pgdir, va, PG_W | PG_U | PG_PS | PG_P);
+			page_info *page_ret = nullptr;
+			auto ret = pmm::pgdir_alloc_page(proc->mm->pgdir, true, va, PG_W | PG_U | PG_PS | PG_P, page_ret);
+			if(ret!=ERROR_SUCCESS)
+			{
+				return -ERROR_MEMORY_ALLOC;
+			}
 		}
 
 		proc->state = PROC_STATE_RUNNABLE;

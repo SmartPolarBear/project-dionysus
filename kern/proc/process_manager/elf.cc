@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sat Apr 18 2020
+ * Last Modified: Mon Apr 20 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -76,7 +76,13 @@ static inline error_code load_section(IN proghdr prog_header,
 
     // ph->p_filesz <= ph->p_memsz
     size_t page_count = PAGE_ROUNDUP(prog_header.memsz) / PAGE_SIZE;
-    auto pages = pmm::pgdir_alloc_pages(proc->mm->pgdir, page_count, prog_header.vaddr, perms);
+    page_info *pages = nullptr;
+    auto error = pmm::pgdir_alloc_pages(proc->mm->pgdir, false, page_count, prog_header.vaddr, perms, pages);
+
+    if (error != ERROR_SUCCESS)
+    {
+        return error;
+    }
 
     memset((uint8_t *)pmm::page_to_va(pages), 0, page_count * PAGE_SIZE);
     memmove((uint8_t *)pmm::page_to_va(pages), bin + prog_header.off, prog_header.filesz);
