@@ -1,5 +1,5 @@
 /*
- * Last Modified: Mon Apr 20 2020
+ * Last Modified: Tue Apr 21 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -314,7 +314,7 @@ error_code pmm::pgdir_alloc_page(IN pde_ptr_t pgdir,
                                  bool rewrite_if_exist,
                                  uintptr_t va,
                                  size_t perm,
-                                 OUT page_info *ret_page)
+                                 OUT page_info **ret_page)
 {
     page_info *page = alloc_page();
     error_code ret = ERROR_SUCCESS;
@@ -327,7 +327,7 @@ error_code pmm::pgdir_alloc_page(IN pde_ptr_t pgdir,
             return ret;
         }
     }
-    ret_page = page;
+    *ret_page = page;
     return ret;
 }
 
@@ -336,8 +336,9 @@ error_code pmm::pgdir_alloc_pages(IN pde_ptr_t pgdir,
                                   size_t n,
                                   uintptr_t va,
                                   size_t perm,
-                                  OUT page_info *ret_page)
+                                  OUT page_info **ret_page)
 {
+
     page_info *pages = alloc_pages(n);
     error_code ret = ERROR_SUCCESS;
     if (pages != nullptr)
@@ -366,12 +367,15 @@ error_code pmm::pgdir_alloc_pages(IN pde_ptr_t pgdir,
             }
         } while (p != pages + n);
 
-        for (; p != pages + n; p++)
+        if (p != pages + n)
         {
-            free_page(p);
+            for (; p != pages + n; p++)
+            {
+                free_page(p);
+            }
         }
     }
 
-    ret_page = pages;
+    *ret_page = pages;
     return ret;
 }

@@ -1,5 +1,5 @@
 /*
- * Last Modified: Thu Feb 20 2020
+ * Last Modified: Mon Apr 20 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -28,6 +28,8 @@
 
 #include "drivers/debug/kerror.h"
 
+#include "drivers/acpi/cpu.h"
+
 namespace kdebug
 {
 extern bool panicked;
@@ -43,10 +45,10 @@ void kdebug_getcallerpcs(size_t buflen, uintptr_t pcs[]);
 // to make __FILE__ and __LINE__ macros works right, this must be a macro as well.
 
 #define KDEBUG_RICHPANIC(msg, title, topleft, add_fmt, args...) \
-    kdebug::kdebug_panic2("%s:\nIn file: %s, line: %d\nIn scope: %s\nMessage:\n%s\n" add_fmt, topleft, title, __FILE__, __LINE__, __PRETTY_FUNCTION__, msg, ##args)
+    kdebug::kdebug_panic2("[CPU%d]%s:\nIn file: %s, line: %d\nIn scope: %s\nMessage:\n%s\n" add_fmt, topleft, cpu->id, title, __FILE__, __LINE__, __PRETTY_FUNCTION__, msg, ##args)
 
 #define KDEBUG_RICHPANIC_CODE(code, topleft, add_fmt, args...) \
-    kdebug::kdebug_panic2("%s:\nIn file: %s, line: %d\nIn scope: %s\nMessage:\n%s\n" add_fmt, topleft, kdebug::error_title(code), __FILE__, __LINE__, __PRETTY_FUNCTION__, kdebug::error_message(code), ##args)
+    kdebug::kdebug_panic2("[CPU%d]%s:\nIn file: %s, line: %d\nIn scope: %s\nMessage:\n%s\n" add_fmt, topleft, cpu->id, kdebug::error_title(code), __FILE__, __LINE__, __PRETTY_FUNCTION__, kdebug::error_message(code), ##args)
 
 #define KDEBUG_GERNERALPANIC_CODE(code) \
     KDEBUG_GENERALPANIC(kdebug::error_message(code))
@@ -77,4 +79,3 @@ void kdebug_getcallerpcs(size_t buflen, uintptr_t pcs[]);
     } while (0)
 
 } // namespace kdebug
-

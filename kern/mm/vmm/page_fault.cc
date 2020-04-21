@@ -1,5 +1,5 @@
 /*
- * Last Modified: Mon Apr 20 2020
+ * Last Modified: Tue Apr 21 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -92,7 +92,7 @@ static inline error_code page_fault_impl(mm_struct *mm, size_t err, uintptr_t ad
         addr = rounddown(addr, PAGE_SIZE);
 
         page_info *page_ret = nullptr;
-        if (pmm::pgdir_alloc_page(mm->pgdir, true, addr, page_perm, page_ret) != ERROR_SUCCESS) // map to any free space
+        if (pmm::pgdir_alloc_page(mm->pgdir, true, addr, page_perm, &page_ret) != ERROR_SUCCESS) // map to any free space
         {
             return -ERROR_MEMORY_ALLOC;
         }

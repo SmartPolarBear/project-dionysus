@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sun Apr 19 2020
+ * Last Modified: Tue Apr 21 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -63,8 +63,8 @@ void tlb_invalidate(pde_ptr_t pgdir, uintptr_t va);
 error_code page_insert(pde_ptr_t pgdir, bool allow_rewrite, page_info *page, uintptr_t va, size_t perm);
 
 // insert a free page to pgdir
-error_code pgdir_alloc_page(IN pde_ptr_t pgdir, bool rewrite_if_exist, uintptr_t va, size_t perm, OUT page_info *page);
-error_code pgdir_alloc_pages(IN pde_ptr_t pgdir, bool rewrite_if_exist, size_t n, uintptr_t va, size_t perm, OUT page_info *page);
+error_code pgdir_alloc_page(IN pde_ptr_t pgdir, bool rewrite_if_exist, uintptr_t va, size_t perm, OUT page_info **page);
+error_code pgdir_alloc_pages(IN pde_ptr_t pgdir, bool rewrite_if_exist, size_t n, uintptr_t va, size_t perm, OUT page_info **page);
 
 static inline uintptr_t pavailable_start(void)
 {
@@ -94,6 +94,7 @@ static inline uintptr_t page_to_pa(page_info *pg)
 
 static inline uintptr_t page_to_va(page_info *pg)
 {
+    KDEBUG_ASSERT(pg != nullptr);
     return P2V(page_to_pa(pg));
 }
 
