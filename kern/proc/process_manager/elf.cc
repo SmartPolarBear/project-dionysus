@@ -84,9 +84,7 @@ static inline auto get_vm_properties_for_header(proghdr prog_header)
         return error;
     }
 
-    auto a = (uint8_t *)pmm::page_to_va(pages);
     memset((uint8_t *)pmm::page_to_va(pages), 0, page_count * PAGE_SIZE);
-    auto b = (uint8_t *)pmm::page_to_va(pages);
     memmove((uint8_t *)pmm::page_to_va(pages), bin + prog_header.off, prog_header.filesz);
 
     return ret;

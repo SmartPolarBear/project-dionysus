@@ -7,6 +7,6 @@ set_property(SOURCE syscall_client.S PROPERTY LANGUAGE C)
 
 target_sources(libuser PRIVATE uentry.S syscall_client.S uentry_main.cc)
 
-add_subdirectory(kernel_api)
-
 target_include_directories(libuser PRIVATE "${CMAKE_SOURCE_DIR}/include")
+target_include_directories(libuser PRIVATE "./include")
+target_include_directories(libuser PUBLIC "./user-include")

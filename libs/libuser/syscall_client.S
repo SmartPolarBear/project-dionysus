@@ -1,6 +1,8 @@
 .code64
 
-.global do_syscall
-do_syscall:
-    
+#define SYSCALL_INTERFACE(name) \
+  .globl name; \
+  name: \
+    movl $SYS_ ## name, %eax; \
+    int $T_SYSCALL; \
     ret

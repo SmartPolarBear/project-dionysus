@@ -1,5 +1,5 @@
 /*
- * Last Modified: Tue Feb 18 2020
+ * Last Modified: Thu Apr 23 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -20,16 +20,10 @@
  * ----------	---	----------------------------------------------------------
  */
 
-
-
-
-
-
-
 #include "arch/amd64/x86.h"
 
-#include "drivers/debug/kdebug.h"
 #include "drivers/console/console.h"
+#include "drivers/debug/kdebug.h"
 
 #include "sys/memlayout.h"
 #include "sys/types.h"
