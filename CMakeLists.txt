@@ -31,7 +31,6 @@ add_dependencies(kernel ap_boot.elf)
 target_sources(kernel PRIVATE ${CMAKE_SOURCE_DIR}/kern/drv/apic/vectors.S)
 
 add_subdirectory(kern)
-add_subdirectory(drivers)
 
 set_property(SOURCE ${CMAKE_SOURCE_DIR}/kern/init/boot.S PROPERTY LANGUAGE C)
 set_property(SOURCE ${CMAKE_SOURCE_DIR}/kern/drv/apic/trapentry_asm.S PROPERTY LANGUAGE C)
@@ -73,7 +72,7 @@ target_link_options(kernel
 
 target_include_directories(kernel PRIVATE "${CMAKE_SOURCE_DIR}/include")
 
-target_link_libraries(kernel arch_amd64)
+target_link_libraries(kernel arch_amd64 libkernel)
 
 set_target_properties(kernel PROPERTIES LINK_DEPENS "${CMAKE_SOURCE_DIR}/config/build/kernel.ld")
 set_target_properties(kernel PROPERTIES LINK_FLAGS "-Wl,-T ${CMAKE_SOURCE_DIR}/config/build/kernel.ld")

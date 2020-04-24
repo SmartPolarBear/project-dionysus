@@ -1,5 +1,5 @@
 /*
- * Last Modified: Tue Apr 21 2020
+ * Last Modified: Thu Apr 23 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -55,9 +55,9 @@ static inline auto get_vm_properties_for_header(proghdr prog_header)
     return sysstd::value_pair<size_t, size_t>{vm_flags, perms};
 }
 
-[[clang::optnone]] static error_code load_section(IN proghdr prog_header,
-                                                  IN const uint8_t *bin,
-                                                  IN process::process_dispatcher *proc)
+static error_code load_section(IN proghdr prog_header,
+                               IN const uint8_t *bin,
+                               IN process::process_dispatcher *proc)
 {
     error_code ret = ERROR_SUCCESS;
 
