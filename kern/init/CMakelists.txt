@@ -6,13 +6,13 @@ target_sources(kernel
 
 # ap_boot
 
-add_executable(ap_boot.elf ${CMAKE_SOURCE_DIR}/kern/init/ap_boot.S)
+add_executable(ap_boot.elf ${CMAKE_CURRENT_SOURCE_DIR}/ap_boot.S)
 set_target_properties(ap_boot.elf PROPERTIES
                             CXX_STANDARD 20
                             CXX_STANDARD_REQUIRED ON
                             CXX_EXTENSIONS ON)
 
-set_property(SOURCE ${CMAKE_SOURCE_DIR}/kern/init/ap_boot.S PROPERTY LANGUAGE C)
+set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/ap_boot.S PROPERTY LANGUAGE C)
 target_include_directories(ap_boot.elf PRIVATE "${CMAKE_SOURCE_DIR}/include")
 
 set_target_properties(ap_boot.elf PROPERTIES LINK_DEPENS "${CMAKE_SOURCE_DIR}/config/build/ap_boot.ld")
