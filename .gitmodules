@@ -1,3 +1,0 @@
-[submodule "external/newlib-cygwin"]
-	path = external/newlib-cygwin
-	url = https://github.com/uchan-nos/newlib-cygwin.git
