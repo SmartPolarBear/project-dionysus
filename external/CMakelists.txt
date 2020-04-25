@@ -10,10 +10,22 @@ file(MAKE_DIRECTORY ${NEWLIB_BASEDIR})
 
 set(TARGET_TRIPLE x86_64-elf)
 
+set (NEWLIB_STATIC_LIB ${NEWLIB_BASEDIR}/lib/libc.a ${NEWLIB_BASEDIR}/lib/libg.a ${NEWLIB_BASEDIR}/lib/libm.a)
+set (NEWLIB_INCLUDE_PATH ${NEWLIB_BASEDIR}/include)
+
 ExternalProject_Add(
     newlib_cygwin
     PREFIX ${NEWLIB_BASEDIR} 
     SOURCE_DIR ${NEWLIB_SRCDIR}
     CONFIGURE_COMMAND ${NEWLIB_SRCDIR}/newlib/configure CC=clang CC_FOR_BUILD=clang CFLAGS=${NEWLIB_CFLAGS} --target=${TARGET_TRIPLE} --prefix=${NEWLIB_BASEDIR} --disable-multilib --disable-newlib-multithread
+    BUILD_BYPRODUCTS ${NEWLIB_STATIC_LIB}
 )
+
+add_library(newlib STATIC IMPORTED GLOBAL)
+
+add_dependencies(newlib newlib_cygwin)
+
+set_target_properties(newlib PROPERTIES IMPORTED_LOCATION ${NEWLIB_STATIC_LIB})
+set_target_properties(newlib PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${NEWLIB_BASEDIR})
+
 

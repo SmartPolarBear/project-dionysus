@@ -21,7 +21,6 @@ set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/proc/syscall/syscall_entry.S PRO
 set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/proc/process_manager/process_run.S PROPERTY LANGUAGE C)
 
 
-
 set_target_properties(kernel PROPERTIES
                             CXX_STANDARD 20
                             CXX_STANDARD_REQUIRED ON
@@ -54,7 +53,7 @@ target_link_options(kernel
 
 target_include_directories(kernel PRIVATE "${CMAKE_SOURCE_DIR}/include")
 
-target_link_libraries(kernel arch_amd64 libkernel)
+target_link_libraries(kernel newlib arch_amd64 libkernel)
 
 set_target_properties(kernel PROPERTIES LINK_DEPENS "${CMAKE_SOURCE_DIR}/config/build/kernel.ld")
 set_target_properties(kernel PROPERTIES LINK_FLAGS "-Wl,-T ${CMAKE_SOURCE_DIR}/config/build/kernel.ld")

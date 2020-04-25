@@ -7,8 +7,14 @@
 
 #include "drivers/debug/kdebug.h"
 
+#include "lib/libc/stdio.h"
+
+
+
 extern "C" void *memset(void *s, int c, size_t n)
 {
+    printf("old memset.\n");
+    
     if (reinterpret_cast<size_t>(s) % 4 == 0 && n % 4 == 0)
     {
         c &= 0xFF;
