@@ -23,6 +23,9 @@ add_subdirectory(kern)
 add_subdirectory(bin)
 add_subdirectory(libs)
 
+# external projects
+add_subdirectory(external)
+
 # custom targets
 
 add_custom_target(disk.img ALL

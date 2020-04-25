@@ -1,1 +1,19 @@
 cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
+include(ExternalProject)
+
+set(NEWLIB_CFLAGS "-fPIC -nostdlibinc -O2 -D__ELF__ -D_LDBL_EQ_DBL -D_GNU_SOURCE -D_POSIX_TIMERS")
+
+set(NEWLIB_BASEDIR ${CMAKE_BINARY_DIR}/external/newlib-cygwin)
+set(NEWLIB_SRCDIR ${CMAKE_CURRENT_SOURCE_DIR}/newlib-cygwin)
+
+file(MAKE_DIRECTORY ${NEWLIB_BASEDIR})
+
+set(TARGET_TRIPLE x86_64-elf)
+
+ExternalProject_Add(
+    newlib_cygwin
+    PREFIX ${NEWLIB_BASEDIR} 
+    SOURCE_DIR ${NEWLIB_SRCDIR}
+    CONFIGURE_COMMAND ${NEWLIB_SRCDIR}/newlib/configure CC=clang CC_FOR_BUILD=clang CFLAGS=${NEWLIB_CFLAGS} --target=${TARGET_TRIPLE} --prefix=${NEWLIB_BASEDIR} --disable-multilib --disable-newlib-multithread
+)
+
