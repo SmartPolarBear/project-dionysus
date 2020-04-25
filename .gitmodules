@@ -1,3 +1,3 @@
 [submodule "external/newlib-cygwin"]
 	path = external/newlib-cygwin
-	url = https://gh.api.99988866.xyz//https://github.com/uchan-nos/newlib-cygwin.git
+	url = https://github.com.cnpmjs.org/uchan-nos/newlib-cygwin.git/
