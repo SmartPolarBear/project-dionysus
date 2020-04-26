@@ -3,4 +3,4 @@ cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 add_library(libkernel)
 
 target_sources(libkernel
-    PRIVATE memory.cc)
+    PRIVATE memory.cc console.cc maths.cc)
