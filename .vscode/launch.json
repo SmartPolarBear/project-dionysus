@@ -8,7 +8,7 @@
             "name": "(gdb) Qemu Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/kernel",
+            "program": "${workspaceFolder}/build/kern/kernel",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
@@ -28,7 +28,7 @@
                 },
                 {
                     "description": "symbol-file build/kernel",
-                    "text": "symbol-file ${workspaceFolder}/build/kernel",
+                    "text": "symbol-file ${workspaceFolder}/build/kern/kernel",
                     "ignoreFailures": false
                 },
                 {
