@@ -1,5 +1,6 @@
+
 /*
- * Last Modified: Wed Mar 25 2020
+ * Last Modified: Sat May 02 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -47,6 +48,7 @@
 #include "sys/syscall.h"
 
 #include "lib/libc/stdio.h"
+
 
 void run_hello()
 {
@@ -99,6 +101,8 @@ extern "C" [[noreturn]] void kmain()
 
     // initialize user process manager
     process::process_init();
+
+    int a[10] = {0, 1, 2, 3, 4, 5};
 
     run_hello();
 

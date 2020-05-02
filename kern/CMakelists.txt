@@ -42,7 +42,12 @@ target_compile_options(kernel BEFORE
     PRIVATE -mno-sse
     PRIVATE -mcmodel=large
     PRIVATE -mno-red-zone
-    PRIVATE -fmodules)
+    PRIVATE -fmodules
+    PRIVATE -nostdlibinc
+    PRIVATE -D__ELF__
+    PRIVATE -D_LDBL_EQ_DBL
+    PRIVATE -D_GNU_SOURCE
+    PRIVATE -D_POSIX_TIMERS)
 
 target_link_options(kernel
     PRIVATE -no-pie
@@ -52,6 +57,7 @@ target_link_options(kernel
     PRIVATE -Wl,--build-id=none)
 
 target_include_directories(kernel PRIVATE "${CMAKE_SOURCE_DIR}/include")
+
 
 target_link_libraries(kernel arch_amd64 libkernel newlib libcxx libcxxabi)
 

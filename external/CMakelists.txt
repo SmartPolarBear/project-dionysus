@@ -6,15 +6,17 @@ set(COMMON_PREFIX ${CMAKE_BINARY_DIR}/external/prefix)
 
 include(ExternalProject)
 
-set(NEWLIB_CFLAGS "-fPIC -nostdlibinc -O2 -D__ELF__ -D_LDBL_EQ_DBL -D_GNU_SOURCE -D_POSIX_TIMERS")
+set(NEWLIB_CFLAGS "-fPIC -nostdlibinc -mno-red-zone -D__ELF__ -D_LDBL_EQ_DBL -D_GNU_SOURCE -D_POSIX_TIMERS")
 
 set(NEWLIB_SRCDIR ${CMAKE_CURRENT_SOURCE_DIR}/newlib-cygwin)
 
 
-set(TARGET_TRIPLE x86_64-elf)
+set(TARGET_TRIPLE x86_64-unknown-none-elf)
 
 set (NEWLIB_STATIC_LIB ${COMMON_PREFIX}/lib/libc.a ${COMMON_PREFIX}/lib/libg.a ${COMMON_PREFIX}/lib/libm.a)
-set (NEWLIB_INCLUDE_PATH ${COMMON_PREFIX}/include)
+
+list(APPEND NEWLIB_INCLUDE_PATH ${COMMON_PREFIX}/include)
+list(APPEND NEWLIB_INCLUDE_PATH ${COMMON_PREFIX}/include/sys)
 
 file(MAKE_DIRECTORY ${COMMON_PREFIX})
 file(MAKE_DIRECTORY ${NEWLIB_INCLUDE_PATH})
@@ -31,8 +33,10 @@ add_library(newlib STATIC IMPORTED GLOBAL)
 
 add_dependencies(newlib newlib_cygwin)
 
+
 set_target_properties(newlib PROPERTIES IMPORTED_LOCATION ${NEWLIB_STATIC_LIB})
-set_target_properties(newlib PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${COMMON_PREFIX}/include)
+set_target_properties(newlib PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${NEWLIB_INCLUDE_PATH}")
+
 
 # llvm cxx libraries
 
@@ -41,7 +45,7 @@ set_target_properties(newlib PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${COMMON_P
 set(LIBCXXABI_SRCDIR ${CMAKE_CURRENT_SOURCE_DIR}/libcxxabi)
 
 
-set(LIBCXXABI_CFLAGS "-I${COMMON_PREFIX}/include -nostdlibinc -O2 -D__ELF__ -D_LDBL_EQ_DBL -D_GNU_SOURCE -D_POSIX_TIMERS  -D_LIBCPP_HAS_NO_THREADS")
+set(LIBCXXABI_CFLAGS "-I${COMMON_PREFIX}/include -nostdlibinc -mno-red-zone -D__ELF__ -D_LDBL_EQ_DBL -D_GNU_SOURCE -D_POSIX_TIMERS  -D_LIBCPP_HAS_NO_THREADS")
 
 file(MAKE_DIRECTORY ${COMMON_PREFIX})
 
@@ -60,7 +64,6 @@ list(APPEND LIBCXXABI_CMAKE_ARGS
     -DLIBCXXABI_TARGET_TRIPLE=${TARGET_TRIPLE} 
     -DLIBCXXABI_ENABLE_SHARED=False 
     -DLIBCXXABI_ENABLE_STATIC=True 
-    ${LIBCXXABI_SRCDIR}
 )
 
 
@@ -71,9 +74,11 @@ ExternalProject_Add(
     CMAKE_ARGS ${LIBCXXABI_CMAKE_ARGS}
 )
 
+add_dependencies(libcxxabi_bin newlib_cygwin)
+
 add_library(libcxxabi STATIC IMPORTED GLOBAL)
 
-add_dependencies(libcxxabi newlib_cygwin libcxxabi_bin)
+add_dependencies(libcxxabi libcxxabi_bin)
 
 set (LIBCXXABI_STATIC_LIB ${COMMON_PREFIX}/lib/libc++abi.a)
 
@@ -84,10 +89,13 @@ set_target_properties(libcxxabi PROPERTIES IMPORTED_LOCATION ${LIBCXXABI_STATIC_
 set(LIBCXX_SRCDIR ${CMAKE_CURRENT_SOURCE_DIR}/libcxx)
 
 
-set(LIBCXX_CFLAGS "-I${COMMON_PREFIX}/include -nostdlibinc -O2 -D__ELF__ -D_LDBL_EQ_DBL -D_GNU_SOURCE -D_POSIX_TIMERS")
+set(LIBCXX_CFLAGS "-I${COMMON_PREFIX}/include -fPIC -nostdlibinc -mno-red-zone -D__ELF__ -D_LDBL_EQ_DBL -D_GNU_SOURCE -D_POSIX_TIMERS -D_LIBCPPABI_VERSION=1002 -D_LIBCPP_HAS_NO_THREADS -D_LIBCPP_HAS_NO_MONOTONIC_CLOCK")
 
 set (LIBCXX_STATIC_LIB ${COMMON_PREFIX}/lib/libc++.a)
-set (LIBCXX_INCLUDE_PATH ${COMMON_PREFIX}/include/c++/v1)
+
+list(APPEND LIBCXX_INCLUDE_PATH ${COMMON_PREFIX}/include)
+list(APPEND LIBCXX_INCLUDE_PATH ${COMMON_PREFIX}/include/c++/v1)
+
 
 file(MAKE_DIRECTORY ${COMMON_PREFIX})
 file(MAKE_DIRECTORY ${LIBCXX_INCLUDE_PATH})
@@ -112,7 +120,6 @@ list(APPEND LIBCXX_CMAKE_ARGS
     -DLIBCXX_ENABLE_THREADS=False 
     -DLIBCXX_ENABLE_SHARED=False 
     -DLIBCXX_ENABLE_STATIC=True 
-    ${LIBCXX_SRCDIR}
 )
 
 
@@ -123,10 +130,11 @@ ExternalProject_Add(
     CMAKE_ARGS ${LIBCXX_CMAKE_ARGS}
 )
 
+add_dependencies(libcxx_bin libcxxabi_bin newlib_cygwin)
 
 add_library(libcxx STATIC IMPORTED GLOBAL)
 
 add_dependencies(libcxx newlib_cygwin libcxxabi_bin libcxx_bin  )
 
 set_target_properties(libcxx PROPERTIES IMPORTED_LOCATION ${LIBCXX_STATIC_LIB})
-set_target_properties(libcxx PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${LIBCXX_INCLUDE_PATH})
+set_target_properties(libcxx PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${LIBCXX_INCLUDE_PATH}")
