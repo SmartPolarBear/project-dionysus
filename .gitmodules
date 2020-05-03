@@ -1,9 +1,6 @@
-[submodule "external/newlib-cygwin"]
-	path = external/newlib-cygwin
+[submodule "external/newlib/newlib"]
+	path = external/newlib/newlib
 	url = https://gh.api.99988866.xyz//https://github.com/SmartPolarBear/newlib-cygwin.git
-[submodule "external/libcxx"]
-	path = external/libcxx
-	url = https://mirrors.tuna.tsinghua.edu.cn/git/llvm/libcxx.git
-[submodule "external/libcxxabi"]
-	path = external/libcxxabi
-	url = https://mirrors.tuna.tsinghua.edu.cn/git/llvm/libcxxabi.git
+[submodule "external/llvm-project/llvm-project"]
+	path = external/llvm-project/llvm-project
+	url = https://gitee.com/clevercoolbear/llvm-project.git
