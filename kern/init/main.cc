@@ -1,6 +1,6 @@
 
 /*
- * Last Modified: Sat May 02 2020
+ * Last Modified: Mon May 04 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -48,7 +48,6 @@
 #include "sys/syscall.h"
 
 #include "lib/libc/stdio.h"
-
 
 void run_hello()
 {

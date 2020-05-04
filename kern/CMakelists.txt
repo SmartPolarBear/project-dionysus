@@ -35,6 +35,7 @@ target_compile_options(kernel BEFORE
     PRIVATE -ffreestanding
     PRIVATE -nostdlib
     PRIVATE -fno-builtin
+    PRIVATE -fno-stack-protector
     PRIVATE -Wall
     PRIVATE -Wextra
     PRIVATE -march=x86-64
@@ -42,7 +43,6 @@ target_compile_options(kernel BEFORE
     PRIVATE -mno-sse
     PRIVATE -mcmodel=large
     PRIVATE -mno-red-zone
-    PRIVATE -fmodules
     PRIVATE -nostdlibinc
     PRIVATE -D__ELF__
     PRIVATE -D_LDBL_EQ_DBL
@@ -54,12 +54,20 @@ target_link_options(kernel
     PRIVATE -nostdlib
     PRIVATE -ffreestanding
     PRIVATE -nostartfiles
+	PRIVATE -static
     PRIVATE -Wl,--build-id=none)
 
-target_include_directories(kernel PRIVATE "${CMAKE_SOURCE_DIR}/include")
+add_dependencies(kernel libcxx_build libcxxabi_build newlib_build)
 
+target_include_directories(kernel BEFORE
+    PRIVATE "${CMAKE_BINARY_DIR}/external/third_party_root/include/c++/v1"
+    PRIVATE "${CMAKE_BINARY_DIR}/external/third_party_root/include/sys"
+    PRIVATE "${CMAKE_BINARY_DIR}/external/third_party_root/include"
+    PRIVATE "${CMAKE_SOURCE_DIR}/include")
 
-target_link_libraries(kernel arch_amd64 libkernel newlib libcxx libcxxabi)
+target_link_directories(kernel BEFORE PRIVATE ${CMAKE_BINARY_DIR}/external/third_party_root/lib)
+
+target_link_libraries(kernel arch_amd64 libkernel c g m c++abi c++ c++experimental)
 
 set_target_properties(kernel PROPERTIES LINK_DEPENS "${CMAKE_SOURCE_DIR}/config/build/kernel.ld")
 set_target_properties(kernel PROPERTIES LINK_FLAGS "-Wl,-T ${CMAKE_SOURCE_DIR}/config/build/kernel.ld")
