@@ -8,9 +8,8 @@
 
 #include "drivers/apic/traps.h"
 
-#include "lib/libc/string.h"
-#include "lib/libcxx/algorithm"
-
+#include <cstring>
+#include <algorithm>
 
 namespace process
 {
@@ -65,7 +64,7 @@ struct process_dispatcher
 
 		memset(&this->trapframe, 0, sizeof(this->trapframe));
 
-		memmove(this->name, name, sysstd::min((size_t)strlen(name), PROC_NAME_LEN));
+		memmove(this->name, name, std::min((size_t)strlen(name), PROC_NAME_LEN));
 	}
 };
 

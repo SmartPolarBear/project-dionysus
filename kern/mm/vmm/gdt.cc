@@ -1,5 +1,5 @@
 /*
- * Last Modified: Fri Apr 03 2020
+ * Last Modified: Mon May 04 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -36,8 +36,8 @@
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 
-#include "lib/libc/string.h"
-#include "lib/libcxx/algorithm"
+#include <cstring>
+#include <algorithm>
 
 using vmm::mm_struct;
 using vmm::pde_ptr_t;

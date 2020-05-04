@@ -1,5 +1,5 @@
 /*
- * Last Modified: Fri Apr 03 2020
+ * Last Modified: Mon May 04 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -35,8 +35,8 @@
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 
-#include "lib/libc/string.h"
-#include "lib/libcxx/new"
+#include <cstring>
+
 
 acpi_version_adapter *acpi_ver_adapter = nullptr;
 

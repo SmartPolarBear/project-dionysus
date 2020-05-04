@@ -1,5 +1,5 @@
 /*
- * Last Modified: Thu Feb 20 2020
+ * Last Modified: Mon May 04 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -31,7 +31,6 @@
 #include "sys/multiboot.h"
 #include "sys/vmm.h"
 
-#include "lib/libcxx/algorithm"
 
 namespace memory
 {

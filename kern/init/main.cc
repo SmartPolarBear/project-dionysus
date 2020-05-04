@@ -33,9 +33,10 @@
 #include "drivers/debug/kdebug.h"
 #include "drivers/debug/kerror.h"
 
-#include "lib/libc/string.h"
-#include "lib/libcxx/new"
+#include <cstring>
+// #include "lib/libcxx/new"
 #include "lib/libkern/data/list.h"
+#include "lib/libc/stdio.h"
 
 #include "sys/kmalloc.h"
 #include "sys/memlayout.h"
@@ -46,8 +47,6 @@
 #include "sys/scheduler.h"
 #include "sys/syscall.h"
 #include "sys/vmm.h"
-
-#include "lib/libc/stdio.h"
 
 
 void run_hello()

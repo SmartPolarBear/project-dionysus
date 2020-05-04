@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sun Mar 22 2020
+ * Last Modified: Mon May 04 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -38,8 +38,8 @@
 #include "drivers/debug/kdebug.h"
 
 #include "lib/libc/stdio.h"
-#include "lib/libc/string.h"
-#include "lib/libcxx/algorithm"
+#include <cstring>
+#include <algorithm>
 
 using vmm::mm_struct;
 using vmm::pde_ptr_t;
@@ -220,7 +220,7 @@ void vmm::boot_map_kernel_mem()
     for (size_t i = 0; i < entry_count; i++)
     {
         const auto entry = memtag->entries + i;
-        max_pa = sysstd::max(max_pa, sysstd::min(entry->addr + entry->len, (unsigned long long)PHYMEMORY_SIZE));
+        max_pa = std::max(max_pa, std::min(entry->addr + entry->len, (unsigned long long)PHYMEMORY_SIZE));
     }
 
     // map the kernel memory

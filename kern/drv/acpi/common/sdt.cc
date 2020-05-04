@@ -13,8 +13,8 @@
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 
-#include "lib/libc/string.h"
-#include "lib/libcxx/new"
+#include <cstring>
+// #include "lib/libcxx/new"
 
 using acpi::acpi_desc_header;
 using acpi::acpi_madt;

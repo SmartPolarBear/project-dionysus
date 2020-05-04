@@ -13,9 +13,10 @@
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 
-#include "lib/libc/string.h"
-#include "lib/libcxx/algorithm"
-#include "lib/libcxx/new"
+#include <cstring>
+#include <algorithm>
+
+// #include "lib/libcxx/new"
 
 using acpi::acpi_desc_header;
 using acpi::acpi_madt;
@@ -27,6 +28,9 @@ using acpi::madt_ioapic;
 using acpi::madt_iso;
 
 using trap::TRAP_NUMBERMAX;
+
+using std::min;
+using std::max;
 
 madt_ioapic ioapics[CPU_COUNT_LIMIT] = {};
 size_t ioapic_count = 0;
@@ -153,7 +157,7 @@ size_t acpi::get_ioapic_descriptors(size_t bufsz, OUT madt_ioapic **buf)
         return ioapic_count;
     }
 
-    size_t cpy_count = sysstd::min(bufsz, ioapic_count);
+    size_t cpy_count = min(bufsz, ioapic_count);
     for (size_t i = 0; i < cpy_count; i++)
     {
         buf[i] = &ioapics[i];
@@ -169,7 +173,7 @@ size_t get_intr_src_override_descriptors(size_t bufsz, OUT madt_iso **buf)
         return iso_count;
     }
 
-    size_t cpy_count = sysstd::min(bufsz, ioapic_count);
+    size_t cpy_count = std::min(bufsz, ioapic_count);
     for (size_t i = 0; i < cpy_count; i++)
     {
         buf[i] = &intr_src_overrides[i];

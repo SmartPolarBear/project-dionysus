@@ -1,5 +1,5 @@
 /*
- * Last Modified: Tue Apr 21 2020
+ * Last Modified: Mon May 04 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -38,12 +38,16 @@
 
 #include "lib/libc/stdio.h"
 #include "lib/libc/stdlib.h"
-#include "lib/libcxx/algorithm"
 #include "lib/libcxx/utility"
+
+#include <algorithm>
 
 using pmm::page_count;
 using pmm::pages;
 using pmm::pmm_manager;
+
+using std::min;
+using std::max;
 
 using vmm::pde_ptr_t;
 
@@ -134,7 +138,7 @@ static inline void init_physical_mem()
         const auto entry = memtag->entries + i;
         if (entry->type == MULTIBOOT_MEMORY_AVAILABLE)
         {
-            max_pa = sysstd::max(max_pa, sysstd::min(entry->addr + entry->len, (unsigned long long)PHYMEMORY_SIZE));
+            max_pa = max(max_pa, min(entry->addr + entry->len, (unsigned long long)PHYMEMORY_SIZE));
         }
     }
 
