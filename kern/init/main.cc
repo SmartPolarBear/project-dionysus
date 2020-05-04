@@ -48,6 +48,7 @@
 #include "sys/syscall.h"
 
 #include "lib/libc/stdio.h"
+#include <tuple>
 
 void run_hello()
 {
@@ -101,8 +102,6 @@ extern "C" [[noreturn]] void kmain()
     // initialize user process manager
     process::process_init();
 
-    int a[10] = {0, 1, 2, 3, 4, 5};
-
     run_hello();
 
     printf("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
@@ -118,33 +117,3 @@ extern "C" [[noreturn]] void kmain()
         ;
 }
 
-// C++ ctors and dtors
-// usually called from boot.S
-extern "C"
-{
-    using ctor_type = void (*)();
-    using dtor_type = void (*)();
-
-    extern ctor_type start_ctors;
-    extern ctor_type end_ctors;
-
-    extern dtor_type start_dtors;
-    extern dtor_type end_dtors;
-
-    // IMPORTANT: initialization of libc components such as printf depends on this.
-    void call_ctors(void)
-    {
-        for (auto ctor = &start_ctors; ctor != &end_ctors; ctor++)
-        {
-            (*ctor)();
-        }
-    }
-
-    void call_dtors(void)
-    {
-        for (auto dtor = &start_dtors; dtor != &end_dtors; dtor++)
-        {
-            (*dtor)();
-        }
-    }
-}
