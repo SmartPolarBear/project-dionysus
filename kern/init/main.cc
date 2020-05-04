@@ -44,11 +44,11 @@
 #include "sys/pmm.h"
 #include "sys/proc.h"
 #include "sys/scheduler.h"
-#include "sys/vmm.h"
 #include "sys/syscall.h"
+#include "sys/vmm.h"
 
 #include "lib/libc/stdio.h"
-#include <tuple>
+
 
 void run_hello()
 {
@@ -78,7 +78,7 @@ extern "C" [[noreturn]] void kmain()
 
     // initialize physical memory
     pmm::init_pmm();
-    
+
     // install trap vectors nad handle structures
     trap::init_trap();
 
@@ -116,4 +116,3 @@ extern "C" [[noreturn]] void kmain()
     for (;;)
         ;
 }
-
