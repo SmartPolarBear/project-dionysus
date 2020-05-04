@@ -34,7 +34,6 @@
 #include "drivers/debug/kerror.h"
 
 #include <cstring>
-// #include "lib/libcxx/new"
 #include "lib/libkern/data/list.h"
 #include "lib/libc/stdio.h"
 
@@ -48,6 +47,7 @@
 #include "sys/syscall.h"
 #include "sys/vmm.h"
 
+#include <utility>
 
 void run_hello()
 {

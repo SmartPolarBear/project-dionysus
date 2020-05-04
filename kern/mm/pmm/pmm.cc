@@ -37,26 +37,26 @@
 #include "drivers/debug/kdebug.h"
 
 #include "lib/libc/stdio.h"
-#include "lib/libc/stdlib.h"
-#include "lib/libcxx/utility"
 
 #include <algorithm>
+#include <utility>
 
 using pmm::page_count;
 using pmm::pages;
 using pmm::pmm_manager;
 
-using std::min;
+using std::make_pair;
 using std::max;
+using std::min;
+using std::pair;
+using std::sort;
 
 using vmm::pde_ptr_t;
-
-using sysstd::value_pair;
 
 // TODO: use lock
 // TODO: i need to manually enable locks because popcli and pushcli relies on gdt
 
-using reserved_space = value_pair<uintptr_t, uintptr_t>;
+using reserved_space = pair<uintptr_t, uintptr_t>;
 
 // use buddy allocator to allocate physical pages
 pmm::pmm_manager_info *pmm::pmm_manager = nullptr;
@@ -155,9 +155,7 @@ static inline void init_physical_mem()
     // reserve the multiboot info
     if ((uintptr_t)mbi_structptr >= pmm::pavailable_start())
     {
-        reserved_spaces[reserved_spaces_count++] =
-            reserved_space{.first = (uintptr_t)mbi_structptr,
-                           .second = (uintptr_t)mbi_structptr + PAGE_SIZE};
+        reserved_spaces[reserved_spaces_count++] = std::make_pair((uintptr_t)mbi_structptr, (uintptr_t)mbi_structptr + PAGE_SIZE);
     }
 
     // reserve all the boot modules
@@ -167,14 +165,15 @@ static inline void init_physical_mem()
         multiboot_tag_module *tag = reinterpret_cast<decltype(tag)>(module_tags[i]);
         if (tag->mod_end >= pmm::pavailable_start())
         {
-            reserved_spaces[reserved_spaces_count++] =
-                reserved_space{.first = (uintptr_t)tag->mod_start,
-                               .second = (uintptr_t)tag->mod_end};
+            reserved_spaces[reserved_spaces_count++] = std::make_pair((uintptr_t)tag->mod_start, (uintptr_t)tag->mod_end);
         }
     }
 
-    qsort(reserved_spaces, reserved_spaces_count, sizeof(reserved_spaces[0]), [](const void *a, const void *b) -> int {
-        return ((reserved_space *)a)->first - ((reserved_space *)b)->first;
+    reserved_spaces[reserved_spaces_count++] = std::make_pair(100, 200);
+    reserved_spaces[reserved_spaces_count++] = std::make_pair(300, 400);
+
+    sort(reserved_spaces, reserved_spaces + reserved_spaces_count, [](const auto &a, const auto &b) {
+        return a.first < b.first;
     });
 
     auto count_of_pages = [](uintptr_t st, uintptr_t ed) {

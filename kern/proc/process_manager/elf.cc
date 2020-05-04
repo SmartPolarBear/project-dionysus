@@ -1,5 +1,5 @@
 /*
- * Last Modified: Thu Apr 23 2020
+ * Last Modified: Mon May 04 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -30,8 +30,9 @@
 #include "sys/vmm.h"
 
 #include "lib/libc/stdio.h"
-#include "lib/libcxx/utility"
 #include "lib/libkern/data/list.h"
+
+#include <utility>
 
 static inline auto get_vm_properties_for_header(proghdr prog_header)
 {
@@ -52,7 +53,7 @@ static inline auto get_vm_properties_for_header(proghdr prog_header)
         perms |= PG_W;
     }
 
-    return sysstd::value_pair<size_t, size_t>{vm_flags, perms};
+    return std::make_pair(vm_flags,perms) ;
 }
 
 static error_code load_section(IN proghdr prog_header,
