@@ -1,5 +1,5 @@
 /*
- * Last Modified: Mon May 04 2020
+ * Last Modified: Thu May 07 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -126,6 +126,11 @@ The memory layout for kernel:
 ......
 */
 
+static inline constexpr auto count_of_pages(uintptr_t st, uintptr_t ed)
+{
+    return (ed - st) / PAGE_SIZE;
+}
+
 static inline void init_physical_mem()
 {
     auto memtag = multiboot::acquire_tag_ptr<multiboot_tag_mmap>(MULTIBOOT_TAG_TYPE_MMAP);
@@ -169,16 +174,9 @@ static inline void init_physical_mem()
         }
     }
 
-    reserved_spaces[reserved_spaces_count++] = std::make_pair(100, 200);
-    reserved_spaces[reserved_spaces_count++] = std::make_pair(300, 400);
-
     sort(reserved_spaces, reserved_spaces + reserved_spaces_count, [](const auto &a, const auto &b) {
         return a.first < b.first;
     });
-
-    auto count_of_pages = [](uintptr_t st, uintptr_t ed) {
-        return (ed - st) / PAGE_SIZE;
-    };
 
     if (reserved_spaces_count == 0)
     {
