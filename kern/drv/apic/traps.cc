@@ -13,7 +13,7 @@
 #include "sys/vmm.h"
 
 #include "lib/libc/stdio.h"
-#include "lib/libc/string.h"
+#include <cstring>
 
 using trap::trap_handle;
 using trap::TRAP_NUMBERMAX;

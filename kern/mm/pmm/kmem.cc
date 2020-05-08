@@ -1,5 +1,5 @@
 /*
- * Last Modified: Fri Mar 20 2020
+ * Last Modified: Fri May 08 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -27,7 +27,8 @@
 #include "drivers/debug/kdebug.h"
 
 #include "lib/libc/stdlib.h"
-#include "lib/libc/string.h"
+
+#include <cstring>
 
 // slab
 using memory::kmem::kmem_bufctl;

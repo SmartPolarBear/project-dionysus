@@ -9,7 +9,7 @@
 #include "sys/memlayout.h"
 #include "sys/types.h"
 
-#include "lib/libc/string.h"
+#include <cstring>
 
 #pragma clang diagnostic push
 

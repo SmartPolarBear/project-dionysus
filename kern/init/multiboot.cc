@@ -4,7 +4,6 @@
 #include "sys/mmu.h"
 #include "sys/multiboot.h"
 
-// #include "lib/libc/string.h"
 #include "string.h"
 #include "lib/libkern/data/list.h"
 

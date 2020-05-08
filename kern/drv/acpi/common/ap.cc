@@ -1,5 +1,5 @@
 /*
- * Last Modified: Tue Apr 14 2020
+ * Last Modified: Fri May 08 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -40,7 +40,7 @@
 #include "sys/scheduler.h"
 
 #include "lib/libc/stdio.h"
-#include "lib/libc/string.h"
+#include <cstring>
 
 // in boot.S
 extern "C" void entry32mp(void);

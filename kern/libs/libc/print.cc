@@ -4,7 +4,8 @@
 
 #include "lib/libc/stdio.h"
 #include "lib/libc/stdlib.h"
-#include "lib/libc/string.h"
+
+#include <cstring>
 
 #include "sys/types.h"
 

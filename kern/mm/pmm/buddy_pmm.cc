@@ -5,8 +5,9 @@
 
 #include "drivers/debug/kdebug.h"
 
-#include "lib/libc/string.h"
 #include "lib/libkern/data/list.h"
+
+#include <cstring>
 
 using libk::list_add;
 using libk::list_add_tail;
