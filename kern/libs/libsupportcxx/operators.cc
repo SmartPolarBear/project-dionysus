@@ -1,7 +1,11 @@
 #include "sys/kmalloc.h"
 #include "sys/types.h"
 
-// #include "lib/libcxx/new"
+// definitions
+void *operator new(size_t, void *p) noexcept;
+void *operator new[](size_t, void *p) noexcept;
+void operator delete(void *, void *) noexcept;
+void operator delete[](void *, void *) noexcept;
 
 //Exceptions aren't supported in kernel, so we mark these operations noexcept
 void operator delete(void *ptr) noexcept
@@ -37,7 +41,7 @@ void *operator new[](size_t, void *p) noexcept
 #pragma clang diagnostic ignored "-Wunused-parameter"
 #pragma clang diagnostic ignored "-Wnew-returns-null"
 
-void operator delete(void *, void *)noexcept
+void operator delete(void *, void *) noexcept
 {
     //Do nothing
 }

@@ -4,7 +4,6 @@
 #include "drivers/debug/kdebug.h"
 
 #include <cstring>
-// #include "lib/libcxx/new"
 
 #include "sys/memlayout.h"
 #include "sys/types.h"

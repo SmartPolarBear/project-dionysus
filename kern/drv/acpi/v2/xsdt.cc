@@ -13,7 +13,6 @@
 #include "drivers/debug/kdebug.h"
 
 #include <cstring>
-// #include "lib/libcxx/new"
 
 using acpi::acpi_desc_header;
 using acpi::acpi_madt;

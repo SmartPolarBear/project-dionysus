@@ -16,7 +16,6 @@
 #include <cstring>
 #include <algorithm>
 
-// #include "lib/libcxx/new"
 
 using acpi::acpi_desc_header;
 using acpi::acpi_madt;
