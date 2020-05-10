@@ -1,8 +1,8 @@
 #include "arch/amd64/regs.h"
 
-#include "sys/error.h"
-#include "sys/types.h"
-#include "sys/scheduler.h"
+#include "system/error.h"
+#include "system/types.h"
+#include "system/scheduler.h"
 
 #include "drivers/acpi/cpu.h"
 #include "drivers/apic/apic.h"

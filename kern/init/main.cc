@@ -33,19 +33,21 @@
 #include "drivers/debug/kdebug.h"
 #include "drivers/debug/kerror.h"
 
-#include "lib/libc/stdio.h"
-#include "lib/libkern/data/list.h"
+#include "libraries/libc/stdio.h"
+#include "libraries/libkern/data/list.h"
+
 #include <cstring>
 
-#include "sys/kmalloc.h"
-#include "sys/memlayout.h"
-#include "sys/multiboot.h"
-#include "sys/param.h"
-#include "sys/pmm.h"
-#include "sys/proc.h"
-#include "sys/scheduler.h"
-#include "sys/syscall.h"
-#include "sys/vmm.h"
+#include "system/kmalloc.h"
+#include "system/memlayout.h"
+#include "system/multiboot.h"
+#include "system/param.h"
+#include "system/pmm.h"
+#include "system/proc.h"
+#include "system/scheduler.h"
+#include "system/syscall.h"
+#include "system/vmm.h"
+
 
 void run_hello()
 {

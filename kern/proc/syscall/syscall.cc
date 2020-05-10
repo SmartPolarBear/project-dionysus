@@ -1,8 +1,8 @@
 #include "syscall.h"
 
-#include "sys/mmu.h"
-#include "sys/proc.h"
-#include "sys/syscall.h"
+#include "system/mmu.h"
+#include "system/proc.h"
+#include "system/syscall.h"
 
 #include "drivers/debug/kdebug.h"
 
@@ -10,7 +10,7 @@
 #include "arch/amd64/msr.h"
 #include "arch/amd64/regs.h"
 
-#include "lib/libc/stdio.h"
+#include "libraries/libc/stdio.h"
 
 using namespace syscall;
 

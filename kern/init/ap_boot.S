@@ -1,4 +1,4 @@
-#include "sys/mmu_asm.h"
+#include "system/mmu_asm.h"
 
 .code16
 .globl start

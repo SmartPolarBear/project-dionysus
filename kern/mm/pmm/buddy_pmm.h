@@ -1,10 +1,10 @@
 #if !defined(__INCLUDE_SYS_BUDDY_ALLOC_H)
 #define __INCLUDE_SYS_BUDDY_ALLOC_H
 
-#include "sys/memlayout.h"
-#include "sys/mmu.h"
-#include "sys/pmm.h"
-#include "sys/types.h"
+#include "system/memlayout.h"
+#include "system/mmu.h"
+#include "system/pmm.h"
+#include "system/types.h"
 
 namespace pmm
 {

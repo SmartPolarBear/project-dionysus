@@ -1,5 +1,5 @@
 /*
- * Last Modified: Fri Mar 20 2020
+ * Last Modified: Sun May 10 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -20,9 +20,9 @@
  * ----------	---	----------------------------------------------------------
  */
 
-#include "sys/kmalloc.h"
-#include "sys/kmem.h"
-#include "sys/pmm.h"
+#include "system/kmalloc.h"
+#include "system/kmem.h"
+#include "system/pmm.h"
 
 // slab
 using memory::kmem::kmem_bufctl;

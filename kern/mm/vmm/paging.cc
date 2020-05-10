@@ -1,5 +1,5 @@
 /*
- * Last Modified: Mon May 04 2020
+ * Last Modified: Sun May 10 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -22,12 +22,12 @@
 
 #include "vmm.h"
 
-#include "sys/error.h"
-#include "sys/kmalloc.h"
-#include "sys/memlayout.h"
-#include "sys/mmu.h"
-#include "sys/pmm.h"
-#include "sys/vmm.h"
+#include "system/error.h"
+#include "system/kmalloc.h"
+#include "system/memlayout.h"
+#include "system/mmu.h"
+#include "system/pmm.h"
+#include "system/vmm.h"
 
 #include "arch/amd64/x86.h"
 
@@ -37,7 +37,7 @@
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 
-#include "lib/libc/stdio.h"
+#include "libraries/libc/stdio.h"
 #include <cstring>
 #include <algorithm>
 

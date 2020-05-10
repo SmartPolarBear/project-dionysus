@@ -3,8 +3,8 @@
 
 #include "arch/amd64/x86.h"
 
-#include "sys/error.h"
-#include "sys/vmm.h"
+#include "system/error.h"
+#include "system/vmm.h"
 
 #include "drivers/apic/traps.h"
 

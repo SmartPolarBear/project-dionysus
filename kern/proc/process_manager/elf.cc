@@ -1,5 +1,5 @@
 /*
- * Last Modified: Mon May 04 2020
+ * Last Modified: Sun May 10 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -22,15 +22,15 @@
 
 #include "elf.hpp"
 
-#include "sys/error.h"
-#include "sys/kmalloc.h"
-#include "sys/memlayout.h"
-#include "sys/pmm.h"
-#include "sys/proc.h"
-#include "sys/vmm.h"
+#include "system/error.h"
+#include "system/kmalloc.h"
+#include "system/memlayout.h"
+#include "system/pmm.h"
+#include "system/proc.h"
+#include "system/vmm.h"
 
-#include "lib/libc/stdio.h"
-#include "lib/libkern/data/list.h"
+#include "libraries/libc/stdio.h"
+#include "libraries/libkern/data/list.h"
 
 #include <utility>
 

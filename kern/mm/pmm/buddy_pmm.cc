@@ -1,11 +1,11 @@
 #include "./buddy_pmm.h"
 
-#include "sys/memlayout.h"
-#include "sys/pmm.h"
+#include "system/memlayout.h"
+#include "system/pmm.h"
 
 #include "drivers/debug/kdebug.h"
 
-#include "lib/libkern/data/list.h"
+#include "libraries/libkern/data/list.h"
 
 #include <cstring>
 

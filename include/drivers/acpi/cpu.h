@@ -4,10 +4,10 @@
 
 #include "arch/amd64/cpu.h"
 
-#include "sys/mmu.h"
-#include "sys/types.h"
+#include "system/mmu.h"
+#include "system/types.h"
 
-#include "sys/segmentation.hpp"
+#include "system/segmentation.hpp"
 
 struct cpu_struct
 {

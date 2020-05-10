@@ -6,13 +6,13 @@
 #include "drivers/debug/kdebug.h"
 #include "drivers/lock/spinlock.h"
 
-#include "sys/error.h"
-#include "sys/mmu.h"
-#include "sys/pmm.h"
-#include "sys/segmentation.hpp"
-#include "sys/vmm.h"
+#include "system/error.h"
+#include "system/mmu.h"
+#include "system/pmm.h"
+#include "system/segmentation.hpp"
+#include "system/vmm.h"
 
-#include "lib/libc/stdio.h"
+#include "libraries/libc/stdio.h"
 #include <cstring>
 
 using trap::trap_handle;

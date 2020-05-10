@@ -1,7 +1,7 @@
 #pragma once
 
 #include "drivers/acpi/cpu.h"
-#include "sys/types.h"
+#include "system/types.h"
 
 namespace local_apic
 {

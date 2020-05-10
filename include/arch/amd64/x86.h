@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sys/types.h"
+#include "system/types.h"
 
 // cpuid and corrosponding enumerations
 #include "arch/amd64/cpuid.h"

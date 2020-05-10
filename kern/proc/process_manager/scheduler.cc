@@ -3,17 +3,17 @@
 #include "arch/amd64/atomic.h"
 #include "arch/amd64/cpu.h"
 
-#include "sys/error.h"
-#include "sys/memlayout.h"
-#include "sys/proc.h"
-#include "sys/scheduler.h"
-#include "sys/types.h"
-#include "sys/vmm.h"
+#include "system/error.h"
+#include "system/memlayout.h"
+#include "system/proc.h"
+#include "system/scheduler.h"
+#include "system/types.h"
+#include "system/vmm.h"
 
 #include "drivers/apic/traps.h"
 #include "drivers/lock/spinlock.h"
 
-#include "lib/libkern/data/list.h"
+#include "libraries/libkern/data/list.h"
 
 using libk::list_add;
 using libk::list_empty;

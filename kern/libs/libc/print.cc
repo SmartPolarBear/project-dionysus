@@ -2,12 +2,12 @@
 #include "drivers/debug/kdebug.h"
 #include "drivers/lock/spinlock.h"
 
-#include "lib/libc/stdio.h"
-#include "lib/libc/stdlib.h"
+#include "libraries/libc/stdio.h"
+#include "libraries/libc/stdlib.h"
 
 #include <cstring>
 
-#include "sys/types.h"
+#include "system/types.h"
 
 // spinlock
 using lock::spinlock;

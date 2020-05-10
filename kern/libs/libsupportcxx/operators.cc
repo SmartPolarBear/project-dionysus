@@ -1,5 +1,5 @@
-#include "sys/kmalloc.h"
-#include "sys/types.h"
+#include "system/kmalloc.h"
+#include "system/types.h"
 
 // definitions
 void *operator new(size_t, void *p) noexcept;

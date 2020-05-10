@@ -5,9 +5,9 @@
 #include "drivers/debug/kdebug.h"
 #include "drivers/debug/kerror.h"
 
-#include "sys/error.h"
-#include "sys/memlayout.h"
-#include "sys/types.h"
+#include "system/error.h"
+#include "system/memlayout.h"
+#include "system/types.h"
 
 #include <cstring>
 

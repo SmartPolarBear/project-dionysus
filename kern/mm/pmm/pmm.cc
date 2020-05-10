@@ -1,5 +1,5 @@
 /*
- * Last Modified: Thu May 07 2020
+ * Last Modified: Sun May 10 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -24,19 +24,19 @@
 
 #include "arch/amd64/x86.h"
 
-#include "sys/error.h"
-#include "sys/kmem.h"
-#include "sys/memlayout.h"
-#include "sys/mmu.h"
-#include "sys/multiboot.h"
-#include "sys/pmm.h"
-#include "sys/vmm.h"
+#include "system/error.h"
+#include "system/kmem.h"
+#include "system/memlayout.h"
+#include "system/mmu.h"
+#include "system/multiboot.h"
+#include "system/pmm.h"
+#include "system/vmm.h"
 
 #include "drivers/apic/traps.h"
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 
-#include "lib/libc/stdio.h"
+#include "libraries/libc/stdio.h"
 
 #include <algorithm>
 #include <utility>

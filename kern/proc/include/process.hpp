@@ -2,7 +2,7 @@
 
 #include "arch/amd64/regs.h"
 
-#include "sys/proc.h"
+#include "system/proc.h"
 
 #include "drivers/lock/spinlock.h"
 #include "drivers/apic/traps.h"

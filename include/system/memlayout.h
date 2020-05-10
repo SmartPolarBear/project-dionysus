@@ -1,13 +1,13 @@
 #pragma once
-#include "sys/mmu.h"
+#include "system/mmu.h"
 
 #if !defined(__cplusplus)
 #error "This header is only for C++"
 #endif //__cplusplus
 
-#include "sys/types.h"
+#include "system/types.h"
 
-#include "lib/libkern/data/list.h"
+#include "libraries/libkern/data/list.h"
 
 // the end of the kernel binary
 extern uint8_t end[]; // kernel.ld

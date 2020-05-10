@@ -5,8 +5,8 @@
 
 #include <cstring>
 
-#include "sys/memlayout.h"
-#include "sys/types.h"
+#include "system/memlayout.h"
+#include "system/types.h"
 
 enum cga_colors : uint8_t
 {

@@ -5,8 +5,8 @@
 #define KERNEL_GS_USTACK 8
 #else
 
-#include "sys/error.h"
-#include "sys/types.h"
+#include "system/error.h"
+#include "system/types.h"
 
 enum KERNEL_GS_INDEX
 {

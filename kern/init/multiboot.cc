@@ -1,11 +1,11 @@
 #include "arch/amd64/x86.h"
 
-#include "sys/memlayout.h"
-#include "sys/mmu.h"
-#include "sys/multiboot.h"
+#include "system/memlayout.h"
+#include "system/mmu.h"
+#include "system/multiboot.h"
 
 #include "string.h"
-#include "lib/libkern/data/list.h"
+#include "libraries/libkern/data/list.h"
 
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"

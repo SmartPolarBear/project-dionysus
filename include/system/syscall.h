@@ -1,6 +1,6 @@
 #pragma once
-#include "sys/error.h"
-#include "sys/types.h"
+#include "system/error.h"
+#include "system/types.h"
 
 namespace syscall
 {

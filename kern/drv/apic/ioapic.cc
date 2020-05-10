@@ -7,10 +7,10 @@
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 
-#include "sys/memlayout.h"
-#include "sys/mmu.h"
+#include "system/memlayout.h"
+#include "system/mmu.h"
 
-#include "lib/libc/stdio.h"
+#include "libraries/libc/stdio.h"
 
 using trap::TRAP_IRQ0;
 

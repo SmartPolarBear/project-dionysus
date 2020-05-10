@@ -2,7 +2,7 @@
 #define __DRIVERS_ACPI_V1_ACPI_V1_H
 
 #include "../acpi.h"
-#include "sys/error.h"
+#include "system/error.h"
 
 error_code init_rsdt(const acpi::acpi_rsdp *rsdp);
 

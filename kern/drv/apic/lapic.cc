@@ -4,8 +4,8 @@
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 
-#include "sys/memlayout.h"
-#include "sys/mmu.h"
+#include "system/memlayout.h"
+#include "system/mmu.h"
 
 #include "arch/amd64/x86.h"
 

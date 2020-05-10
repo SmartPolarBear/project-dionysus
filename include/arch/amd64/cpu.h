@@ -1,8 +1,8 @@
 #pragma once
-#include "sys/mmu.h"
-#include "sys/types.h"
+#include "system/mmu.h"
+#include "system/types.h"
 
-#include "sys/segmentation.hpp"
+#include "system/segmentation.hpp"
 
 extern "C" void load_gdt_and_tr(gdt_table_ptr *gdt_ptr, uint64_t tss_sel);
 

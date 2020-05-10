@@ -3,7 +3,7 @@
 
 #include "../acpi.h"
 
-#include "sys/error.h"
+#include "system/error.h"
 
 error_code init_xsdt(const acpi::acpi_rsdp *rsdp);
 

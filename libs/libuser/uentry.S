@@ -1,7 +1,7 @@
 .code64
 
-#include "sys/mmu_asm.h"
-#include "sys/memlayout_asm.h"
+#include "system/mmu_asm.h"
+#include "system/memlayout_asm.h"
 
 .data
 // Define the global symbols 'envs', 'pages', 'uvpt', and 'uvpd'

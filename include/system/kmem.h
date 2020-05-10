@@ -1,10 +1,10 @@
 #if !defined(__INCLUDE_SYS_ALLOCATORS_SLAB_ALLOC_H)
 #define __INCLUDE_SYS_ALLOCATORS_SLAB_ALLOC_H
 
-#include "sys/error.h"
-#include "sys/types.h"
+#include "system/error.h"
+#include "system/types.h"
 
-#include "lib/libkern/data/list.h"
+#include "libraries/libkern/data/list.h"
 
 #include "drivers/lock/spinlock.h"
 

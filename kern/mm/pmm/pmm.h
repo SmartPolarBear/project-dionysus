@@ -1,9 +1,9 @@
 
 #pragma once
 
-#include "sys/kmem.h"
-#include "sys/memlayout.h"
-#include "sys/mmu.h"
-#include "sys/pmm.h"
-#include "sys/vmm.h"
+#include "system/kmem.h"
+#include "system/memlayout.h"
+#include "system/mmu.h"
+#include "system/pmm.h"
+#include "system/vmm.h"
 

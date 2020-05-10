@@ -1,8 +1,8 @@
 #pragma once
 
-#include "sys/types.h"
+#include "system/types.h"
 
-#include "lib/libkern/data/list.h"
+#include "libraries/libkern/data/list.h"
 
 #include "drivers/console/console.h"
 

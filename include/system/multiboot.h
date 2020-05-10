@@ -1,7 +1,7 @@
 #pragma once
 
 #include "boot/multiboot2.h"
-#include "sys/types.h"
+#include "system/types.h"
 
 // the *PHYSICAL* address for multiboot2_boot_info and the magic number
 extern "C" void *mbi_structptr;

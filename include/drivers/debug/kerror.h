@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sys/error.h"
+#include "system/error.h"
 
 namespace kdebug
 {

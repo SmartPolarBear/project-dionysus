@@ -1,5 +1,5 @@
 /*
- * Last Modified: Tue Apr 21 2020
+ * Last Modified: Sun May 10 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -22,9 +22,9 @@
 
 #pragma once
 
-#include "sys/memlayout.h"
-#include "sys/types.h"
-#include "sys/vmm.h"
+#include "system/memlayout.h"
+#include "system/types.h"
+#include "system/vmm.h"
 
 #include "drivers/debug/kdebug.h"
 

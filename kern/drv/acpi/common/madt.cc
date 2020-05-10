@@ -2,9 +2,9 @@
 #include "../v1/acpi_v1.h"
 #include "../v2/acpi_v2.h"
 
-#include "sys/memlayout.h"
-#include "sys/mmu.h"
-#include "sys/multiboot.h"
+#include "system/memlayout.h"
+#include "system/mmu.h"
+#include "system/multiboot.h"
 
 #include "drivers/acpi/acpi.h"
 #include "drivers/acpi/cpu.h"

@@ -1,5 +1,5 @@
 /*
- * Last Modified: Mon May 04 2020
+ * Last Modified: Sun May 10 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -22,14 +22,14 @@
 
 #pragma once
 
-#include "sys/types.h"
+#include "system/types.h"
 
-#include "sys/kmem.h"
+#include "system/kmem.h"
 
-#include "sys/memlayout.h"
-#include "sys/mmu.h"
-#include "sys/multiboot.h"
-#include "sys/vmm.h"
+#include "system/memlayout.h"
+#include "system/mmu.h"
+#include "system/multiboot.h"
+#include "system/vmm.h"
 
 
 namespace memory

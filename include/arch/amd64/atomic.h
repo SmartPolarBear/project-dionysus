@@ -23,7 +23,7 @@
 #pragma once
 
 
-#include "sys/types.h"
+#include "system/types.h"
 
 static inline uint32_t xchg(volatile uint32_t *addr, size_t newval)
 {

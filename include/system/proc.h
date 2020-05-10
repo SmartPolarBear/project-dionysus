@@ -2,9 +2,9 @@
 
 #include "arch/amd64/regs.h"
 
-#include "sys/mmu.h"
-#include "sys/types.h"
-#include "sys/vmm.h"
+#include "system/mmu.h"
+#include "system/types.h"
+#include "system/vmm.h"
 
 #include "drivers/apic/traps.h"
 

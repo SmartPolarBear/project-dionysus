@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include "sys/types.h"
+#include "system/types.h"
 
 #include "drivers/lock/spinlock.h"
 

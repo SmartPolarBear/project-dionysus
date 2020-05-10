@@ -1,5 +1,5 @@
 /*
- * Last Modified: Fri May 08 2020
+ * Last Modified: Sun May 10 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -20,13 +20,13 @@
  * ----------	---	----------------------------------------------------------
  */
 
-#include "sys/kmem.h"
-#include "sys/pmm.h"
+#include "system/kmem.h"
+#include "system/pmm.h"
 
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 
-#include "lib/libc/stdlib.h"
+#include "libraries/libc/stdlib.h"
 
 #include <cstring>
 
