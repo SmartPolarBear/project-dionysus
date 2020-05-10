@@ -1,8 +1,9 @@
+#include "libraries/libkernel/console/builtin_console.hpp"
+
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 #include "drivers/lock/spinlock.h"
 
-#include "libraries/libc/stdio.h"
 #include "libraries/libc/stdlib.h"
 
 #include <cstring>
@@ -23,23 +24,23 @@ __attribute__((constructor)) void printf_init(void)
     spinlock_initlock(&printf_lock, "printf");
 }
 
-void puts(const char *str)
+void PutChar(const char *str)
 {
     auto len = strlen(str);
     console::cosnole_write_string(str, len);
 }
 
-void putc(char c)
+void PutChar(char c)
 {
     console::console_write_char(c);
 }
 
-void printf(const char *fmt, ...)
+void WriteFormat(const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
 
-    vprintf(fmt, ap);
+    VaListWriteFormat(fmt, ap);
 
     va_end(ap);
 }
@@ -48,7 +49,7 @@ void printf(const char *fmt, ...)
 constexpr size_t MAXNUMBER_LEN = 256;
 char nbuf[MAXNUMBER_LEN] = {};
 
-void vprintf(const char *fmt, va_list ap)
+void VaListWriteFormat(const char *fmt, va_list ap)
 {
     bool locking = console::console_get_lock();
     if (locking)

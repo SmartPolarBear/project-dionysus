@@ -28,7 +28,7 @@
 #include "system/memlayout.h"
 #include "system/types.h"
 
-#include "libraries/libc/stdio.h"
+#include "libraries/libkernel/console/builtin_console.hpp"
 
 bool kdebug::panicked = false;
 
@@ -46,16 +46,16 @@ static inline void kdebug_vpanic_print_impl(const char *fmt, bool topleft, va_li
         console::console_set_pos(0);
     }
 
-    vprintf(fmt, ap);
+    VaListWriteFormat(fmt, ap);
 
     constexpr size_t PCS_BUFLEN = 16;
     uintptr_t pcs[PCS_BUFLEN] = {0};
     kdebug::kdebug_getcallerpcs(PCS_BUFLEN, pcs);
 
-    printf("\n");
+    WriteFormat("\n");
     for (auto pc : pcs)
     {
-        printf("%p ", pc);
+        WriteFormat("%p ", pc);
     }
 }
 
@@ -130,14 +130,14 @@ void kdebug::kdebug_dump_lock_panic(lock::spinlock *lock)
 
     console::console_set_color(console::CONSOLE_COLOR_BLUE, console::CONSOLE_COLOR_LIGHT_BROWN);
 
-    printf("lock %s has been held.\nCall stack:\n", lock->name);
+    WriteFormat("lock %s has been held.\nCall stack:\n", lock->name);
 
     for (auto cs : lock->pcs)
     {
-        printf("%p ", cs);
+        WriteFormat("%p ", cs);
     }
 
-    printf("\n");
+    WriteFormat("\n");
 
     KDEBUG_FOLLOWPANIC("acquire");
 }

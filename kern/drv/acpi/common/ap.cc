@@ -39,7 +39,7 @@
 #include "system/proc.h"
 #include "system/scheduler.h"
 
-#include "libraries/libc/stdio.h"
+#include "libraries/libkernel/console/builtin_console.hpp"
 #include <cstring>
 
 // in boot.S

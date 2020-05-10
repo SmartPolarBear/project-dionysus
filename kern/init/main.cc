@@ -33,11 +33,6 @@
 #include "drivers/debug/kdebug.h"
 #include "drivers/debug/kerror.h"
 
-#include "libraries/libc/stdio.h"
-#include "libraries/libkern/data/list.h"
-
-#include <cstring>
-
 #include "system/kmalloc.h"
 #include "system/memlayout.h"
 #include "system/multiboot.h"
@@ -48,6 +43,10 @@
 #include "system/syscall.h"
 #include "system/vmm.h"
 
+#include "libraries/libkernel/console/builtin_console.hpp"
+#include "libraries/libkern/data/list.h"
+
+#include <cstring>
 
 void run_hello()
 {
@@ -66,7 +65,7 @@ void run_hello()
 
     process::process_load_binary(proc_he, (uint8_t *)P2V(tag->mod_start), tag->mod_end - tag->mod_start + 1, process::BINARY_ELF);
 
-    printf("load binary: hello\n");
+    WriteFormat("load binary: hello\n");
 }
 
 // global entry of the kernel
@@ -103,7 +102,7 @@ extern "C" [[noreturn]] void kmain()
 
     run_hello();
 
-    printf("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
+    WriteFormat("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
 
     // boot other CPU cores
     ap::init_ap();

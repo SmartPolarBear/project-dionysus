@@ -10,7 +10,7 @@
 #include "arch/amd64/msr.h"
 #include "arch/amd64/regs.h"
 
-#include "libraries/libc/stdio.h"
+#include "libraries/libkernel/console/builtin_console.hpp"
 
 using namespace syscall;
 
@@ -21,7 +21,7 @@ error_code default_syscall()
 
 error_code sys_hello()
 {
-    printf("hello sys!\n");
+    WriteFormat("hello sys!\n");
     return ERROR_SUCCESS;
 }
 
@@ -32,7 +32,7 @@ extern "C" syscall_entry syscall_table[SYSCALL_COUNT + 1] = {
 
 extern "C" error_code syscall_body()
 {
-    printf("syscall_body\n");
+    WriteFormat("syscall_body\n");
     return ERROR_SUCCESS;
 }
 

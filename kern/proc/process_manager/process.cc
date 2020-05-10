@@ -37,7 +37,7 @@
 #include "drivers/apic/traps.h"
 #include "drivers/lock/spinlock.h"
 
-#include "libraries/libc/stdio.h"
+#include "libraries/libkernel/console/builtin_console.hpp"
 #include "libraries/libkern/data/list.h"
 
 using libk::list_add;

@@ -12,7 +12,7 @@
 #include "system/segmentation.hpp"
 #include "system/vmm.h"
 
-#include "libraries/libc/stdio.h"
+#include "libraries/libkernel/console/builtin_console.hpp"
 #include <cstring>
 
 using trap::trap_handle;
@@ -43,7 +43,7 @@ static error_code default_trap_handle([[maybe_unused]] trap::trap_frame info)
 {
     // TODO: the handle doesn't exist
 
-    printf("trap %d caused but not handled.\nerror=%d, ip=0x%p, sp=0x%p\n", info.trap_num, info.err, info.rip, info.rsp);
+    WriteFormat("trap %d caused but not handled.\nerror=%d, ip=0x%p, sp=0x%p\n", info.trap_num, info.err, info.rip, info.rsp);
 
     return ERROR_SUCCESS;
 }
