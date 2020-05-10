@@ -4,7 +4,7 @@
 #include "drivers/debug/kdebug.h"
 #include "drivers/lock/spinlock.h"
 
-#include "libraries/libc/stdlib.h"
+#include "libraries/libkernel/maths/maths.hpp"
 
 #include <cstring>
 
