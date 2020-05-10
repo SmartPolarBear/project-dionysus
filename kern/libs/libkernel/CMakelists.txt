@@ -2,5 +2,13 @@ cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
 add_library(libkernel)
 
+target_include_directories(libkernel BEFORE
+    PRIVATE "${CMAKE_BINARY_DIR}/external/third_party_root/include/c++/v1"
+    PRIVATE "${CMAKE_BINARY_DIR}/external/third_party_root/include/sys"
+    PRIVATE "${CMAKE_BINARY_DIR}/external/third_party_root/include"
+    PRIVATE "${CMAKE_SOURCE_DIR}/include")
+
+add_subdirectory(console)
+
 target_sources(libkernel
-    PRIVATE memory.cc console.cc maths.cc)
+    PRIVATE memory.cc maths.cc)

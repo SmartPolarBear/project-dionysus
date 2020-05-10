@@ -1,6 +1,6 @@
 
 /*
- * Last Modified: Mon May 04 2020
+ * Last Modified: Sun May 10 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -33,9 +33,9 @@
 #include "drivers/debug/kdebug.h"
 #include "drivers/debug/kerror.h"
 
-#include <cstring>
-#include "lib/libkern/data/list.h"
 #include "lib/libc/stdio.h"
+#include "lib/libkern/data/list.h"
+#include <cstring>
 
 #include "sys/kmalloc.h"
 #include "sys/memlayout.h"
@@ -46,8 +46,6 @@
 #include "sys/scheduler.h"
 #include "sys/syscall.h"
 #include "sys/vmm.h"
-
-#include <utility>
 
 void run_hello()
 {
