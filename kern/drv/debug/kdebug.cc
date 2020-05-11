@@ -46,16 +46,16 @@ static inline void kdebug_vpanic_print_impl(const char *fmt, bool topleft, va_li
         console::console_set_pos(0);
     }
 
-    VaListWriteFormat(fmt, ap);
+    valist_write_format(fmt, ap);
 
     constexpr size_t PCS_BUFLEN = 16;
     uintptr_t pcs[PCS_BUFLEN] = {0};
     kdebug::kdebug_getcallerpcs(PCS_BUFLEN, pcs);
 
-    WriteFormat("\n");
+    write_format("\n");
     for (auto pc : pcs)
     {
-        WriteFormat("%p ", pc);
+        write_format("%p ", pc);
     }
 }
 
@@ -130,14 +130,14 @@ void kdebug::kdebug_dump_lock_panic(lock::spinlock *lock)
 
     console::console_set_color(console::CONSOLE_COLOR_BLUE, console::CONSOLE_COLOR_LIGHT_BROWN);
 
-    WriteFormat("lock %s has been held.\nCall stack:\n", lock->name);
+    write_format("lock %s has been held.\nCall stack:\n", lock->name);
 
     for (auto cs : lock->pcs)
     {
-        WriteFormat("%p ", cs);
+        write_format("%p ", cs);
     }
 
-    WriteFormat("\n");
+    write_format("\n");
 
     KDEBUG_FOLLOWPANIC("acquire");
 }

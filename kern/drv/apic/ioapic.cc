@@ -110,7 +110,7 @@ PANIC void io_apic::init_ioapic(void)
 
     if (apicid != ioapic->id)
     {
-        WriteFormat("WARNING: inconsistence between apicid from IOAPICID register (%d) and ioapic.id (%d)\n", apicid, ioapic->id);
+        write_format("WARNING: inconsistence between apicid from IOAPICID register (%d) and ioapic.id (%d)\n", apicid, ioapic->id);
     }
 
     for (size_t i = 0; i <= redirection_count; i++)

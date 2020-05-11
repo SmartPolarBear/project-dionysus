@@ -21,7 +21,7 @@ error_code default_syscall()
 
 error_code sys_hello()
 {
-    WriteFormat("hello sys!\n");
+    write_format("hello sys!\n");
     return ERROR_SUCCESS;
 }
 
@@ -32,7 +32,7 @@ extern "C" syscall_entry syscall_table[SYSCALL_COUNT + 1] = {
 
 extern "C" error_code syscall_body()
 {
-    WriteFormat("syscall_body\n");
+    write_format("syscall_body\n");
     return ERROR_SUCCESS;
 }
 

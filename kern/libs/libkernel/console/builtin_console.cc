@@ -24,23 +24,23 @@ __attribute__((constructor)) void printf_init(void)
     spinlock_initlock(&printf_lock, "printf");
 }
 
-void PutStr(const char *str)
+void put_str(const char *str)
 {
     auto len = strlen(str);
     console::cosnole_write_string(str, len);
 }
 
-void PutChar(char c)
+void put_char(char c)
 {
     console::console_write_char(c);
 }
 
-void WriteFormat(const char *fmt, ...)
+void write_format(const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
 
-    VaListWriteFormat(fmt, ap);
+    valist_write_format(fmt, ap);
 
     va_end(ap);
 }
@@ -49,7 +49,7 @@ void WriteFormat(const char *fmt, ...)
 constexpr size_t MAXNUMBER_LEN = 256;
 char nbuf[MAXNUMBER_LEN] = {};
 
-void VaListWriteFormat(const char *fmt, va_list ap)
+void valist_write_format(const char *fmt, va_list ap)
 {
     bool locking = console::console_get_lock();
     if (locking)

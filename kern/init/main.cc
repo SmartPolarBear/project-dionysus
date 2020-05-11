@@ -48,6 +48,9 @@
 
 #include <cstring>
 
+#include <utility>
+#include <queue>
+
 void run_hello()
 {
     auto tag = multiboot::acquire_tag_ptr<multiboot_tag_module>(MULTIBOOT_TAG_TYPE_MODULE, [](auto ptr) -> bool {
@@ -65,7 +68,7 @@ void run_hello()
 
     process::process_load_binary(proc_he, (uint8_t *)P2V(tag->mod_start), tag->mod_end - tag->mod_start + 1, process::BINARY_ELF);
 
-    WriteFormat("load binary: hello\n");
+    write_format("load binary: hello\n");
 }
 
 // global entry of the kernel
@@ -101,8 +104,8 @@ extern "C" [[noreturn]] void kmain()
     process::process_init();
 
     run_hello();
-
-    WriteFormat("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
+    
+    write_format("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
 
     // boot other CPU cores
     ap::init_ap();
