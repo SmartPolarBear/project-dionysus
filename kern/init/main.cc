@@ -1,6 +1,6 @@
 
 /*
- * Last Modified: Sun May 10 2020
+ * Last Modified: Mon May 11 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -43,8 +43,8 @@
 #include "system/syscall.h"
 #include "system/vmm.h"
 
-#include "libraries/libkernel/console/builtin_console.hpp"
 #include "libraries/libkern/data/list.h"
+#include "libraries/libkernel/console/builtin_console.hpp"
 
 #include <cstring>
 

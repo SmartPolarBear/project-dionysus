@@ -24,7 +24,7 @@ __attribute__((constructor)) void printf_init(void)
     spinlock_initlock(&printf_lock, "printf");
 }
 
-void PutChar(const char *str)
+void PutStr(const char *str)
 {
     auto len = strlen(str);
     console::cosnole_write_string(str, len);
