@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sun May 10 2020
+ * Last Modified: Wed May 13 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -27,6 +27,7 @@
 #include "system/vmm.h"
 
 #include "drivers/debug/kdebug.h"
+#include "drivers/lock/spinlock.h"
 
 using vmm::pde_ptr_t;
 namespace pmm
@@ -45,6 +46,9 @@ struct pmm_manager_info
     page_info *(*alloc_pages)(size_t n);            // allocate >=n pages, depend on the allocation algorithm
     void (*free_pages)(page_info *base, size_t n);  // free >=n pages with "base" addr of Page descriptor structures(memlayout.h)
     size_t (*get_free_pages_count)(void);           // return the number of free pages
+
+    lock::spinlock lock;
+    bool enable_lock;
 };
 
 extern pmm_manager_info *pmm_manager;

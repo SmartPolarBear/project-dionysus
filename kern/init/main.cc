@@ -1,6 +1,6 @@
 
 /*
- * Last Modified: Mon May 11 2020
+ * Last Modified: Wed May 13 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -47,9 +47,8 @@
 #include "libraries/libkernel/console/builtin_console.hpp"
 
 #include <cstring>
-
 #include <utility>
-#include <queue>
+
 
 void run_hello()
 {
