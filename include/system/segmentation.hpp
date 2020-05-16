@@ -64,3 +64,21 @@ enum GDT_SEGMENTS : uint64_t
     SEGMENTSEL_TSSLOW = 0x40,
     SEGMENTSEL_TSSHIGH = 0x48
 };
+
+#define __cls_get(n) ({ \
+  uint64_t res; \
+  asm ("mov %%gs:" #n ",%0" : "=r" (res)); \
+  res; \
+})
+
+#define __cls_put(n, v) ({ \
+  uint64_t val = v; \
+  asm ("mov %0, %%gs:" #n : : "r" (val)); \
+})
+
+template<typename T>
+static inline auto cls_get(uintptr_t n)
+{
+    
+}
+

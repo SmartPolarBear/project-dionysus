@@ -18,7 +18,7 @@ page_info *buddy_alloc_pages(size_t n);
 void buddy_free_pages(page_info *base, size_t n);
 size_t buddy_get_free_pages_count(void);
 
-extern pmm::pmm_manager_info buddy_pmm_manager;
+extern pmm::pmm_desc buddy_pmm_manager;
 
 } // namespace buddy_allocator
 

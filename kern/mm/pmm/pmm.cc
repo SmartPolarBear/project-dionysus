@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sun May 10 2020
+ * Last Modified: Sat May 16 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -43,7 +43,7 @@
 
 using pmm::page_count;
 using pmm::pages;
-using pmm::pmm_manager;
+using pmm::pmm_entity;
 
 using std::make_pair;
 using std::max;
@@ -59,7 +59,7 @@ using vmm::pde_ptr_t;
 using reserved_space = pair<uintptr_t, uintptr_t>;
 
 // use buddy allocator to allocate physical pages
-pmm::pmm_manager_info *pmm::pmm_manager = nullptr;
+pmm::pmm_desc *pmm::pmm_entity = nullptr;
 
 page_info *pmm::pages = nullptr;
 size_t pmm::page_count = 0;
@@ -74,13 +74,13 @@ multiboot::multiboot_tag_ptr module_tags[RESERVED_SPACES_MAX_COUNT];
 static inline void init_pmm_manager()
 {
     // set the physical memory manager
-    pmm_manager = &pmm::buddy_pmm::buddy_pmm_manager;
-    pmm_manager->init();
+    pmm_entity = &pmm::buddy_pmm::buddy_pmm_manager;
+    pmm_entity->init();
 }
 
 static inline void init_memmap(page_info *base, size_t sz)
 {
-    pmm_manager->init_memmap(base, sz);
+    pmm_entity->init_memmap(base, sz);
 }
 
 static inline void page_remove_pde(pde_ptr_t pgdir, uintptr_t va, pde_ptr_t pde)
@@ -220,18 +220,35 @@ void pmm::init_pmm(void)
     vmm::boot_map_kernel_mem();
 
     vmm::install_kpml4();
+
+    pmm_entity->enable_lock = true;
 }
 
 page_info *pmm::alloc_pages(size_t n)
 {
-    bool intrrupt_flag = false;
     page_info *ret = nullptr;
 
-    software_pushcli(intrrupt_flag);
+    bool intrrupt_flag = false;
 
-    ret = pmm_manager->alloc_pages(n);
+    if (!pmm_entity->enable_lock)
+    {
+        software_pushcli(intrrupt_flag);
+    }
+    else
+    {
+        lock::spinlock_acquire(&pmm_entity->lock);
+    }
 
-    software_popcli(intrrupt_flag);
+    ret = pmm_entity->alloc_pages(n);
+
+    if (!pmm_entity->enable_lock)
+    {
+        software_popcli(intrrupt_flag);
+    }
+    else
+    {
+        lock::spinlock_release(&pmm_entity->lock);
+    }
 
     return ret;
 }
@@ -242,7 +259,7 @@ void pmm::free_pages(page_info *base, size_t n)
 
     software_pushcli(intrrupt_flag);
 
-    pmm_manager->free_pages(base, n);
+    pmm_entity->free_pages(base, n);
 
     software_popcli(intrrupt_flag);
 }
@@ -254,7 +271,7 @@ size_t pmm::get_free_page_count(void)
 
     software_pushcli(intrrupt_flag);
 
-    ret = pmm_manager->get_free_pages_count();
+    ret = pmm_entity->get_free_pages_count();
 
     software_popcli(intrrupt_flag);
 

@@ -22,7 +22,7 @@ using pmm::buddy_pmm::buddy_get_free_pages_count;
 using pmm::buddy_pmm::buddy_init_memmap;
 using pmm::buddy_pmm::init_buddy;
 
-pmm::pmm_manager_info pmm::buddy_pmm::buddy_pmm_manager = {
+pmm::pmm_desc pmm::buddy_pmm::buddy_pmm_manager = {
     .name = "BUDDY",
     .init = init_buddy,
     .init_memmap = buddy_init_memmap,

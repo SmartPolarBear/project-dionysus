@@ -1,5 +1,5 @@
 /*
- * Last Modified: Wed May 13 2020
+ * Last Modified: Sat May 16 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -35,7 +35,7 @@ namespace pmm
 
 constexpr size_t PMM_MANAGER_NAME_MAXLEN = 32;
 
-struct pmm_manager_info
+struct pmm_desc
 {
     char name[PMM_MANAGER_NAME_MAXLEN];
 
@@ -51,7 +51,7 @@ struct pmm_manager_info
     bool enable_lock;
 };
 
-extern pmm_manager_info *pmm_manager;
+extern pmm_desc *pmm_entity;
 
 extern page_info *pages;
 extern size_t page_count;
