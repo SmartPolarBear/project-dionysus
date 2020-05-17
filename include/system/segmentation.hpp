@@ -1,5 +1,6 @@
 #pragma once
 
+#include "system/concepts.hpp"
 #include "system/types.h"
 
 struct gdt_entry
@@ -65,20 +66,56 @@ enum GDT_SEGMENTS : uint64_t
     SEGMENTSEL_TSSHIGH = 0x48
 };
 
-#define __cls_get(n) ({ \
-  uint64_t res; \
-  asm ("mov %%gs:" #n ",%0" : "=r" (res)); \
-  res; \
-})
+// cpu local storage
 
-#define __cls_put(n, v) ({ \
-  uint64_t val = v; \
-  asm ("mov %0, %%gs:" #n : : "r" (val)); \
-})
-
-template<typename T>
-static inline auto cls_get(uintptr_t n)
+static_assert(sizeof(uintptr_t) == 0x08);
+enum CLS_ADDRESS : uintptr_t
 {
-    
+    CLS_CPU_STRUCT_PTR = 0,
+    CLS_PROC_STRUCT_PTR = 0x8
+};
+
+// #define __cls_get(n) ({      \
+//     uint64_t res;            \
+//     asm("mov %%gs:" #n ",%0" \
+//         : "=r"(res));        \
+//     res;                     \
+// })
+
+// #define __cls_put(n, v) ({ \
+//     uint64_t val = v;      \
+//     asm("mov %0, %%gs:" #n \
+//         :                  \
+//         : "r"(val));       \
+// })
+
+#pragma clang diagnostic push
+
+// bypass the problem caused by the fault of clang
+// that parameters used in inline asm are always reported to be unused
+
+#pragma clang diagnostic ignored "-Wunused-variable"
+#pragma clang diagnostic ignored "-Wunused-parameter"
+
+//__attribute__((always_inline))
+
+template <typename T>
+ static inline T cls_get(uintptr_t n) requires Pointer<T>
+{
+    uintptr_t ret = 0;
+    asm("mov %%fs:(%%rax),%0"
+        : "=r"(ret)
+        : "a"(n));
+    return (T)(void*)ret;
 }
 
+template <typename T>
+ static inline void cls_put(uintptr_t n, T v) requires Pointer<T>
+{
+    uintptr_t val = (uintptr_t)v;      
+    asm("mov %0, %%fs:(%%rax)" 
+        :                  
+        : "r"(val),"a"(n));
+}
+
+#pragma clang diagnostic pop

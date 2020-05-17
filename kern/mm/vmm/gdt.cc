@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sun May 10 2020
+ * Last Modified: Sun May 17 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -36,8 +36,8 @@
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 
-#include <cstring>
 #include <algorithm>
+#include <cstring>
 
 using vmm::mm_struct;
 using vmm::pde_ptr_t;
@@ -53,22 +53,43 @@ using libk::list_for_each;
 using libk::list_init;
 using libk::list_remove;
 
+
 // cpu-individual variable containing info about current CPU
-// TODO: lacking records of current proc
+#ifndef USE_NEW_CPU_INTERFACE
 __thread cpu_struct *cpu;
+#endif
 
 void vmm::install_gdt(void)
 {
     auto current_cpu = &cpus[local_apic::get_cpunum()];
 
     uint8_t *cpu_fs = reinterpret_cast<decltype(cpu_fs)>(boot_alloc_page());
+
+    if(cpu_fs==nullptr)
+    {
+        KDEBUG_RICHPANIC("Cannot allocate memory for kernel FS\n",
+                         "KERNEL PANIC: AP",
+                         false,
+                         "");
+    }
+
     memset(cpu_fs, 0, PAGE_SIZE);
     wrmsr(MSR_FS_BASE, ((uintptr_t)cpu_fs));
     current_cpu->local_fs = cpu_fs;
 
     uint8_t *cpu_kernel_gs = reinterpret_cast<decltype(cpu_kernel_gs)>(boot_alloc_page());
+
+    if(cpu_kernel_gs==nullptr)
+    {
+        KDEBUG_RICHPANIC("Cannot allocate memory for kernel GS\n",
+                         "KERNEL PANIC: AP",
+                         false,
+                         ""
+    }
+
     memset(cpu_kernel_gs, 0, PAGE_SIZE);
     wrmsr(MSR_KERNEL_GS_BASE, ((uintptr_t)cpu_kernel_gs));
+
     current_cpu->local_gs = cpu_kernel_gs;
 
     uintptr_t tss_addr = (uintptr_t)(&current_cpu->tss);
@@ -81,9 +102,13 @@ void vmm::install_gdt(void)
 
     current_cpu->install_gdt_and_tss();
 
-    // --target=x86_64-pc-none-elf and -mcmodel=large can cause a triple fault here
-    // work it around by building with x86_64-pc-linux-elf
+// --target=x86_64-pc-none-elf and -mcmodel=large can cause a triple fault here
+// work it around by building with x86_64-pc-linux-elf
+#ifndef USE_NEW_CPU_INTERFACE
     cpu = current_cpu;
+#else
+    cls_put(CLS_CPU_STRUCT_PTR, current_cpu);
+#endif
 }
 
 void vmm::tss_set_rsp(uint32_t *tss, size_t n, uint64_t rsp)

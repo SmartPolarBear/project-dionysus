@@ -1,6 +1,6 @@
 
 /*
- * Last Modified: Wed May 13 2020
+ * Last Modified: Sun May 17 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -48,7 +48,6 @@
 
 #include <cstring>
 #include <utility>
-
 
 void run_hello()
 {
@@ -103,7 +102,7 @@ extern "C" [[noreturn]] void kmain()
     process::process_init();
 
     run_hello();
-    
+
     write_format("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
 
     // boot other CPU cores

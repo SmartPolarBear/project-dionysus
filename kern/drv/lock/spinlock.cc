@@ -25,7 +25,12 @@ void lock::spinlock_acquire(spinlock *lock)
     while (xchg(&lock->locked, 1u) != 0)
         ;
 
+#ifndef USE_NEW_CPU_INTERFACE
     lock->cpu = cpu;
+#else
+    lock->cpu = cpu();
+#endif
+
     kdebug::kdebug_getcallerpcs(16, lock->pcs);
 }
 
@@ -49,5 +54,9 @@ void lock::spinlock_release(spinlock *lock)
 
 bool lock::spinlock_holding(spinlock *lock)
 {
+#ifndef USE_NEW_CPU_INTERFACE
     return lock->locked && lock->cpu == cpu;
+#else
+    return lock->locked && lock->cpu == cpu();
+#endif
 }

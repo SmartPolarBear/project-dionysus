@@ -1,8 +1,8 @@
 #include "arch/amd64/regs.h"
 
 #include "system/error.h"
-#include "system/types.h"
 #include "system/scheduler.h"
+#include "system/types.h"
 
 #include "drivers/acpi/cpu.h"
 #include "drivers/apic/apic.h"
@@ -49,7 +49,14 @@ PANIC void timer::init_apic_timer(void)
 
 error_code trap_handle_tick([[maybe_unused]] trap::trap_frame info)
 {
-    if (cpu->id == 0)
+    size_t id = 0;
+#ifndef USE_NEW_CPU_INTERFACE
+    id = cpu->id;
+#else
+    id = cpu()->id;
+#endif
+
+    if (id == 0)
     {
         spinlock_acquire(&tickslock);
         ticks++;

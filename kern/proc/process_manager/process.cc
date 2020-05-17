@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sun May 10 2020
+ * Last Modified: Sun May 17 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -37,8 +37,8 @@
 #include "drivers/apic/traps.h"
 #include "drivers/lock/spinlock.h"
 
-#include "libraries/libkernel/console/builtin_console.hpp"
 #include "libraries/libkern/data/list.h"
+#include "libraries/libkernel/console/builtin_console.hpp"
 
 using libk::list_add;
 using libk::list_empty;
@@ -165,7 +165,7 @@ error_code process::process_load_binary(IN process_dispatcher *proc,
 	}
 	else
 	{
-		ret =- ERROR_INVALID_ADDR;
+		ret = -ERROR_INVALID_ADDR;
 	}
 
 	if (ret == ERROR_SUCCESS)
@@ -178,7 +178,7 @@ error_code process::process_load_binary(IN process_dispatcher *proc,
 			uintptr_t va = USER_TOP - process::process_dispatcher::KERNSTACK_SIZE + i * PAGE_SIZE;
 			page_info *page_ret = nullptr;
 			auto ret = pmm::pgdir_alloc_page(proc->mm->pgdir, true, va, PG_W | PG_U | PG_PS | PG_P, &page_ret);
-			if(ret!=ERROR_SUCCESS)
+			if (ret != ERROR_SUCCESS)
 			{
 				return -ERROR_MEMORY_ALLOC;
 			}
@@ -211,7 +211,11 @@ error_code process::process_run(IN process_dispatcher *proc)
 	spinlock_release(&proc_list.lock);
 
 	// vmm::tss_set_rsp(cpu->get_tss(), 0, current->kstack + process_dispatcher::KERNSTACK_SIZE);
+#ifndef USE_NEW_CPU_INTERFACE
 	cpu->tss.rsp0 = current->kstack + process_dispatcher::KERNSTACK_SIZE;
+#else
+	cpu()->tss.rsp0 = current->kstack + process_dispatcher::KERNSTACK_SIZE;
+#endif
 
 	trap::popcli();
 

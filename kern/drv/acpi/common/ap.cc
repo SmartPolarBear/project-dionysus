@@ -1,5 +1,5 @@
 /*
- * Last Modified: Sun May 10 2020
+ * Last Modified: Sun May 17 2020
  * Modified By: SmartPolarBear
  * -----
  * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
@@ -34,10 +34,10 @@
 #include "system/memlayout.h"
 #include "system/multiboot.h"
 #include "system/pmm.h"
-#include "system/types.h"
-#include "system/vmm.h"
 #include "system/proc.h"
 #include "system/scheduler.h"
+#include "system/types.h"
+#include "system/vmm.h"
 
 #include "libraries/libkernel/console/builtin_console.hpp"
 #include <cstring>
@@ -89,10 +89,13 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
     }
 }
 
-
 void ap::all_processor_main()
 {
+#ifndef USE_NEW_CPU_INTERFACE
     xchg(&cpu->started, 1u);
+#else
+    xchg(&cpu()->started, 1u);
+#endif
 
     // FIXME: temporarily enable interrupt
     sti();
@@ -110,8 +113,6 @@ void ap::all_processor_main()
         for (;;)
             ;
     }
-
-   
 }
 
 extern "C" [[clang::optnone]] void ap_enter(void)

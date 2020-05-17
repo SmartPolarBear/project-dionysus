@@ -54,6 +54,7 @@ using lock::spinlock_release;
 
     spinlock_release(&proc_list.lock);
 
+#ifndef USE_NEW_CPU_INTERFACE
     asm volatile(
         "movq $0, %%rbp\n"
         "movq %0, %%rsp\n"
@@ -66,6 +67,20 @@ using lock::spinlock_release;
         "jmp spin\n"
         :
         : "a"(cpu->tss.rsp0 /*(vmm::tss_get_rsp(cpu->get_tss(), 0)*/));
+#else
+    asm volatile(
+        "movq $0, %%rbp\n"
+        "movq %0, %%rsp\n"
+        "pushq $0\n"
+        "pushq $0\n"
+        // Uncomment the following line after completing exercise 13
+        "sti\n"
+        "spin:\n"
+        "hlt\n"
+        "jmp spin\n"
+        :
+        : "a"(cpu()->tss.rsp0 /*(vmm::tss_get_rsp(cpu->get_tss(), 0)*/));
+#endif
 }
 
 [[clang::optnone]] void scheduler::scheduler_yield()
