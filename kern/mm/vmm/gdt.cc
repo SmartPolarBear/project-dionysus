@@ -67,10 +67,7 @@ void vmm::install_gdt(void)
 
     if(cpu_fs==nullptr)
     {
-        KDEBUG_RICHPANIC("Cannot allocate memory for kernel FS\n",
-                         "KERNEL PANIC: AP",
-                         false,
-                         "");
+        KDEBUG_FOLLOWPANIC("Cannot allocate memory for kernel GS\n");
     }
 
     memset(cpu_fs, 0, PAGE_SIZE);
@@ -81,10 +78,7 @@ void vmm::install_gdt(void)
 
     if(cpu_kernel_gs==nullptr)
     {
-        KDEBUG_RICHPANIC("Cannot allocate memory for kernel GS\n",
-                         "KERNEL PANIC: AP",
-                         false,
-                         ""
+        KDEBUG_FOLLOWPANIC("Cannot allocate memory for kernel GS\n");
     }
 
     memset(cpu_kernel_gs, 0, PAGE_SIZE);

@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
 project(project-dionysus C CXX)
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 set(QEMU_CPUS 6)
 set(QEMU_MEM 8G)
 set(QEMU_DEBUG_PORT 32768)

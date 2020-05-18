@@ -75,12 +75,12 @@ def func_update_diskimage(main_argv):
         print("COMPLETE: "+getcmd_cp(src=diskimgtemplate,
                                      dest=diskimgtarget, force=False))
 
-    lo0name = subprocess.getoutput("losetup -f")
+    lo0name = "/dev/loop0" #subprocess.getoutput("losetup -f")
     setuplo0_cmd = getcmd_losetup(lo0name, diskimgtarget)
     subprocess.run(setuplo0_cmd, check=True, shell=True)
     print("COMPLETE: "+setuplo0_cmd)
 
-    lo1name = subprocess.getoutput("losetup -f")
+    lo1name = "/dev/loop1" # subprocess.getoutput("losetup -f")
     setuplo1_cmd = getcmd_losetup(lo1name, lo0name, offset=1048576)
     subprocess.run(setuplo1_cmd, check=True, shell=True)
     print("COMPLETE: " + setuplo1_cmd)

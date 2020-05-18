@@ -136,10 +136,10 @@ void trap::pushcli(void)
 
     cli();
 #ifndef USE_NEW_CPU_INTERFACE
-    // if (cpu->nest_pushcli_depth++ == 0)
-    // {
-    //     cpu->intr_enable = eflags & EFLAG_IF;
-    // }
+    if (cpu->nest_pushcli_depth++ == 0)
+    {
+        cpu->intr_enable = eflags & EFLAG_IF;
+    }
 #else
     KDEBUG_ASSERT(cpu()!=nullptr);
     if (cpu()->nest_pushcli_depth++ == 0)
