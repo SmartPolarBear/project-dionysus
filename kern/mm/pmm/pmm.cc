@@ -232,7 +232,7 @@ page_info *pmm::alloc_pages(size_t n)
 
     if (!pmm_entity->enable_lock)
     {
-        software_pushcli(intrrupt_flag);
+        save_intr(intrrupt_flag);
     }
     else
     {
@@ -243,7 +243,7 @@ page_info *pmm::alloc_pages(size_t n)
 
     if (!pmm_entity->enable_lock)
     {
-        software_popcli(intrrupt_flag);
+        restore_intr(intrrupt_flag);
     }
     else
     {
@@ -257,11 +257,11 @@ void pmm::free_pages(page_info *base, size_t n)
 {
     bool intrrupt_flag = false;
 
-    software_pushcli(intrrupt_flag);
+    save_intr(intrrupt_flag);
 
     pmm_entity->free_pages(base, n);
 
-    software_popcli(intrrupt_flag);
+    restore_intr(intrrupt_flag);
 }
 
 size_t pmm::get_free_page_count(void)
@@ -269,11 +269,11 @@ size_t pmm::get_free_page_count(void)
     bool intrrupt_flag = false;
     size_t ret = 0;
 
-    software_pushcli(intrrupt_flag);
+    save_intr(intrrupt_flag);
 
     ret = pmm_entity->get_free_pages_count();
 
-    software_popcli(intrrupt_flag);
+    restore_intr(intrrupt_flag);
 
     return ret;
 }

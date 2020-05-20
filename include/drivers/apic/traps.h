@@ -149,13 +149,13 @@ __intr_restore(bool flag)
     }
 }
 
-#define software_pushcli(x) \
+#define save_intr(x) \
     do                      \
     {                       \
         x = __intr_save();  \
     } while (0)
 
-#define software_popcli(x) \
+#define restore_intr(x) \
     do                     \
     {                      \
         __intr_restore(x); \
