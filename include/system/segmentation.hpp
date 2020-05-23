@@ -118,4 +118,23 @@ template <typename T>
         : "r"(val),"a"(n));
 }
 
+template <typename T>
+static inline T gs_get(uintptr_t n) requires Pointer<T>
+{
+    uintptr_t ret = 0;
+    asm("mov %%gs:(%%rax),%0"
+    : "=r"(ret)
+    : "a"(n));
+    return (T)(void*)ret;
+}
+
+template <typename T>
+static inline void gs_put(uintptr_t n, T v) requires Pointer<T>
+{
+    uintptr_t val = (uintptr_t)v;
+    asm("mov %0, %%gs:(%%rax)"
+    :
+    : "r"(val),"a"(n));
+}
+
 #pragma clang diagnostic pop

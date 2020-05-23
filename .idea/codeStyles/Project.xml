@@ -1,0 +1,21 @@
+<component name="ProjectCodeStyleConfiguration">
+  <code_scheme name="Project" version="173">
+    <Objective-C>
+      <option name="NAMESPACE_BRACE_PLACEMENT" value="2" />
+      <option name="FUNCTION_BRACE_PLACEMENT" value="2" />
+      <option name="BLOCK_BRACE_PLACEMENT" value="2" />
+    </Objective-C>
+    <Objective-C-extensions>
+      <extensions>
+        <pair source="cpp" header="h" fileNamingConvention="NONE" />
+        <pair source="c" header="h" fileNamingConvention="NONE" />
+        <pair source="cu" header="cuh" fileNamingConvention="NONE" />
+        <pair source="cc" header="hpp" fileNamingConvention="SNAKE_CASE" />
+      </extensions>
+    </Objective-C-extensions>
+    <codeStyleSettings language="ObjectiveC">
+      <option name="BRACE_STYLE" value="2" />
+      <option name="CLASS_BRACE_STYLE" value="2" />
+    </codeStyleSettings>
+  </code_scheme>
+</component>

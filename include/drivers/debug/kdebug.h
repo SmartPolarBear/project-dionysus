@@ -32,14 +32,18 @@
 
 namespace kdebug
 {
-extern bool panicked;
+    extern bool panicked;
 
-[[noreturn]] void kdebug_panic(const char *fmt, ...);
+    [[noreturn]] void kdebug_panic(const char *fmt, ...);
+
 // use uint32_t for the bool value to make va_args happy.
-[[noreturn]] void kdebug_panic2(const char *fmt, uint32_t topleft, ...);
-[[noreturn]] void kdebug_dump_lock_panic(lock::spinlock *lock);
+    [[noreturn]] void kdebug_panic2(const char *fmt, uint32_t topleft, ...);
 
-void kdebug_getcallerpcs(size_t buflen, uintptr_t pcs[]);
+    [[noreturn]] void kdebug_dump_lock_panic(lock::spinlock *lock);
+
+    void kdebug_warning(const char *fmt,...);
+
+    void kdebug_getcallerpcs(size_t buflen, uintptr_t pcs[]);
 
 // panic with line number and file name
 // to make __FILE__ and __LINE__ macros works right, this must be a macro as well.

@@ -103,15 +103,10 @@ extern "C" [[noreturn]] void kmain()
 
     run_hello();
 
-    write_format("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
-
-    //FIXME: the issue is that in the install_gdt of secondary cores,
-    // pmm_entity->enable_lock is true, but no fs memory is allocated, making spinlock cause page fault
-    // However, alloc a fs memory needs spinlock, because pmm_entity->enable_lock is true.
-    // this is like a deadlock
-
     // boot other CPU cores
     ap::init_ap();
+
+    write_format("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
 
     scheduler::scheduler_yield();
 

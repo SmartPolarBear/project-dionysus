@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
 target_sources(kernel
-    PRIVATE syscall.cc syscall_entry.S)
+    PRIVATE syscall.cc syscall_body.cc syscall_entry.S)
 

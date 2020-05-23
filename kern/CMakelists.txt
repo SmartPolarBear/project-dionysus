@@ -2,12 +2,12 @@ cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
 file(WRITE ${CMAKE_CURRENT_SOURCE_DIR}/drv/apic/vectors.S "")
 
-add_executable(kernel 
-    ${CMAKE_CURRENT_SOURCE_DIR}/init/boot.S 
-    ${CMAKE_CURRENT_SOURCE_DIR}/drv/apic/trapentry_asm.S
-    ${CMAKE_CURRENT_SOURCE_DIR}/drv/apic/vectors.S
-    ${CMAKE_CURRENT_SOURCE_DIR}/proc/syscall/syscall_entry.S
-    ${CMAKE_CURRENT_SOURCE_DIR}/proc/process_manager/process_run.S )
+add_executable(kernel
+        ${CMAKE_CURRENT_SOURCE_DIR}/init/boot.S
+        ${CMAKE_CURRENT_SOURCE_DIR}/drv/apic/trapentry_asm.S
+        ${CMAKE_CURRENT_SOURCE_DIR}/drv/apic/vectors.S
+        ${CMAKE_CURRENT_SOURCE_DIR}/proc/syscall/syscall_entry.S
+        ${CMAKE_CURRENT_SOURCE_DIR}/proc/process_manager/process_run.S)
 
 add_dependencies(kernel vectors_S)
 add_dependencies(kernel ap_boot.elf)
@@ -22,50 +22,51 @@ set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/proc/process_manager/process_run
 
 
 set_target_properties(kernel PROPERTIES
-                            CXX_STANDARD 20
-                            CXX_STANDARD_REQUIRED ON
-                            CXX_EXTENSIONS ON)
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS ON)
 
 target_compile_options(kernel BEFORE
-    PRIVATE -g
-    PRIVATE --target=x86_64-pc-linux-elf
-    PRIVATE -fno-pie
-    PRIVATE -fno-exceptions
-    PRIVATE -fno-rtti
-    PRIVATE -fno-stack-protector
-    PRIVATE -nostdlib
-    PRIVATE -ffreestanding
-    PRIVATE -fno-builtin
-    PRIVATE -Wall
-    PRIVATE -Wno-gnu-include-next
-    PRIVATE -Wextra
-    PRIVATE -march=x86-64
-    PRIVATE -mtls-direct-seg-refs
-    PRIVATE -mno-sse
-    PRIVATE -msoft-float
-    PRIVATE -mcmodel=large
-    PRIVATE -mno-red-zone
-    PRIVATE -nostdlibinc
-    PRIVATE -D__ELF__
-    PRIVATE -D_LDBL_EQ_DBL
-    PRIVATE -D_GNU_SOURCE
-    PRIVATE -D_POSIX_TIMERS)
+        PRIVATE -g
+        PRIVATE --target=x86_64-pc-linux-elf
+        PRIVATE -fno-pie
+        PRIVATE -fno-exceptions
+        PRIVATE -fno-rtti
+        PRIVATE -fno-stack-protector
+        PRIVATE -nostdlib
+        PRIVATE -ffreestanding
+        PRIVATE -fno-builtin
+        PRIVATE -Wall
+        PRIVATE -Wno-gnu-include-next
+        PRIVATE -Wextra
+        PRIVATE -march=x86-64
+        PRIVATE -mtls-direct-seg-refs
+        PRIVATE -mno-sse
+        PRIVATE -msoft-float
+        PRIVATE -mcmodel=large
+        PRIVATE -mno-red-zone
+        PRIVATE -nostdlibinc
+        PRIVATE -D__ELF__
+        PRIVATE -D_LDBL_EQ_DBL
+        PRIVATE -D_GNU_SOURCE
+        PRIVATE -D_POSIX_TIMERS)
 
 target_link_options(kernel
-    PRIVATE -no-pie
-    PRIVATE -nostdlib
-    PRIVATE -ffreestanding
-    PRIVATE -nostartfiles
-	PRIVATE -static
-    PRIVATE -Wl,--build-id=none)
+        PRIVATE -no-pie
+        PRIVATE -nostdlib
+        PRIVATE -ffreestanding
+        PRIVATE -nostartfiles
+        PRIVATE -static
+        PRIVATE -Wl,--build-id=none)
 
 add_dependencies(kernel libcxx_build libcxxabi_build newlib_build)
 
 target_include_directories(kernel BEFORE
-    PRIVATE "${CMAKE_BINARY_DIR}/external/third_party_root/include/c++/v1"
-    PRIVATE "${CMAKE_BINARY_DIR}/external/third_party_root/include/sys"
-    PRIVATE "${CMAKE_BINARY_DIR}/external/third_party_root/include"
-    PRIVATE "${CMAKE_SOURCE_DIR}/include")
+        PRIVATE "${CMAKE_BINARY_DIR}/external/third_party_root/include/c++/v1"
+        PRIVATE "${CMAKE_BINARY_DIR}/external/third_party_root/include/sys"
+        PRIVATE "${CMAKE_BINARY_DIR}/external/third_party_root/include"
+        PRIVATE "${CMAKE_SOURCE_DIR}/include"
+        PRIVATE "${CMAKE_SOURCE_DIR}/libs/libuser")
 
 target_link_directories(kernel BEFORE PRIVATE ${CMAKE_BINARY_DIR}/external/third_party_root/lib)
 
@@ -83,13 +84,13 @@ add_subdirectory(drv)
 # custom targets
 
 add_custom_command(TARGET kernel POST_BUILD
-    COMMAND objdump -S $<TARGET_FILE:kernel> > ${CMAKE_BINARY_DIR}/kernel.asm
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-)
+        COMMAND objdump -S $<TARGET_FILE:kernel> > ${CMAKE_BINARY_DIR}/kernel.asm
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        )
 
 add_custom_target(
-    vectors_S ALL
-    COMMAND python3 ${CMAKE_SOURCE_DIR}/tools/vectors/gvectors.py ${CMAKE_SOURCE_DIR}/config/codegen/gvectors/gvectors.json ${CMAKE_SOURCE_DIR}/kern/drv/apic/vectors.S
-    BYPRODUCTS ${CMAKE_SOURCE_DIR}/kern/drv/apic/vectors.S
-    COMMENT "Generating vectors"
+        vectors_S ALL
+        COMMAND python3 ${CMAKE_SOURCE_DIR}/tools/vectors/gvectors.py ${CMAKE_SOURCE_DIR}/config/codegen/gvectors/gvectors.json ${CMAKE_SOURCE_DIR}/kern/drv/apic/vectors.S
+        BYPRODUCTS ${CMAKE_SOURCE_DIR}/kern/drv/apic/vectors.S
+        COMMENT "Generating vectors"
 )

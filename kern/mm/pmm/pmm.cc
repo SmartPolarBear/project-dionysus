@@ -31,6 +31,7 @@
 #include "system/multiboot.h"
 #include "system/pmm.h"
 #include "system/vmm.h"
+#include "system/segmentation.hpp"
 
 #include "drivers/apic/traps.h"
 #include "drivers/console/console.h"

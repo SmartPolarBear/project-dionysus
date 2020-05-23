@@ -27,14 +27,11 @@ error_code sys_hello()
 
 extern "C" syscall_entry syscall_table[SYSCALL_COUNT + 1] = {
     [0 ... SYSCALL_COUNT] = default_syscall,
+
+
     [0] = sys_hello,
 };
 
-extern "C" error_code syscall_body()
-{
-    write_format("syscall_body\n");
-    return ERROR_SUCCESS;
-}
 
 PANIC void syscall::system_call_init()
 {

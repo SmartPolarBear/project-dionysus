@@ -13,14 +13,15 @@ class MountAction(Enum):
 def getcmd_cp(src, dest, force: bool = False, sudo: bool = True, sanitycheck: bool = True):
     if sanitycheck:
         if os.path.exists(src) != True:
-            print("Error in getcmd_cp: "+src+" isn't exist.")
+            print("Error in getcmd_cp: " + src + " isn't exist.")
             exit(-1)
 
     return ("sudo " if sudo else "") + "cp " + ("-f " if force else "") + src + " " + dest
 
 
 def getcmd_losetup(loname, target, sudo: bool = True, offset: int = 0):
-    return ("sudo " if sudo else "") + "losetup " + ("-o "+str(offset) if offset != 0 else "")+" " + loname + " " + target
+    return ("sudo " if sudo else "") + "losetup " + (
+        "-o " + str(offset) if offset != 0 else "") + " " + loname + " " + target
 
 
 def getcmd_delosetup(loname, sudo: bool = True):
@@ -32,11 +33,11 @@ def getcmd_mount(act: MountAction, mountpoint, dev="", sudo: bool = True):
         print("Error in getcmd_mount: dev can't be empty if doing a mount")
         exit(-1)
 
-    return ("sudo " if sudo else "")+("mount " if act == MountAction.MOUNT else "umount ")+dev+" "+mountpoint
+    return ("sudo " if sudo else "") + ("mount " if act == MountAction.MOUNT else "umount ") + dev + " " + mountpoint
 
 
 def get_argidx(base, offset):
-    return base+offset
+    return base + offset
 
 
 argidx_st: int = 2
@@ -44,7 +45,6 @@ argidx_st: int = 2
 
 # fname: filelist name
 def func_update_diskimage(main_argv):
-
     if os.path.exists(main_argv[get_argidx(argidx_st, 1)]) != True:
         print("File list does not exist.")
         exit(-1)
@@ -72,15 +72,15 @@ def func_update_diskimage(main_argv):
     if os.path.exists(diskimgtarget) != True:
         subprocess.run(getcmd_cp(src=diskimgtemplate,
                                  dest=diskimgtarget, force=False), check=True, shell=True)
-        print("COMPLETE: "+getcmd_cp(src=diskimgtemplate,
-                                     dest=diskimgtarget, force=False))
+        print("COMPLETE: " + getcmd_cp(src=diskimgtemplate,
+                                       dest=diskimgtarget, force=False))
 
-    lo0name = "/dev/loop0" #subprocess.getoutput("losetup -f")
+    lo0name = subprocess.getoutput("losetup -f")
     setuplo0_cmd = getcmd_losetup(lo0name, diskimgtarget)
     subprocess.run(setuplo0_cmd, check=True, shell=True)
-    print("COMPLETE: "+setuplo0_cmd)
+    print("COMPLETE: " + setuplo0_cmd)
 
-    lo1name = "/dev/loop1" # subprocess.getoutput("losetup -f")
+    lo1name = subprocess.getoutput("losetup -f")
     setuplo1_cmd = getcmd_losetup(lo1name, lo0name, offset=1048576)
     subprocess.run(setuplo1_cmd, check=True, shell=True)
     print("COMPLETE: " + setuplo1_cmd)
@@ -132,7 +132,7 @@ def func_convert_diskimage(main_argv):
               target_type + "is given.")
         exit(-1)
 
-    qemuimg_cmd = "qemu-img convert -f raw -O "+target_type+" "+src + " " + dest
+    qemuimg_cmd = "qemu-img convert -f raw -O " + target_type + " " + src + " " + dest
     subprocess.run(qemuimg_cmd, check=True, shell=True)
     print("COMPLETE: " + qemuimg_cmd)
 
@@ -141,11 +141,10 @@ def func_convert_diskimage(main_argv):
 
 
 def main(argv):
-
     funcname: str = argv[get_argidx(argidx_st, -1)]
 
     if (funcname != "update" and funcname != "convert"):
-        print("Only update and convert is available, but " + funcname+" is given.")
+        print("Only update and convert is available, but " + funcname + " is given.")
         exit(-1)
 
     if os.path.exists(argv[get_argidx(argidx_st, 0)]) != True:
