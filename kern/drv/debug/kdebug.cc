@@ -40,6 +40,7 @@ constexpr color_scheme cs_default{console::CONSOLE_COLOR_BLACK, console::CONSOLE
 constexpr color_scheme cs_panic{console::CONSOLE_COLOR_LIGHT_BLUE, console::CONSOLE_COLOR_RED};
 constexpr color_scheme cs_warning{console::CONSOLE_COLOR_LIGHT_BLUE, console::CONSOLE_COLOR_LIGHT_BROWN};
 
+size_t warning_count = 0;
 
 bool kdebug::panicked = false;
 
@@ -48,12 +49,15 @@ static inline void kdebug_vwarning_print_impl(const char *fmt, va_list ap)
     // change cga color to draw attention
     console::console_set_color(cs_warning.first, cs_warning.second);
 
+    write_format("[%lld] ", warning_count);
+
     valist_write_format(fmt, ap);
 
     constexpr size_t PCS_BUFLEN = 16;
     uintptr_t pcs[PCS_BUFLEN] = {0};
     kdebug::kdebug_getcallerpcs(PCS_BUFLEN, pcs);
 
+    write_format("\n");
     for (auto pc : pcs)
     {
         write_format("%p ", pc);
@@ -159,6 +163,8 @@ void kdebug::kdebug_warning(const char *fmt, ...)
     va_list ap;
 
     va_start(ap, fmt);
+
+    warning_count++;
 
     kdebug_vwarning_print_impl(fmt, ap);
 

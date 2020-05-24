@@ -14,28 +14,10 @@
 
 using namespace syscall;
 
-error_code default_syscall()
-{
-    return ERROR_NOT_IMPL;
-}
-
-error_code sys_hello()
-{
-    write_format("hello sys!\n");
-    return ERROR_SUCCESS;
-}
-
-extern "C" syscall_entry syscall_table[SYSCALL_COUNT + 1] = {
-    [0 ... SYSCALL_COUNT] = default_syscall,
-
-
-    [0] = sys_hello,
-};
-
 
 PANIC void syscall::system_call_init()
 {
-    // check availablity of syscall/sysret
+    // check availability of syscall/sysret
     auto [eax, ebx, ecx, edx] = cpuid(CPUID_INTELFEATURES);
 
     if (!(edx & (1 << 11)))
@@ -43,7 +25,7 @@ PANIC void syscall::system_call_init()
         KDEBUG_GENERALPANIC("SYSCALL/SYSRET isn't available.");
     }
 
-    // enanble the syscall/sysret instructions
+    // enable the syscall/sysret instructions
 
     auto ia32_EFER_val = rdmsr(MSR_EFER);
     if (!(ia32_EFER_val & 0b1))
