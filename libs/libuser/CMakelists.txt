@@ -5,8 +5,9 @@ add_library(libuser STATIC uentry.S syscall_client.S uentry_main.cc)
 set_property(SOURCE uentry.S PROPERTY LANGUAGE C)
 set_property(SOURCE syscall_client.S PROPERTY LANGUAGE C)
 
+target_include_directories(libuser PRIVATE "./include")
+target_include_directories(libuser PUBLIC "${CMAKE_SOURCE_DIR}/include")
+target_include_directories(libuser PUBLIC "./user-include")
+
 target_sources(libuser PRIVATE uentry.S syscall_client.S uentry_main.cc)
 
-target_include_directories(libuser PRIVATE "${CMAKE_SOURCE_DIR}/include")
-target_include_directories(libuser PRIVATE "./include")
-target_include_directories(libuser PUBLIC "./user-include")

@@ -1,10 +1,25 @@
 #pragma once
 
+
+#if defined(__ASSEMBLER__)
+
+#define SYS_hello 1
+#define SYS_exit 2
+
+#else
+
+
 #include "system/error.h"
 #include "system/types.h"
 
 namespace syscall
 {
+    enum SYSCALL_NUMBER
+    {
+        // starts from 1 for the sake of debugging
+        SYS_hello = 1,
+        SYS_exit,
+    };
 
     struct syscall_regs
     {
@@ -33,3 +48,7 @@ namespace syscall
     PANIC void system_call_init();
 
 } // namespace syscall
+
+
+
+#endif

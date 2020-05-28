@@ -1,15 +1,10 @@
-
-long long a = 0;
-void infinite(long long b)
-{
-    a = b;
-    infinite(b + 1);
-}
+#include "syscall.hpp"
 
 extern "C" int main(int argc, const char **argv)
 {
-    // infinite(0);
-    asm volatile("syscall" ::
-                     : "memory");
+    hello(2001, 12, 04, 23);
+    hello(2002, 12, 04, 23);
+    hello(2003, 10, 01, 10);
+
     return 0;
 }

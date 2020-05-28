@@ -9,6 +9,7 @@ syscall_x64_entry:
     movq %rsp, %gs:(KERNEL_GS_USTACK)
     movq %gs:(KERNEL_GS_KSTACK), %rsp
 
+
     pushq %r15
     pushq %r14
     pushq %r13

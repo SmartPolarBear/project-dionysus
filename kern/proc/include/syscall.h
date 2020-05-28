@@ -11,6 +11,7 @@
 #include "system/types.h"
 
 #include "system/syscall.h"
+
 using syscall::syscall_regs;
 
 enum KERNEL_GS_INDEX
@@ -20,7 +21,7 @@ enum KERNEL_GS_INDEX
 };
 
 
-size_t get_nth_arg(const syscall_regs *uregs, size_t n);
+size_t get_nth_arg(const syscall_regs *regs, size_t n);
 
 extern "C" error_code syscall_body();
 
