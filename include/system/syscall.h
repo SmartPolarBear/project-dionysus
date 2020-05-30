@@ -43,6 +43,8 @@ namespace syscall
     using syscall_entry = error_code (*)(const syscall_regs *);
 
     constexpr size_t SYSCALL_COUNT = 512;
+    constexpr size_t SYSCALL_PARAMETER_MAX = 6;
+
     extern "C" syscall_entry syscall_table[SYSCALL_COUNT + 1];
 
     PANIC void system_call_init();
