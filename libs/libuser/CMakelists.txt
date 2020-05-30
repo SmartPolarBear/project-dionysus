@@ -21,7 +21,6 @@ target_compile_options(libuser BEFORE
         PRIVATE -Wextra
         PRIVATE -march=x86-64
         PRIVATE -mtls-direct-seg-refs
-        PRIVATE -mno-implicit-float
         PRIVATE -mno-sse
         PRIVATE -mno-avx
         PRIVATE -mcmodel=large

@@ -11,53 +11,63 @@
 //  2) 0<=para_count<7 and all parameter is uint64_t or those with the same size.
 static inline uint64_t trigger_syscall(uint64_t syscall_number, size_t para_count, ...)
 {
+    uint64_t args[6] = {0};
+
     if (syscall_number >= syscall::SYSCALL_COUNT ||
         para_count > syscall::SYSCALL_PARAMETER_MAX)
     {
         //TODO: error
     }
 
+    // copy out parameters in advance to avoid rewriting %rdx
     va_list ap;
     va_start(ap, para_count);
+    for (size_t i = 0; i < para_count; i++)
+    {
+        args[i] = va_arg(ap, uint64_t);
+    }
+    va_end(ap);
 
-    for (int i = 0; i < para_count; i++)
+    for (size_t i = 0; i < para_count; i++)
     {
         switch (i)
         {
             case 5:
+            {
                 asm volatile("mov %0, %%r9\n\t"
                 :
-                : "a" (va_arg(ap, uint64_t))
+                : "r" (args[5])
                 : "%r9");
                 break;
+            }
             case 4:
                 asm volatile("mov %0, %%r8\n\t"
                 :
-                : "a" (va_arg(ap, uint64_t))
+                : "a" (args[4])
                 : "%r8");
                 break;
             case 3:
                 asm volatile("mov %0, %%r10\n\t"
                 :
-                : "a" (va_arg(ap, uint64_t))
+                : "a" (args[3])
                 : "%r10");
                 break;
             case 2:
                 asm volatile("mov %0, %%rdx\n\t"
                 :
-                : "a" (va_arg(ap, uint64_t))
+                : "a" (args[2])
                 : "%rdx");
                 break;
             case 1:
                 asm volatile("mov %0, %%rsi\n\t"
                 :
-                : "a" (va_arg(ap, uint64_t))
+                : "a" (args[1])
                 : "%rsi");
                 break;
             case 0:
                 asm volatile("mov %0, %%rdi\n\t"
                 :
-                : "a" (va_arg(ap, uint64_t))
+                : "a" (args[0])
                 : "%rdi");
                 break;
             default:
@@ -65,7 +75,6 @@ static inline uint64_t trigger_syscall(uint64_t syscall_number, size_t para_coun
         }
     }
 
-    va_end(ap);
 
     uint64_t ret = 0;
 
