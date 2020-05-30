@@ -17,10 +17,6 @@
 
 using namespace syscall;
 
-// According to System V ABI
-// Parameters are in rdi, rsi, rdx, rcx, r8, r9, stack (right to left)
-// Return values are in rax and rdx
-
 size_t get_nth_arg(const syscall_regs *regs, size_t n)
 {
     switch (n)
@@ -32,7 +28,7 @@ size_t get_nth_arg(const syscall_regs *regs, size_t n)
         case 2:
             return regs->rdx;
         case 3:
-            return regs->rcx;
+            return regs->r10;
         case 4:
             return regs->r8;
         case 5:
@@ -86,7 +82,7 @@ extern "C" error_code syscall_body()
     asm volatile ("mov %%rsp,%0":"=r"(sp));
 
     // FIXME: r11 value appear under r14. needs further investigation.
-    const syscall_regs *regs = reinterpret_cast<syscall_regs *>(sp + sizeof(syscall_regs));
+    const syscall_regs *regs = reinterpret_cast<syscall_regs *>(sp + sizeof(syscall_regs) + sizeof(uint64_t));
 
     KDEBUG_ASSERT(regs != nullptr);
 

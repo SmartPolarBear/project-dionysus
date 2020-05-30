@@ -1,5 +1,7 @@
 #include "syscall.hpp"
 
+//TODO: syscall client can't handle parameter passing right.
+
 extern "C" int main(int argc, const char **argv)
 {
     hello(2001, 12, 04, 23);
