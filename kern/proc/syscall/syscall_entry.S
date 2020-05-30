@@ -2,6 +2,9 @@
 
 .code64
 
+// we don't use C++ here because it unexpectedly modifies some registers.
+// asm make a function rather 'clean'
+
 .global syscall_x64_entry
 syscall_x64_entry:
     call safe_swap_gs

@@ -63,6 +63,10 @@ error_code sys_hello(const syscall_regs *regs)
     return ERROR_SUCCESS;
 }
 
+#pragma clang diagnostic push
+
+#pragma clang diagnostic ignored "-Wc99-designator"
+#pragma clang diagnostic ignored "-Winitializer-overrides"
 
 extern "C" syscall_entry syscall_table[SYSCALL_COUNT + 1] = {
         [0 ... SYSCALL_COUNT] = default_syscall,
@@ -71,6 +75,7 @@ extern "C" syscall_entry syscall_table[SYSCALL_COUNT + 1] = {
         [SYS_hello] = sys_hello,
 };
 
+#pragma clang diagnostic pop
 
 
 extern "C" error_code syscall_body()

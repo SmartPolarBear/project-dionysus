@@ -3,20 +3,21 @@
 //
 
 #include "system/syscall.h"
+#include "system/error.h"
 
 
 // syscall without out parameters
 // precondition:
 //  1) 0<=syscall_number<SYSCALL_COUNT
 //  2) 0<=para_count<7 and all parameter is uint64_t or those with the same size.
-static inline uint64_t trigger_syscall(uint64_t syscall_number, size_t para_count, ...)
+__attribute__((always_inline)) static inline error_code trigger_syscall(uint64_t syscall_number, size_t para_count, ...)
 {
     uint64_t args[6] = {0};
 
     if (syscall_number >= syscall::SYSCALL_COUNT ||
         para_count > syscall::SYSCALL_PARAMETER_MAX)
     {
-        //TODO: error
+        return -ERROR_INVALID_ARG;
     }
 
     // copy out parameters in advance to avoid rewriting %rdx
@@ -28,6 +29,7 @@ static inline uint64_t trigger_syscall(uint64_t syscall_number, size_t para_coun
     }
     va_end(ap);
 
+    // set parameter-passing registers
     for (size_t i = 0; i < para_count; i++)
     {
         switch (i)
@@ -76,7 +78,7 @@ static inline uint64_t trigger_syscall(uint64_t syscall_number, size_t para_coun
     }
 
 
-    uint64_t ret = 0;
+    error_code ret = 0;
 
     // rcx and r11 are used by syscall instruction and therefore should be protected
     asm volatile ( "syscall" : "=a" (ret)
