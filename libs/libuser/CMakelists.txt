@@ -9,3 +9,23 @@ target_include_directories(libuser PUBLIC "include")
 
 target_sources(libuser PRIVATE uentry.S syscall_client.cc uentry_main.cc)
 
+#-mno-implicit-float is used to avoid xmm registers, which may cause GPF
+target_compile_options(libuser BEFORE
+        PRIVATE --target=x86_64-pc-linux-elf
+        PRIVATE -gdwarf-2
+        PRIVATE -fno-pie
+        PRIVATE -fno-exceptions
+        PRIVATE -fno-rtti
+        PRIVATE -nostdlib
+        PRIVATE -Wall
+        PRIVATE -Wextra
+        PRIVATE -march=x86-64
+        PRIVATE -mtls-direct-seg-refs
+        PRIVATE -mno-implicit-float
+        PRIVATE -mno-sse
+        PRIVATE -mno-avx
+        PRIVATE -mcmodel=large
+        PRIVATE -mno-red-zone
+        PRIVATE -fmodules
+        PRIVATE -std=c++2a)
+

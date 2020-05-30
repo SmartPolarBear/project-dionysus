@@ -4,6 +4,7 @@
 
 #include "system/syscall.h"
 
+
 // syscall without out parameters
 // precondition:
 //  1) 0<=syscall_number<SYSCALL_COUNT
@@ -19,34 +20,45 @@ static inline uint64_t trigger_syscall(uint64_t syscall_number, size_t para_coun
     va_list ap;
     va_start(ap, para_count);
 
-    register uint64_t arg0 asm("rdi");
-    register uint64_t arg1 asm("rsi");
-    register uint64_t arg2 asm("rdx");
-    register uint64_t arg3 asm("r10");
-    register uint64_t arg4 asm("r8");
-    register uint64_t arg5 asm("r9");
-
     for (int i = 0; i < para_count; i++)
     {
         switch (i)
         {
             case 5:
-                arg5 = va_arg(ap, uint64_t);
+                asm volatile("mov %0, %%r9\n\t"
+                :
+                : "a" (va_arg(ap, uint64_t))
+                : "%r9");
                 break;
             case 4:
-                arg4 = va_arg(ap, uint64_t);
+                asm volatile("mov %0, %%r8\n\t"
+                :
+                : "a" (va_arg(ap, uint64_t))
+                : "%r8");
                 break;
             case 3:
-                arg3 = va_arg(ap, uint64_t);
+                asm volatile("mov %0, %%r10\n\t"
+                :
+                : "a" (va_arg(ap, uint64_t))
+                : "%r10");
                 break;
             case 2:
-                arg2 = va_arg(ap, uint64_t);
+                asm volatile("mov %0, %%rdx\n\t"
+                :
+                : "a" (va_arg(ap, uint64_t))
+                : "%rdx");
                 break;
             case 1:
-                arg1 = va_arg(ap, uint64_t);
+                asm volatile("mov %0, %%rsi\n\t"
+                :
+                : "a" (va_arg(ap, uint64_t))
+                : "%rsi");
                 break;
             case 0:
-                arg0 = va_arg(ap, uint64_t);
+                asm volatile("mov %0, %%rdi\n\t"
+                :
+                : "a" (va_arg(ap, uint64_t))
+                : "%rdi");
                 break;
             default:
                 break;
