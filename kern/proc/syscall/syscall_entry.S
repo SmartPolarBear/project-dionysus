@@ -31,7 +31,9 @@ syscall_x64_entry:
 
     call syscall_body
 
-    popq %rax
+    // we discard rax because it is used to store return value
+    addq $8, %rsp
+
     popq %rbx
     popq %rcx
     popq %rdx
