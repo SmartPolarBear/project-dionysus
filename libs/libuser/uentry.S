@@ -21,6 +21,6 @@
 .globl _start
 _start:
 	call libmain
-  syscall
+// normally, control flow can't reach here
 spin:
   jmp spin
