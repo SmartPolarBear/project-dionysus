@@ -7,10 +7,10 @@
     </Objective-C>
     <Objective-C-extensions>
       <extensions>
+        <pair source="cc" header="hpp" fileNamingConvention="SNAKE_CASE" />
         <pair source="cpp" header="h" fileNamingConvention="NONE" />
         <pair source="c" header="h" fileNamingConvention="NONE" />
         <pair source="cu" header="cuh" fileNamingConvention="NONE" />
-        <pair source="cc" header="hpp" fileNamingConvention="SNAKE_CASE" />
       </extensions>
     </Objective-C-extensions>
     <codeStyleSettings language="ObjectiveC">

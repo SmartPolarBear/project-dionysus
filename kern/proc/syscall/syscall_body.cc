@@ -41,41 +41,7 @@ size_t get_syscall_number(const syscall_regs *regs)
     return regs->rax;
 }
 
-error_code default_syscall(const syscall_regs *regs)
-{
-    size_t syscall_no = get_syscall_number(regs); // first parameter
 
-    kdebug::kdebug_warning("The syscall %lld isn't yet defined.", syscall_no);
-
-    return ERROR_SUCCESS;
-}
-
-
-error_code sys_hello(const syscall_regs *regs)
-{
-
-    write_format("hello ! %lld %lld %lld %lld\n",
-                 get_nth_arg(regs, 0),
-                 get_nth_arg(regs, 1),
-                 get_nth_arg(regs, 2),
-                 get_nth_arg(regs, 3));
-
-    return ERROR_SUCCESS;
-}
-
-#pragma clang diagnostic push
-
-#pragma clang diagnostic ignored "-Wc99-designator"
-#pragma clang diagnostic ignored "-Winitializer-overrides"
-
-extern "C" syscall_entry syscall_table[SYSCALL_COUNT + 1] = {
-        [0 ... SYSCALL_COUNT] = default_syscall,
-
-
-        [SYS_hello] = sys_hello,
-};
-
-#pragma clang diagnostic pop
 
 
 extern "C" error_code syscall_body()

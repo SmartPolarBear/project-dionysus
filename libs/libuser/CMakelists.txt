@@ -1,13 +1,16 @@
 cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
-add_library(libuser STATIC uentry.S uentry_main.cc syscall_client.cc)
+add_library(libuser STATIC uentry.S uentry_main.cc)
+
+add_subdirectory(implements)
 
 set_property(SOURCE uentry.S PROPERTY LANGUAGE C)
 
 target_include_directories(libuser PUBLIC "${CMAKE_SOURCE_DIR}/include")
 target_include_directories(libuser PUBLIC "include")
+target_include_directories(libuser PRIVATE "include_private")
 
-target_sources(libuser PRIVATE uentry.S syscall_client.cc uentry_main.cc)
+target_sources(libuser PRIVATE uentry.S uentry_main.cc)
 
 #-mno-implicit-float is used to avoid xmm registers, which may cause GPF
 target_compile_options(libuser BEFORE
