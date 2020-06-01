@@ -27,9 +27,15 @@ constexpr size_t IDT_SIZE = 4_KB;
 
 static error_code default_trap_handle([[maybe_unused]] trap::trap_frame info);
 
+#pragma clang diagnostic push
+
+#pragma clang diagnostic ignored "-Wc99-designator"
+#pragma clang diagnostic ignored "-Winitializer-overrides"
+
 struct
 {
     spinlock lock;
+
     trap_handle trap_handles[TRAP_NUMBERMAX] =
         {
             [0 ... TRAP_NUMBERMAX - 1] = trap_handle{
@@ -37,6 +43,8 @@ struct
             },
     };
 } handle_table;
+
+#pragma clang diagnostic pop
 
 // default handle of trap
 static error_code default_trap_handle([[maybe_unused]] trap::trap_frame info)
