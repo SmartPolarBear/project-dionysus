@@ -31,7 +31,7 @@ using lock::spinlock_release;
     bool has_proc = false;
 
     list_head *iter = nullptr;
-    list_for(iter, &proc_list.head)
+    list_for(iter, &proc_list.run_head)
     {
         auto entry = list_entry(iter, process::process_dispatcher, link);
         if (entry->state == process::PROC_STATE_RUNNING ||
@@ -89,7 +89,7 @@ using lock::spinlock_release;
 
     list_head *start = current != nullptr
                            ? current->link.next
-                           : &proc_list.head;
+                           : &proc_list.run_head;
     list_head *iter = start;
     if (iter->next != iter)
     {

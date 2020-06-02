@@ -33,6 +33,7 @@
 #include "system/pmm.h"
 #include "system/proc.h"
 #include "system/vmm.h"
+#include "system/scheduler.h"
 
 #include "drivers/apic/traps.h"
 #include "drivers/lock/spinlock.h"
@@ -61,165 +62,190 @@ process_list_struct proc_list;
 // precondition: the lock must be held
 static inline process::pid alloc_pid(void)
 {
-	return proc_list.proc_count++;
+    return proc_list.proc_count++;
 }
 
 static inline error_code setup_mm(process::process_dispatcher *proc)
 {
-	proc->mm = vmm::mm_create();
-	if (proc->mm == nullptr)
-	{
-		return -ERROR_MEMORY_ALLOC;
-	}
+    proc->mm = vmm::mm_create();
+    if (proc->mm == nullptr)
+    {
+        return -ERROR_MEMORY_ALLOC;
+    }
 
-	vmm::pde_ptr_t pgdir = vmm::pgdir_entry_alloc();
+    vmm::pde_ptr_t pgdir = vmm::pgdir_entry_alloc();
 
-	if (pgdir == nullptr)
-	{
-		vmm::mm_destroy(proc->mm);
-		return -ERROR_MEMORY_ALLOC;
-	}
+    if (pgdir == nullptr)
+    {
+        vmm::mm_destroy(proc->mm);
+        return -ERROR_MEMORY_ALLOC;
+    }
 
-	memmove(pgdir, g_kpml4t, PGTABLE_SIZE);
+    memmove(pgdir, g_kpml4t, PGTABLE_SIZE);
 
-	proc->mm->pgdir = pgdir;
+    proc->mm->pgdir = pgdir;
 
-	return ERROR_SUCCESS;
+    return ERROR_SUCCESS;
 }
 
 void process::process_init(void)
 {
-	proc_list.proc_count = 0;
-	spinlock_initlock(&proc_list.lock, "proc");
-	list_init(&proc_list.head);
+    proc_list.proc_count = 0;
+    spinlock_initlock(&proc_list.lock, "proc");
+    list_init(&proc_list.run_head);
 }
 
 error_code process::create_process(IN const char *name,
-								   IN size_t flags,
-								   IN bool inherit_parent,
-								   OUT process_dispatcher **retproc)
+                                   IN size_t flags,
+                                   IN bool inherit_parent,
+                                   OUT process_dispatcher **retproc)
 {
-	spinlock_acquire(&proc_list.lock);
+    spinlock_acquire(&proc_list.lock);
 
-	if (proc_list.proc_count >= process::PROC_MAX_COUNT)
-	{
-		return -ERROR_TOO_MANY_PROC;
-	}
+    if (proc_list.proc_count >= process::PROC_MAX_COUNT)
+    {
+        return -ERROR_TOO_MANY_PROC;
+    }
 
-	auto proc = new process_dispatcher(name, alloc_pid(), current == nullptr ? 0 : current->id, flags);
+    auto proc = new process_dispatcher(name, alloc_pid(), current == nullptr ? 0 : current->id, flags);
 
-	//setup kernel stack
-	proc->kstack = (uintptr_t) new BLOCK<process::process_dispatcher::KERNSTACK_SIZE>;
+    //setup kernel stack
+    proc->kstack = (uintptr_t) new BLOCK<process::process_dispatcher::KERNSTACK_SIZE>;
 
-	if (!proc->kstack)
-	{
-		delete proc;
-		return -ERROR_MEMORY_ALLOC;
-	}
+    if (!proc->kstack)
+    {
+        delete proc;
+        return -ERROR_MEMORY_ALLOC;
+    }
 
-	error_code ret = ERROR_SUCCESS;
-	if ((ret = setup_mm(proc)) != ERROR_SUCCESS)
-	{
-		delete proc;
-		return ret;
-	}
+    error_code ret = ERROR_SUCCESS;
+    if ((ret = setup_mm(proc)) != ERROR_SUCCESS)
+    {
+        delete proc;
+        return ret;
+    }
 
-	// proc->trapframe.cs = (SEG_UCODE << 3) | DPL_USER;
-	// proc->trapframe.ss = (SEG_UDATA << 3) | DPL_USER;
-	//TODO: load real user segment selectors
-	proc->trapframe.cs = 8;
-	proc->trapframe.ss = 8 + 8;
-	proc->trapframe.rsp = USER_STACK_TOP;
+    // proc->trapframe.cs = (SEG_UCODE << 3) | DPL_USER;
+    // proc->trapframe.ss = (SEG_UDATA << 3) | DPL_USER;
+    //TODO: load real user segment selectors
+    proc->trapframe.cs = 8;
+    proc->trapframe.ss = 8 + 8;
+    proc->trapframe.rsp = USER_STACK_TOP;
 
-	proc->trapframe.rflags |= trap::EFLAG_IF;
+    proc->trapframe.rflags |= trap::EFLAG_IF;
 
-	if (flags & PROC_SYS_SERVER)
-	{
-		proc->trapframe.rflags |= trap::EFLAG_IOPL_MASK;
-	}
+    if (flags & PROC_SYS_SERVER)
+    {
+        proc->trapframe.rflags |= trap::EFLAG_IOPL_MASK;
+    }
 
-	if (inherit_parent)
-	{
-		// TODO: copy data from parent process
-	}
+    if (inherit_parent)
+    {
+        // TODO: copy data from parent process
+    }
 
-	list_add(&proc->link, &proc_list.head);
+    list_add(&proc->link, &proc_list.run_head);
 
-	spinlock_release(&proc_list.lock);
+    spinlock_release(&proc_list.lock);
 
-	*retproc = proc;
-	return ERROR_SUCCESS;
+    *retproc = proc;
+    return ERROR_SUCCESS;
 }
 
 error_code process::process_load_binary(IN process_dispatcher *proc,
-										IN uint8_t *bin,
-										[[maybe_unused]] IN size_t binsize OPTIONAL,
-										IN binary_types type)
+                                        IN uint8_t *bin,
+                                        [[maybe_unused]] IN size_t binsize OPTIONAL,
+                                        IN binary_types type)
 {
-	error_code ret = ERROR_SUCCESS;
-	uintptr_t entry_addr = 0;
-	if (type == BINARY_ELF)
-	{
+    error_code ret = ERROR_SUCCESS;
 
-		ret = elf_load_binary(proc, bin, &entry_addr);
-	}
-	else
-	{
-		ret = -ERROR_INVALID_ADDR;
-	}
+    uintptr_t entry_addr = 0;
+    if (type == BINARY_ELF)
+    {
 
-	if (ret == ERROR_SUCCESS)
-	{
-		proc->trapframe.rip = entry_addr;
+        ret = elf_load_binary(proc, bin, &entry_addr);
+    } else
+    {
+        ret = -ERROR_INVALID_ADDR;
+    }
 
-		// allocate an stack
-		for (size_t i = 0; i < process::process_dispatcher::KERNSTACK_PAGES; i++)
-		{
-			uintptr_t va = USER_TOP - process::process_dispatcher::KERNSTACK_SIZE + i * PAGE_SIZE;
-			page_info *page_ret = nullptr;
-			auto ret = pmm::pgdir_alloc_page(proc->mm->pgdir, true, va, PG_W | PG_U | PG_PS | PG_P, &page_ret);
-			if (ret != ERROR_SUCCESS)
-			{
-				return -ERROR_MEMORY_ALLOC;
-			}
-		}
+    if (ret == ERROR_SUCCESS)
+    {
+        proc->trapframe.rip = entry_addr;
 
-		proc->state = PROC_STATE_RUNNABLE;
-	}
+        // allocate an stack
+        for (size_t i = 0; i < process::process_dispatcher::KERNSTACK_PAGES; i++)
+        {
+            uintptr_t va = USER_TOP - process::process_dispatcher::KERNSTACK_SIZE + i * PAGE_SIZE;
+            page_info *page_ret = nullptr;
+            auto ret = pmm::pgdir_alloc_page(proc->mm->pgdir, true, va, PG_W | PG_U | PG_PS | PG_P, &page_ret);
+            if (ret != ERROR_SUCCESS)
+            {
+                return -ERROR_MEMORY_ALLOC;
+            }
+        }
 
-	return ret;
+        proc->state = PROC_STATE_RUNNABLE;
+    }
+
+    return ret;
 }
 
 error_code process::process_run(IN process_dispatcher *proc)
 {
 
-	if (current != nullptr && current->state == PROC_STATE_RUNNING)
-	{
-		current->state = PROC_STATE_RUNNABLE;
-	}
+    if (current != nullptr && current->state == PROC_STATE_RUNNING)
+    {
+        current->state = PROC_STATE_RUNNABLE;
+    }
 
-	trap::pushcli();
+    trap::pushcli();
 
-	current = proc;
-	current->state = PROC_STATE_RUNNING;
-	current->runs++;
+    current = proc;
+    current->state = PROC_STATE_RUNNING;
+    current->runs++;
 
-	KDEBUG_ASSERT(current != nullptr && current->mm != nullptr);
+    KDEBUG_ASSERT(current != nullptr && current->mm != nullptr);
 
-	lcr3(V2P((uintptr_t)current->mm->pgdir));
+    lcr3(V2P((uintptr_t) current->mm->pgdir));
 
-	spinlock_release(&proc_list.lock);
+    spinlock_release(&proc_list.lock);
 
-	// vmm::tss_set_rsp(cpu->get_tss(), 0, current->kstack + process_dispatcher::KERNSTACK_SIZE);
+    // vmm::tss_set_rsp(cpu->get_tss(), 0, current->kstack + process_dispatcher::KERNSTACK_SIZE);
 #ifndef USE_NEW_CPU_INTERFACE
-	cpu->tss.rsp0 = current->kstack + process_dispatcher::KERNSTACK_SIZE;
+    cpu->tss.rsp0 = current->kstack + process_dispatcher::KERNSTACK_SIZE;
 #else
-	cpu()->tss.rsp0 = current->kstack + process_dispatcher::KERNSTACK_SIZE;
+    cpu()->tss.rsp0 = current->kstack + process_dispatcher::KERNSTACK_SIZE;
 #endif
 
-	trap::popcli();
+    trap::popcli();
 
-	do_run_process(&current->trapframe, current->kstack);
+    do_run_process(&current->trapframe, current->kstack);
 
-	KDEBUG_FOLLOWPANIC("iret failed");
+    KDEBUG_FOLLOWPANIC("iret failed");
 }
+
+void process::process_terminate()
+{
+    process_terminate(current);
+}
+
+void process::process_terminate(IN process_dispatcher *proc)
+{
+    // TODO: close all files
+
+    // TODO: wakeup parent and inform it of the termination
+
+    // TODO: recycle the memory
+
+
+
+
+    // set process state and call the scheduler
+    proc->state = PROC_STATE_ZOMBIE;
+
+    scheduler::scheduler_yield();
+
+    KDEBUG_GENERALPANIC("process_terminate: should not reach here.");
+}
+

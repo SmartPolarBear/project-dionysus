@@ -17,7 +17,7 @@ error_code sys_exit(const syscall_regs *regs)
 {
     write_format("current process calls exit: %lld\n", get_nth_arg(regs, 0));
 
-
-
+    process::process_terminate();
+    
     return ERROR_SUCCESS;
 }

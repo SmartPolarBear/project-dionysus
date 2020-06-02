@@ -15,7 +15,7 @@ using lock::spinlock_release;
 struct process_list_struct
 {
     spinlock lock;
-    list_head head;
+    list_head run_head;
     size_t proc_count;
 };
 
