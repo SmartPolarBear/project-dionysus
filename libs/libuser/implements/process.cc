@@ -7,7 +7,7 @@
 #include "system/syscall.h"
 #include "system/error.h"
 
-extern "C" void app_terminate(error_code err)
+extern "C" error_code app_terminate(error_code err)
 {
-    trigger_syscall(syscall::SYS_exit, 1, err);
+   return trigger_syscall(syscall::SYS_exit, 1, err);
 }

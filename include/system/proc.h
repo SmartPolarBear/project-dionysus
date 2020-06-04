@@ -20,7 +20,24 @@ namespace process
         PROC_STATE_SLEEPING,
         PROC_STATE_RUNNABLE,
         PROC_STATE_RUNNING,
-        PROC_STATE_ZOMBIE
+        PROC_STATE_ZOMBIE,
+    };
+
+    enum process_flags
+    {
+        PROC_EXITING = 0b1,
+        PROC_SYS_SERVER = 0x10,
+        PROC_USER = 0b100,
+        PROC_DRIVER = 0b1000,
+    };
+
+
+    constexpr size_t PROC_WAITING_INTERRUPTED = 0x80000000;
+    enum process_waiting_state : size_t
+    {
+        PROC_WAITING_NONE,
+        PROC_WAITING_CHILD = 0x1ul | PROC_WAITING_INTERRUPTED,
+        PROC_WAITING_TIMER = 0x2ul | PROC_WAITING_INTERRUPTED,
     };
 
     using pid = int64_t;
@@ -54,12 +71,15 @@ namespace process
         uintptr_t pgdir_addr;
 
         size_t flags;
+        size_t wating_state;
+        error_code exit_code;
 
         list_head link;
 
         process_dispatcher(const char *name, pid id, pid parent_id, size_t flags)
                 : state(PROC_STATE_EMBRYO), id(id), parent_id(parent_id),
-                  runs(0), kstack(0), mm(nullptr), flags(flags)
+                  runs(0), kstack(0), mm(nullptr), flags(flags), wating_state(PROC_WAITING_NONE),
+                  exit_code(ERROR_SUCCESS)
         {
 
             memset(&this->trapframe, 0, sizeof(this->trapframe));
@@ -68,12 +88,6 @@ namespace process
         }
     };
 
-    enum process_flags
-    {
-        PROC_SYS_SERVER,
-        PROC_USER,
-        PROC_DRIVER,
-    };
 
     enum binary_types
     {
@@ -95,11 +109,14 @@ namespace process
 
     error_code process_run(IN process_dispatcher *porc);
 
+    // handle process cleanup when exiting
+    void process_exit(IN process_dispatcher *proc);
+
     // terminate current process
-    void process_terminate();
+    error_code process_terminate(error_code error_code);
 
     // terminate the given process
-    void process_terminate(IN process_dispatcher *proc);
+    error_code process_terminate(pid pid, error_code error_code);
 
 } // namespace process
 

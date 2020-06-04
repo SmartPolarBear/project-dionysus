@@ -88,6 +88,43 @@ static inline error_code setup_mm(process::process_dispatcher *proc)
     return ERROR_SUCCESS;
 }
 
+static inline void free_pgdir(vmm::pde_ptr_t *pgdir)
+{
+    pmm::free_page(pmm::va_to_page((uintptr_t) pgdir));
+}
+
+static inline size_t process_terminal_impl(process::process_dispatcher *proc,
+                                           error_code err)
+{
+    if ((proc->flags & process::PROC_EXITING) == 0)
+    {
+        proc->flags |= process::PROC_EXITING;
+        proc->exit_code = err;
+        if (proc->wating_state & process::PROC_WAITING_INTERRUPTED)
+        {
+            //TODO Wake up the proc
+        }
+        return ERROR_SUCCESS;
+    }
+    return -ERROR_HAS_KILLED;
+}
+
+static inline process::process_dispatcher *find_process(pid pid)
+{
+    list_head *iter = nullptr;
+    list_for(iter, &proc_list.run_head)
+    {
+        auto proc_item = container_of(iter, process::process_dispatcher, link);
+
+        if (proc_item->id == pid)
+        {
+            return proc_item;
+        }
+    }
+
+    return nullptr;
+}
+
 void process::process_init(void)
 {
     proc_list.proc_count = 0;
@@ -154,8 +191,10 @@ error_code process::create_process(IN const char *name,
 
 error_code process::process_load_binary(IN process_dispatcher *proc,
                                         IN uint8_t *bin,
-                                        [[maybe_unused]] IN size_t binsize OPTIONAL,
-                                        IN binary_types type)
+                                        [[maybe_unused]] IN size_t
+                                        binsize OPTIONAL,
+                                        IN binary_types type
+)
 {
     error_code ret = ERROR_SUCCESS;
 
@@ -171,21 +210,27 @@ error_code process::process_load_binary(IN process_dispatcher *proc,
 
     if (ret == ERROR_SUCCESS)
     {
-        proc->trapframe.rip = entry_addr;
+        proc->trapframe.
+                rip = entry_addr;
 
-        // allocate an stack
-        for (size_t i = 0; i < process::process_dispatcher::KERNSTACK_PAGES; i++)
+// allocate an stack
+        for (
+                size_t i = 0;
+                i < process::process_dispatcher::KERNSTACK_PAGES;
+                i++)
         {
             uintptr_t va = USER_TOP - process::process_dispatcher::KERNSTACK_SIZE + i * PAGE_SIZE;
             page_info *page_ret = nullptr;
             auto ret = pmm::pgdir_alloc_page(proc->mm->pgdir, true, va, PG_W | PG_U | PG_PS | PG_P, &page_ret);
             if (ret != ERROR_SUCCESS)
             {
-                return -ERROR_MEMORY_ALLOC;
+                return -
+                        ERROR_MEMORY_ALLOC;
             }
         }
 
-        proc->state = PROC_STATE_RUNNABLE;
+        proc->
+                state = PROC_STATE_RUNNABLE;
     }
 
     return ret;
@@ -211,7 +256,6 @@ error_code process::process_run(IN process_dispatcher *proc)
 
     spinlock_release(&proc_list.lock);
 
-    // vmm::tss_set_rsp(cpu->get_tss(), 0, current->kstack + process_dispatcher::KERNSTACK_SIZE);
 #ifndef USE_NEW_CPU_INTERFACE
     cpu->tss.rsp0 = current->kstack + process_dispatcher::KERNSTACK_SIZE;
 #else
@@ -222,15 +266,26 @@ error_code process::process_run(IN process_dispatcher *proc)
 
     do_run_process(&current->trapframe, current->kstack);
 
-    KDEBUG_FOLLOWPANIC("iret failed");
+    KDEBUG_FOLLOWPANIC("do_run_process failed");
 }
 
-void process::process_terminate()
+
+error_code process::process_terminate(error_code err)
 {
-    process_terminate(current);
+    return process_terminal_impl(current, err)
 }
 
-void process::process_terminate(IN process_dispatcher *proc)
+error_code process::process_terminate(pid pid, error_code err)
+{
+    auto victim = find_process(pid);
+    if (victim == nullptr)
+    {
+        return -ERROR_INVALID_ARG;
+    }
+    return process_terminal_impl(victim, err);
+}
+
+void process::process_exit(IN process_dispatcher *proc)
 {
     // TODO: close all files
 
@@ -238,7 +293,23 @@ void process::process_terminate(IN process_dispatcher *proc)
 
     // TODO: recycle the memory
 
+    auto mm = current->mm;
+    if (mm != nullptr)
+    {
+        vmm::mm_free(mm);
 
+        free_pgdir(mm->pgdir);
+
+        trap::pushcli();
+
+        //TODO remove process mm link
+
+        trap::popcli();
+
+        vmm::mm_destroy(mm);
+    }
+
+    current->mm = nullptr;
 
 
     // set process state and call the scheduler
@@ -246,6 +317,6 @@ void process::process_terminate(IN process_dispatcher *proc)
 
     scheduler::scheduler_yield();
 
-    KDEBUG_GENERALPANIC("process_terminate: should not reach here.");
+    KDEBUG_GENERALPANIC("process_exit: should not reach here.");
 }
 

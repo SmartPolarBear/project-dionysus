@@ -7,4 +7,4 @@
 #include "system/types.h"
 #include "system/error.h"
 
-extern "C" void app_terminate(error_code e);
+extern "C" error_code app_terminate(error_code e);

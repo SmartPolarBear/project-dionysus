@@ -66,7 +66,8 @@ static inline pde_ptr_t walk_pgdir(const pde_ptr_t pml4t,
                                    size_t perm = 0)
 {
     // the lambda removes all flags in entries to expose the address of the next level
-    auto remove_flags = [](size_t pde) {
+    auto remove_flags = [](size_t pde)
+    {
         constexpr size_t FLAGS_SHIFT = 8;
         return (pde >> FLAGS_SHIFT) << FLAGS_SHIFT;
     };
@@ -74,10 +75,10 @@ static inline pde_ptr_t walk_pgdir(const pde_ptr_t pml4t,
     // the pml4, which's the content of CR3, is held in kpml4t
     // firstly find the 3rd page directory (PDPT) from it.
     pde_ptr_t pml4e = &pml4t[P4X(vaddr)],
-              pdpt = nullptr,
-              pdpte = nullptr,
-              pgdir = nullptr,
-              pde = nullptr;
+            pdpt = nullptr,
+            pdpte = nullptr,
+            pgdir = nullptr,
+            pde = nullptr;
 
 #ifdef WALK_PGDIR_PRINT_INTERMEDIATE_VAL
     if (vaddr == 0x10000000)
@@ -101,9 +102,8 @@ static inline pde_ptr_t walk_pgdir(const pde_ptr_t pml4t,
         }
 
         memset(pdpt, 0, PGTABLE_SIZE);
-        *pml4e = ((V2P((uintptr_t)pdpt)) | PG_P | PG_U | perm);
-    }
-    else
+        *pml4e = ((V2P((uintptr_t) pdpt)) | PG_P | PG_U | perm);
+    } else
     {
         pdpt = reinterpret_cast<decltype(pdpt)>(P2V(remove_flags(*pml4e)));
     }
@@ -132,9 +132,8 @@ static inline pde_ptr_t walk_pgdir(const pde_ptr_t pml4t,
         }
 
         memset(pgdir, 0, PGTABLE_SIZE);
-        *pdpte = ((V2P((uintptr_t)pgdir)) | PG_P | PG_U | perm);
-    }
-    else
+        *pdpte = ((V2P((uintptr_t) pgdir)) | PG_P | PG_U | perm);
+    } else
     {
         pgdir = reinterpret_cast<decltype(pgdir)>(P2V(remove_flags(*pdpte)));
     }
@@ -174,8 +173,7 @@ static inline error_code map_page(pde_ptr_t pml4, uintptr_t va, uintptr_t pa, si
     if (!(*pde & PG_P))
     {
         *pde = ((pa) | PG_PS | PG_P | PG_U | perm);
-    }
-    else
+    } else
     {
         return -ERROR_REWRITE;
     }
@@ -203,9 +201,19 @@ static inline error_code map_pages(pde_ptr_t pml4, uintptr_t va_start, uintptr_t
     return ret;
 }
 
+void vmm::unmap_range(pde_ptr_t pgdir, uintptr_t start, uintptr_t end)
+{
+    //TODO implement
+}
+
+void vmm::free_range(pde_ptr_t pgdir, uintptr_t start, uintptr_t end)
+{
+    //TODO implement
+}
+
 void vmm::install_kpml4()
 {
-    lcr3(V2P((uintptr_t)g_kpml4t));
+    lcr3(V2P((uintptr_t) g_kpml4t));
 }
 
 // When called by pmm, first map [0,2GiB] to [KERNEL_VIRTUALBASE,KERNEL_VIRTUALEND]
@@ -213,14 +221,15 @@ void vmm::install_kpml4()
 void vmm::boot_map_kernel_mem()
 {
     auto memtag = multiboot::acquire_tag_ptr<multiboot_tag_mmap>(MULTIBOOT_TAG_TYPE_MMAP);
-    size_t entry_count = (memtag->size - sizeof(multiboot_uint32_t) * 4ul - sizeof(memtag->entry_size)) / memtag->entry_size;
+    size_t entry_count =
+            (memtag->size - sizeof(multiboot_uint32_t) * 4ul - sizeof(memtag->entry_size)) / memtag->entry_size;
 
     auto max_pa = 0ull;
 
     for (size_t i = 0; i < entry_count; i++)
     {
         const auto entry = memtag->entries + i;
-        max_pa = std::max(max_pa, std::min(entry->addr + entry->len, (unsigned long long)PHYMEMORY_SIZE));
+        max_pa = std::max(max_pa, std::min(entry->addr + entry->len, (unsigned long long) PHYMEMORY_SIZE));
     }
 
     // map the kernel memory
@@ -229,8 +238,7 @@ void vmm::boot_map_kernel_mem()
     if (ret == -ERROR_MEMORY_ALLOC)
     {
         KDEBUG_GENERALPANIC("Can't allocate enough space for paging.\n");
-    }
-    else if (ret == -ERROR_REWRITE)
+    } else if (ret == -ERROR_REWRITE)
     {
         KDEBUG_RICHPANIC("Remap a mapped page.", "KERNEL PANIC:ERROR_REMAP",
                          true, "");
@@ -242,8 +250,7 @@ void vmm::boot_map_kernel_mem()
     if (ret == -ERROR_MEMORY_ALLOC)
     {
         KDEBUG_GENERALPANIC("Can't allocate enough space for paging.\n");
-    }
-    else if (ret == -ERROR_REWRITE)
+    } else if (ret == -ERROR_REWRITE)
     {
         KDEBUG_RICHPANIC("Remap a mapped page.", "KERNEL PANIC:ERROR_REMAP",
                          true, "");
@@ -258,5 +265,5 @@ uintptr_t vmm::pde_to_pa(pde_ptr_t pde)
 
 pde_ptr_t vmm::walk_pgdir(pde_ptr_t pgdir, size_t va, bool create)
 {
-    return ::walk_pgdir(pgdir, va, create, PG_U | PG_W );
+    return ::walk_pgdir(pgdir, va, create, PG_U | PG_W);
 }

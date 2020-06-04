@@ -26,75 +26,94 @@
 
 namespace vmm
 {
-using pde_t = size_t;
-using pde_ptr_t = pde_t *;
+    using pde_t = size_t;
+    using pde_ptr_t = pde_t *;
 
-struct vma_struct;
+    struct vma_struct;
 
-struct mm_struct
-{
-    // TODO: optimize with trees
-    list_head vma_list;    // linked list of vma structures
-    vma_struct *mmap_cache; // for quicker search of vma
-    pde_ptr_t pgdir;
-    size_t map_count;
-    size_t locked_by;
-    uintptr_t brk_start, brk;
+    struct mm_struct
+    {
+        // TODO: optimize with trees
+        list_head vma_list;    // linked list of vma structures
+        vma_struct *mmap_cache; // for quicker search of vma
+        pde_ptr_t pgdir;
+        size_t map_count;
+        size_t locked_by;
+        uintptr_t brk_start, brk;
 
-};
+    };
 
-struct vma_struct
-{
-    mm_struct *mm; // the mm this struct belongs to
-    uintptr_t vm_start;
-    uintptr_t vm_end;
-    size_t flags;
-    // TODO: optimize it with trees
-    list_head vma_link;
-};
+    struct vma_struct
+    {
+        mm_struct *mm; // the mm this struct belongs to
+        uintptr_t vm_start;
+        uintptr_t vm_end;
+        size_t flags;
+        // TODO: optimize it with trees
+        list_head vma_link;
+    };
 
-enum VM_FLAGS : size_t
-{
-    VM_READ = 0x00000001,
-    VM_WRITE = 0x00000002,
-    VM_EXEC = 0x00000004,
-    VM_STACK = 0x00000008,
-    VM_SHARE = 0x00000010,
-};
+    enum VM_FLAGS : size_t
+    {
+        VM_READ = 0x00000001,
+        VM_WRITE = 0x00000002,
+        VM_EXEC = 0x00000004,
+        VM_STACK = 0x00000008,
+        VM_SHARE = 0x00000010,
+    };
 
-vmm::pde_ptr_t pgdir_entry_alloc();
-void pgdir_entry_free(vmm::pde_ptr_t entry);
+    vmm::pde_ptr_t pgdir_entry_alloc();
 
-vma_struct *find_vma(mm_struct *mm, uintptr_t addr);
-vma_struct *vma_create(uintptr_t vm_start, uintptr_t vm_end, size_t vm_flags);
-void insert_vma_struct(mm_struct *mm, vma_struct *vma);
+    void pgdir_entry_free(vmm::pde_ptr_t entry);
 
-mm_struct *mm_create(void);
-error_code mm_map(IN mm_struct *mm, IN uintptr_t addr, IN size_t len, IN uint32_t vm_flags,
-                  OPTIONAL OUT vma_struct **vma_store);
-error_code mm_unmap(IN mm_struct *mm, IN uintptr_t addr, IN size_t len);
-error_code mm_duplicate(IN mm_struct *to, IN const mm_struct *from);
+    vma_struct *find_vma(mm_struct *mm, uintptr_t addr);
 
-void mm_destroy(mm_struct *mm);
+    vma_struct *vma_create(uintptr_t vm_start, uintptr_t vm_end, size_t vm_flags);
+
+    void insert_vma_struct(mm_struct *mm, vma_struct *vma);
+
+    mm_struct *mm_create(void);
+
+    error_code mm_map(IN mm_struct *mm, IN uintptr_t addr, IN size_t len, IN uint32_t vm_flags,
+                      OPTIONAL OUT vma_struct **vma_store);
+
+    error_code mm_unmap(IN mm_struct *mm, IN uintptr_t addr, IN size_t len);
+
+    error_code mm_duplicate(IN mm_struct *to, IN const mm_struct *from);
+
+    void mm_destroy(mm_struct *mm);
+
+     void mm_free(mm_struct *mm);
 
 // initialize the vmm
 // 1) register the page fault handle
 // 2) allocate an pml4 table
-void init_vmm(void);
+    void init_vmm(void);
 
 // When called by pmm, first map [0,2GiB] to [KERNEL_VIRTUALBASE,KERNEL_VIRTUALEND]
 // and then map all the memories to PHYREMAP_VIRTUALBASE
-void boot_map_kernel_mem(void);
+    void boot_map_kernel_mem(void);
+
 // load and get tss
-void tss_set_rsp(uint32_t *tss, size_t n, uint64_t rsp);
-uint64_t tss_get_rsp(uint32_t *tss, size_t n);
+    void tss_set_rsp(uint32_t *tss, size_t n, uint64_t rsp);
+
+    uint64_t tss_get_rsp(uint32_t *tss, size_t n);
+
 // install GDT
-void install_gdt(void);
+    void install_gdt(void);
+
 // install g_kml4_t to cr3
-void install_kpml4(void);
+    void install_kpml4(void);
+
 // get the physical address mapped by a pde
-uintptr_t pde_to_pa(pde_ptr_t pde);
-pde_ptr_t walk_pgdir(pde_ptr_t pgdir, size_t va, bool create);
+    uintptr_t pde_to_pa(pde_ptr_t pde);
+
+    pde_ptr_t walk_pgdir(pde_ptr_t pgdir, size_t va, bool create);
+
+// unmap or free memory ranges
+    void free_range(pde_ptr_t pgdir, uintptr_t start, uintptr_t end);
+
+    void unmap_range(pde_ptr_t pgdir, uintptr_t start, uintptr_t end);
 
 } // namespace vmm
 

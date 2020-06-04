@@ -77,7 +77,7 @@ void vmm::init_vmm(void)
 
     // register the page fault handle
     trap::trap_handle_regsiter(trap::TRAP_PGFLT, trap::trap_handle{
-                                                     .handle = handle_pgfault});
+            .handle = handle_pgfault});
 }
 
 vma_struct *vmm::find_vma(mm_struct *mm, uintptr_t addr)
@@ -87,7 +87,6 @@ vma_struct *vmm::find_vma(mm_struct *mm, uintptr_t addr)
     if (!(ret != nullptr &&
           ret->vm_start <= addr &&
           ret->vm_end > addr))
-
     {
         ret = nullptr;
         list_head *entry = nullptr;
@@ -196,8 +195,7 @@ error_code vmm::mm_map(IN mm_struct *mm, IN uintptr_t addr, IN size_t len, IN ui
     {
         // the vma exists
         return ret;
-    }
-    else
+    } else
     {
         vm_flags &= ~VM_SHARE;
         if ((vma = vma_create(start, end, vm_flags)) == nullptr)
@@ -258,4 +256,27 @@ void vmm::mm_destroy(mm_struct *mm)
     }
     memory::kfree(mm);
     mm = nullptr;
+}
+
+
+void vmm::mm_free(mm_struct *mm)
+{
+    KDEBUG_ASSERT(mm != nullptr && mm->map_count == 0);
+    auto pgdir = mm->pgdir;
+
+    list_head *iter = nullptr;
+
+    list_for(iter, &mm->vma_list)
+    {
+        auto vma = container_of(iter, vma_struct, vma_link);
+        unmap_range(pgdir, vma->vm_start, vma->vm_end);
+    }
+
+
+    iter = nullptr;
+    list_for(iter, &mm->vma_list)
+    {
+        auto vma = container_of(iter, vma_struct, vma_link);
+        free_range(pgdir, vma->vm_start, vma->vm_end);
+    }
 }
