@@ -109,7 +109,7 @@ static inline size_t process_terminal_impl(process::process_dispatcher *proc,
     return -ERROR_HAS_KILLED;
 }
 
-static inline process::process_dispatcher *find_process(pid pid)
+static inline process::process_dispatcher *find_process(process::pid pid)
 {
     list_head *iter = nullptr;
     list_for(iter, &proc_list.run_head)
@@ -272,7 +272,7 @@ error_code process::process_run(IN process_dispatcher *proc)
 
 error_code process::process_terminate(error_code err)
 {
-    return process_terminal_impl(current, err)
+    return process_terminal_impl(current, err);
 }
 
 error_code process::process_terminate(pid pid, error_code err)
@@ -298,7 +298,7 @@ void process::process_exit(IN process_dispatcher *proc)
     {
         vmm::mm_free(mm);
 
-        free_pgdir(mm->pgdir);
+        free_pgdir(&mm->pgdir);
 
         trap::pushcli();
 
