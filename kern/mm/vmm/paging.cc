@@ -211,7 +211,7 @@ void vmm::free_range(pde_ptr_t pgdir, uintptr_t start, uintptr_t end)
     //TODO implement
 }
 
-void vmm::install_kpml4()
+void vmm::install_kernel_pml4t()
 {
     lcr3(V2P((uintptr_t) g_kpml4t));
 }

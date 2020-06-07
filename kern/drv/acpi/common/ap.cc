@@ -117,11 +117,11 @@ void ap::all_processor_main()
 
 extern "C" [[clang::optnone]] void ap_enter(void)
 {
-    // the calling sequence of install_kpml4 and install_gdt is not the same as the boot CPU
+    // the calling sequence of install_kernel_pml4t and install_gdt is not the same as the boot CPU
     // because we need paging enabled first.
 
     // install the kernel vm
-    vmm::install_kpml4();
+    vmm::install_kernel_pml4t();
 
     // initialize segmentation
     vmm::install_gdt();

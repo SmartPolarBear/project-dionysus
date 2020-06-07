@@ -103,7 +103,7 @@ namespace vmm
     void install_gdt(void);
 
 // install g_kml4_t to cr3
-    void install_kpml4(void);
+    void install_kernel_pml4t(void);
 
 // get the physical address mapped by a pde
     uintptr_t pde_to_pa(pde_ptr_t pde);

@@ -220,7 +220,7 @@ void pmm::init_pmm(void)
 
     vmm::boot_map_kernel_mem();
 
-    vmm::install_kpml4();
+    vmm::install_kernel_pml4t();
 
     pmm_entity->enable_lock = true;
 }

@@ -104,6 +104,8 @@ static inline size_t process_terminal_impl(process::process_dispatcher *proc,
         {
             //TODO Wake up the proc
         }
+        // FIXME temporarily directly kill it
+        process::process_exit(proc);
         return ERROR_SUCCESS;
     }
     return -ERROR_HAS_KILLED;
@@ -296,17 +298,24 @@ void process::process_exit(IN process_dispatcher *proc)
     auto mm = current->mm;
     if (mm != nullptr)
     {
-        vmm::mm_free(mm);
+        if ((--mm->map_count) == 0)
+        {
+            // restore to kernel page table
+            vmm::install_kernel_pml4t();
 
-        free_pgdir(&mm->pgdir);
+            // free memory
+            vmm::mm_free(mm);
 
-        trap::pushcli();
+            free_pgdir(&mm->pgdir);
 
-        //TODO remove process mm link
+            trap::pushcli();
 
-        trap::popcli();
+            //TODO remove process mm link
 
-        vmm::mm_destroy(mm);
+            trap::popcli();
+
+            vmm::mm_destroy(mm);
+        }
     }
 
     current->mm = nullptr;
