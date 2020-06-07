@@ -54,7 +54,7 @@ using libk::list_init;
 using libk::list_remove;
 
 // global variable for the sake of access and dynamically mapping
-pde_ptr_t g_kpml4t;
+pde_ptr_t vmm::g_kpml4t;
 
 // #define WALK_PGDIR_PRINT_INTERMEDIATE_VAL
 
@@ -214,6 +214,16 @@ void vmm::free_range(pde_ptr_t pgdir, uintptr_t start, uintptr_t end)
 void vmm::install_kernel_pml4t()
 {
     lcr3(V2P((uintptr_t) g_kpml4t));
+}
+
+void vmm::duplicate_kernel_pml4t(OUT pde_ptr_t pml4t)
+{
+    memmove(pml4t, g_kpml4t, PGTABLE_SIZE);
+
+    //#define VERIFY_COPY
+#ifdef VERIFY_COPY
+    KDEBUG_ASSERT(memcmp(pml4t,g_kpml4t,PGTABLE_SIZE)==0);
+#endif
 }
 
 // When called by pmm, first map [0,2GiB] to [KERNEL_VIRTUALBASE,KERNEL_VIRTUALEND]

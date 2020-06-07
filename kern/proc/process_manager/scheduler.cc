@@ -50,7 +50,7 @@ using lock::spinlock_release;
     }
 
     current = nullptr;
-    lcr3(V2P((uintptr_t)&g_kpml4t));
+    vmm::install_kernel_pml4t();
 
     spinlock_release(&proc_list.lock);
 

@@ -248,11 +248,14 @@ error_code vmm::mm_duplicate(IN mm_struct *to, IN const mm_struct *from)
 
 void vmm::mm_destroy(mm_struct *mm)
 {
-    list_head *iter = nullptr;
-    list_for(iter, &mm->vma_list)
+    for (list_head *iter = mm->vma_list.next; iter != &mm->vma_list;)
     {
+        auto next = iter->next;
+
         list_remove(iter);
         memory::kfree(container_of(iter, vma_struct, vma_link));
+
+        iter = next;
     }
     memory::kfree(mm);
     mm = nullptr;
