@@ -56,173 +56,250 @@ using libk::list_remove;
 // global variable for the sake of access and dynamically mapping
 pde_ptr_t vmm::g_kpml4t;
 
-// #define WALK_PGDIR_PRINT_INTERMEDIATE_VAL
+// remove all flags in entries to expose the address of the next level
+static inline constexpr size_t remove_flags(vmm::pde_t pde)
+{
+	constexpr size_t FLAGS_SHIFT = 8;
+	return (pde >> FLAGS_SHIFT) << FLAGS_SHIFT;
+}
 
 // find the pde corresponding to the given va
 // perm is only valid when create_if_not_exist = true
 static inline pde_ptr_t walk_pgdir(const pde_ptr_t pml4t,
-                                   uintptr_t vaddr,
-                                   bool create_if_not_exist = false,
-                                   size_t perm = 0)
+		uintptr_t vaddr,
+		bool create_if_not_exist = false,
+		size_t perm = 0)
 {
-    // the lambda removes all flags in entries to expose the address of the next level
-    auto remove_flags = [](size_t pde)
-    {
-        constexpr size_t FLAGS_SHIFT = 8;
-        return (pde >> FLAGS_SHIFT) << FLAGS_SHIFT;
-    };
+	// #define WALK_PGDIR_PRINT_INTERMEDIATE_VAL
 
-    // the pml4, which's the content of CR3, is held in kpml4t
-    // firstly find the 3rd page directory (PDPT) from it.
-    pde_ptr_t pml4e = &pml4t[P4X(vaddr)],
-            pdpt = nullptr,
-            pdpte = nullptr,
-            pgdir = nullptr,
-            pde = nullptr;
+	// the pml4, which's the content of CR3, is held in kpml4t
+	// firstly find the 3rd page directory (PDPT) from it.
+	pde_ptr_t pml4e = &pml4t[P4X(vaddr)],
+			pdpt = nullptr,
+			pdpte = nullptr,
+			pgdir = nullptr,
+			pde = nullptr;
 
 #ifdef WALK_PGDIR_PRINT_INTERMEDIATE_VAL
-    if (vaddr == 0x10000000)
-    {
-        printf("pml4e=0x%p\n", pml4e);
-    }
+	if (vaddr == 0x10000000)
+	{
+		printf("pml4e=0x%p\n", pml4e);
+	}
 #endif
 
-    if (!(*pml4e & PG_P))
-    {
-        if (!create_if_not_exist)
-        {
-            return nullptr;
-        }
+	if (!(*pml4e & PG_P))
+	{
+		if (!create_if_not_exist)
+		{
+			return nullptr;
+		}
 
-        pdpt = vmm::pgdir_entry_alloc();
-        KDEBUG_ASSERT(pdpt != nullptr);
-        if (pdpt == nullptr)
-        {
-            return nullptr;
-        }
+		pdpt = vmm::pgdir_entry_alloc();
+		KDEBUG_ASSERT(pdpt != nullptr);
+		if (pdpt == nullptr)
+		{
+			return nullptr;
+		}
 
-        memset(pdpt, 0, PGTABLE_SIZE);
-        *pml4e = ((V2P((uintptr_t) pdpt)) | PG_P | PG_U | perm);
-    } else
-    {
-        pdpt = reinterpret_cast<decltype(pdpt)>(P2V(remove_flags(*pml4e)));
-    }
+		memset(pdpt, 0, PGTABLE_SIZE);
+		*pml4e = ((V2P((uintptr_t)pdpt)) | PG_P | PG_U | perm);
+	}
+	else
+	{
+		pdpt = reinterpret_cast<decltype(pdpt)>(P2V(remove_flags(*pml4e)));
+	}
 
 #ifdef WALK_PGDIR_PRINT_INTERMEDIATE_VAL
-    if (vaddr == 0x10000000)
-    {
-        printf("pdpt=0x%p\n", pdpt);
-    }
+	if (vaddr == 0x10000000)
+	{
+		printf("pdpt=0x%p\n", pdpt);
+	}
 #endif
 
-    // find the 2nd page directory from PGPT
-    pdpte = &pdpt[P3X(vaddr)];
-    if (!(*pdpte & PG_P))
-    {
-        if (!create_if_not_exist)
-        {
-            return nullptr;
-        }
+	// find the 2nd page directory from PGPT
+	pdpte = &pdpt[P3X(vaddr)];
+	if (!(*pdpte & PG_P))
+	{
+		if (!create_if_not_exist)
+		{
+			return nullptr;
+		}
 
-        pgdir = vmm::pgdir_entry_alloc();
-        KDEBUG_ASSERT(pgdir != nullptr);
-        if (pgdir == nullptr)
-        {
-            return nullptr;
-        }
+		pgdir = vmm::pgdir_entry_alloc();
+		KDEBUG_ASSERT(pgdir != nullptr);
+		if (pgdir == nullptr)
+		{
+			return nullptr;
+		}
 
-        memset(pgdir, 0, PGTABLE_SIZE);
-        *pdpte = ((V2P((uintptr_t) pgdir)) | PG_P | PG_U | perm);
-    } else
-    {
-        pgdir = reinterpret_cast<decltype(pgdir)>(P2V(remove_flags(*pdpte)));
-    }
+		memset(pgdir, 0, PGTABLE_SIZE);
+		*pdpte = ((V2P((uintptr_t)pgdir)) | PG_P | PG_U | perm);
+	}
+	else
+	{
+		pgdir = reinterpret_cast<decltype(pgdir)>(P2V(remove_flags(*pdpte)));
+	}
 
 #ifdef WALK_PGDIR_PRINT_INTERMEDIATE_VAL
-    if (vaddr == 0x10000000)
-    {
-        printf("pdpte=0x%p\n", pdpte);
-    }
+	if (vaddr == 0x10000000)
+	{
+		printf("pdpte=0x%p\n", pdpte);
+	}
 #endif
 
-    // find the page from 2nd page directory.
-    // because we use page size extension (2mb pages)
-    // this is the last level.
-    pde = &pgdir[P2X(vaddr)];
+	// find the page from 2nd page directory.
+	// because we use page size extension (2mb pages)
+	// this is the last level.
+	pde = &pgdir[P2X(vaddr)];
 
 #ifdef WALK_PGDIR_PRINT_INTERMEDIATE_VAL
-    if (vaddr == 0x10000000)
-    {
-        printf("pde=0x%p\n", pde);
-    }
+	if (vaddr == 0x10000000)
+	{
+		printf("pde=0x%p\n", pde);
+	}
 #endif
 
-    return pde;
+	return pde;
 }
 
 // this method maps the specific va
 static inline error_code map_page(pde_ptr_t pml4, uintptr_t va, uintptr_t pa, size_t perm)
 {
-    auto pde = walk_pgdir(pml4, va, true, perm);
+	auto pde = walk_pgdir(pml4, va, true, perm);
 
-    if (pde == nullptr)
-    {
-        return -ERROR_MEMORY_ALLOC;
-    }
+	if (pde == nullptr)
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
 
-    if (!(*pde & PG_P))
-    {
-        *pde = ((pa) | PG_PS | PG_P | PG_U | perm);
-    } else
-    {
-        return -ERROR_REWRITE;
-    }
+	if (!(*pde & PG_P))
+	{
+		*pde = ((pa) | PG_PS | PG_P | PG_U | perm);
+	}
+	else
+	{
+		return -ERROR_REWRITE;
+	}
 
-    return ERROR_SUCCESS;
+	return ERROR_SUCCESS;
 }
 
 static inline error_code map_pages(pde_ptr_t pml4, uintptr_t va_start, uintptr_t pa_start, uintptr_t pa_end)
 {
-    error_code ret = ERROR_SUCCESS;
+	error_code ret = ERROR_SUCCESS;
 
-    // map the kernel memory
-    for (uintptr_t pa = pa_start, va = va_start;
-         pa < pa_end && pa + PAGE_SIZE <= pa_end;
-         pa += PAGE_SIZE, va += PAGE_SIZE)
-    {
-        ret = map_page(pml4, va, pa, PG_W | PG_U);
+	// map the kernel memory
+	for (uintptr_t pa = pa_start, va = va_start;
+		 pa < pa_end && pa + PAGE_SIZE <= pa_end;
+		 pa += PAGE_SIZE, va += PAGE_SIZE)
+	{
+		ret = map_page(pml4, va, pa, PG_W | PG_U);
 
-        if (ret != -ERROR_SUCCESS)
-        {
-            return ret;
-        }
-    }
+		if (ret != -ERROR_SUCCESS)
+		{
+			return ret;
+		}
+	}
 
-    return ret;
+	return ret;
 }
 
 void vmm::unmap_range(pde_ptr_t pgdir, uintptr_t start, uintptr_t end)
 {
-    //TODO implement
+	KDEBUG_ASSERT(start % PAGE_SIZE == 0 && end % PAGE_SIZE == 0);
+	KDEBUG_ASSERT(VALID_USER_REGION(start, end));
+
+	for (uintptr_t addr = start; addr <= end; addr += PAGE_SIZE)
+	{
+		auto pte = walk_pgdir(pgdir, addr, false);
+
+		if ((*pte) & PG_P)
+		{
+			*pte = 0;
+			pmm::tlb_invalidate(pgdir, addr);
+		}
+	}
 }
 
-void vmm::free_range(pde_ptr_t pgdir, uintptr_t start, uintptr_t end)
+static inline void do_free_range_pgdir(pde_ptr_t pgdir, uintptr_t st, uintptr_t ed)
 {
-    //TODO implement
+	*pgdir = 0;
+	vmm::pgdir_entry_free(pgdir);
+}
+
+static inline void do_free_range_pdpt(pde_ptr_t pml4e, uintptr_t st, uintptr_t ed)
+{
+	auto pdpt = reinterpret_cast<decltype(pml4e)>(P2V(remove_flags(*pml4e)));
+	for (uintptr_t addr = st; addr <= ed; addr += PDPT_SIZE)
+	{
+		auto pdpte = &pdpt[P2X(addr)];
+		do_free_range_pgdir(pdpte, st, ed);
+
+		*pdpte = 0;
+		vmm::pgdir_entry_free(pdpte);
+	}
+}
+
+static inline void do_free_range_pml4t(pde_ptr_t pml4t, uintptr_t st, uintptr_t ed)
+{
+// traversal all the pml4e concerned
+	for (uintptr_t addr = st; addr <= ed; addr += PML4T_SIZE)
+	{
+		pde_ptr_t pml4e = &pml4t[P4X(addr)];
+		if ((*pml4e) & PG_P)
+		{
+			do_free_range_pdpt(pml4e, st, ed);
+
+			*pml4e = 0;
+			vmm::pgdir_entry_free(pml4e);
+		}
+	}
+}
+
+static inline void do_free_range(pde_ptr_t pgdir, uintptr_t st, uintptr_t ed, size_t layer = 0)
+{
+	const size_t shifts[] = { P4_SHIFT, P3_SHIFT, P2_SHIFT };
+
+	if (layer >= 3)
+	{
+		*pgdir = 0;
+		vmm::pgdir_entry_free(pgdir);
+	}
+
+	for (uintptr_t addr = st; addr <= ed; addr += PML4T_SIZE)
+	{
+		pde_ptr_t next = &pgdir[(addr >> shifts[layer]) & PX_MASK];
+		if ((*next) & PG_P)
+		{
+			do_free_range(next, st, ed, layer + 1);
+
+			*next = 0;
+			vmm::pgdir_entry_free(next);
+		}
+	}
+}
+
+// the range must be unmapped
+void vmm::free_range(pde_ptr_t pml4t, uintptr_t start, uintptr_t end)
+{
+	KDEBUG_ASSERT(start % PAGE_SIZE == 0 && end % PAGE_SIZE == 0);
+	KDEBUG_ASSERT(VALID_USER_REGION(start, end));
+
+	do_free_range_pml4t(pml4t, start, end);
 }
 
 void vmm::install_kernel_pml4t()
 {
-    lcr3(V2P((uintptr_t) g_kpml4t));
+	lcr3(V2P((uintptr_t)g_kpml4t));
 }
 
 void vmm::duplicate_kernel_pml4t(OUT pde_ptr_t pml4t)
 {
-    memmove(pml4t, g_kpml4t, PGTABLE_SIZE);
+	memmove(pml4t, g_kpml4t, PGTABLE_SIZE);
 
-    //#define VERIFY_COPY
+	//#define VERIFY_COPY
 #ifdef VERIFY_COPY
-    KDEBUG_ASSERT(memcmp(pml4t,g_kpml4t,PGTABLE_SIZE)==0);
+	KDEBUG_ASSERT(memcmp(pml4t,g_kpml4t,PGTABLE_SIZE)==0);
 #endif
 }
 
@@ -230,50 +307,52 @@ void vmm::duplicate_kernel_pml4t(OUT pde_ptr_t pml4t)
 // and then map all the memories to PHYREMAP_VIRTUALBASE
 void vmm::boot_map_kernel_mem()
 {
-    auto memtag = multiboot::acquire_tag_ptr<multiboot_tag_mmap>(MULTIBOOT_TAG_TYPE_MMAP);
-    size_t entry_count =
-            (memtag->size - sizeof(multiboot_uint32_t) * 4ul - sizeof(memtag->entry_size)) / memtag->entry_size;
+	auto memtag = multiboot::acquire_tag_ptr<multiboot_tag_mmap>(MULTIBOOT_TAG_TYPE_MMAP);
+	size_t entry_count =
+			(memtag->size - sizeof(multiboot_uint32_t) * 4ul - sizeof(memtag->entry_size)) / memtag->entry_size;
 
-    auto max_pa = 0ull;
+	auto max_pa = 0ull;
 
-    for (size_t i = 0; i < entry_count; i++)
-    {
-        const auto entry = memtag->entries + i;
-        max_pa = std::max(max_pa, std::min(entry->addr + entry->len, (unsigned long long) PHYMEMORY_SIZE));
-    }
+	for (size_t i = 0; i < entry_count; i++)
+	{
+		const auto entry = memtag->entries + i;
+		max_pa = std::max(max_pa, std::min(entry->addr + entry->len, (unsigned long long)PHYMEMORY_SIZE));
+	}
 
-    // map the kernel memory
-    auto ret = map_pages(g_kpml4t, KERNEL_VIRTUALBASE, 0, KERNEL_SIZE);
+	// map the kernel memory
+	auto ret = map_pages(g_kpml4t, KERNEL_VIRTUALBASE, 0, KERNEL_SIZE);
 
-    if (ret == -ERROR_MEMORY_ALLOC)
-    {
-        KDEBUG_GENERALPANIC("Can't allocate enough space for paging.\n");
-    } else if (ret == -ERROR_REWRITE)
-    {
-        KDEBUG_RICHPANIC("Remap a mapped page.", "KERNEL PANIC:ERROR_REMAP",
-                         true, "");
-    }
+	if (ret == -ERROR_MEMORY_ALLOC)
+	{
+		KDEBUG_GENERALPANIC("Can't allocate enough space for paging.\n");
+	}
+	else if (ret == -ERROR_REWRITE)
+	{
+		KDEBUG_RICHPANIC("Remap a mapped page.", "KERNEL PANIC:ERROR_REMAP",
+				true, "");
+	}
 
-    // remap all the physical memory
-    ret = map_pages(g_kpml4t, PHYREMAP_VIRTUALBASE, 0, max_pa);
+	// remap all the physical memory
+	ret = map_pages(g_kpml4t, PHYREMAP_VIRTUALBASE, 0, max_pa);
 
-    if (ret == -ERROR_MEMORY_ALLOC)
-    {
-        KDEBUG_GENERALPANIC("Can't allocate enough space for paging.\n");
-    } else if (ret == -ERROR_REWRITE)
-    {
-        KDEBUG_RICHPANIC("Remap a mapped page.", "KERNEL PANIC:ERROR_REMAP",
-                         true, "");
-    }
+	if (ret == -ERROR_MEMORY_ALLOC)
+	{
+		KDEBUG_GENERALPANIC("Can't allocate enough space for paging.\n");
+	}
+	else if (ret == -ERROR_REWRITE)
+	{
+		KDEBUG_RICHPANIC("Remap a mapped page.", "KERNEL PANIC:ERROR_REMAP",
+				true, "");
+	}
 }
 
 uintptr_t vmm::pde_to_pa(pde_ptr_t pde)
 {
-    constexpr size_t FLAGS_SHIFT = 8;
-    return ((((*pde) >> FLAGS_SHIFT) << FLAGS_SHIFT) & (~PG_PS));
+	constexpr size_t FLAGS_SHIFT = 8;
+	return ((((*pde) >> FLAGS_SHIFT) << FLAGS_SHIFT) & (~PG_PS));
 }
 
 pde_ptr_t vmm::walk_pgdir(pde_ptr_t pgdir, size_t va, bool create)
 {
-    return ::walk_pgdir(pgdir, va, create, PG_U | PG_W);
+	return ::walk_pgdir(pgdir, va, create, PG_U | PG_W);
 }
