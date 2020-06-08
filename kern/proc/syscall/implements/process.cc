@@ -15,9 +15,7 @@
 
 // take the following argument:
 //  1. exit code, the value of which is error_codes
-error_code sys_exit(const syscall_regs *regs)
+error_code sys_exit(const syscall_regs* regs)
 {
-    write_format("current process calls exit: %lld\n", get_nth_arg(regs, 0));
-
-    return process::process_terminate((error_code) get_nth_arg(regs, 0));
+	return process::process_terminate((error_code)get_nth_arg(regs, 0));
 }

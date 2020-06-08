@@ -63,6 +63,45 @@ static inline constexpr size_t remove_flags(vmm::pde_t pde)
 	return (pde >> FLAGS_SHIFT) << FLAGS_SHIFT;
 }
 
+
+static inline void do_free_range_pgdir(pde_ptr_t pdpte, uintptr_t st, uintptr_t ed)
+{
+	auto pgdir = reinterpret_cast<decltype(pdpte)>(P2V(remove_flags(*pdpte)));
+
+	*pgdir = 0;
+	vmm::pgdir_entry_free(pgdir);
+}
+
+static inline void do_free_range_pdpt(pde_ptr_t pml4e, uintptr_t st, uintptr_t ed)
+{
+	auto pdpt = reinterpret_cast<decltype(pml4e)>(P2V(remove_flags(*pml4e)));
+
+	for (uintptr_t addr = st; addr <= ed; addr += PDPT_SIZE)
+	{
+		auto pdpte = &pdpt[P3X(addr)];
+		do_free_range_pgdir(pdpte, st, ed);
+
+		*pdpte = 0;
+		vmm::pgdir_entry_free(pdpte);
+	}
+}
+
+static inline void do_free_range_pml4t(pde_ptr_t pml4t, uintptr_t st, uintptr_t ed)
+{
+// traversal all the pml4e concerned
+	for (uintptr_t addr = st; addr <= ed; addr += PML4T_SIZE)
+	{
+		pde_ptr_t pml4e = &pml4t[P4X(addr)];
+		if ((*pml4e) & PG_P)
+		{
+			do_free_range_pdpt(pml4e, st, ed);
+
+			*pml4e = 0;
+			vmm::pgdir_entry_free(pml4e);
+		}
+	}
+}
+
 // find the pde corresponding to the given va
 // perm is only valid when create_if_not_exist = true
 static inline pde_ptr_t walk_pgdir(const pde_ptr_t pml4t,
@@ -126,6 +165,7 @@ static inline pde_ptr_t walk_pgdir(const pde_ptr_t pml4t,
 		}
 
 		pgdir = vmm::pgdir_entry_alloc();
+
 		KDEBUG_ASSERT(pgdir != nullptr);
 		if (pgdir == nullptr)
 		{
@@ -217,64 +257,6 @@ void vmm::unmap_range(pde_ptr_t pgdir, uintptr_t start, uintptr_t end)
 		{
 			*pte = 0;
 			pmm::tlb_invalidate(pgdir, addr);
-		}
-	}
-}
-
-static inline void do_free_range_pgdir(pde_ptr_t pgdir, uintptr_t st, uintptr_t ed)
-{
-	*pgdir = 0;
-	vmm::pgdir_entry_free(pgdir);
-}
-
-static inline void do_free_range_pdpt(pde_ptr_t pml4e, uintptr_t st, uintptr_t ed)
-{
-	auto pdpt = reinterpret_cast<decltype(pml4e)>(P2V(remove_flags(*pml4e)));
-	for (uintptr_t addr = st; addr <= ed; addr += PDPT_SIZE)
-	{
-		auto pdpte = &pdpt[P2X(addr)];
-		do_free_range_pgdir(pdpte, st, ed);
-
-		*pdpte = 0;
-		vmm::pgdir_entry_free(pdpte);
-	}
-}
-
-static inline void do_free_range_pml4t(pde_ptr_t pml4t, uintptr_t st, uintptr_t ed)
-{
-// traversal all the pml4e concerned
-	for (uintptr_t addr = st; addr <= ed; addr += PML4T_SIZE)
-	{
-		pde_ptr_t pml4e = &pml4t[P4X(addr)];
-		if ((*pml4e) & PG_P)
-		{
-			do_free_range_pdpt(pml4e, st, ed);
-
-			*pml4e = 0;
-			vmm::pgdir_entry_free(pml4e);
-		}
-	}
-}
-
-static inline void do_free_range(pde_ptr_t pgdir, uintptr_t st, uintptr_t ed, size_t layer = 0)
-{
-	const size_t shifts[] = { P4_SHIFT, P3_SHIFT, P2_SHIFT };
-
-	if (layer >= 3)
-	{
-		*pgdir = 0;
-		vmm::pgdir_entry_free(pgdir);
-	}
-
-	for (uintptr_t addr = st; addr <= ed; addr += PML4T_SIZE)
-	{
-		pde_ptr_t next = &pgdir[(addr >> shifts[layer]) & PX_MASK];
-		if ((*next) & PG_P)
-		{
-			do_free_range(next, st, ed, layer + 1);
-
-			*next = 0;
-			vmm::pgdir_entry_free(next);
 		}
 	}
 }
