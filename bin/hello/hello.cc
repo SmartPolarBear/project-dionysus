@@ -8,7 +8,7 @@ extern "C" int main(int argc, const char **argv)
     ret += hello(2002, 12, 04, 23);
     ret += hello(2003, 10, 01, 10);
 
-    hello(ret, ret + ret, ret - ret, ret / 3);
+    hello(ret, ret + ret, ret * ret, ret / 3);
 
     return 0;
 }
