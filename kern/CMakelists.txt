@@ -79,6 +79,8 @@ add_subdirectory(libs)
 add_subdirectory(mm)
 add_subdirectory(proc)
 add_subdirectory(drv)
+add_subdirectory(objm)
+add_subdirectory(servers)
 
 # custom targets
 

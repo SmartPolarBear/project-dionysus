@@ -47,71 +47,68 @@
 #include "libraries/libkernel/console/builtin_console.hpp"
 
 #include <cstring>
-#include <utility>
 
 void run_hello()
 {
-    auto tag = multiboot::acquire_tag_ptr<multiboot_tag_module>(MULTIBOOT_TAG_TYPE_MODULE, [](auto ptr) -> bool {
-        multiboot_tag_module *mdl_tag = reinterpret_cast<decltype(mdl_tag)>(ptr);
-        const char *ap_boot_commandline = "/hello";
-        auto cmp = strncmp(mdl_tag->cmdline, ap_boot_commandline, strlen(ap_boot_commandline));
-        return cmp == 0;
-    });
+	uint8_t* bin = nullptr;
+	size_t size = 0;
 
-    KDEBUG_ASSERT(tag != nullptr);
+	auto ret = multiboot::find_module_by_cmdline("/hello", &size, &bin);
 
-    process::process_dispatcher *proc_he = nullptr;
-    process::create_process("hello", 0, false, &proc_he);
-    KDEBUG_ASSERT(proc_he != nullptr);
+	KDEBUG_ASSERT(ret == ERROR_SUCCESS);
 
-    process::process_load_binary(proc_he, (uint8_t *)P2V(tag->mod_start), tag->mod_end - tag->mod_start + 1, process::BINARY_ELF);
+	process::process_dispatcher* proc_he = nullptr;
+	process::create_process("hello", 0, false, &proc_he);
 
-    write_format("load binary: hello\n");
+	KDEBUG_ASSERT(proc_he != nullptr);
+
+	process::process_load_binary(proc_he, bin, size, process::BINARY_ELF);
+
+	write_format("load binary: hello\n");
 }
 
 // global entry of the kernel
 extern "C" [[noreturn]] void kmain()
 {
-    // process the multiboot information
-    multiboot::init_mbi();
+	// process the multiboot information
+	multiboot::init_mbi();
 
-    // initialize physical memory
-    pmm::init_pmm();
+	// initialize physical memory
+	pmm::init_pmm();
 
-    // install trap vectors nad handle structures
-    trap::init_trap();
+	// install trap vectors nad handle structures
+	trap::init_trap();
 
-    // initialize the console
-    console::console_init();
+	// initialize the console
+	console::console_init();
 
-    // initialize ACPI
-    acpi::init_acpi();
+	// initialize ACPI
+	acpi::init_acpi();
 
-    // initialize local APIC
-    local_apic::init_lapic();
+	// initialize local APIC
+	local_apic::init_lapic();
 
-    // initialize I/O APIC
-    io_apic::init_ioapic();
+	// initialize I/O APIC
+	io_apic::init_ioapic();
 
-    // initialize apic timer
-    timer::init_apic_timer();
+	// initialize apic timer
+	timer::init_apic_timer();
 
-    syscall::system_call_init();
+	syscall::system_call_init();
 
-    // initialize user process manager
-    process::process_init();
+	// initialize user process manager
+	process::process_init();
 
-    run_hello();
+	// boot other CPU cores
+	ap::init_ap();
 
-    // boot other CPU cores
-    ap::init_ap();
+	write_format("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
 
-    write_format("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
+	run_hello();
 
-    scheduler::scheduler_yield();
+	scheduler::scheduler_yield();
 
-    ap::all_processor_main();
+	ap::all_processor_main();
 
-    for (;;)
-        ;
+	for (;;);
 }
