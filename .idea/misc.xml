@@ -10,6 +10,7 @@
       <file path="$PROJECT_DIR$/../.vscode" />
       <file path="$PROJECT_DIR$/../build" />
       <file path="$PROJECT_DIR$/../external" />
+      <file path="$PROJECT_DIR$/external" />
     </excludeRoots>
   </component>
   <component name="JavaScriptSettings">

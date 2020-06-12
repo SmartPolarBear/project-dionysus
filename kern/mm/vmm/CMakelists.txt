@@ -1,4 +1,0 @@
-cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
-
-target_sources(kernel
-    PRIVATE address.cc gdt.cc kmalloc.cc page_fault.cc paging.cc vmm.cc  pgdir_cache.cc cls.cc)
