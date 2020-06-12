@@ -28,7 +28,7 @@
 #include "drivers/acpi/cpu.h"
 #include "drivers/apic/apic.h"
 #include "drivers/apic/traps.h"
-#include "drivers/apic_timer/timer.h"
+#include "drivers/apic/timer.h"
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 #include "drivers/debug/kerror.h"
@@ -93,6 +93,8 @@ extern "C" [[noreturn]] void kmain()
 
 	// initialize apic timer
 	timer::init_apic_timer();
+
+	timer::set_enable_on_cpu(0, true);
 
 	syscall::system_call_init();
 

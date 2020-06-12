@@ -164,11 +164,13 @@ error_code process::create_process(IN const char* name,
 		return ret;
 	}
 
-	// proc->trapframe.cs = (SEG_UCODE << 3) | DPL_USER;
-	// proc->trapframe.ss = (SEG_UDATA << 3) | DPL_USER;
-	//TODO: load real user segment selectors
+	// FIXME The code should be like:
+	// 	proc->trapframe.cs = (SEG_UCODE << 3) | DPL_USER;
+	// 	proc->trapframe.ss = (SEG_UDATA << 3) | DPL_USER;
 	proc->trapframe.cs = 8;
 	proc->trapframe.ss = 8 + 8;
+
+
 	proc->trapframe.rsp = USER_STACK_TOP;
 
 	proc->trapframe.rflags |= trap::EFLAG_IF;
