@@ -88,27 +88,26 @@ extern "C" [[noreturn]] void kmain()
 	// initialize local APIC
 	local_apic::init_lapic();
 
-	// initialize I/O APIC
-	io_apic::init_ioapic();
-
 	// initialize apic timer
 	timer::init_apic_timer();
-
 	timer::set_enable_on_cpu(0, true);
+
+	// initialize I/O APIC
+	io_apic::init_ioapic();
 
 	syscall::system_call_init();
 
 	// initialize user process manager
 	process::process_init();
 
+	run_hello();
+
+	scheduler::scheduler_yield();
+
 	// boot other CPU cores
 	ap::init_ap();
 
 	write_format("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
-
-	run_hello();
-
-	scheduler::scheduler_yield();
 
 	ap::all_processor_main();
 

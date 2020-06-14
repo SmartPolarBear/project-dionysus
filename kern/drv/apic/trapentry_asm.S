@@ -17,7 +17,8 @@ trap_entry:
   push %rbx
   push %rax
 
-  mov  %rsp, %rdi  # frame in arg1
+  mov  %rsp, %rdi  # frame in arg1\
+
   call trap_body
 
   # Return falls through to trap_ret
@@ -42,4 +43,5 @@ trap_ret:
 
   # discard trapnum and errorcode
   add $16, %rsp
+
   iretq

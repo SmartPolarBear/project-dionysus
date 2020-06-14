@@ -9,10 +9,11 @@
 #include "drivers/acpi/cpu.h"
 #include "drivers/apic/apic.h"
 #include "drivers/apic/traps.h"
-#include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 #include "drivers/lock/spinlock.h"
 #include "drivers/acpi/cpu.h"
+
+#include "libraries/libkernel/console/builtin_console.hpp"
 
 using local_apic::TDCR;
 using local_apic::TIC_DEFUALT_VALUE;
@@ -68,8 +69,6 @@ PANIC void timer::init_apic_timer()
 
 error_code trap_handle_tick([[maybe_unused]] trap::trap_frame info)
 {
-	return ERROR_SUCCESS;
-
 	size_t id = cpu()->id;
 
 	if (enable_irq[id])
@@ -77,9 +76,11 @@ error_code trap_handle_tick([[maybe_unused]] trap::trap_frame info)
 		spinlock_acquire(ticks_lock());
 		ticks[id]++;
 
+//		write_format("ticks=%lld", ticks[id]);
+
 		spinlock_release(ticks_lock());
 
-		// scheduler::scheduler_yield();
+//		scheduler::scheduler_yield();
 	}
 
 	return ERROR_SUCCESS;

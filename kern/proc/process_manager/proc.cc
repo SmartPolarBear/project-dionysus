@@ -260,12 +260,8 @@ error_code process::process_run(IN process_dispatcher* proc)
 	lcr3(V2P((uintptr_t)current->mm->pgdir));
 
 	spinlock_release(&proc_list.lock);
-
-#ifndef USE_NEW_CPU_INTERFACE
-	cpu->tss.rsp0 = current->kstack + process_dispatcher::KERNSTACK_SIZE;
-#else
+	
 	cpu()->tss.rsp0 = current->kstack + process_dispatcher::KERNSTACK_SIZE;
-#endif
 
 	trap::popcli();
 
