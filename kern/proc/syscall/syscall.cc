@@ -39,9 +39,8 @@ PANIC void syscall::system_call_init()
 	wrmsr(MSR_LSTAR, (uintptr_t)syscall_x64_entry);
 
 	using namespace trap;
-//	wrmsr(MSR_SYSCALL_MASK, EFLAG_TF | EFLAG_DF | EFLAG_IF |
-//		EFLAG_IOPL_MASK | EFLAG_AC | EFLAG_NT);
-	wrmsr(MSR_SYSCALL_MASK, EFLAG_TF | EFLAG_IF);
+	wrmsr(MSR_SYSCALL_MASK, EFLAG_TF | EFLAG_DF | EFLAG_IF |
+		EFLAG_IOPL_MASK | EFLAG_AC | EFLAG_NT);
 
 	// TODO:support 32bit compatibility mode
 	// we do not support 32bit compatibility mode now

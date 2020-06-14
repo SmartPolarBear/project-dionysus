@@ -10,6 +10,9 @@ extern "C" int main(int argc, const char** argv)
 
 	hello(ret, ret + ret, ret * ret, ret / 3);
 
+	int* ptr = nullptr;
+	*ptr = 0;
+
 	size_t i = 0;
 	for (;;)
 	{
