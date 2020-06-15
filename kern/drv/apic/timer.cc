@@ -48,6 +48,7 @@ error_code trap_handle_tick(trap::trap_frame info);
 
 PANIC void timer::setup_apic_timer()
 {
+	return;
 	// initialize apic values
 	write_lapic(TDCR, TIMER_FLAG_X1);
 	write_lapic(TIMER, TIMER_FLAG_PERIODIC | (trap::irq_to_trap_number(IRQ_TIMER)));

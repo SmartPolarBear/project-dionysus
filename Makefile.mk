@@ -18,9 +18,9 @@ QEMU_EXE = $(QEMU).exe
 GDBPORT = 32678
 QEMUGDB = -gdb tcp::$(GDBPORT)
 
-CPUS = 2
+CPUS = 4
 
-QEMUOPTS = -no-reboot -drive file=$(BUILD)/disk.img,index=0,media=disk,format=raw -cpu max 
+QEMUOPTS = -no-reboot -drive file=$(BUILD)/disk.img,index=0,media=disk,format=raw -cpu Icelake-Client-v2
 #QEMUOPTS +=  -accel whpx
 QEMUOPTS += -d int,cpu_reset
 QEMUOPTS += -smp $(CPUS) -m 8G $(QEMUEXTRA)

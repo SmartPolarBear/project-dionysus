@@ -94,7 +94,7 @@ static inline void free_pgdir(vmm::pde_ptr_t pgdir)
 }
 
 static inline size_t process_terminal_impl(process::process_dispatcher* proc,
-		error_code err)
+	error_code err)
 {
 	if ((proc->flags & process::PROC_EXITING) == 0)
 	{
@@ -135,9 +135,9 @@ void process::process_init(void)
 }
 
 error_code process::create_process(IN const char* name,
-		IN size_t flags,
-		IN bool inherit_parent,
-		OUT process_dispatcher** retproc)
+	IN size_t flags,
+	IN bool inherit_parent,
+	OUT process_dispatcher** retproc)
 {
 	spinlock_acquire(&proc_list.lock);
 
@@ -167,9 +167,8 @@ error_code process::create_process(IN const char* name,
 	// FIXME The code should be like:
 	// 	proc->trapframe.cs = (SEG_UCODE << 3) | DPL_USER;
 	// 	proc->trapframe.ss = (SEG_UDATA << 3) | DPL_USER;
-	proc->trapframe.cs = 8;
-	proc->trapframe.ss = 8 + 8;
-
+	proc->trapframe.cs = SEGMENTSEL_UCODE | DPL_USER;
+	proc->trapframe.ss = SEGMENTSEL_UDATA | DPL_USER;
 
 	proc->trapframe.rsp = USER_STACK_TOP;
 
@@ -194,10 +193,10 @@ error_code process::create_process(IN const char* name,
 }
 
 error_code process::process_load_binary(IN process_dispatcher* proc,
-		IN uint8_t* bin,
-		[[maybe_unused]] IN size_t
-		binsize OPTIONAL,
-		IN binary_types type
+	IN uint8_t* bin,
+	[[maybe_unused]] IN size_t
+	binsize OPTIONAL,
+	IN binary_types type
 )
 {
 	error_code ret = ERROR_SUCCESS;
@@ -216,13 +215,13 @@ error_code process::process_load_binary(IN process_dispatcher* proc,
 	if (ret == ERROR_SUCCESS)
 	{
 		proc->trapframe.
-				rip = entry_addr;
+			rip = entry_addr;
 
 // allocate an stack
 		for (
-				size_t i = 0;
-				i < process::process_dispatcher::KERNSTACK_PAGES;
-				i++)
+			size_t i = 0;
+			i < process::process_dispatcher::KERNSTACK_PAGES;
+			i++)
 		{
 			uintptr_t va = USER_TOP - process::process_dispatcher::KERNSTACK_SIZE + i * PAGE_SIZE;
 			page_info* page_ret = nullptr;
@@ -230,12 +229,12 @@ error_code process::process_load_binary(IN process_dispatcher* proc,
 			if (ret != ERROR_SUCCESS)
 			{
 				return -
-						ERROR_MEMORY_ALLOC;
+					ERROR_MEMORY_ALLOC;
 			}
 		}
 
 		proc->
-				state = PROC_STATE_RUNNABLE;
+			state = PROC_STATE_RUNNABLE;
 	}
 
 	return ret;
@@ -260,7 +259,7 @@ error_code process::process_run(IN process_dispatcher* proc)
 	lcr3(V2P((uintptr_t)current->mm->pgdir));
 
 	spinlock_release(&proc_list.lock);
-	
+
 	cpu()->tss.rsp0 = current->kstack + process_dispatcher::KERNSTACK_SIZE;
 
 	trap::popcli();

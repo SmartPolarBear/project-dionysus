@@ -52,11 +52,10 @@ static error_code default_trap_handle([[maybe_unused]] trap::trap_frame info)
 {
 	// TODO: the handle doesn't exist
 
-	write_format("trap %d caused but not handled.\nerror=%d, ip=0x%p, sp=0x%p\n",
-		info.trap_num,
-		info.err,
-		info.rip,
-		info.rsp);
+	write_format("trap %d caused but not handled.\n",
+		info.trap_num);
+
+	trap::print_trap_frame(&info);
 
 	return ERROR_SUCCESS;
 }
@@ -120,7 +119,7 @@ PANIC trap_handle trap::trap_handle_regsiter(size_t number, trap_handle handle)
 	return old;
 }
 
-PANIC bool trap_handle_enable(size_t number, bool enable)
+PANIC bool trap::trap_handle_enable(size_t number, bool enable)
 {
 	spinlock_acquire(&handle_table.lock);
 
@@ -165,3 +164,32 @@ extern "C" void trap_body(trap::trap_frame info)
 	}
 }
 
+void trap::print_trap_frame(IN const trap_frame* p_tf)
+{
+	write_format("Trap frame content at 0x%p : \n",p_tf);
+
+	write_format("  rax=0x%x", p_tf->rax);
+	write_format("  rbx=0x%x", p_tf->rbx);
+	write_format("  rcx=0x%x", p_tf->rcx);
+	write_format("  rdx=0x%x", p_tf->rdx);
+	write_format("  rbp=0x%x\n", p_tf->rbp);
+	write_format("  rsi=0x%x", p_tf->rsi);
+	write_format("  rdi=0x%x", p_tf->rdi);
+	write_format("  r8=0x%x", p_tf->r8);
+	write_format("  r9=0x%x", p_tf->r9);
+	write_format("  r10=0x%x\n", p_tf->r10);
+	write_format("  r11=0x%x", p_tf->r11);
+	write_format("  r12=0x%x", p_tf->r12);
+	write_format("  r13=0x%x", p_tf->r13);
+	write_format("  r14=0x%x", p_tf->r14);
+	write_format("  r15=0x%x\n", p_tf->r15);
+	write_format("  trap number=0x%x", p_tf->trap_num);
+	write_format("  err=0x%x", p_tf->err);
+	write_format("  rip=0x%x", p_tf->rip);
+	write_format("  cs=0x%x", p_tf->cs);
+	write_format("  rflags=0x%x\n", p_tf->rflags);
+	write_format("  rsp=0x%x", p_tf->rsp);
+	write_format("  ss=0x%x\n", p_tf->ss);
+
+	write_format("End trap frame content at 0x%p .\n",p_tf);
+}

@@ -131,6 +131,8 @@ PANIC bool trap_handle_enable(size_t trapnumber, bool enable);
 PANIC void pushcli(void);
 PANIC void popcli(void);
 
+void print_trap_frame(IN const trap_frame *frm);
+
 } // namespace trap
 
 static inline bool
