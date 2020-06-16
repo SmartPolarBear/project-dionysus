@@ -63,8 +63,8 @@ enum pde_flags
 
 enum exception_type : uint32_t
 {
-	IT_TRAP = 0x8F00,
-	IT_INTERRUPT = 0x8E00
+	IT_TRAP = 0XF,
+	IT_INTERRUPT = 0XE
 };
 
 enum dpl_values

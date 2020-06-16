@@ -29,6 +29,11 @@ load_gdt_and_tr:
     pushq %rdi
     lretq
 
+.global load_idt
+load_idt:
+    lidt (%rdi)
+    ret
+
 .global cli
 cli:
     cli

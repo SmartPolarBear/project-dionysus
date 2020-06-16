@@ -167,6 +167,7 @@ error_code process::create_process(IN const char* name,
 	// FIXME The code should be like:
 	// 	proc->trapframe.cs = (SEG_UCODE << 3) | DPL_USER;
 	// 	proc->trapframe.ss = (SEG_UDATA << 3) | DPL_USER;
+
 	proc->trapframe.cs = SEGMENTSEL_UCODE | DPL_USER;
 	proc->trapframe.ss = SEGMENTSEL_UDATA | DPL_USER;
 

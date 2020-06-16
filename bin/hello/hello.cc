@@ -6,8 +6,6 @@ extern "C" int main(int argc, const char** argv)
 {
 	int* ptr = nullptr;
 	*ptr = 0;
-//	asm("int $35");
-//	return 0;
 
 	size_t ret = hello(2001, 12, 04, 23);
 	ret += hello(2002, 12, 04, 23);
@@ -15,14 +13,13 @@ extern "C" int main(int argc, const char** argv)
 
 	hello(ret, ret + ret, ret * ret, ret / 3);
 
-//	size_t i = 0;
-//	for (;;)
-//	{
-//		hello(i, i + i, i * i, i / 3);
-//		i++;
-//	}
-//
-//	asm("int $35");
+	size_t i = 0;
+	for (;;)
+	{
+		hello(i, i + i, i * i, i / 3);
+		i++;
+	}
+
 
 	return 0;
 }
