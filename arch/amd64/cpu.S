@@ -22,11 +22,14 @@ load_gdt_and_tr:
 
     mov $0x10, %ax
     mov %ax,%ss
+    mov %ax,%es
+    mov %ax,%ds
 
     popq %rdi
     movq $0x08,%rax
     pushq %rax
     pushq %rdi
+
     lretq
 
 .global load_idt

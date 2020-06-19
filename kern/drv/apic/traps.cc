@@ -89,16 +89,29 @@ static inline void make_gate(idt_entry* gate, exception_type type, uintptr_t sel
 PANIC void trap::init_trap()
 {
 	auto idt = reinterpret_cast<idt_entry*>(new BLOCK<IDT_SIZE>);
+	if (idt == nullptr)
+	{
+		KDEBUG_GENERALPANIC("Can't allocate memory for IDT.");
+	}
 	memset(idt, 0, IDT_SIZE);
 
+
+	auto desc = reinterpret_cast<idt_table_desc*>(new BLOCK<sizeof(idt_table_desc)>);
+	if (desc == nullptr)
+	{
+		KDEBUG_GENERALPANIC("Can't allocate memory for IDT descriptor.");
+	}
+	memset(desc, 0, sizeof(*desc));
+
+	// fill the descriptor
+	desc->limit = IDT_SIZE - 1;
+	desc->base = (uintptr_t)idt;
+
+	// fill the idt table
 	for (size_t i = 0; i < 256; i++)
 	{
 		make_gate(&idt[i], IT_INTERRUPT, SEGMENTSEL_KCODE, (uintptr_t)vectors[i], DPL_KERNEL);
 	}
-
-	auto desc = reinterpret_cast<idt_table_desc*>(new BLOCK<sizeof(idt_table_desc)>);
-	desc->limit = IDT_SIZE - 1;
-	desc->base = (uintptr_t)idt;
 
 	load_idt(desc);
 

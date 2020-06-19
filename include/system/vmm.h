@@ -97,10 +97,6 @@ namespace vmm
 // and then map all the memories to PHYREMAP_VIRTUALBASE
 	void boot_map_kernel_mem(void);
 
-// load and get tss
-	void tss_set_rsp(uint32_t* tss, size_t n, uint64_t rsp);
-
-	uint64_t tss_get_rsp(uint32_t* tss, size_t n);
 
 // install GDT
 	void install_gdt(void);

@@ -61,58 +61,47 @@ __thread cpu_struct *cpu;
 
 void vmm::install_gdt(void)
 {
-    auto current_cpu = &cpus[local_apic::get_cpunum()];
+	auto current_cpu = &cpus[local_apic::get_cpunum()];
 
-    uint8_t *cpu_fs = reinterpret_cast<decltype(cpu_fs)>(boot_alloc_page());
+	uint8_t* cpu_fs = reinterpret_cast<decltype(cpu_fs)>(boot_alloc_page());
 
-    if(cpu_fs==nullptr)
-    {
-        KDEBUG_FOLLOWPANIC("Cannot allocate memory for kernel GS\n");
-    }
+	if (cpu_fs == nullptr)
+	{
+		KDEBUG_FOLLOWPANIC("Cannot allocate memory for kernel GS\n");
+	}
 
-    memset(cpu_fs, 0, PAGE_SIZE);
-    wrmsr(MSR_FS_BASE, ((uintptr_t)cpu_fs));
-    current_cpu->local_fs = cpu_fs;
+	memset(cpu_fs, 0, PAGE_SIZE);
+	wrmsr(MSR_FS_BASE, ((uintptr_t)cpu_fs));
+	current_cpu->local_fs = cpu_fs;
 
-    uint8_t *cpu_kernel_gs = reinterpret_cast<decltype(cpu_kernel_gs)>(boot_alloc_page());
+	uint8_t* cpu_kernel_gs = reinterpret_cast<decltype(cpu_kernel_gs)>(boot_alloc_page());
 
-    if(cpu_kernel_gs==nullptr)
-    {
-        KDEBUG_FOLLOWPANIC("Cannot allocate memory for kernel GS\n");
-    }
+	if (cpu_kernel_gs == nullptr)
+	{
+		KDEBUG_FOLLOWPANIC("Cannot allocate memory for kernel GS\n");
+	}
 
-    memset(cpu_kernel_gs, 0, PAGE_SIZE);
-    wrmsr(MSR_KERNEL_GS_BASE, ((uintptr_t)cpu_kernel_gs));
+	memset(cpu_kernel_gs, 0, PAGE_SIZE);
+	wrmsr(MSR_KERNEL_GS_BASE, ((uintptr_t)cpu_kernel_gs));
 
-    current_cpu->local_gs = cpu_kernel_gs;
+	current_cpu->local_gs = cpu_kernel_gs;
 
-    uintptr_t tss_addr = (uintptr_t)(&current_cpu->tss);
+	current_cpu->tss.iopb_offset = sizeof(current_cpu->tss);
+	uintptr_t tss_addr = (uintptr_t)(&current_cpu->tss);
 
-    current_cpu->gdt_table.tss_low.base15_0 = tss_addr & 0xffff;
-    current_cpu->gdt_table.tss_low.base23_16 = (tss_addr >> 16) & 0xff;
-    current_cpu->gdt_table.tss_low.base31_24 = (tss_addr >> 24) & 0xff;
-    current_cpu->gdt_table.tss_low.limit15_0 = sizeof(task_state_segment);
-    current_cpu->gdt_table.tss_high.limit15_0 = (tss_addr >> 32) & 0xffff;
+	current_cpu->gdt_table.tss_low.base15_0 = tss_addr & 0xffffull;
+	current_cpu->gdt_table.tss_low.base23_16 = (tss_addr >> 16ull) & 0xffull;
+	current_cpu->gdt_table.tss_low.base31_24 = (tss_addr >> 24ull) & 0xffull;
+	current_cpu->gdt_table.tss_low.limit15_0 = sizeof(task_state_segment);
+	current_cpu->gdt_table.tss_high.limit15_0 = (tss_addr >> 32ull) & 0xffffull;
 
-    current_cpu->install_gdt_and_tss();
+	current_cpu->install_gdt_and_tss();
 
 // --target=x86_64-pc-none-elf and -mcmodel=large can cause a triple fault here
 // work it around by building with x86_64-pc-linux-elf
 #ifndef USE_NEW_CPU_INTERFACE
-    cpu = current_cpu;
+	cpu = current_cpu;
 #else
-    cls_put(CLS_CPU_STRUCT_PTR, current_cpu);
+	cls_put(CLS_CPU_STRUCT_PTR, current_cpu);
 #endif
-}
-
-void vmm::tss_set_rsp(uint32_t *tss, size_t n, uint64_t rsp)
-{
-    tss[n * 2 + 1] = rsp;
-    tss[n * 2 + 2] = rsp >> 32;
-}
-
-uint64_t vmm::tss_get_rsp(uint32_t *tss, size_t n)
-{
-    uint64_t ret = (((uint64_t)tss[n * 2 + 2]) << 32ull) | ((uint64_t)tss[n * 2 + 1]);
-    return ret;
 }
