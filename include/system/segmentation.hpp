@@ -34,7 +34,7 @@ struct idt_entry
 	uint32_t gd_off_31_16: 16; // [16 ~ 31] bits of offset in segment
 	uint32_t gd_off_63_32: 32; // [32 ~ 63] bits of offset in segment
 	uint32_t gd_rsv2: 32;      // reserved bits
-};
+}__attribute__((__packed__));
 
 using idt_table_desc = pseudo_descriptor;
 

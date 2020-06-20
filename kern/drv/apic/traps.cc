@@ -83,7 +83,6 @@ static inline void make_gate(idt_entry* gate, exception_type type, uintptr_t sel
 	gate->gd_off_31_16 = (uint64_t)(off) >> 16ull;
 	gate->gd_off_63_32 = (uint64_t)(off) >> 32ull;
 	gate->gd_rsv2 = 0;
-
 }
 
 PANIC void trap::init_trap()

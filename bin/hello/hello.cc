@@ -4,8 +4,9 @@
 
 extern "C" int main(int argc, const char** argv)
 {
-	int* ptr = nullptr;
-	*ptr = 0;
+
+	size_t test = 100;
+	test /= 0;
 
 	size_t ret = hello(2001, 12, 04, 23);
 	ret += hello(2002, 12, 04, 23);
@@ -19,7 +20,6 @@ extern "C" int main(int argc, const char** argv)
 		hello(i, i + i, i * i, i / 3);
 		i++;
 	}
-
 
 	return 0;
 }

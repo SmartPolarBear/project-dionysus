@@ -44,6 +44,10 @@ struct cpu_struct
 			{ 0, 0, 0, 0x00, 0x00, 0 }, /* 0x48 tss high */
 		};
 
+//		*((uint64_t*)(&gdt_table.kernel_code)) = 0x0020980000000000;
+//		*((uint64_t*)(&gdt_table.kernel_data)) = 0x0000920000000000;
+//		*((uint64_t*)(&gdt_table.user_code)) = 0x0020F80000000000;
+//		*((uint64_t*)(&gdt_table.user_data)) = 0x0000F20000000000;
 	}
 
 	void install_gdt_and_tss()
