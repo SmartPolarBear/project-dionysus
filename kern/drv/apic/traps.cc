@@ -1,3 +1,6 @@
+#include "./traps.hpp"
+#include "./exception.hpp"
+
 #include "arch/amd64/x86.h"
 
 #include "drivers/apic/apic.h"
@@ -25,30 +28,28 @@ using lock::spinlock_release;
 
 constexpr size_t IDT_SIZE = 4_KB;
 
-static error_code default_trap_handle([[maybe_unused]] trap::trap_frame info);
-
 #pragma clang diagnostic push
 
 #pragma clang diagnostic ignored "-Wc99-designator"
 #pragma clang diagnostic ignored "-Winitializer-overrides"
 
-struct
+struct handle_table_struct
 {
-	spinlock lock;
+	lock::spinlock lock{};
 
-	trap_handle trap_handles[TRAP_NUMBERMAX] =
+	trap::trap_handle trap_handles[trap::TRAP_NUMBERMAX] =
 		{
-			[0 ... TRAP_NUMBERMAX - 1] = trap_handle{
+			[0 ... trap::TRAP_NUMBERMAX - 1] = trap::trap_handle{
 				.handle = default_trap_handle,
 				.enable = true
 			},
 		};
 } handle_table;
 
-#pragma clang diagnostic pop
+#pragma clang diagnostic pop;
 
 // default handle of trap
-static error_code default_trap_handle([[maybe_unused]] trap::trap_frame info)
+error_code default_trap_handle([[maybe_unused]] trap::trap_frame info)
 {
 	// TODO: the handle doesn't exist
 
@@ -94,7 +95,6 @@ PANIC void trap::init_trap()
 	}
 	memset(idt, 0, IDT_SIZE);
 
-
 	auto desc = reinterpret_cast<idt_table_desc*>(new BLOCK<sizeof(idt_table_desc)>);
 	if (desc == nullptr)
 	{
@@ -116,21 +116,21 @@ PANIC void trap::init_trap()
 
 	spinlock_initlock(&handle_table.lock, "traphandles");
 
-	spinlock_acquire(&handle_table.lock);
+	trap_handle_register(trap::irq_to_trap_number(IRQ_SPURIOUS), trap_handle{
+		.handle = spurious_trap_handle,
+		.enable = true
+	});
 
-	handle_table.trap_handles[trap::irq_to_trap_number(IRQ_SPURIOUS)].handle = spurious_trap_handle;
-	handle_table.trap_handles[trap::irq_to_trap_number(IRQ_SPURIOUS)].enable = true;
-
-	spinlock_release(&handle_table.lock);
+	install_exception_handles();
 }
 
 // returns the old handle
-PANIC trap_handle trap::trap_handle_regsiter(size_t number, trap_handle handle)
+PANIC trap_handle trap::trap_handle_register(size_t trapnumber, trap_handle handle)
 {
 	spinlock_acquire(&handle_table.lock);
 
-	trap_handle old = trap_handle{ handle_table.trap_handles[number] };
-	handle_table.trap_handles[number] = handle;
+	trap_handle old = trap_handle{ handle_table.trap_handles[trapnumber] };
+	handle_table.trap_handles[trapnumber] = handle;
 
 	spinlock_release(&handle_table.lock);
 

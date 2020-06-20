@@ -58,7 +58,7 @@ PANIC void timer::setup_apic_timer()
 PANIC void timer::init_apic_timer()
 {
 	// register the handle
-	trap::trap_handle_regsiter(trap::irq_to_trap_number(IRQ_TIMER),
+	trap::trap_handle_register(trap::irq_to_trap_number(IRQ_TIMER),
 		trap::trap_handle
 			{
 				.handle = trap_handle_tick,

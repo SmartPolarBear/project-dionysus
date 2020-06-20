@@ -76,9 +76,9 @@ void vmm::init_vmm(void)
   memset(g_kpml4t, 0, PGTABLE_SIZE);
 
   // register the page fault handle
-  trap::trap_handle_regsiter(trap::TRAP_PGFLT, trap::trap_handle{
-	  .handle = handle_pgfault,
-	  .enable = true});
+	trap::trap_handle_register(trap::TRAP_PGFLT, trap::trap_handle{
+		.handle = handle_pgfault,
+		.enable = true });
 }
 
 vma_struct *vmm::find_vma(mm_struct *mm, uintptr_t addr)

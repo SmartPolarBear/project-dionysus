@@ -261,8 +261,7 @@ error_code process::process_run(IN process_dispatcher* proc)
 
 	spinlock_release(&proc_list.lock);
 
-	uintptr_t krsp0 = current->kstack + process_dispatcher::KERNSTACK_SIZE;
-	cpu()->tss.rsp0 = krsp0;
+	cpu()->tss.rsp0 = current->kstack + process_dispatcher::KERNSTACK_SIZE;
 
 	trap::popcli();
 
