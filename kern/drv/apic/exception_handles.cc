@@ -61,97 +61,115 @@ void install_exception_handles()
 
 error_code exception_divided_by_0([[maybe_unused]] trap::trap_frame info)
 {
+	KDEBUG_RICHPANIC("Divide-by-0 error.", "#DE", false, "");
 	return ERROR_SUCCESS;
 }
 
 error_code exception_debug([[maybe_unused]] trap::trap_frame info)
 {
+	KDEBUG_RICHPANIC("Debug", "#DB", false, "");
 	return ERROR_SUCCESS;
 }
 
 error_code exception_no_maskable_interrupt([[maybe_unused]] trap::trap_frame info)
 {
+	KDEBUG_RICHPANIC("NMI Interrupt", "", false, "");
 	return ERROR_SUCCESS;
 }
 
 error_code exception_breakpoint([[maybe_unused]] trap::trap_frame info)
 {
+	KDEBUG_RICHPANIC("Breakpoint", "#BP", false, "");
 	return ERROR_SUCCESS;
 }
 
 error_code exception_overflow([[maybe_unused]] trap::trap_frame info)
 {
+	KDEBUG_RICHPANIC("Overflow", "#OF", false, "");
 	return ERROR_SUCCESS;
 }
 
 error_code exception_bound_range_exceeded([[maybe_unused]] trap::trap_frame info)
 {
+	KDEBUG_RICHPANIC("Bound range exceeded.", "#BR", false, "");
 	return ERROR_SUCCESS;
 }
 
 error_code exception_invalid_opcode([[maybe_unused]] trap::trap_frame info)
 {
+	KDEBUG_RICHPANIC("Invalid opcode.", "#UD", false, "");
 	return ERROR_SUCCESS;
 }
 
 error_code exception_device_not_available([[maybe_unused]] trap::trap_frame info)
 {
+	KDEBUG_RICHPANIC("Device not available", "#NM", false, "");
 	return ERROR_SUCCESS;
 }
 
 error_code exception_double_fault([[maybe_unused]] trap::trap_frame info)
 {
+	KDEBUG_RICHPANIC("Double fault", "#DF", false, "");
 	return ERROR_SUCCESS;
 }
 
 error_code exception_invalid_tss([[maybe_unused]] trap::trap_frame info)
 {
+	KDEBUG_RICHPANIC("Invalid TSS", "#TS", false, "Error=%lld\n", (size_t)info.err);
 	return ERROR_SUCCESS;
 }
 
 error_code exception_segment_np([[maybe_unused]] trap::trap_frame info)
 {
+	KDEBUG_RICHPANIC("Segment not present", "#NP", false, "Error=%lld\n", (size_t)info.err);
 	return ERROR_SUCCESS;
 }
 
 error_code exception_stack_segment_fault([[maybe_unused]] trap::trap_frame info)
 {
+	KDEBUG_RICHPANIC("Stack segment fault", "#SS", false, "Error=%lld\n", (size_t)info.err);
 	return ERROR_SUCCESS;
 }
 
 error_code exception_gpf([[maybe_unused]] trap::trap_frame info)
 {
+	KDEBUG_RICHPANIC("General protection fault", "#GP", false, "Error=%lld\n", (size_t)info.err);
 	return ERROR_SUCCESS;
 }
 
 error_code exception_x87_floating_point([[maybe_unused]] trap::trap_frame info)
 {
+	KDEBUG_RICHPANIC("x87 floating-point exception", "#MF", false, "");
 	return ERROR_SUCCESS;
-
 }
 
 error_code exception_alignment_check([[maybe_unused]] trap::trap_frame info)
 {
+	KDEBUG_RICHPANIC("Alignment check", "#AC", false, "Error=%lld\n", (size_t)info.err);
 	return ERROR_SUCCESS;
 }
 
 error_code exception_machine_check([[maybe_unused]] trap::trap_frame info)
 {
+	KDEBUG_RICHPANIC("Machine check", "#MC", false, "");
 	return ERROR_SUCCESS;
 }
 
 error_code exception_SIMD_floating_point([[maybe_unused]] trap::trap_frame info)
 {
+	KDEBUG_RICHPANIC("SIMD floating-point exception", "#XF", false, "");
 	return ERROR_SUCCESS;
 }
 
 error_code exception_virtualization([[maybe_unused]] trap::trap_frame info)
 {
+	KDEBUG_RICHPANIC("Virtualization exception", "#VE", false, "");
 	return ERROR_SUCCESS;
 }
 
 error_code exception_security([[maybe_unused]] trap::trap_frame info)
 {
+	KDEBUG_RICHPANIC("Security exception", "#SX", false, "Error=%lld\n", (size_t)info.err);
 	return ERROR_SUCCESS;
 }
 
