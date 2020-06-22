@@ -37,6 +37,25 @@ struct gdt_entry
 	uint64_t base_high: 8;
 } __attribute__((__packed__));
 
+struct access_byte_struct
+{
+	uint64_t ac: 1;
+	uint64_t rw: 1;
+	uint64_t dc: 1;
+	uint64_t ex: 1;
+	uint64_t s: 1;
+	uint64_t privl: 2;
+	uint64_t pr: 1;
+}__attribute__((__packed__));
+
+struct flags_struct
+{
+	uint64_t always0_1:1;
+	uint64_t l:1;
+	uint64_t sz:1;
+	uint64_t gr:1;
+};
+
 
 using idt_table_desc = pseudo_descriptor;
 
