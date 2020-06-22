@@ -3,16 +3,6 @@
 #include "system/concepts.hpp"
 #include "system/types.h"
 
-struct gdt_entry
-{
-	uint16_t limit15_0;
-	uint16_t base15_0;
-	uint8_t base23_16;
-	uint8_t type;
-	uint8_t limit19_16_and_flags;
-	uint8_t base31_24;
-} __attribute__((__packed__));
-
 struct pseudo_descriptor
 {
 	uint16_t limit;
@@ -35,6 +25,18 @@ struct idt_entry
 	uint32_t gd_off_63_32: 32; // [32 ~ 63] bits of offset in segment
 	uint32_t gd_rsv2: 32;      // reserved bits
 }__attribute__((__packed__));
+
+struct gdt_entry
+{
+	uint64_t limit_low: 16;
+	uint64_t base_low: 16;
+	uint64_t base_mid: 8;
+	uint64_t access_byte: 8;
+	uint64_t limit_high: 4;
+	uint64_t flags: 4;
+	uint64_t base_high: 8;
+} __attribute__((__packed__));
+
 
 using idt_table_desc = pseudo_descriptor;
 
@@ -85,6 +87,27 @@ enum GDT_SEGMENTS : uint64_t
 	SEGMENTSEL_TSSHIGH = 0x48
 };
 
+enum SEGMENT_TYPE
+{
+	STA_X = 0x8,                 // Executable segment
+	STA_E = 0x4,                 // Expand down (non-executable segments)
+	STA_C = 0x4,                 // Conforming code segment (executable only)
+	STA_W = 0x2,                 // Writeable (non-executable segments)
+	STA_R = 0x2,                 // Readable (executable segments)
+	STA_A = 0x1,                 // Accessed
+	STS_T16A = 0x1,                 // Available 16-bit TSS
+	STS_LDT = 0x2,                 // Local Descriptor Table
+	STS_T16B = 0x3,                 // Busy 16-bit TSS
+	STS_CG16 = 0x4,                 // 16-bit Call Gate
+	STS_TG = 0x5,                 // Task Gate / Coum Transmitions
+	STS_IG16 = 0x6,                 // 16-bit Interrupt Gate
+	STS_TG16 = 0x7,                 // 16-bit Trap Gate
+	STS_T32A = 0x9,                 // Available 32-bit TSS
+	STS_T32B = 0xB,                 // Busy 32-bit TSS
+	STS_CG32 = 0xC,                 // 32-bit Call Gate
+	STS_IG32 = 0xE,                 // 32-bit Interrupt Gate
+	STS_TG32 = 0xF,                 // 32-bit Trap Gate
+};
 // cpu local storage
 
 static_assert(sizeof(uintptr_t) == 0x08);

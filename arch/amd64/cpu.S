@@ -14,11 +14,9 @@ safe_swap_gs:
 end_safe_swap_gs:
     ret
 
-.global load_gdt_and_tr
-load_gdt_and_tr:
+.global load_gdt
+load_gdt:
     lgdt (%rdi)
-    movw %si, %ax
-    ltr %ax
 
     mov $0x10, %ax
     mov %ax,%ss
@@ -31,6 +29,12 @@ load_gdt_and_tr:
     pushq %rdi
 
     lretq
+
+.global load_tr
+load_tr:
+    movw %di, %ax
+    ltr %ax
+    ret
 
 .global load_idt
 load_idt:

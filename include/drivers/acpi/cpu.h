@@ -22,38 +22,23 @@ struct cpu_struct
 	void* local_fs;
 	void* local_gs;
 
-	task_state_segment tss;
-	gdt_table gdt_table;
+	task_state_segment tss{};
+	gdt_table gdt_table{};
 
 	cpu_struct()
 		: id(0), apicid(0),
 		  started(0), nest_pushcli_depth(0),
 		  intr_enable(0), present(false),
-		  local_fs(nullptr)
+		  local_fs(nullptr), local_gs(nullptr)
 	{
-		gdt_table = {
-			{ 0, 0, 0, 0x00, 0x00, 0 }, /* 0x00 null  */
-			{ 0, 0, 0, 0x9a, 0xa0, 0 }, /* 0x08 kernel code (kernel base selector) */
-			{ 0, 0, 0, 0x92, 0xa0, 0 }, /* 0x10 kernel data */
-			{ 0, 0, 0, 0x00, 0x00, 0 }, /* 0x18 null (user base selector) */
-			{ 0, 0, 0, 0x92, 0xa0, 0 }, /* 0x20 user data */
-			{ 0, 0, 0, 0x9a, 0xa0, 0 }, /* 0x28 user code */
-			{ 0, 0, 0, 0x92, 0xa0, 0 }, /* 0x30 ovmf data */
-			{ 0, 0, 0, 0x9a, 0xa0, 0 }, /* 0x38 ovmf code */
-			{ 0, 0, 0, 0x89, 0xa0, 0 }, /* 0x40 tss low */
-			{ 0, 0, 0, 0x00, 0x00, 0 }, /* 0x48 tss high */
-		};
 
-//		*((uint64_t*)(&gdt_table.kernel_code)) = 0x0020980000000000;
-//		*((uint64_t*)(&gdt_table.kernel_data)) = 0x0000920000000000;
-//		*((uint64_t*)(&gdt_table.user_code)) = 0x0020F80000000000;
-//		*((uint64_t*)(&gdt_table.user_data)) = 0x0000F20000000000;
 	}
 
 	void install_gdt_and_tss()
 	{
 		gdt_table_desc gdt_desc = { sizeof(gdt_table) - 1, (uintptr_t)&gdt_table };
-		load_gdt_and_tr(&gdt_desc, SEGMENTSEL_TSSLOW);
+		load_gdt(&gdt_desc);
+		load_tr(SEGMENTSEL_TSSLOW);
 	}
 };
 

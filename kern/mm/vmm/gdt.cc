@@ -59,7 +59,7 @@ using libk::list_remove;
 __thread cpu_struct *cpu;
 #endif
 
-void vmm::install_gdt(void)
+void vmm::install_gdt()
 {
 	auto current_cpu = &cpus[local_apic::get_cpunum()];
 
@@ -88,18 +88,15 @@ void vmm::install_gdt(void)
 
 	current_cpu->tss.iopb_offset = sizeof(current_cpu->tss);
 
-	uintptr_t tss_addr = (uintptr_t)(&current_cpu->tss);
-	current_cpu->gdt_table.tss_low.base15_0 = tss_addr & 0xffffull;
-	current_cpu->gdt_table.tss_low.base23_16 = (tss_addr >> 16ull) & 0xffull;
-	current_cpu->gdt_table.tss_low.base31_24 = (tss_addr >> 24ull) & 0xffull;
-	current_cpu->gdt_table.tss_low.limit15_0 = sizeof(task_state_segment);
-	current_cpu->gdt_table.tss_high.limit15_0 = (tss_addr >> 32ull) & 0xffffull;
+	auto s2 = sizeof(gdt_entry);
 
-	(*((uint64_t*)(&current_cpu->gdt_table.kernel_code)))= 0x0020980000000000ul;  // Code, DPL=0, R/X
+	(*((uint64_t*)(&current_cpu->gdt_table.kernel_code))) = 0x0020980000000000ul;  // Code, DPL=0, R/X
 	(*((uint64_t*)(&current_cpu->gdt_table.user_code))) = 0x0020F80000000000ul;  // Code, DPL=3, R/X
-	(*((uint64_t*)(&current_cpu->gdt_table.kernel_data)))  = 0x0000920000000000ul;  // Data, DPL=0, W
-	(*((uint64_t*)(&current_cpu->gdt_table.user_data)))  = 0x0000F20000000000ul;  // Data, DPL=3, W
-	(*((uint64_t*)(&current_cpu->gdt_table.tss_low)))  = (0x0067ul) | ((tss_addr & 0xFFFFFFul) << 16ul) |
+	(*((uint64_t*)(&current_cpu->gdt_table.kernel_data))) = 0x0000920000000000ul;  // Data, DPL=0, W
+	(*((uint64_t*)(&current_cpu->gdt_table.user_data))) = 0x0000F20000000000ul;  // Data, DPL=3, W
+
+	uintptr_t tss_addr = (uintptr_t)(&current_cpu->tss);
+	(*((uint64_t*)(&current_cpu->gdt_table.tss_low))) = (0x0067ul) | ((tss_addr & 0xFFFFFFul) << 16ul) |
 		(0x00E9ul << 40ul) | (((tss_addr >> 24ul) & 0xFFul) << 56ul);
 	(*((uint64_t*)(&current_cpu->gdt_table.tss_high))) = (tss_addr >> 32ul);
 
