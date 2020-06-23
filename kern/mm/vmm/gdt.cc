@@ -83,14 +83,32 @@ static inline void set_gdt_entry(OUT
 
 	entry->flags = gdt_flags_to_int(flags);
 
-
 	entry->base_low = base & 0xFFFFu;
 	entry->base_mid = (base >> 16u) & 0xFFu;
 	entry->base_high = (base >> 24u) & 0xFFu;
 
 	entry->limit_low = limit & 0xFFFFu;
-	entry->limit_low = (limit >> 16u) & 0xFu;
+	entry->limit_high = (limit >> 16u) & 0xFu;
+}
 
+static inline void set_tss_gdt_entry(gdt_entry* entry_low, gdt_entry* entry_high, uintptr_t tss_addr)
+{
+	entry_low->access_byte = 0xE9u; //TSS specified access byte
+
+	gdt_flags_struct flags{};
+	flags.l = true;// L bit for x86-64
+	entry_low->flags = 0x0;
+
+	entry_low->base_low = tss_addr & 0xFFFFu;
+	entry_low->base_mid = (tss_addr >> 16u) & 0xFFu;
+	entry_low->base_high = (tss_addr >> 24u) & 0xFFu;
+
+	size_t tss_limit=sizeof(task_state_segment)-1;
+	entry_low->limit_low = (tss_limit & 0xFFFFu);
+	entry_low->limit_high = ((tss_limit >> 16u) & 0xFu);
+
+	// tss-high isn't structured as usual
+	(*((uint64_t*)entry_high)) = (tss_addr >> 32ul);
 }
 
 void vmm::install_gdt()
@@ -127,15 +145,7 @@ void vmm::install_gdt()
 	set_gdt_entry(&current_cpu->gdt_table.user_code, 0, 0, DPL_USER, true, false);
 	set_gdt_entry(&current_cpu->gdt_table.user_data, 0, 0, DPL_USER, false, true);
 
-	KDEBUG_ASSERT((*((uint64_t*)(&current_cpu->gdt_table.kernel_code))) == 0x0020980000000000ul);  // Code, DPL=0, R/X
-	KDEBUG_ASSERT((*((uint64_t*)(&current_cpu->gdt_table.kernel_data))) == 0x0000920000000000ul);  // Data, DPL=0, W
-	KDEBUG_ASSERT((*((uint64_t*)(&current_cpu->gdt_table.user_code))) == 0x0020F80000000000ul);  // Code, DPL=3, R/X
-	KDEBUG_ASSERT((*((uint64_t*)(&current_cpu->gdt_table.user_data))) == 0x0000F20000000000ul);  // Data, DPL=3, W
-
-	uintptr_t tss_addr = (uintptr_t)(&current_cpu->tss);
-	(*((uint64_t*)(&current_cpu->gdt_table.tss_low))) = (0x0067ul) | ((tss_addr & 0xFFFFFFul) << 16ul) |
-		(0x00E9ul << 40ul) | (((tss_addr >> 24ul) & 0xFFul) << 56ul);
-	(*((uint64_t*)(&current_cpu->gdt_table.tss_high))) = (tss_addr >> 32ul);
+	set_tss_gdt_entry(&current_cpu->gdt_table.tss_low, &current_cpu->gdt_table.tss_high, (uintptr_t)&current_cpu->tss);
 
 	current_cpu->install_gdt_and_tss();
 
