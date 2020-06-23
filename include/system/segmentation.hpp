@@ -45,17 +45,6 @@ struct gdt_flags_struct
 	uint64_t gr: 1;
 }__attribute__((__packed__));
 
-struct gdt_entry
-{
-	uint64_t limit_low: 16;
-	uint64_t base_low: 16;
-	uint64_t base_mid: 8;
-	gdt_access_byte_struct access_byte;
-	uint64_t limit_high: 4;
-	gdt_flags_struct flags;
-	uint64_t base_high: 8;
-} __attribute__((__packed__));
-
 static inline uint8_t gdt_flags_to_int(gdt_flags_struct flags)
 {
 	uint8_t access_byte = *((uint8_t*)(&flags));
@@ -67,6 +56,18 @@ static inline uint8_t gdt_access_byte_to_int(gdt_access_byte_struct ab)
 	uint8_t flags = *((uint8_t*)(&ab));
 	return flags;
 }
+
+struct gdt_entry
+{
+	uint64_t limit_low: 16;
+	uint64_t base_low: 16;
+	uint64_t base_mid: 8;
+	uint64_t access_byte: 8;
+	uint64_t limit_high: 4;
+	uint64_t flags: 4;
+	uint64_t base_high: 8;
+} __attribute__((__packed__));
+
 
 using idt_table_desc = pseudo_descriptor;
 
