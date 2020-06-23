@@ -67,30 +67,41 @@ static inline void set_gdt_entry(OUT
 	bool executable,
 	bool rw)
 {
-	uint8_t access_byte = 0;
-	uint8_t flags = 0;
+	gdt_access_byte_struct access_byte{};
+	gdt_flags_struct flags{};
 
-	access_byte |= 0b10000000u; // present
-	access_byte |= ((uint8_t)(((uint8_t)dpl) << 5u)); // dpl
-	access_byte |= 0b00010000u; // code or data segment
+	access_byte.pr = 1;
+	access_byte.privl = ((uint8_t)dpl);
+	access_byte.s = 1;
+	access_byte.rw = rw;
+	access_byte.ex = executable;
 
-	if (rw)
-	{
-		access_byte |= 0b00000010u;
-	}
+	flags.l = executable;// L bit for x86-64
 
-	if (executable)
-	{
-		access_byte |= 0b00001000u;
-	}
+//	uint8_t access_byte = 0;
+//	uint8_t flags = 0;
+//
+//	access_byte |= 0b10000000u; // present
+//	access_byte |= ((uint8_t)(((uint8_t)dpl) << 5u)); // dpl
+//	access_byte |= 0b00010000u; // code or data segment
+//
+//	if (rw)
+//	{
+//		access_byte |= 0b00000010u;
+//	}
+//
+//	if (executable)
+//	{
+//		access_byte |= 0b00001000u;
+//	}
+//
+//	if (executable)
+//	{
+//		flags |= 0b0010u; // L bit for x86-64
+//	}
 
-	if (executable)
-	{
-		flags |= 0b0010u; // L bit for x86-64
-	}
-
-	entry->flags = flags;
-	entry->access_byte = access_byte;
+	entry->flags = gdt_flags_to_int(flags);
+	entry->access_byte = gdt_access_byte_to_int(access_byte);
 
 	entry->base_low = base & 0xFFFFu;
 	entry->base_mid = (base >> 16u) & 0xFFu;
