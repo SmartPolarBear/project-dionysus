@@ -36,8 +36,10 @@ struct cpu_struct
 
 	void install_gdt_and_tss()
 	{
-		gdt_table_desc gdt_desc = { sizeof(gdt_table) - 1, (uintptr_t)&gdt_table };
+		gdt_table_desc gdt_desc{ sizeof(gdt_table) - 1, (uintptr_t)&gdt_table };
+
 		load_gdt(&gdt_desc);
+
 		load_tr(SEGMENTSEL_TSSLOW);
 	}
 };

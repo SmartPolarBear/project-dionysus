@@ -73,7 +73,6 @@ using lock::spinlock_release;
         "movq %0, %%rsp\n"
         "pushq $0\n"
         "pushq $0\n"
-        // Uncomment the following line after completing exercise 13
         "sti\n"
         "spin:\n"
         "hlt\n"

@@ -90,6 +90,8 @@ extern "C" [[noreturn]] void kmain()
 
 	// initialize apic timer
 	timer::init_apic_timer();
+
+	// timer interrupt is only processed in cpu 0
 	timer::set_enable_on_cpu(0, true);
 
 	// initialize I/O APIC
@@ -100,14 +102,14 @@ extern "C" [[noreturn]] void kmain()
 	// initialize user process manager
 	process::process_init();
 
-	run_hello();
-
-	scheduler::scheduler_yield();
-
 	// boot other CPU cores
 	ap::init_ap();
 
 	write_format("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
+
+	run_hello();
+
+	scheduler::scheduler_yield();
 
 	ap::all_processor_main();
 
