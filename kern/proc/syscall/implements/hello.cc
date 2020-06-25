@@ -13,14 +13,15 @@
 
 #include "libraries/libkernel/console/builtin_console.hpp"
 
-error_code sys_hello(const syscall_regs *regs)
+error_code sys_hello(const syscall_regs* regs)
 {
 
-    write_format("hello ! %lld %lld %lld %lld\n",
-                 get_nth_arg(regs, 0),
-                 get_nth_arg(regs, 1),
-                 get_nth_arg(regs, 2),
-                 get_nth_arg(regs, 3));
+	write_format("[pid %d]hello ! %lld %lld %lld %lld\n",
+		current->id,
+		get_nth_arg(regs, 0),
+		get_nth_arg(regs, 1),
+		get_nth_arg(regs, 2),
+		get_nth_arg(regs, 3));
 
-    return ERROR_SUCCESS;
+	return ERROR_SUCCESS;
 }

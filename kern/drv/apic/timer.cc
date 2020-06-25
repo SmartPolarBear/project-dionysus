@@ -77,8 +77,7 @@ error_code trap_handle_tick([[maybe_unused]] trap::trap_frame info)
 		ticks[id]++;
 		spinlock_release(ticks_lock());
 
-		write_format("ticks=%lld", ticks[id]);
-
+		local_apic::write_eoi();
 		scheduler::scheduler_yield();
 	}
 

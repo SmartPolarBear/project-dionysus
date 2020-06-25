@@ -48,25 +48,6 @@
 
 #include <cstring>
 
-void run_hello()
-{
-	uint8_t* bin = nullptr;
-	size_t size = 0;
-
-	auto ret = multiboot::find_module_by_cmdline("/hello", &size, &bin);
-
-	KDEBUG_ASSERT(ret == ERROR_SUCCESS);
-
-	process::process_dispatcher* proc_he = nullptr;
-	process::create_process("hello", 0, false, &proc_he);
-
-	KDEBUG_ASSERT(proc_he != nullptr);
-
-	process::process_load_binary(proc_he, bin, size, process::BINARY_ELF);
-
-	write_format("load binary: hello\n");
-}
-
 // global entry of the kernel
 extern "C" [[noreturn]] void kmain()
 {
@@ -91,8 +72,8 @@ extern "C" [[noreturn]] void kmain()
 	// initialize apic timer
 	timer::init_apic_timer();
 
-	// timer interrupt is only processed in cpu 0
-	timer::set_enable_on_cpu(0, true);
+//	// timer interrupt is only processed in cpu 0
+//	timer::set_enable_on_cpu(0, true);
 
 	// initialize I/O APIC
 	io_apic::init_ioapic();
@@ -102,14 +83,10 @@ extern "C" [[noreturn]] void kmain()
 	// initialize user process manager
 	process::process_init();
 
-	// boot other CPU cores
-	ap::init_ap();
-
 	write_format("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
 
-	run_hello();
-
-	scheduler::scheduler_yield();
+	// boot other CPU cores
+	ap::init_ap();
 
 	ap::all_processor_main();
 

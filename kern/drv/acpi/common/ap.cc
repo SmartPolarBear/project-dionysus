@@ -50,90 +50,120 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
 [[clang::optnone]] void ap::init_ap(void)
 {
 
-    auto tag = multiboot::acquire_tag_ptr<multiboot_tag_module>(MULTIBOOT_TAG_TYPE_MODULE, [](auto ptr) -> bool {
-        multiboot_tag_module *mdl_tag = reinterpret_cast<decltype(mdl_tag)>(ptr);
-        const char *ap_boot_commandline = "/ap_boot";
-        auto cmp = strncmp(mdl_tag->cmdline, ap_boot_commandline, strlen(ap_boot_commandline));
-        return cmp == 0;
-    });
-    KDEBUG_ASSERT(tag != nullptr);
+	auto tag = multiboot::acquire_tag_ptr<multiboot_tag_module>(MULTIBOOT_TAG_TYPE_MODULE, [](auto ptr) -> bool
+	{
+	  multiboot_tag_module* mdl_tag = reinterpret_cast<decltype(mdl_tag)>(ptr);
+	  const char* ap_boot_commandline = "/ap_boot";
+	  auto cmp = strncmp(mdl_tag->cmdline, ap_boot_commandline, strlen(ap_boot_commandline));
+	  return cmp == 0;
+	});
+	KDEBUG_ASSERT(tag != nullptr);
 
-    uint8_t *code = reinterpret_cast<decltype(code)>(P2V(AP_CODE_LOAD_ADDR));
+	uint8_t* code = reinterpret_cast<decltype(code)>(P2V(AP_CODE_LOAD_ADDR));
 
-    // Attention: not knowing tag->mod_end is the address of the last byte or next to it. May need +1 for code size
-    //    Although with or without +1 it runs fine, bugs may occurs if the code changes.
+	// Attention: not knowing tag->mod_end is the address of the last byte or next to it. May need +1 for code size
+	//    Although with or without +1 it runs fine, bugs may occurs if the code changes.
 
-    size_t code_size = tag->mod_end - tag->mod_start;
-    memmove(code, reinterpret_cast<decltype(code)>(P2V_KERNEL(tag->mod_start)), code_size);
+	size_t code_size = tag->mod_end - tag->mod_start;
+	memmove(code, reinterpret_cast<decltype(code)>(P2V_KERNEL(tag->mod_start)), code_size);
 
-    for (const auto &core : cpus)
-    {
-        if (core.present && core.id != local_apic::get_cpunum())
-        {
-            uint8_t *stack = new BLOCK<PAGE_SIZE>;
+	for (const auto& core : cpus)
+	{
+		if (core.present && core.id != local_apic::get_cpunum())
+		{
+			uint8_t* stack = new BLOCK<PAGE_SIZE>;
 
-            if (stack == nullptr)
-            {
-                KDEBUG_RICHPANIC("Can't allocate enough memory for AP boot.\n", "KERNEL PANIC: AP", false, "");
-            }
+			if (stack == nullptr)
+			{
+				KDEBUG_RICHPANIC("Can't allocate enough memory for AP boot.\n", "KERNEL PANIC: AP", false, "");
+			}
 
-            *(uint32_t *)(code - 4) = 0x8000; // just enough stack to get us to entry64mp
-            *(uint32_t *)(code - 8) = V2P(uintptr_t(entry32mp));
-            *(uint64_t *)(code - 16) = (uint64_t)(stack + 4_KB);
+			*(uint32_t*)(code - 4) = 0x8000; // just enough stack to get us to entry64mp
+			*(uint32_t*)(code - 8) = V2P(uintptr_t(entry32mp));
+			*(uint64_t*)(code - 16) = (uint64_t)(stack + 4_KB);
 
-            local_apic::start_ap(core.apicid, V2P((uintptr_t)code));
+			local_apic::start_ap(core.apicid, V2P((uintptr_t)code));
 
-            while (core.started == 0u)
-                ;
-        }
-    }
+			while (core.started == 0u);
+		}
+	}
+}
+
+void run_hello()
+{
+	uint8_t* bin = nullptr;
+	size_t size = 0;
+
+	auto ret = multiboot::find_module_by_cmdline("/hello", &size, &bin);
+
+	KDEBUG_ASSERT(ret == ERROR_SUCCESS);
+
+	process::process_dispatcher* proc_he = nullptr;
+	process::create_process("hello", 0, false, &proc_he);
+
+	KDEBUG_ASSERT(proc_he != nullptr);
+
+	process::process_load_binary(proc_he, bin, size, process::BINARY_ELF);
+
+	write_format("[cpu %d]load binary: hello\n", cpu()->id);
 }
 
 void ap::all_processor_main()
 {
 #ifndef USE_NEW_CPU_INTERFACE
-    xchg(&cpu->started, 1u);
+	xchg(&cpu->started, 1u);
 #else
-    xchg(&cpu()->started, 1u);
+	xchg(&cpu()->started, 1u);
 #endif
 
-    // FIXME: temporarily enable interrupt
-    sti();
+	// FIXME: temporarily enable interrupt
+	sti();
 
-    // simple scheduler loop
-    while (!kdebug::panicked)
-    {
-        // printf("cpu %d\n", cpu->id);
-    }
+	size_t id = cpu()->id;
 
-    if (kdebug::panicked)
-    {
-        cli();
-        hlt();
-        for (;;)
-            ;
-    }
+	run_hello();
+
+	if (cpu()->id == 0)
+	{
+		// timer interrupt is only processed in cpu 0
+		timer::set_enable_on_cpu(0, true);
+		scheduler::scheduler_yield();
+	}
+
+
+	// simple scheduler loop
+	while (!kdebug::panicked)
+	{
+		// printf("cpu %d\n", cpu->id);
+	}
+
+	if (kdebug::panicked)
+	{
+		cli();
+		hlt();
+		for (;;);
+	}
 }
 
 extern "C" [[clang::optnone]] void ap_enter(void)
 {
-    // the calling sequence of install_kernel_pml4t and install_gdt is not the same as the boot CPU
-    // because we need paging enabled first.
+	// the calling sequence of install_kernel_pml4t and install_gdt is not the same as the boot CPU
+	// because we need paging enabled first.
 
-    // install the kernel vm
-    vmm::install_kernel_pml4t();
+	// install the kernel vm
+	vmm::install_kernel_pml4t();
 
-    // initialize segmentation
-    vmm::install_gdt();
+	// initialize segmentation
+	vmm::install_gdt();
 
-    // install trap vectors
-    trap::init_trap();
+	// install trap vectors
+	trap::init_trap();
 
-    // initialize local APIC
-    local_apic::init_lapic();
+	// initialize local APIC
+	local_apic::init_lapic();
 
-    // initialize apic timer
-    timer::init_apic_timer();
+	// initialize apic timer
+	timer::init_apic_timer();
 
-    ap::all_processor_main();
+	ap::all_processor_main();
 }
