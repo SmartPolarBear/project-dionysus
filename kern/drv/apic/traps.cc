@@ -64,10 +64,6 @@ error_code default_trap_handle([[maybe_unused]] trap::trap_frame info)
 
 static error_code spurious_trap_handle([[maybe_unused]] trap::trap_frame info)
 {
-	if ((info.cs & 0b11u) == DPL_USER)
-	{
-		process::process_update_context(info);
-	}
 
 	return ERROR_SUCCESS;
 }
@@ -164,6 +160,10 @@ extern "C" void trap_body(trap::trap_frame info)
 			info.trap_num);
 	}
 
+	if ((info.cs & 0b11u) == DPL_USER)
+	{
+		process::process_update_context(info);
+	}
 
 	// it should be assigned with the defualt handle when initialized
 	KDEBUG_ASSERT(handle_table.trap_handles[info.trap_num].handle != nullptr);
