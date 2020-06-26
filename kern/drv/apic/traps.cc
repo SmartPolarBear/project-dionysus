@@ -14,6 +14,7 @@
 #include "system/pmm.h"
 #include "system/segmentation.hpp"
 #include "system/vmm.h"
+#include "system/proc.h"
 
 #include "libraries/libkernel/console/builtin_console.hpp"
 #include <cstring>
@@ -63,6 +64,11 @@ error_code default_trap_handle([[maybe_unused]] trap::trap_frame info)
 
 static error_code spurious_trap_handle([[maybe_unused]] trap::trap_frame info)
 {
+	if ((info.cs & 0b11u) == DPL_USER)
+	{
+		process::process_update_context(info);
+	}
+
 	return ERROR_SUCCESS;
 }
 
@@ -157,6 +163,7 @@ extern "C" void trap_body(trap::trap_frame info)
 		KDEBUG_RICHPANIC("trap number is out of range", "KERNEL PANIC: TRAP", false, "The given trap number is %d",
 			info.trap_num);
 	}
+
 
 	// it should be assigned with the defualt handle when initialized
 	KDEBUG_ASSERT(handle_table.trap_handles[info.trap_num].handle != nullptr);

@@ -121,10 +121,10 @@ void ap::all_processor_main()
 
 	size_t id = cpu()->id;
 
-	run_hello();
+
 
 	if (cpu()->id == 0)
-	{
+	{run_hello();
 		// timer interrupt is only processed in cpu 0
 		timer::set_enable_on_cpu(0, true);
 		scheduler::scheduler_yield();
