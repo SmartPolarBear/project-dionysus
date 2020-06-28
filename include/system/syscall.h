@@ -18,6 +18,7 @@ namespace syscall
 		SYS_hello = 1,
 		SYS_exit,
 		SYS_put_str,
+		SYS_put_char,
 	};
 
 	struct syscall_regs

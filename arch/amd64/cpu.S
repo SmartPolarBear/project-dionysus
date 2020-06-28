@@ -8,8 +8,8 @@ swap_gs:
 .global safe_swap_gs
 safe_swap_gs:
     // TODO: check if already in kernel
-    // cmpq $0x08, 0x8(%rsp)
-    // je end_safe_swap_gs
+    //cmpq $0x08, %cs
+    //je end_safe_swap_gs
     call swap_gs
 end_safe_swap_gs:
     ret

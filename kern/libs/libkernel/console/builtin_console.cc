@@ -19,7 +19,7 @@ using lock::spinlock_release;
 
 spinlock printf_lock;
 
-__attribute__((constructor)) void printf_init(void)
+__attribute__((constructor)) void printf_init()
 {
     spinlock_initlock(&printf_lock, "printf");
 }

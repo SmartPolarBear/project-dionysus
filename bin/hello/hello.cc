@@ -4,6 +4,9 @@
 
 extern "C" int main(int argc, const char** argv)
 {
-	put_str("hello world!");
+	for (;;)
+	{
+		put_char('a');
+	}
 	return 0;
 }

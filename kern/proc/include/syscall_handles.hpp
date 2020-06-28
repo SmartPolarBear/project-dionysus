@@ -14,6 +14,7 @@
 DEF_SYSCALL_HANDLE(default_syscall);
 DEF_SYSCALL_HANDLE(sys_hello);
 DEF_SYSCALL_HANDLE(sys_exit);
-DEF_SYSCALL_HANDLE(sys_putstr);
+DEF_SYSCALL_HANDLE(sys_put_str);
+DEF_SYSCALL_HANDLE(sys_put_char);
 
 #undef DEF_SYSCALL_HANDLE

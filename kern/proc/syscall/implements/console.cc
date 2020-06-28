@@ -13,10 +13,18 @@
 
 #include "libraries/libkernel/console/builtin_console.hpp"
 
-error_code sys_putstr(const syscall_regs* regs)
+error_code sys_put_str(const syscall_regs* regs)
 {
 	char* strbuf = (char*)get_nth_arg(regs, 0);
+
 	put_str(strbuf);
+
+	return ERROR_SUCCESS;
+}
+
+error_code sys_put_char(const syscall_regs* regs)
+{
+	put_char((char)get_nth_arg(regs, 0));
 
 	return ERROR_SUCCESS;
 }

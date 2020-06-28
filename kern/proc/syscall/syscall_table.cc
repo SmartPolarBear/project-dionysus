@@ -27,7 +27,8 @@ extern "C" syscall_entry syscall_table[SYSCALL_COUNT + 1] = {
 
         [SYS_hello] = sys_hello,
         [SYS_exit] = sys_exit,
-        [SYS_put_str] = sys_putstr,
+        [SYS_put_str] = sys_put_str,
+        [SYS_put_char] = sys_put_char,
 };
 
 #pragma clang diagnostic pop

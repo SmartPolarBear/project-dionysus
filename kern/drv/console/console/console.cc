@@ -102,9 +102,9 @@ void console::cosnole_write_string(const char *str, size_t len)
         list_head *iter = nullptr;
         list_for(iter, &cons.devs_head)
         {
-            auto consdev = container_of(iter, console_dev, dev_link);
+            auto cons_dev = container_of(iter, console_dev, dev_link);
 
-            consdev->write_char(*(str + i), cons.background, cons.foreground);
+            cons_dev->write_char(*(str + i), cons.background, cons.foreground);
         }
     }
 
