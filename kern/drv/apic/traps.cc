@@ -162,7 +162,7 @@ extern "C" void trap_body(trap::trap_frame info)
 
 	if ((info.cs & 0b11u) == DPL_USER)
 	{
-		process::process_update_context(info);
+		process::process_update_context(&info);
 	}
 
 	// it should be assigned with the defualt handle when initialized

@@ -29,6 +29,7 @@ syscall_x64_entry:
     pushq %rbx
     pushq %rax
 
+    movq %rsp, %rdi  // parameter: address of regs
     call syscall_body
 
     // we discard rax because it is used to store return value

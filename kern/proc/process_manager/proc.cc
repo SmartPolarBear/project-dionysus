@@ -328,20 +328,20 @@ void process::process_exit(IN process_dispatcher* proc)
 }
 
 // update from trap frame
-error_code process::process_update_context(trap::trap_frame tf)
+error_code process::process_update_context(const trap::trap_frame* tf)
 {
 	if (current == nullptr)
 	{
 		return -ERROR_NO_RUNNING_PROC;
 	}
 
-	current->trapframe = tf;
+	memcpy(&current->trapframe, tf, sizeof(current->trapframe));
 
 	return ERROR_SUCCESS;
 }
 
 // update from syscall
-error_code process::process_update_context(syscall::syscall_regs regs)
+error_code process::process_update_context(const syscall::syscall_regs* regs)
 {
 	if (current == nullptr)
 	{
@@ -350,21 +350,21 @@ error_code process::process_update_context(syscall::syscall_regs regs)
 
 	trap::trap_frame tf{};
 
-	tf.rax = regs.rax;
-	tf.rbx = regs.rbx;
-	tf.rcx = regs.rcx;
-	tf.rdx = regs.rdx;
-	tf.rbp = regs.rbp;
-	tf.rsi = regs.rsi;
-	tf.rdi = regs.rdi;
-	tf.r8 = regs.r8;
-	tf.r9 = regs.r9;
-	tf.r10 = regs.r10;
-	tf.r11 = regs.r11;
-	tf.r12 = regs.r12;
-	tf.r13 = regs.r13;
-	tf.r14 = regs.r14;
-	tf.r15 = regs.r15;
+	tf.rax = regs->rax;
+	tf.rbx = regs->rbx;
+	tf.rcx = regs->rcx;
+	tf.rdx = regs->rdx;
+	tf.rbp = regs->rbp;
+	tf.rsi = regs->rsi;
+	tf.rdi = regs->rdi;
+	tf.r8 = regs->r8;
+	tf.r9 = regs->r9;
+	tf.r10 = regs->r10;
+	tf.r11 = regs->r11;
+	tf.r12 = regs->r12;
+	tf.r13 = regs->r13;
+	tf.r14 = regs->r14;
+	tf.r15 = regs->r15;
 
 	tf.rflags = tf.r11;
 	tf.r11 = 0;
@@ -374,6 +374,6 @@ error_code process::process_update_context(syscall::syscall_regs regs)
 
 	tf.rsp = (uintptr_t)gs_get<void*>(KERNEL_GS_USTACK);
 
-	return process_update_context(tf);
+	return process_update_context(&tf);
 }
 

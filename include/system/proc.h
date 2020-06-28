@@ -119,9 +119,9 @@ namespace process
 
 	// update context information of current process
 	// update from trap frame
-	error_code process_update_context(trap::trap_frame tf);
+	error_code process_update_context(const trap::trap_frame* tf);
 	// update from syscall
-	error_code process_update_context(syscall::syscall_regs regs);
+	error_code process_update_context(const syscall::syscall_regs* regs);
 
 } // namespace process
 

@@ -43,15 +43,10 @@ size_t get_syscall_number(const syscall_regs* regs)
 
 
 //FIXME: this is fragile and constantly make anything into mess
-extern "C" [[clang::optnone]] error_code syscall_body()
-{
-	// saved registers is right in the stack
-	uintptr_t sp = 0;
-	asm volatile ("mov %%rsp,%0":"=r"(sp));
 
-	// REMEMBER NOT TO CALL ANY FUNCTION BEFORE COPY THE VALUE OF THIS
-	const syscall_regs* regs = reinterpret_cast<syscall_regs*>(sp + sizeof(syscall_regs) + sizeof(uint64_t));
-	KDEBUG_ASSERT(regs != nullptr);
+//to be called in syscall_entry.S
+extern "C" [[clang::optnone]] error_code syscall_body(const syscall_regs* regs)
+{
 
 	size_t syscall_no = get_syscall_number(regs);  // first parameter
 
@@ -59,6 +54,8 @@ extern "C" [[clang::optnone]] error_code syscall_body()
 	{
 		KDEBUG_FOLLOWPANIC("Syscall number out of range.");
 	}
+
+	process::process_update_context(regs);
 
 	auto ret = syscall_table[syscall_no](regs);
 

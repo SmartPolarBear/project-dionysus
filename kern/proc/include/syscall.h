@@ -25,7 +25,7 @@ enum KERNEL_GS_INDEX
 size_t get_nth_arg(const syscall_regs* regs, size_t n);
 size_t get_syscall_number(const syscall_regs* regs);
 
-extern "C" error_code syscall_body();
+//extern "C" error_code syscall_body();
 
 extern "C" void syscall_x64_entry();
 
