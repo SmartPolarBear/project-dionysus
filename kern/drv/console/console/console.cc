@@ -106,7 +106,6 @@ void console::cosnole_write_string(const char *str, size_t len)
 
             consdev->write_char(*(str + i), cons.background, cons.foreground);
         }
-        ++str;
     }
 
     // release the lock

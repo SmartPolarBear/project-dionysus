@@ -17,6 +17,7 @@ namespace syscall
 		// starts from 1 for the sake of debugging
 		SYS_hello = 1,
 		SYS_exit,
+		SYS_put_str,
 	};
 
 	struct syscall_regs

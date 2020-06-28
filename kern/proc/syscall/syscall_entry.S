@@ -7,6 +7,7 @@
 
 .global syscall_x64_entry
 syscall_x64_entry:
+
     call safe_swap_gs
 
     movq %rsp, %gs:(KERNEL_GS_USTACK)
@@ -29,7 +30,7 @@ syscall_x64_entry:
     pushq %rbx
     pushq %rax
 
-    movq %rsp, %rdi  // parameter: address of regs
+    movq %rsp, %rdi  // first parameter: pointer to regs
     call syscall_body
 
     // we discard rax because it is used to store return value
