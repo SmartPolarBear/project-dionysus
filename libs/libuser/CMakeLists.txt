@@ -4,6 +4,7 @@ add_library(libuser STATIC uentry.S uentry_main.cc)
 
 add_subdirectory(syscall)
 add_subdirectory(io)
+add_subdirectory(math)
 
 set_property(SOURCE uentry.S PROPERTY LANGUAGE C)
 
@@ -12,9 +13,9 @@ target_include_directories(libuser PUBLIC "include")
 target_include_directories(libuser PRIVATE "include_private")
 
 target_include_directories(libuser
-        PRIVATE "${CMAKE_BINARY_DIR}/external/third_party_root_user/include/c++/v1"
-        PRIVATE "${CMAKE_BINARY_DIR}/external/third_party_root_user/include/sys"
-        PRIVATE "${CMAKE_BINARY_DIR}/external/third_party_root_user/include")
+        INTERFACE "${CMAKE_BINARY_DIR}/external/third_party_root_user/include/c++/v1"
+        INTERFACE "${CMAKE_BINARY_DIR}/external/third_party_root_user/include/sys"
+        INTERFACE "${CMAKE_BINARY_DIR}/external/third_party_root_user/include")
 
 target_sources(libuser PRIVATE uentry.S uentry_main.cc)
 

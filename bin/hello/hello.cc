@@ -4,9 +4,6 @@
 
 extern "C" int main(int argc, const char** argv)
 {
-	for (;;)
-	{
-		put_char('a');
-	}
+	write_format("%d %x %s", 1, 0x12345000, "fuck");
 	return 0;
 }

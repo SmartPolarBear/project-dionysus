@@ -48,6 +48,7 @@
 
 #include <cstring>
 
+
 // global entry of the kernel
 extern "C" [[noreturn]] void kmain()
 {

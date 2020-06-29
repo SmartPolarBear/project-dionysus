@@ -13,7 +13,7 @@ ExternalProject_Add(
     BUILD_BYPRODUCTS ${NEWLIB_STATIC_LIB}
 )
 
-set(NEWLIB_USER_CFLAGS " -g -nostdlibinc -mno-avx -target x86_64-unknown-pc-elf -fPIC -mcmodel=large")
+set(NEWLIB_USER_CFLAGS " -g -nostdlibinc -mno-avx -target x86_64-unknown-none-elf -fPIC -mcmodel=large")
 set(NEWLIB_USER_STATIC_LIB ${USER_INSTALL_PREFIX}/lib/libc.a ${USER_INSTALL_PREFIX}/lib/libg.a ${USER_INSTALL_PREFIX}/lib/libm.a)
 
 ExternalProject_Add(
