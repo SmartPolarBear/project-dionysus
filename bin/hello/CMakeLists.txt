@@ -14,6 +14,8 @@ set_target_properties(hello PROPERTIES LINK_FLAGS "-Wl,-T ${CMAKE_SOURCE_DIR}/co
 
 target_include_directories(hello PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
+target_link_libraries(hello c++ c++abi c++experimental)
+
 target_compile_options(hello BEFORE
         PRIVATE --target=x86_64-pc-linux-elf
         PRIVATE -gdwarf-2

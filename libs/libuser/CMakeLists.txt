@@ -22,7 +22,9 @@ target_link_directories(libuser BEFORE PRIVATE ${CMAKE_BINARY_DIR}/external/thir
 
 add_dependencies(libuser libcxx_build_user libcxxabi_build_user newlib_build_user)
 
-target_link_libraries(libuser c g m c++abi c++ c++experimental)
+target_link_directories(libuser INTERFACE ${CMAKE_BINARY_DIR}/external/third_party_root_user/lib)
+
+target_link_libraries(libuser c g m c++ c++abi c++experimental)
 
 #-mno-implicit-float is used to avoid xmm registers, which may cause GPF
 target_compile_options(libuser BEFORE
