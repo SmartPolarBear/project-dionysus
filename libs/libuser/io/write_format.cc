@@ -23,13 +23,13 @@ void write_format(const char* fmt, ...)
 	va_end(ap);
 }
 
-constexpr size_t MAXNUMBER_LEN = 64;
-static char nbuf[MAXNUMBER_LEN] = {};
-
 void write_format_a(const char* fmt, va_list ap)
 {
 	// TODO: lock
 	// buffer for converting ints with itoa
+
+	constexpr size_t MAXNUMBER_LEN = 64;
+	char nbuf[MAXNUMBER_LEN] = {};
 
 	if (fmt == 0)
 	{
