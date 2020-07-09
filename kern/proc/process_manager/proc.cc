@@ -267,6 +267,8 @@ error_code process::process_run(IN process_dispatcher* proc)
 
 error_code process::process_terminate(error_code err)
 {
+	// it in fact won't return, so swap gs first
+	safe_swap_gs();
 	return process_terminal_impl(current, err);
 }
 

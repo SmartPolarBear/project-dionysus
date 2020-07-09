@@ -7,6 +7,8 @@
 
 .global do_run_process
 do_run_process:
+
+# FIXME: GS causes a page fault of address 0
     call safe_swap_gs
 
     movq %rsi, %gs:(KERNEL_GS_KSTACK)

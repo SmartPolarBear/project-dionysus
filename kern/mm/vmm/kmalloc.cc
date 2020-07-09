@@ -39,7 +39,7 @@ using memory::kmem::kmem_cache_shrink;
 using memory::kmem::kmem_init;
 
 // defined in slab.cc
-extern kmem_cache *sized_caches[KMEM_SIZED_CACHE_COUNT];
+extern kmem_cache* sized_caches[KMEM_SIZED_CACHE_COUNT];
 
 // pmm
 using pmm::alloc_page;
@@ -51,89 +51,91 @@ constexpr size_t GUARDIAN_BYTES_AFTER = 16;
 
 enum class allocator_types
 {
-    PMM,
-    SLAB
+	// not start from zero for the sake of debugging
+	PMM = 0x1,
+	SLAB
 };
 
 struct memory_block
 {
-    allocator_types type;
+	allocator_types type;
 
-    union {
-        struct
-        {
-            size_t page_count;
-        } pmm;
+	union
+	{
+		struct
+		{
+			size_t page_count;
+		} pmm;
 
-        struct
-        {
-            size_t size;
-            kmem_cache *cache;
-        } slab;
-    } alloc_info;
+		struct
+		{
+			size_t size;
+			kmem_cache* cache;
+		} slab;
+	} alloc_info;
 
-    uint8_t mem[0];
+	uint8_t mem[0];
 };
 
-static inline kmem_cache *cache_from_size(size_t sz)
+static inline kmem_cache* cache_from_size(size_t sz)
 {
-    kmem_cache *cache = nullptr;
+	kmem_cache* cache = nullptr;
 
-    // assumption: sized_caches are sorted ascendingly.
-    for (auto c : sized_caches)
-    {
-        if (sz <= c->obj_size)
-        {
-            cache = c;
-            break;
-        }
-    }
+	// assumption: sized_caches are sorted ascendingly.
+	for (auto c : sized_caches)
+	{
+		if (sz <= c->obj_size)
+		{
+			cache = c;
+			break;
+		}
+	}
 
-    return cache;
+	return cache;
 }
 
-void *memory::kmalloc(size_t sz, [[maybe_unused]] size_t flags)
+void* memory::kmalloc(size_t sz, [[maybe_unused]] size_t flags)
 {
-    memory_block *ret = nullptr;
+	memory_block* ret = nullptr;
 
-    size_t actual_size = sizeof(memory_block) + sz + GUARDIAN_BYTES_AFTER;
+	size_t actual_size = sizeof(memory_block) + sz + GUARDIAN_BYTES_AFTER;
 
-    if (actual_size > memory::kmem::KMEM_MAX_SIZED_CACHE_SIZE)
-    {
-        // use buddy
+	if (actual_size > memory::kmem::KMEM_MAX_SIZED_CACHE_SIZE)
+	{
+		// use buddy
 
-        size_t npages = roundup(actual_size, PAGE_SIZE) / PAGE_SIZE;
+		size_t npages = roundup(actual_size, PAGE_SIZE) / PAGE_SIZE;
 
-        ret = reinterpret_cast<decltype(ret)>(pmm::page_to_va(pmm::alloc_pages(npages)));
+		ret = reinterpret_cast<decltype(ret)>(pmm::page_to_va(pmm::alloc_pages(npages)));
 
-        ret->type = allocator_types::PMM;
-        ret->alloc_info.pmm.page_count = npages;
-    }
-    else
-    {
-        // use slab
-        kmem_cache *cache = cache_from_size(actual_size);
+		ret->type = allocator_types::PMM;
+		ret->alloc_info.pmm.page_count = npages;
+	}
+	else
+	{
+		// use slab
+		kmem_cache* cache = cache_from_size(actual_size);
 
-        ret = reinterpret_cast<decltype(ret)>(kmem_cache_alloc(cache));
-        ret->type = allocator_types::SLAB;
-        ret->alloc_info.slab = decltype(ret->alloc_info.slab){.size = cache->obj_size, .cache = cache};
-    }
+		ret = reinterpret_cast<decltype(ret)>(kmem_cache_alloc(cache));
+		ret->type = allocator_types::SLAB;
+		ret->alloc_info.slab = decltype(ret->alloc_info.slab){ .size = cache->obj_size, .cache = cache };
+	}
 
-    return ret->mem;
+	return ret->mem;
 }
 
-void memory::kfree(void *ptr)
+void memory::kfree(void* ptr)
 {
-    uint8_t *mem_ptr = reinterpret_cast<decltype(mem_ptr)>(ptr);
-    memory_block *block = reinterpret_cast<decltype(block)>(container_of(mem_ptr, memory_block, mem));
+	uint8_t* mem_ptr = reinterpret_cast<decltype(mem_ptr)>(ptr);
+	memory_block* block = reinterpret_cast<decltype(block)>(container_of(mem_ptr, memory_block, mem));
 
-    if (block->type == allocator_types::PMM)
-    {
-        pmm::free_pages(pmm::va_to_page((uintptr_t)ptr), block->alloc_info.pmm.page_count);
-    }
-    else if (block->type == allocator_types::SLAB)
-    {
-        auto cache = block->alloc_info.slab.cache;
-        kmem_cache_free(cache, block);
-    }
+	if (block->type == allocator_types::PMM)
+	{
+		pmm::free_pages(pmm::va_to_page((uintptr_t)ptr), block->alloc_info.pmm.page_count);
+	}
+	else if (block->type == allocator_types::SLAB)
+	{
+		auto cache = block->alloc_info.slab.cache;
+		kmem_cache_free(cache, block);
+	}
 }
