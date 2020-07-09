@@ -282,4 +282,6 @@ void vmm::mm_free(mm_struct *mm)
 	auto vma = container_of(iter, vma_struct, vma_link);
 	free_range(pgdir, vma->vm_start, vma->vm_end);
   }
+
+
 }

@@ -88,11 +88,6 @@ static inline error_code setup_mm(process::process_dispatcher* proc)
 	return ERROR_SUCCESS;
 }
 
-static inline void free_pgdir(vmm::pde_ptr_t pgdir)
-{
-	pmm::free_page(pmm::va_to_page((uintptr_t)pgdir));
-}
-
 static inline size_t process_terminal_impl(process::process_dispatcher* proc,
 	error_code err)
 {
@@ -304,7 +299,7 @@ void process::process_exit(IN process_dispatcher* proc)
 			// free memory
 			vmm::mm_free(mm);
 
-			free_pgdir(mm->pgdir);
+			vmm::pgdir_entry_free(mm->pgdir);
 
 			trap::pushcli();
 
