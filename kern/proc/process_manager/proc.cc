@@ -52,8 +52,11 @@ using lock::spinlock_acquire;
 using lock::spinlock_initlock;
 using lock::spinlock_release;
 
+using process::process_dispatcher;
 
-__thread process::process_dispatcher* current;
+//__thread process::process_dispatcher* current;
+
+CLSItem<process_dispatcher*,CLS_PROC_STRUCT_PTR> current;
 
 // scheduler.cc
 void scheduler_ret();
@@ -267,7 +270,7 @@ error_code process::process_terminate(error_code err)
 {
 	// it in fact won't return, so swap gs first
 	safe_swap_gs();
-	return process_terminal_impl(current, err);
+	return process_terminal_impl(current(), err);
 }
 
 error_code process::process_terminate(pid pid, error_code err)

@@ -21,6 +21,8 @@ struct process_list_struct
 
 extern process_list_struct proc_list;
 
-extern __thread process::process_dispatcher *current;
+//extern __thread process::process_dispatcher *current;
+
+extern CLSItem<process::process_dispatcher*,CLS_PROC_STRUCT_PTR> current;
 
 extern "C" [[noreturn]] void do_run_process(trap::trap_frame *tf, uintptr_t kstack);

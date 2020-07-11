@@ -91,7 +91,7 @@ using lock::spinlock_release;
 
 	if (current != nullptr && current->state == process::PROC_STATE_RUNNING)
 	{
-		process::process_run(current);
+		process::process_run(current());
 	}
 
 	// it never returns

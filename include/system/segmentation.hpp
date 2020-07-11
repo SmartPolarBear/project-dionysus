@@ -222,3 +222,72 @@ struct CLSItem
 	}
 };
 
+template<typename T, CLS_ADDRESS addr>
+requires Pointer<T>
+static inline bool operator==(CLSItem<T, addr> lhs, CLSItem<T, addr> rhs)
+{
+	return lhs() == rhs();
+}
+
+template<typename T, CLS_ADDRESS addr>
+requires Pointer<T>
+static inline bool operator!=(CLSItem<T, addr> lhs, CLSItem<T, addr> rhs)
+{
+	return !(lhs() == rhs());
+}
+
+template<typename T, CLS_ADDRESS addr>
+requires Pointer<T>
+static inline bool operator==(T lhs, CLSItem<T, addr> rhs)
+{
+	return lhs == rhs();
+}
+
+template<typename T, CLS_ADDRESS addr>
+requires Pointer<T>
+static inline bool operator!=(T lhs, CLSItem<T, addr> rhs)
+{
+	return !(lhs == rhs());
+}
+
+template<typename T, CLS_ADDRESS addr>
+requires Pointer<T>
+static inline bool operator==(CLSItem<T, addr> lhs, T rhs)
+{
+	return lhs() == rhs;
+}
+
+template<typename T, CLS_ADDRESS addr>
+requires Pointer<T>
+static inline bool operator!=(CLSItem<T, addr> lhs, T rhs)
+{
+	return !(lhs() == rhs);
+}
+
+template<typename T, CLS_ADDRESS addr>
+requires Pointer<T>
+static inline bool operator==(CLSItem<T, addr> lhs, [[maybe_unused]] nullptr_t rhs)
+{
+	return lhs() == nullptr;
+}
+
+template<typename T, CLS_ADDRESS addr>
+requires Pointer<T>
+static inline bool operator!=(CLSItem<T, addr> lhs, [[maybe_unused]]nullptr_t rhs)
+{
+	return !(lhs() == nullptr);
+}
+
+template<typename T, CLS_ADDRESS addr>
+requires Pointer<T>
+static inline bool operator==([[maybe_unused]]nullptr_t lhs, CLSItem<T, addr> rhs)
+{
+	return nullptr == rhs();
+}
+
+template<typename T, CLS_ADDRESS addr>
+requires Pointer<T>
+static inline bool operator!=([[maybe_unused]]nullptr_t lhs, CLSItem<T, addr> rhs)
+{
+	return !(nullptr == rhs());
+}
