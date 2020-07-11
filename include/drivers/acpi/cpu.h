@@ -8,6 +8,8 @@
 #include "system/types.h"
 #include "system/segmentation.hpp"
 
+#include "system/cls.hpp"
+
 
 struct cpu_struct
 {
