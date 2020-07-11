@@ -190,8 +190,7 @@ error_code process::create_process(IN const char* name,
 
 error_code process::process_load_binary(IN process_dispatcher* proc,
 	IN uint8_t* bin,
-	[[maybe_unused]] IN size_t
-	binsize OPTIONAL,
+	[[maybe_unused]] IN size_t binary_size OPTIONAL,
 	IN binary_types type
 )
 {
@@ -224,13 +223,11 @@ error_code process::process_load_binary(IN process_dispatcher* proc,
 			auto ret = pmm::pgdir_alloc_page(proc->mm->pgdir, true, va, PG_W | PG_U | PG_PS | PG_P, &page_ret);
 			if (ret != ERROR_SUCCESS)
 			{
-				return -
-					ERROR_MEMORY_ALLOC;
+				return -ERROR_MEMORY_ALLOC;
 			}
 		}
 
-		proc->
-			state = PROC_STATE_RUNNABLE;
+		proc->state = PROC_STATE_RUNNABLE;
 	}
 
 	return ret;

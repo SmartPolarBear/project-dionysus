@@ -103,7 +103,7 @@ namespace process
 
 	error_code process_load_binary(IN process_dispatcher* porc,
 		IN uint8_t* bin,
-		IN size_t binsize,
+		IN size_t binary_size,
 		IN binary_types type);
 
 	error_code process_run(IN process_dispatcher* porc);
