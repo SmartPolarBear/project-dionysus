@@ -3,6 +3,8 @@
 #include "system/concepts.hpp"
 #include "system/types.h"
 
+#include "drivers/lock/spinlock.h"
+
 struct pseudo_descriptor
 {
 	uint16_t limit;
@@ -204,22 +206,57 @@ requires Pointer<T>
 
 template<typename T, CLS_ADDRESS addr>
 requires Pointer<T>
-struct CLSItem
+class CLSItem
 {
+ private:
+	lock::spinlock lk;
+	bool use_lock;
+ public:
+	CLSItem() : use_lock(true)
+	{
+		lock::spinlock_initlock(&lk, "clslock");
+	}
+
+	CLSItem(bool _use_lock) : use_lock(_use_lock)
+	{
+		lock::spinlock_initlock(&lk, "clslock");
+	}
+
+	void set_lock(bool _use_lock)
+	{
+		use_lock = _use_lock;
+	}
+
+	bool get_lock()
+	{
+		return use_lock;
+	}
+
 	T operator()()
 	{
 		return cls_get<T>(addr);
-	}
-
-	void operator=(T src)
-	{
-		cls_put(addr, src);
 	}
 
 	T operator->()
 	{
 		return cls_get<T>(addr);
 	}
+
+	void operator=(T src)
+	{
+		if (use_lock)
+		{
+			lock::spinlock_acquire(&this->lk);
+		}
+
+		cls_put(addr, src);
+
+		if (use_lock)
+		{
+			lock::spinlock_release(&this->lk);
+		}
+	}
+
 };
 
 template<typename T, CLS_ADDRESS addr>
@@ -291,3 +328,4 @@ static inline bool operator!=([[maybe_unused]]nullptr_t lhs, CLSItem<T, addr> rh
 {
 	return !(nullptr == rhs());
 }
+

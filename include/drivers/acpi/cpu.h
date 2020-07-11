@@ -6,8 +6,8 @@
 
 #include "system/mmu.h"
 #include "system/types.h"
-
 #include "system/segmentation.hpp"
+
 
 struct cpu_struct
 {

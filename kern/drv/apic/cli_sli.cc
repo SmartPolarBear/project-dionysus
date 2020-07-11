@@ -18,8 +18,6 @@
 // only works after gdt installation
 void trap::pushcli(void)
 {
-	KDEBUG_ASSERT(cpu() != nullptr);
-
 	auto eflags = read_eflags();
 
 	cli();

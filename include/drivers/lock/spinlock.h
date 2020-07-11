@@ -1,6 +1,7 @@
 #pragma once
 
-#include "drivers/acpi/cpu.h"
+//#include "drivers/acpi/cpu.h"
+struct cpu_struct;
 #include "system/types.h"
 
 namespace lock

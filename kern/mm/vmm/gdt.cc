@@ -53,9 +53,8 @@ using libk::list_for_each;
 using libk::list_init;
 using libk::list_remove;
 
-
 // cpu-individual variable containing info about current CPU
-CLSItem<cpu_struct*, CLS_CPU_STRUCT_PTR> cpu;
+CLSItem<cpu_struct*, CLS_CPU_STRUCT_PTR> cpu{ false };
 
 static inline void set_gdt_entry(OUT
 	gdt_entry* entry,
@@ -149,9 +148,5 @@ void vmm::install_gdt()
 
 // --target=x86_64-pc-none-elf and -mcmodel=large can cause a triple fault here
 // work it around by building with x86_64-pc-linux-elf
-#ifndef USE_NEW_CPU_INTERFACE
 	cpu = current_cpu;
-#else
-	cpu = current_cpu;
-#endif
 }
