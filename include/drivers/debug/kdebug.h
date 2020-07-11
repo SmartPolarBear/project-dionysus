@@ -48,21 +48,11 @@ namespace kdebug
 // panic with line number and file name
 // to make __FILE__ and __LINE__ macros works right, this must be a macro as well.
 
-#ifndef USE_NEW_CPU_INTERFACE
 #define KDEBUG_RICHPANIC(msg, title, topleft, add_fmt, args...) \
     kdebug::kdebug_panic2("[CPU%d]%s:\nIn file: %s, line: %d\nIn scope: %s\nMessage:\n%s\n" add_fmt, topleft, cpu->id, title, __FILE__, __LINE__, __PRETTY_FUNCTION__, msg, ##args)
-#else
-#define KDEBUG_RICHPANIC(msg, title, topleft, add_fmt, args...) \
-    kdebug::kdebug_panic2("[CPU%d]%s:\nIn file: %s, line: %d\nIn scope: %s\nMessage:\n%s\n" add_fmt, topleft, cpu()->id, title, __FILE__, __LINE__, __PRETTY_FUNCTION__, msg, ##args)
-#endif
 
-#ifndef USE_NEW_CPU_INTERFACE
 #define KDEBUG_RICHPANIC_CODE(code, topleft, add_fmt, args...) \
     kdebug::kdebug_panic2("[CPU%d]%s:\nIn file: %s, line: %d\nIn scope: %s\nMessage:\n%s\n" add_fmt, topleft, cpu->id, kdebug::error_title(code), __FILE__, __LINE__, __PRETTY_FUNCTION__, kdebug::error_message(code), ##args)
-#else
-#define KDEBUG_RICHPANIC_CODE(code, topleft, add_fmt, args...) \
-    kdebug::kdebug_panic2("[CPU%d]%s:\nIn file: %s, line: %d\nIn scope: %s\nMessage:\n%s\n" add_fmt, topleft, cpu()->id, kdebug::error_title(code), __FILE__, __LINE__, __PRETTY_FUNCTION__, kdebug::error_message(code), ##args)
-#endif
 
 #define KDEBUG_GERNERALPANIC_CODE(code) \
     KDEBUG_GENERALPANIC(kdebug::error_message(code))

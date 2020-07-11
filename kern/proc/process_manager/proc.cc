@@ -52,6 +52,7 @@ using lock::spinlock_acquire;
 using lock::spinlock_initlock;
 using lock::spinlock_release;
 
+
 __thread process::process_dispatcher* current;
 
 // scheduler.cc

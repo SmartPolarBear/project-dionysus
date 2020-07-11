@@ -110,16 +110,10 @@ void run_hello()
 
 void ap::all_processor_main()
 {
-#ifndef USE_NEW_CPU_INTERFACE
 	xchg(&cpu->started, 1u);
-#else
-	xchg(&cpu()->started, 1u);
-#endif
 
 	// FIXME: temporarily enable interrupt
 	sti();
-
-	size_t id = cpu()->id;
 
 	run_hello();
 	if (cpu()->id == 0)

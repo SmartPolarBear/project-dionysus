@@ -49,15 +49,7 @@ constexpr size_t CPU_COUNT_LIMIT = 8;
 extern cpu_struct cpus[CPU_COUNT_LIMIT];
 extern uint8_t cpu_count;
 
-#define USE_NEW_CPU_INTERFACE
-#ifndef USE_NEW_CPU_INTERFACE
-extern __thread cpu_struct *cpu;
-#else
-__attribute__((always_inline)) static inline cpu_struct* cpu()
-{
-	return cls_get<cpu_struct*>(CLS_CPU_STRUCT_PTR);
-}
-#endif
+extern CLSItem<cpu_struct*, CLS_CPU_STRUCT_PTR> cpu;
 
 namespace ap
 {

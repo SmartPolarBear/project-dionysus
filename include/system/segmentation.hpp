@@ -148,20 +148,6 @@ enum CLS_ADDRESS : uintptr_t
 	CLS_PROC_STRUCT_PTR = 0x8
 };
 
-// #define __cls_get(n) ({      \
-//     uint64_t res;            \
-//     asm("mov %%gs:" #n ",%0" \
-//         : "=r"(res));        \
-//     res;                     \
-// })
-
-// #define __cls_put(n, v) ({ \
-//     uint64_t val = v;      \
-//     asm("mov %0, %%gs:" #n \
-//         :                  \
-//         : "r"(val));       \
-// })
-
 #pragma clang diagnostic push
 
 // bypass the problem caused by the fault of clang
@@ -215,3 +201,24 @@ requires Pointer<T>
 }
 
 #pragma clang diagnostic pop
+
+template<typename T, CLS_ADDRESS addr>
+requires Pointer<T>
+struct CLSItem
+{
+	T operator()()
+	{
+		return cls_get<T>(addr);
+	}
+
+	void operator=(T src)
+	{
+		cls_put(addr, src);
+	}
+
+	T operator->()
+	{
+		return cls_get<T>(addr);
+	}
+};
+

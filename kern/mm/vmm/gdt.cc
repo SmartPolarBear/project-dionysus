@@ -55,9 +55,7 @@ using libk::list_remove;
 
 
 // cpu-individual variable containing info about current CPU
-#ifndef USE_NEW_CPU_INTERFACE
-__thread cpu_struct *cpu;
-#endif
+CLSItem<cpu_struct*, CLS_CPU_STRUCT_PTR> cpu;
 
 static inline void set_gdt_entry(OUT
 	gdt_entry* entry,
@@ -103,7 +101,7 @@ static inline void set_tss_gdt_entry(gdt_entry* entry_low, gdt_entry* entry_high
 	entry_low->base_mid = (tss_addr >> 16u) & 0xFFu;
 	entry_low->base_high = (tss_addr >> 24u) & 0xFFu;
 
-	size_t tss_limit=sizeof(task_state_segment)-1;
+	size_t tss_limit = sizeof(task_state_segment) - 1;
 	entry_low->limit_low = (tss_limit & 0xFFFFu);
 	entry_low->limit_high = ((tss_limit >> 16u) & 0xFu);
 
@@ -154,6 +152,6 @@ void vmm::install_gdt()
 #ifndef USE_NEW_CPU_INTERFACE
 	cpu = current_cpu;
 #else
-	cls_put(CLS_CPU_STRUCT_PTR, current_cpu);
+	cpu = current_cpu;
 #endif
 }

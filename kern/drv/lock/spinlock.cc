@@ -7,56 +7,47 @@
 
 using lock::spinlock;
 
-void lock::spinlock_initlock(spinlock *splk, const char *name)
+void lock::spinlock_initlock(spinlock* splk, const char* name)
 {
-    splk->name = name;
-    splk->locked = 0u;
-    splk->cpu = nullptr;
+	splk->name = name;
+	splk->locked = 0u;
+	splk->cpu = nullptr;
 }
 
-void lock::spinlock_acquire(spinlock *lock)
+void lock::spinlock_acquire(spinlock* lock)
 {
-    trap::pushcli();
-    if (spinlock_holding(lock))
-    {
-        kdebug::kdebug_dump_lock_panic(lock);
-    }
+	trap::pushcli();
+	if (spinlock_holding(lock))
+	{
+		kdebug::kdebug_dump_lock_panic(lock);
+	}
 
-    while (xchg(&lock->locked, 1u) != 0)
-        ;
+	while (xchg(&lock->locked, 1u) != 0);
 
-#ifndef USE_NEW_CPU_INTERFACE
-    lock->cpu = cpu;
-#else
-    lock->cpu = cpu();
-#endif
+	lock->cpu = cpu();
 
-    kdebug::kdebug_getcallerpcs(16, lock->pcs);
+	kdebug::kdebug_getcallerpcs(16, lock->pcs);
 }
 
-void lock::spinlock_release(spinlock *lock)
+void lock::spinlock_release(spinlock* lock)
 {
-    if (!spinlock_holding(lock))
-    {
-        KDEBUG_RICHPANIC("Release a not-held spinlock.\n",
-                         "KERNEL PANIC",
-                         false,
-                         "Lock's name: %s", lock->name);
-    }
+	if (!spinlock_holding(lock))
+	{
+		KDEBUG_RICHPANIC("Release a not-held spinlock.\n",
+			"KERNEL PANIC",
+			false,
+			"Lock's name: %s", lock->name);
+	}
 
-    lock->pcs[0] = 0;
-    lock->cpu = nullptr;
+	lock->pcs[0] = 0;
+	lock->cpu = nullptr;
 
-    xchg(&lock->locked, 0u);
+	xchg(&lock->locked, 0u);
 
-    trap::popcli();
+	trap::popcli();
 }
 
-bool lock::spinlock_holding(spinlock *lock)
+bool lock::spinlock_holding(spinlock* lock)
 {
-#ifndef USE_NEW_CPU_INTERFACE
-    return lock->locked && lock->cpu == cpu;
-#else
-    return lock->locked && lock->cpu == cpu();
-#endif
+	return lock->locked && lock->cpu == cpu();
 }

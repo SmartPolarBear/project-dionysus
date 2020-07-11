@@ -18,21 +18,16 @@
 // only works after gdt installation
 void trap::pushcli(void)
 {
+	KDEBUG_ASSERT(cpu() != nullptr);
+
 	auto eflags = read_eflags();
 
 	cli();
-#ifndef USE_NEW_CPU_INTERFACE
+
 	if (cpu->nest_pushcli_depth++ == 0)
 	{
 		cpu->intr_enable = eflags & EFLAG_IF;
 	}
-#else
-	KDEBUG_ASSERT(cpu() != nullptr);
-	if (cpu()->nest_pushcli_depth++ == 0)
-	{
-		cpu()->intr_enable = eflags & EFLAG_IF;
-	}
-#endif
 }
 
 // only works after gdt installation
@@ -47,25 +42,11 @@ void trap::popcli(void)
 			"");
 	}
 
-#ifndef USE_NEW_CPU_INTERFACE
 	--cpu->nest_pushcli_depth;
-#else
-	--cpu()->nest_pushcli_depth;
 
-#endif
-
-#ifndef USE_NEW_CPU_INTERFACE
 	KDEBUG_ASSERT(cpu->nest_pushcli_depth >= 0);
 	if (cpu->nest_pushcli_depth == 0 && cpu->intr_enable)
 	{
 		sti();
 	}
-#else
-	KDEBUG_ASSERT(cpu() != nullptr);
-	KDEBUG_ASSERT(cpu()->nest_pushcli_depth >= 0);
-	if (cpu()->nest_pushcli_depth == 0 && cpu()->intr_enable)
-	{
-		sti();
-	}
-#endif
 }
