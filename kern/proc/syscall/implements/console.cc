@@ -15,6 +15,7 @@
 
 error_code sys_put_str(const syscall_regs* regs)
 {
+//	write_format("[cpu%d]", cpu->id);
 	char* strbuf = (char*)get_nth_arg(regs, 0);
 
 	put_str(strbuf);

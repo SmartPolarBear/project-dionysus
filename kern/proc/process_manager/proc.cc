@@ -54,12 +54,7 @@ using lock::spinlock_release;
 
 using process::process_dispatcher;
 
-//__thread process::process_dispatcher* current;
-
-CLSItem<process_dispatcher*,CLS_PROC_STRUCT_PTR> current;
-
-// scheduler.cc
-void scheduler_ret();
+CLSItem<process_dispatcher*, CLS_PROC_STRUCT_PTR> current;
 
 process_list_struct proc_list;
 
