@@ -88,10 +88,8 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
 		}
 	}
 
-	//FIXME: it should work, but not
-
 	// after all cpu cores started, we can enable that damn lock.
-	// cpu.set_lock(true);
+	 cpu.set_lock(true);
 }
 
 void run_hello()
@@ -121,21 +119,12 @@ void ap::all_processor_main()
 	sti();
 
 	run_hello();
-	if (cpu()->id == 0)
-	{
-
-		// timer interrupt is only processed in cpu 0
-		timer::set_enable_on_cpu(0, true);
-		scheduler::scheduler_yield();
-	}
-
 
 	// simple scheduler loop
 	while (!kdebug::panicked)
 	{
-		// printf("cpu %d\n", cpu->id);
 		timer::set_enable_on_cpu(cpu->id, true);
-//		scheduler::scheduler_yield();
+		scheduler::scheduler_yield();
 	}
 
 	if (kdebug::panicked)
@@ -166,6 +155,7 @@ extern "C" [[clang::optnone]] void ap_enter(void)
 	// initialize apic timer
 	timer::init_apic_timer();
 
+	// set registers converning syscall/sysret
 	syscall::system_call_init();
 
 	ap::all_processor_main();

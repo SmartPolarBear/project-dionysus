@@ -44,11 +44,6 @@ using lock::spinlock_release;
 		}
 	}
 
-	if (!has_proc)
-	{
-		KDEBUG_FOLLOWPANIC("no process to run");
-	}
-
 	current = nullptr;
 	vmm::install_kernel_pml4t();
 
@@ -59,11 +54,7 @@ using lock::spinlock_release;
 	"movq %0, %%rsp\n"
 	"pushq $0\n"
 	"pushq $0\n"
-	// Uncomment the following line after completing exercise 13
-	"sti\n"
-	"spin:\n"
 	"hlt\n"
-	"jmp spin\n"
 	:
 	: "a"(cpu->tss.rsp0 /*(vmm::tss_get_rsp(cpu->get_tss(), 0)*/));
 }
