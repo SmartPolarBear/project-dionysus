@@ -2,6 +2,7 @@
 
 #include "system/error.h"
 #include "system/scheduler.h"
+#include "system/proc.h"
 #include "system/types.h"
 
 #include "drivers/apic/timer.h"
@@ -78,7 +79,11 @@ error_code trap_handle_tick([[maybe_unused]] trap::trap_frame info)
 		spinlock_release(ticks_lock());
 
 		local_apic::write_eoi();
-		scheduler::scheduler_yield();
+
+		if (current != nullptr && current->state == process::PROC_STATE_RUNNING)
+		{
+			scheduler::scheduler_yield();
+		}
 	}
 
 	return ERROR_SUCCESS;

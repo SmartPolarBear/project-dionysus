@@ -252,6 +252,7 @@ error_code process::process_load_binary(IN process_dispatcher* proc,
 		proc->state = PROC_STATE_RUNNABLE;
 	}
 
+	memmove(proc->tf, &proc->trapframe, sizeof(*proc->tf)); // FIXME
 	return ret;
 }
 
@@ -346,6 +347,8 @@ void process::process_exit(IN process_dispatcher* proc)
 // update from trap frame
 error_code process::process_update_context(const trap::trap_frame* tf)
 {
+	//FIXME
+	return ERROR_SUCCESS;
 	if (current == nullptr)
 	{
 		return -ERROR_NO_RUNNING_PROC;
@@ -359,6 +362,8 @@ error_code process::process_update_context(const trap::trap_frame* tf)
 // update from syscall
 error_code process::process_update_context(const syscall::syscall_regs* regs)
 {
+	//FIXME:
+	return ERROR_SUCCESS;
 	if (current == nullptr)
 	{
 		return -ERROR_NO_RUNNING_PROC;

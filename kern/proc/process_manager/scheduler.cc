@@ -55,8 +55,26 @@ using lock::spinlock_holding;
 			hlt();
 		}
 
-		memmove(runnable->tf, &runnable->trapframe, sizeof(*runnable->tf)); // TODO
-		process::process_run(runnable);
+
+
+//		process::process_run(runnable);
+
+		trap::pushcli();
+
+		current = runnable;
+
+		current->state = process::PROC_STATE_RUNNING;
+		current->runs++;
+
+		KDEBUG_ASSERT(current != nullptr && current->mm != nullptr);
+
+		lcr3(V2P((uintptr_t)current->mm->pgdir));
+
+		cpu()->tss.rsp0 = current->kstack + process::process_dispatcher::KERNSTACK_SIZE;
+
+		trap::popcli();
+
+		context_switch(&cpu->scheduler, current->context);
 
 		spinlock_release(&proc_list.lock);
 
