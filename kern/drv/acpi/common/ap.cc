@@ -115,31 +115,10 @@ void ap::all_processor_main()
 {
 	xchg(&cpu->started, 1u);
 
-	// FIXME: temporarily enable interrupt
-	sti();
-
 	run_hello();
 
-	if (cpu->id == 0)
-	{
-		timer::set_enable_on_cpu(cpu->id, true);
-		scheduler::scheduler_loop();
-	}
-
-//	// simple scheduler loop
-	while (!kdebug::panicked)
-	{
-//		timer::set_enable_on_cpu(cpu->id, true);
-//
-//		scheduler::scheduler_yield();
-	}
-
-	if (kdebug::panicked)
-	{
-		cli();
-		hlt();
-		for (;;);
-	}
+	timer::set_enable_on_cpu(cpu->id, true);
+	scheduler::scheduler_loop();
 }
 
 extern "C" [[clang::optnone]] void ap_enter(void)
