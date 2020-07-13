@@ -3,10 +3,10 @@
 .code64
 
 
-// void do_run_process(trap::trap_frame tf, uintptr_t kstack)
+// void run_process(trap::trap_frame tf, uintptr_t kstack)
 
-.global do_run_process
-do_run_process:
+.global run_process
+run_process:
     call safe_swap_gs
 
     movq %rsi, %gs:(KERNEL_GS_KSTACK)
@@ -49,8 +49,8 @@ do_run_process:
 
 
 // assume that the stack is firstly kstack pointer and then a trapframe
-.global syscall_ret
-syscall_ret:
+.global user_proc_entry
+user_proc_entry:
     popq %rsi   // pop kstack address
 
     call safe_swap_gs

@@ -27,7 +27,7 @@ using lock::spinlock_initlock;
 using lock::spinlock_release;
 using lock::spinlock_holding;
 
-[[noreturn]] [[clang::optnone]] void scheduler::scheduler_loop()
+[[noreturn, clang::optnone]] void scheduler::scheduler_loop()
 {
 	for (;;)
 	{
@@ -36,72 +36,62 @@ using lock::spinlock_holding;
 
 		spinlock_acquire(&proc_list.lock);
 
-		// find next runnable one
-		process::process_dispatcher* runnable = nullptr;
 		list_head* iter = nullptr;
+		// find runnable ones
 		list_for(iter, &proc_list.run_head)
 		{
 			auto iter_proc = list_entry(iter, process::process_dispatcher, link);
 			if (iter_proc->state == process::PROC_STATE_RUNNABLE)
 			{
-				runnable = iter_proc;
-				break;
+
+				trap::pushcli();
+
+				current = iter_proc;
+
+				current->state = process::PROC_STATE_RUNNING;
+				current->runs++;
+
+				// FIXME: this failed randomly
+				KDEBUG_ASSERT(current != nullptr);
+				KDEBUG_ASSERT(current->mm != nullptr);
+
+				lcr3(V2P((uintptr_t)current->mm->pgdir));
+
+				cpu()->tss.rsp0 = current->kstack + process::process_dispatcher::KERNSTACK_SIZE;
+
+				trap::popcli();
+
+				context_switch(&cpu->scheduler, current->context);
+
+				current = nullptr;
 			}
 		}
 
-		if (runnable == nullptr)
-		{
-			spinlock_release(&proc_list.lock);
-			hlt();
-		}
-
-
-
-//		process::process_run(runnable);
-
-		trap::pushcli();
-
-		current = runnable;
-
-		current->state = process::PROC_STATE_RUNNING;
-		current->runs++;
-
-		KDEBUG_ASSERT(current != nullptr && current->mm != nullptr);
-
-		lcr3(V2P((uintptr_t)current->mm->pgdir));
-
-		cpu()->tss.rsp0 = current->kstack + process::process_dispatcher::KERNSTACK_SIZE;
-
-		trap::popcli();
-
-		context_switch(&cpu->scheduler, current->context);
-
 		spinlock_release(&proc_list.lock);
 
-		current = nullptr;
 	}
 }
 
-[[clang::optnone]] void scheduler::scheduler_enter()
+void scheduler::scheduler_enter()
 {
 	if (!spinlock_holding(&proc_list.lock))
 	{
-		KDEBUG_GENERALPANIC("scheduler_yield should hold proc_list.lock");
+		KDEBUG_GENERALPANIC("scheduler_enter should hold proc_list.lock");
 	}
 
 	if (cpu->nest_pushcli_depth != 1)
 	{
-		KDEBUG_GENERALPANIC("scheduler_yield should hold proc_list.lock");
+		KDEBUG_GENERALPANIC("scheduler_enter should validly hold proc_list.lock");
 	}
 
 	if (current->state == process::PROC_STATE_RUNNING)
 	{
-		KDEBUG_GENERALPANIC("scheduler_yield should have current proc not running");
+		KDEBUG_GENERALPANIC("scheduler_enter should have current proc not running");
 	}
 
 	if (read_eflags() & trap::EFLAG_IF)
 	{
-		KDEBUG_GENERALPANIC("scheduler_yield can't be interruptible");
+		KDEBUG_GENERALPANIC("scheduler_enter can't be interruptible");
 	}
 
 	auto intr_enable = cpu->intr_enable;
@@ -109,7 +99,7 @@ using lock::spinlock_holding;
 	cpu->intr_enable = intr_enable;
 }
 
-[[clang::optnone]] void scheduler::scheduler_yield()
+void scheduler::scheduler_yield()
 {
 	spinlock_acquire(&proc_list.lock);
 	current->state = process::PROC_STATE_RUNNABLE;

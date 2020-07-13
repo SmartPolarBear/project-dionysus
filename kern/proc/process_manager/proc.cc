@@ -51,6 +51,7 @@ using lock::spinlock;
 using lock::spinlock_acquire;
 using lock::spinlock_initlock;
 using lock::spinlock_release;
+using lock::spinlock_holding;
 
 using process::process_dispatcher;
 
@@ -58,10 +59,11 @@ CLSItem<process_dispatcher*, CLS_PROC_STRUCT_PTR> current;
 
 process_list_struct proc_list;
 
-void new_proc_ret()
+static inline void new_proc_begin()
 {
 	spinlock_release(&proc_list.lock);
-	// "return" to syscall_ret
+
+	// "return" to user_proc_entry
 }
 
 // precondition: the lock must be held
@@ -96,6 +98,7 @@ static inline error_code setup_mm(process::process_dispatcher* proc)
 static inline size_t process_terminal_impl(process::process_dispatcher* proc,
 	error_code err)
 {
+
 	if ((proc->flags & process::PROC_EXITING) == 0)
 	{
 		proc->flags |= process::PROC_EXITING;
@@ -192,13 +195,13 @@ error_code process::create_process(IN const char* name,
 	*((uintptr_t*)sp) = proc->kstack;
 
 	sp -= sizeof(uintptr_t);
-	*((uintptr_t*)sp) = (uintptr_t)syscall_ret;
+	*((uintptr_t*)sp) = (uintptr_t)user_proc_entry;
 
 	sp -= sizeof(*proc->context);
 	proc->context = (context*)sp;
 	memset(proc->context, 0, sizeof(*proc->context));
 
-	proc->context->rip = (uintptr_t)new_proc_ret;
+	proc->context->rip = (uintptr_t)new_proc_begin;
 
 	list_add(&proc->link, &proc_list.run_head);
 
@@ -257,6 +260,7 @@ error_code process::process_load_binary(IN process_dispatcher* proc,
 error_code process::process_terminate(error_code err)
 {
 	// it in fact won't return, so swap gs first
+
 	safe_swap_gs();
 	return process_terminal_impl(current(), err);
 }
@@ -273,6 +277,8 @@ error_code process::process_terminate(pid pid, error_code err)
 
 void process::process_exit(IN process_dispatcher* proc)
 {
+	spinlock_acquire(&proc_list.lock);
+
 	// TODO: close all files
 
 	// TODO: wakeup parent and inform it of the termination
@@ -308,7 +314,7 @@ void process::process_exit(IN process_dispatcher* proc)
 	// set process state and call the scheduler
 	proc->state = PROC_STATE_ZOMBIE;
 
-	scheduler::scheduler_yield();
+	scheduler::scheduler_enter();
 
 	KDEBUG_GENERALPANIC("process_exit: should not reach here.");
 }

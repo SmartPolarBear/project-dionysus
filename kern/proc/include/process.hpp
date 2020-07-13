@@ -25,9 +25,9 @@ extern process_list_struct proc_list;
 
 extern CLSItem<process::process_dispatcher*, CLS_PROC_STRUCT_PTR> current;
 
-extern "C" [[noreturn]] void do_run_process(trap::trap_frame* tf, uintptr_t kstack);
+[[maybe_unused]] extern "C" [[noreturn]] void run_process(trap::trap_frame* tf, uintptr_t kstack);
 
-extern "C" [[noreturn]] void syscall_ret();
+extern "C" [[noreturn]] void user_proc_entry();
 
 extern "C" void context_switch(context** oldcontext, context* newcontext);
 

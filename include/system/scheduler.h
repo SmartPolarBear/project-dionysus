@@ -2,7 +2,7 @@
 
 namespace scheduler
 {
-	[[noreturn]] [[clang::optnone]] void scheduler_loop();
-	[[clang::optnone]] void scheduler_yield();
-	[[clang::optnone]] void scheduler_enter();
+	[[noreturn, clang::optnone]]void scheduler_loop();
+	void scheduler_yield();
+	void scheduler_enter();
 } // namespace scheduler
