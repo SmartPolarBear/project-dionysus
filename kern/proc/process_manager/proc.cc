@@ -164,8 +164,6 @@ error_code process::create_process(IN const char* name,
 		return ret;
 	}
 
-//	proc->trapframe.cs = SEGMENTSEL_UCODE | DPL_USER;
-//	proc->trapframe.ss = SEGMENTSEL_UDATA | DPL_USER;
 	proc->trapframe.cs = SEGMENT_VAL(SEGMENTSEL_UCODE, DPL_USER);
 	proc->trapframe.ss = SEGMENT_VAL(SEGMENTSEL_UDATA, DPL_USER);
 
@@ -342,59 +340,5 @@ void process::process_exit(IN process_dispatcher* proc)
 	scheduler::scheduler_yield();
 
 	KDEBUG_GENERALPANIC("process_exit: should not reach here.");
-}
-
-// update from trap frame
-error_code process::process_update_context(const trap::trap_frame* tf)
-{
-	//FIXME
-	return ERROR_SUCCESS;
-	if (current == nullptr)
-	{
-		return -ERROR_NO_RUNNING_PROC;
-	}
-
-	memcpy(&current->trapframe, tf, sizeof(current->trapframe));
-
-	return ERROR_SUCCESS;
-}
-
-// update from syscall
-error_code process::process_update_context(const syscall::syscall_regs* regs)
-{
-	//FIXME:
-	return ERROR_SUCCESS;
-	if (current == nullptr)
-	{
-		return -ERROR_NO_RUNNING_PROC;
-	}
-
-	trap::trap_frame tf{};
-
-	tf.rax = regs->rax;
-	tf.rbx = regs->rbx;
-	tf.rcx = regs->rcx;
-	tf.rdx = regs->rdx;
-	tf.rbp = regs->rbp;
-	tf.rsi = regs->rsi;
-	tf.rdi = regs->rdi;
-	tf.r8 = regs->r8;
-	tf.r9 = regs->r9;
-	tf.r10 = regs->r10;
-	tf.r11 = regs->r11;
-	tf.r12 = regs->r12;
-	tf.r13 = regs->r13;
-	tf.r14 = regs->r14;
-	tf.r15 = regs->r15;
-
-	tf.rflags = tf.r11;
-	tf.r11 = 0;
-
-	tf.rip = tf.rcx;
-	tf.rcx = 0;
-
-	tf.rsp = (uintptr_t)gs_get<void*>(KERNEL_GS_USTACK);
-
-	return process_update_context(&tf);
 }
 

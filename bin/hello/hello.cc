@@ -3,6 +3,9 @@
 extern "C" int main(int argc, const char** argv)
 {
 //	write_format("%d %x %s\n", 1, 0x12345000, "fuck");
-	while(true)put_str("hello world\n");
+	for (size_t i = 0; i < 10000; i++)
+	{
+		write_format("fuck %d times\n", i);
+	}
 	return 0;
 }

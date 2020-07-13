@@ -160,11 +160,6 @@ extern "C" void trap_body(trap::trap_frame info)
 			info.trap_num);
 	}
 
-	if ((info.cs & 0b11u) == DPL_USER)
-	{
-		process::process_update_context(&info);
-	}
-
 	// it should be assigned with the defualt handle when initialized
 	KDEBUG_ASSERT(handle_table.trap_handles[info.trap_num].handle != nullptr);
 
