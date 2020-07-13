@@ -123,7 +123,7 @@ void ap::all_processor_main()
 	if (cpu->id == 0)
 	{
 		timer::set_enable_on_cpu(cpu->id, true);
-		scheduler::scheduler_thread();
+		scheduler::scheduler_loop();
 	}
 
 //	// simple scheduler loop

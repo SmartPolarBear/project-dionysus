@@ -109,8 +109,6 @@ namespace process
 		IN size_t binary_size,
 		IN binary_types type);
 
-	error_code process_run(IN process_dispatcher* porc);
-
 	// handle process cleanup when exiting
 	void process_exit(IN process_dispatcher* proc);
 

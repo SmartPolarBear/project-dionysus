@@ -254,35 +254,6 @@ error_code process::process_load_binary(IN process_dispatcher* proc,
 	return ret;
 }
 
-error_code process::process_run(IN process_dispatcher* proc)
-{
-
-	if (current != nullptr && current->state == PROC_STATE_RUNNING)
-	{
-		current->state = PROC_STATE_RUNNABLE;
-	}
-
-	trap::pushcli();
-
-	current = proc;
-	current->state = PROC_STATE_RUNNING;
-	current->runs++;
-
-	KDEBUG_ASSERT(current != nullptr && current->mm != nullptr);
-
-	lcr3(V2P((uintptr_t)current->mm->pgdir));
-
-	cpu()->tss.rsp0 = current->kstack + process_dispatcher::KERNSTACK_SIZE;
-
-	trap::popcli();
-
-	context_switch(&cpu->scheduler, current->context);
-
-//	do_run_process(&current->trapframe, current->kstack);
-
-//	KDEBUG_FOLLOWPANIC("do_run_process failed");
-}
-
 error_code process::process_terminate(error_code err)
 {
 	// it in fact won't return, so swap gs first

@@ -27,7 +27,7 @@ using lock::spinlock_initlock;
 using lock::spinlock_release;
 using lock::spinlock_holding;
 
-[[noreturn]] [[clang::optnone]] void scheduler::scheduler_thread()
+[[noreturn]] [[clang::optnone]] void scheduler::scheduler_loop()
 {
 	for (;;)
 	{
@@ -117,35 +117,3 @@ using lock::spinlock_holding;
 	spinlock_release(&proc_list.lock);
 }
 
-[[clang::optnone]] void scheduler::scheduler_halt()
-{
-	bool has_proc = false;
-
-	list_head* iter = nullptr;
-	list_for(iter, &proc_list.run_head)
-	{
-		auto entry = list_entry(iter, process::process_dispatcher, link);
-		if (entry->state == process::PROC_STATE_RUNNING ||
-			entry->state == process::PROC_STATE_RUNNABLE ||
-			entry->state == process::PROC_STATE_ZOMBIE ||
-			entry->state == process::PROC_STATE_SLEEPING)
-		{
-			has_proc = true;
-			break;
-		}
-	}
-
-	current = nullptr;
-	vmm::install_kernel_pml4t();
-
-	spinlock_release(&proc_list.lock);
-
-	asm volatile(
-	"movq $0, %%rbp\n"
-	"movq %0, %%rsp\n"
-	"pushq $0\n"
-	"pushq $0\n"
-	"hlt\n"
-	:
-	: "a"(cpu->tss.rsp0 /*(vmm::tss_get_rsp(cpu->get_tss(), 0)*/));
-}
