@@ -74,12 +74,15 @@ namespace process
 		size_t wating_state;
 		error_code exit_code;
 
+		trap::trap_frame* tf;
+		context* context;
+
 		list_head link;
 
 		process_dispatcher(const char* name, pid id, pid parent_id, size_t flags)
 			: state(PROC_STATE_EMBRYO), id(id), parent_id(parent_id),
 			  runs(0), kstack(0), mm(nullptr), flags(flags), wating_state(PROC_WAITING_NONE),
-			  exit_code(ERROR_SUCCESS)
+			  exit_code(ERROR_SUCCESS), tf(nullptr), context(nullptr)
 		{
 
 			memset(&this->trapframe, 0, sizeof(this->trapframe));

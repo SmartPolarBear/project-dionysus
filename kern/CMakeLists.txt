@@ -7,7 +7,9 @@ add_executable(kernel
         ${CMAKE_CURRENT_SOURCE_DIR}/drv/apic/trapentry_asm.S
         ${CMAKE_CURRENT_SOURCE_DIR}/drv/apic/vectors.S
         ${CMAKE_CURRENT_SOURCE_DIR}/proc/syscall/syscall_entry.S
-        ${CMAKE_CURRENT_SOURCE_DIR}/proc/process_manager/process_run.S)
+        ${CMAKE_CURRENT_SOURCE_DIR}/proc/process_manager/process_run.S
+        ${CMAKE_CURRENT_SOURCE_DIR}/proc/process_manager/context_switch.S)
+
 
 add_dependencies(kernel vectors_S)
 add_dependencies(kernel ap_boot.elf)
@@ -19,6 +21,7 @@ set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/drv/apic/trapentry_asm.S PROPERT
 set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/drv/apic/vectors.S PROPERTY LANGUAGE C)
 set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/proc/syscall/syscall_entry.S PROPERTY LANGUAGE C)
 set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/proc/process_manager/process_run.S PROPERTY LANGUAGE C)
+set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/proc/process_manager/context_switch.S PROPERTY LANGUAGE C)
 
 
 set_target_properties(kernel PROPERTIES

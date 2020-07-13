@@ -89,7 +89,7 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
 	}
 
 	// after all cpu cores started, we can enable that damn lock.
-	 cpu.set_lock(true);
+	cpu.set_lock(true);
 }
 
 void run_hello()
@@ -120,11 +120,18 @@ void ap::all_processor_main()
 
 	run_hello();
 
-	// simple scheduler loop
-	while (!kdebug::panicked)
+	if (cpu->id == 0)
 	{
 		timer::set_enable_on_cpu(cpu->id, true);
-		scheduler::scheduler_yield();
+		scheduler::scheduler_thread();
+	}
+
+//	// simple scheduler loop
+	while (!kdebug::panicked)
+	{
+//		timer::set_enable_on_cpu(cpu->id, true);
+//
+//		scheduler::scheduler_yield();
 	}
 
 	if (kdebug::panicked)

@@ -58,6 +58,12 @@ CLSItem<process_dispatcher*, CLS_PROC_STRUCT_PTR> current;
 
 process_list_struct proc_list;
 
+void new_proc_ret()
+{
+	spinlock_release(&proc_list.lock);
+	// "return" to syscall_ret
+}
+
 // precondition: the lock must be held
 static inline process::pid alloc_pid(void)
 {
@@ -158,12 +164,10 @@ error_code process::create_process(IN const char* name,
 		return ret;
 	}
 
-	// FIXME The code should be like:
-	// 	proc->trapframe.cs = (SEG_UCODE << 3) | DPL_USER;
-	// 	proc->trapframe.ss = (SEG_UDATA << 3) | DPL_USER;
-
-	proc->trapframe.cs = SEGMENTSEL_UCODE | DPL_USER;
-	proc->trapframe.ss = SEGMENTSEL_UDATA | DPL_USER;
+//	proc->trapframe.cs = SEGMENTSEL_UCODE | DPL_USER;
+//	proc->trapframe.ss = SEGMENTSEL_UDATA | DPL_USER;
+	proc->trapframe.cs = SEGMENT_VAL(SEGMENTSEL_UCODE, DPL_USER);
+	proc->trapframe.ss = SEGMENT_VAL(SEGMENTSEL_UDATA, DPL_USER);
 
 	proc->trapframe.rsp = USER_STACK_TOP;
 
@@ -178,6 +182,25 @@ error_code process::create_process(IN const char* name,
 	{
 		// TODO: copy data from parent process
 	}
+
+	// setup initial kstack
+	uintptr_t sp = proc->kstack + process::process_dispatcher::KERNSTACK_SIZE;
+
+	sp -= sizeof(*proc->tf);
+	proc->tf = reinterpret_cast<decltype(proc->tf)>(sp);
+	memmove(proc->tf, &proc->trapframe, sizeof(*proc->tf)); // TODO
+
+	sp -= sizeof(uintptr_t);
+	*((uintptr_t*)sp) = proc->kstack;
+
+	sp -= sizeof(uintptr_t);
+	*((uintptr_t*)sp) = (uintptr_t)syscall_ret;
+
+	sp -= sizeof(*proc->context);
+	proc->context = (context*)sp;
+	memset(proc->context, 0, sizeof(*proc->context));
+
+	proc->context->rip = (uintptr_t)new_proc_ret;
 
 	list_add(&proc->link, &proc_list.run_head);
 
@@ -250,15 +273,15 @@ error_code process::process_run(IN process_dispatcher* proc)
 
 	lcr3(V2P((uintptr_t)current->mm->pgdir));
 
-	spinlock_release(&proc_list.lock);
-
 	cpu()->tss.rsp0 = current->kstack + process_dispatcher::KERNSTACK_SIZE;
 
 	trap::popcli();
 
-	do_run_process(&current->trapframe, current->kstack);
+	context_switch(&cpu->scheduler, current->context);
 
-	KDEBUG_FOLLOWPANIC("do_run_process failed");
+//	do_run_process(&current->trapframe, current->kstack);
+
+//	KDEBUG_FOLLOWPANIC("do_run_process failed");
 }
 
 error_code process::process_terminate(error_code err)

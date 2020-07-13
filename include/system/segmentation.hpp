@@ -120,6 +120,11 @@ enum GDT_SEGMENTS : uint64_t
 	SEGMENTSEL_TSSHIGH = 0x48
 };
 
+constexpr size_t SEGMENT_VAL(GDT_SEGMENTS seg, dpl_values dpl)
+{
+	return ((size_t)seg) | ((size_t)dpl);
+}
+
 enum SEGMENT_TYPE
 {
 	STA_X = 0x8,                 // Executable segment

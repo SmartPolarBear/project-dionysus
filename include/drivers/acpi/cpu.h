@@ -10,6 +10,17 @@
 
 #include "system/cls.hpp"
 
+struct context
+{
+	uint64_t r15;
+	uint64_t r14;
+	uint64_t r13;
+	uint64_t r12;
+	uint64_t r11;
+	uint64_t rbx;
+	uint64_t rbp;
+	uint64_t rip; //rip will be pop automatically by ret instruction
+}__attribute__((packed));
 
 struct cpu_struct
 {
@@ -24,6 +35,9 @@ struct cpu_struct
 	void* local_fs;
 	void* local_gs;
 
+	// scheduler context
+	context* scheduler;
+
 	task_state_segment tss{};
 	gdt_table gdt_table{};
 
@@ -31,7 +45,8 @@ struct cpu_struct
 		: id(0), apicid(0),
 		  started(0), nest_pushcli_depth(0),
 		  intr_enable(0), present(false),
-		  local_fs(nullptr), local_gs(nullptr)
+		  local_fs(nullptr), local_gs(nullptr),
+		  scheduler(nullptr)
 	{
 
 	}
