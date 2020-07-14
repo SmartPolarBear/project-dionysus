@@ -1,7 +1,7 @@
 #include "syscall.h"
 
 #include "system/mmu.h"
-#include "system/proc.h"
+#include "system/process.h"
 #include "system/syscall.h"
 
 #include "drivers/debug/kdebug.h"

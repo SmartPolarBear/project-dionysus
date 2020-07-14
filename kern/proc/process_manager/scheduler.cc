@@ -5,7 +5,7 @@
 
 #include "system/error.h"
 #include "system/memlayout.h"
-#include "system/proc.h"
+#include "system/process.h"
 #include "system/scheduler.h"
 #include "system/types.h"
 #include "system/vmm.h"

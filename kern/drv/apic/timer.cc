@@ -2,7 +2,7 @@
 
 #include "system/error.h"
 #include "system/scheduler.h"
-#include "system/proc.h"
+#include "system/process.h"
 #include "system/types.h"
 
 #include "drivers/apic/timer.h"

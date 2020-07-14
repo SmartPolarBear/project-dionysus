@@ -1,7 +1,7 @@
 #include "syscall.h"
 
 #include "system/mmu.h"
-#include "system/proc.h"
+#include "system/process.h"
 #include "system/syscall.h"
 
 #include "drivers/debug/kdebug.h"
@@ -41,8 +41,6 @@ size_t get_syscall_number(const syscall_regs* regs)
 	return regs->rax;
 }
 
-
-//FIXME: this is fragile and constantly make anything into mess
 
 //to be called in syscall_entry.S
 extern "C" [[clang::optnone]] error_code syscall_body(const syscall_regs* regs)

@@ -8,6 +8,7 @@
 #include "system/syscall.h"
 
 #include "drivers/apic/traps.h"
+#include "drivers/lock/spinlock.h"
 
 #include <cstring>
 #include <algorithm>
@@ -67,15 +68,24 @@ namespace process
 
 		vmm::mm_struct* mm;
 
-//		trap::trap_frame trapframe;
-		uintptr_t pgdir_addr;
-
 		size_t flags;
 		size_t wating_state;
 		error_code exit_code;
 
 		trap::trap_frame* tf;
 		context* context;
+
+		struct sleep_data_struct
+		{
+			size_t channel;
+		} sleep_data{};
+
+		struct ipc_data_struct
+		{
+			static constexpr size_t IPC_BUF_SIZE = 64;
+			uint8_t *ipc_buf[IPC_BUF_SIZE];
+			pid sender_pid;
+		} ipc_data{};
 
 		list_head link;
 
@@ -112,8 +122,12 @@ namespace process
 	// terminate current process
 	error_code process_terminate(error_code error_code);
 
-	// terminate the given process
-	error_code process_terminate(pid pid, error_code error_code);
+	// sleep on certain channel
+	error_code process_sleep(size_t channel, lock::spinlock* lock);
+
+	// wake up processes sleeping on certain channel
+	error_code process_wakeup(size_t channel);
+	error_code process_wakeup_nolock(size_t channel);
 
 } // namespace process
 

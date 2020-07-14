@@ -1,6 +1,6 @@
 #pragma once
 
-#include "system/proc.h"
+#include "system/process.h"
 #include "system/types.h"
 
 constexpr size_t ELF_MAGIC = 0x464C457FU;

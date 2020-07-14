@@ -25,7 +25,7 @@
 #include "system/memlayout.h"
 #include "system/mmu.h"
 #include "system/pmm.h"
-#include "system/proc.h"
+#include "system/process.h"
 #include "system/vmm.h"
 
 #include "arch/amd64/x86.h"

@@ -38,7 +38,7 @@
 #include "system/multiboot.h"
 #include "system/param.h"
 #include "system/pmm.h"
-#include "system/proc.h"
+#include "system/process.h"
 #include "system/scheduler.h"
 #include "system/syscall.h"
 #include "system/vmm.h"
@@ -73,21 +73,19 @@ extern "C" [[noreturn]] void kmain()
 	// initialize apic timer
 	timer::init_apic_timer();
 
-//	// timer interrupt is only processed in cpu 0
-//	timer::set_enable_on_cpu(0, true);
-
 	// initialize I/O APIC
 	io_apic::init_ioapic();
 
+	// initialize syscall
 	syscall::system_call_init();
 
 	// initialize user process manager
 	process::process_init();
 
-	write_format("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
-
 	// boot other CPU cores
 	ap::init_ap();
+
+	write_format("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
 
 	ap::all_processor_main();
 

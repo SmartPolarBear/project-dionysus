@@ -1,7 +1,7 @@
 #include "syscall.h"
 
 #include "system/mmu.h"
-#include "system/proc.h"
+#include "system/process.h"
 #include "system/syscall.h"
 
 #include "drivers/debug/kdebug.h"
@@ -17,7 +17,7 @@ error_code sys_put_str(const syscall_regs* regs)
 {
 	char* strbuf = (char*)get_nth_arg(regs, 0);
 
-	write_format("[cpu%d] %s", cpu->id, strbuf);
+	write_format("[cpu%d,pid %d] %s", cpu->id, current->id, strbuf);
 //	put_str(strbuf);
 
 	return ERROR_SUCCESS;

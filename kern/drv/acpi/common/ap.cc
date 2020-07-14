@@ -34,7 +34,7 @@
 #include "system/memlayout.h"
 #include "system/multiboot.h"
 #include "system/pmm.h"
-#include "system/proc.h"
+#include "system/process.h"
 #include "system/scheduler.h"
 #include "system/types.h"
 #include "system/vmm.h"
@@ -118,6 +118,7 @@ void ap::all_processor_main()
 	run_hello();
 
 	timer::set_enable_on_cpu(cpu->id, true);
+
 	scheduler::scheduler_loop();
 }
 

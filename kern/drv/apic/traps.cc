@@ -14,7 +14,7 @@
 #include "system/pmm.h"
 #include "system/segmentation.hpp"
 #include "system/vmm.h"
-#include "system/proc.h"
+#include "system/process.h"
 
 #include "libraries/libkernel/console/builtin_console.hpp"
 #include <cstring>
