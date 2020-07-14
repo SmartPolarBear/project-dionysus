@@ -154,6 +154,25 @@ error_code process::create_process(IN const char* name,
 	//setup kernel stack
 	proc->kstack = (uintptr_t)new BLOCK<process::process_dispatcher::KERNSTACK_SIZE>;
 
+
+	// setup initial kstack items
+	uintptr_t sp = proc->kstack + process::process_dispatcher::KERNSTACK_SIZE;
+
+	sp -= sizeof(*proc->tf);
+	proc->tf = reinterpret_cast<decltype(proc->tf)>(sp);
+
+	sp -= sizeof(uintptr_t);
+	*((uintptr_t*)sp) = proc->kstack;
+
+	sp -= sizeof(uintptr_t);
+	*((uintptr_t*)sp) = (uintptr_t)user_proc_entry;
+
+	sp -= sizeof(*proc->context);
+	proc->context = (context*)sp;
+	memset(proc->context, 0, sizeof(*proc->context));
+
+	proc->context->rip = (uintptr_t)new_proc_begin;
+
 	if (!proc->kstack)
 	{
 		delete proc;
@@ -167,41 +186,22 @@ error_code process::create_process(IN const char* name,
 		return ret;
 	}
 
-	proc->trapframe.cs = SEGMENT_VAL(SEGMENTSEL_UCODE, DPL_USER);
-	proc->trapframe.ss = SEGMENT_VAL(SEGMENTSEL_UDATA, DPL_USER);
+	proc->tf->cs = SEGMENT_VAL(SEGMENTSEL_UCODE, DPL_USER);
+	proc->tf->ss = SEGMENT_VAL(SEGMENTSEL_UDATA, DPL_USER);
 
-	proc->trapframe.rsp = USER_STACK_TOP;
+	proc->tf->rsp = USER_STACK_TOP;
 
-	proc->trapframe.rflags |= trap::EFLAG_IF;
+	proc->tf->rflags |= trap::EFLAG_IF;
 
 	if (flags & PROC_SYS_SERVER)
 	{
-		proc->trapframe.rflags |= trap::EFLAG_IOPL_MASK;
+		proc->tf->rflags |= trap::EFLAG_IOPL_MASK;
 	}
 
 	if (inherit_parent)
 	{
 		// TODO: copy data from parent process
 	}
-
-	// setup initial kstack
-	uintptr_t sp = proc->kstack + process::process_dispatcher::KERNSTACK_SIZE;
-
-	sp -= sizeof(*proc->tf);
-	proc->tf = reinterpret_cast<decltype(proc->tf)>(sp);
-	memmove(proc->tf, &proc->trapframe, sizeof(*proc->tf)); // TODO
-
-	sp -= sizeof(uintptr_t);
-	*((uintptr_t*)sp) = proc->kstack;
-
-	sp -= sizeof(uintptr_t);
-	*((uintptr_t*)sp) = (uintptr_t)user_proc_entry;
-
-	sp -= sizeof(*proc->context);
-	proc->context = (context*)sp;
-	memset(proc->context, 0, sizeof(*proc->context));
-
-	proc->context->rip = (uintptr_t)new_proc_begin;
 
 	list_add(&proc->link, &proc_list.run_head);
 
@@ -232,8 +232,7 @@ error_code process::process_load_binary(IN process_dispatcher* proc,
 
 	if (ret == ERROR_SUCCESS)
 	{
-		proc->trapframe.
-			rip = entry_addr;
+		proc->tf->rip = entry_addr;
 
 // allocate an stack
 		for (
@@ -253,7 +252,6 @@ error_code process::process_load_binary(IN process_dispatcher* proc,
 		proc->state = PROC_STATE_RUNNABLE;
 	}
 
-	memmove(proc->tf, &proc->trapframe, sizeof(*proc->tf)); // FIXME
 	return ret;
 }
 

@@ -67,7 +67,7 @@ namespace process
 
 		vmm::mm_struct* mm;
 
-		trap::trap_frame trapframe;
+//		trap::trap_frame trapframe;
 		uintptr_t pgdir_addr;
 
 		size_t flags;
@@ -84,9 +84,6 @@ namespace process
 			  runs(0), kstack(0), mm(nullptr), flags(flags), wating_state(PROC_WAITING_NONE),
 			  exit_code(ERROR_SUCCESS), tf(nullptr), context(nullptr)
 		{
-
-			memset(&this->trapframe, 0, sizeof(this->trapframe));
-
 			memmove(this->name, name, std::min((size_t)strlen(name), PROC_NAME_LEN));
 		}
 	};
