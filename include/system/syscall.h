@@ -19,6 +19,8 @@ namespace syscall
 		SYS_exit,
 		SYS_put_str,
 		SYS_put_char,
+		SYS_send,
+		SYS_receive,
 	};
 
 	struct syscall_regs

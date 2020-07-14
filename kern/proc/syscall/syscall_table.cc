@@ -23,12 +23,14 @@ using namespace syscall;
 #include "syscall_handles.hpp"
 
 extern "C" syscall_entry syscall_table[SYSCALL_COUNT + 1] = {
-        [0 ... SYSCALL_COUNT] = default_syscall,
+	[0 ... SYSCALL_COUNT] = default_syscall,
 
-        [SYS_hello] = sys_hello,
-        [SYS_exit] = sys_exit,
-        [SYS_put_str] = sys_put_str,
-        [SYS_put_char] = sys_put_char,
+	[SYS_hello] = sys_hello,
+	[SYS_exit] = sys_exit,
+	[SYS_put_str] = sys_put_str,
+	[SYS_put_char] = sys_put_char,
+	[SYS_send]=sys_send,
+	[SYS_receive]=sys_receive,
 };
 
 #pragma clang diagnostic pop

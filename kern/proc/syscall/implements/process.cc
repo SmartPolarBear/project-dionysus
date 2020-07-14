@@ -19,3 +19,17 @@ error_code sys_exit(const syscall_regs* regs)
 {
 	return process::process_terminate((error_code)get_nth_arg(regs, 0));
 }
+
+error_code sys_send(const syscall_regs* regs)
+{
+	return process::process_send_msg(get_nth_arg(regs, 0),
+		get_nth_arg(regs, 1),
+		(void*)get_nth_arg(regs, 2));
+}
+
+error_code sys_receive(const syscall_regs* regs)
+{
+	return process::process_receive_msg((void**)get_nth_arg(regs, 0),
+		(size_t*)get_nth_arg(regs, 1))
+}
+

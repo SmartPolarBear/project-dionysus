@@ -82,9 +82,14 @@ namespace process
 
 		struct ipc_data_struct
 		{
-			static constexpr size_t IPC_BUF_SIZE = 64;
-			uint8_t *ipc_buf[IPC_BUF_SIZE];
+			static constexpr size_t IPC_BUF_MAX_SIZE = 64;
+
+			lock::spinlock ipc_lock;
+
+			uint8_t* ipc_buf[IPC_BUF_MAX_SIZE];
+			size_t msg_size;
 			pid sender_pid;
+
 		} ipc_data{};
 
 		list_head link;
@@ -95,6 +100,7 @@ namespace process
 			  exit_code(ERROR_SUCCESS), tf(nullptr), context(nullptr)
 		{
 			memmove(this->name, name, std::min((size_t)strlen(name), PROC_NAME_LEN));
+			lock::spinlock_initlock(&ipc_data.ipc_lock, name);
 		}
 	};
 
@@ -128,6 +134,10 @@ namespace process
 	// wake up processes sleeping on certain channel
 	error_code process_wakeup(size_t channel);
 	error_code process_wakeup_nolock(size_t channel);
+
+	// send and receive message
+	error_code process_send_msg(pid id, size_t msg_sz, IN void* msg);
+	error_code process_receive_msg(OUT void** msg, OUT size_t* sz);
 
 } // namespace process
 

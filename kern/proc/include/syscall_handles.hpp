@@ -13,8 +13,10 @@
 
 DEF_SYSCALL_HANDLE(default_syscall);
 DEF_SYSCALL_HANDLE(sys_hello);
-DEF_SYSCALL_HANDLE(sys_exit);
 DEF_SYSCALL_HANDLE(sys_put_str);
 DEF_SYSCALL_HANDLE(sys_put_char);
+DEF_SYSCALL_HANDLE(sys_exit);
+DEF_SYSCALL_HANDLE(sys_send);
+DEF_SYSCALL_HANDLE(sys_receive);
 
 #undef DEF_SYSCALL_HANDLE
