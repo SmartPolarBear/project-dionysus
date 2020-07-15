@@ -92,30 +92,37 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
 	cpu.set_lock(true);
 }
 
-void run_hello()
+void run(char* name)
 {
 	uint8_t* bin = nullptr;
 	size_t size = 0;
 
-	auto ret = multiboot::find_module_by_cmdline("/hello", &size, &bin);
+	auto ret = multiboot::find_module_by_cmdline(name, &size, &bin);
 
 	KDEBUG_ASSERT(ret == ERROR_SUCCESS);
 
 	process::process_dispatcher* proc_he = nullptr;
-	process::create_process("hello", 0, false, &proc_he);
+	process::create_process(name, 0, false, &proc_he);
 
 	KDEBUG_ASSERT(proc_he != nullptr);
 
 	process::process_load_binary(proc_he, bin, size, process::BINARY_ELF);
 
-	write_format("[cpu %d]load binary: hello\n", cpu()->id);
+	write_format("[cpu %d]load binary: %s\n", cpu()->id, name);
 }
 
 void ap::all_processor_main()
 {
 	xchg(&cpu->started, 1u);
 
-	run_hello();
+	if (cpu->id == 0)
+	{
+		run("/ipctest");
+	}
+	else
+	{
+		run("/hello");
+	}
 
 	timer::set_enable_on_cpu(cpu->id, true);
 

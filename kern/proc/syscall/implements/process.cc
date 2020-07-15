@@ -30,6 +30,6 @@ error_code sys_send(const syscall_regs* regs)
 error_code sys_receive(const syscall_regs* regs)
 {
 	return process::process_receive_msg((void**)get_nth_arg(regs, 0),
-		(size_t*)get_nth_arg(regs, 1))
+		(size_t*)get_nth_arg(regs, 1));
 }
 

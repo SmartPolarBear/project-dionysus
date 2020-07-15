@@ -381,10 +381,10 @@ error_code process::process_send_msg(pid id, size_t msg_sz, IN void* msg)
 	process_wakeup((size_t)&target->ipc_data);
 
 	// sleep until it is consumed
-	while (target->ipc_data.sender_pid != 0)
-	{
-		process_sleep((size_t)&target->ipc_data, &target->ipc_data.ipc_lock);
-	}
+//	while (target->ipc_data.sender_pid != 0)
+//	{
+//		process_sleep((size_t)&target->ipc_data, &target->ipc_data.ipc_lock);
+//	}
 	return ERROR_SUCCESS;
 }
 
@@ -405,7 +405,7 @@ error_code process::process_receive_msg(OUT void** msg, OUT size_t* sz)
 	current->ipc_data.msg_size = 0;
 
 	// wake up sender
-	process_wakeup((size_t)&current->ipc_data);
+//	process_wakeup((size_t)&current->ipc_data);
 
 	return ERROR_SUCCESS;
 }

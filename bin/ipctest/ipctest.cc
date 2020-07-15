@@ -25,23 +25,28 @@ struct ret_message
 	int r;
 }__attribute__((packed));
 
-
 extern "C" int main(int argc, const char** argv)
 {
-	for (;;)
+	for (int i = 0; i < 1024; i++)
 	{
-		add_message add;
-		size_t sz = 0;
-		auto addp = &add;
-		auto szp = &sz;
+		for (int j = 0; j < 1024; j++)
+		{
+			add_message msg;
+			msg.hdr.type = ADDMSG;
+			msg.a = i;
+			msg.b = j;
 
-		receive((void**)&addp, szp);
+			send(2, sizeof(msg), &msg);
 
-		ret_message ret;
-		ret.r = add.a + add.b;
-		ret.hdr.type = RETMSG;
+			ret_message ret;
+			size_t sz = 0;
+			auto retp = &ret;
+			auto szp = &sz;
 
-		send(0, sizeof(ret), &ret);
+			receive((void**)&retp, szp);
+
+			write_format("ret number %d\n", ret.r);
+		}
 	}
 	return 0;
 }
