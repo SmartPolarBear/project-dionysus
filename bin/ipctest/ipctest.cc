@@ -36,7 +36,7 @@ extern "C" int main(int argc, const char** argv)
 			msg.a = i;
 			msg.b = j;
 
-			send(2, sizeof(msg), &msg);
+			send(0, sizeof(msg), &msg);
 
 			ret_message ret;
 			size_t sz = 0;

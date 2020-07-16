@@ -108,7 +108,7 @@ void run(char* name)
 
 	process::process_load_binary(proc_he, bin, size, process::BINARY_ELF);
 
-	write_format("[cpu %d]load binary: %s\n", cpu()->id, name);
+	write_format("[cpu %d]load binary: %s, pid %d\n", cpu()->id, name, proc_he->id);
 }
 
 void ap::all_processor_main()
