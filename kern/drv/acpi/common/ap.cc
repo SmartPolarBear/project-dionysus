@@ -118,15 +118,18 @@ void ap::all_processor_main()
 	if (cpu->id == 0)
 	{
 		run("/ipctest");
+		timer::set_enable_on_cpu(0, true);
+
+		scheduler::scheduler_loop();
 	}
-	else
+	else if (cpu->id == 1)
 	{
 		run("/hello");
+
+		scheduler::scheduler_loop();
 	}
 
-	timer::set_enable_on_cpu(cpu->id, true);
-
-	scheduler::scheduler_loop();
+	while (true);
 }
 
 extern "C" [[clang::optnone]] void ap_enter(void)

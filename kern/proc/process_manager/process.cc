@@ -363,49 +363,40 @@ error_code process::process_wakeup_nolock(size_t channel)
 	return ERROR_SUCCESS;
 }
 
+struct msgbuf
+{
+	spinlock lock;
+	char buf[256];
+
+	char* ptr;
+} q;
+
 // send and receive message
 error_code process::process_send_msg(pid id, size_t msg_sz, IN void* msg)
 {
-	auto target = find_process(id);
-	if (target == nullptr)
-	{
-		return -ERROR_INVALID_ARG;
-	}
+	spinlock_acquire(&q.lock);
 
-	target->ipc_data.sender_pid = current->id;
-	target->ipc_data.msg_size = msg_sz;
+	while (q.ptr != nullptr);
 
-	memmove(target->ipc_data.ipc_buf, msg, msg_sz);
+	q.ptr = q.buf;
 
-	// wakeup receiver
-	process_wakeup((size_t)&target->ipc_data);
+	process_wakeup((size_t)&q);
 
-	// sleep until it is consumed
-//	while (target->ipc_data.sender_pid != 0)
-//	{
-//		process_sleep((size_t)&target->ipc_data, &target->ipc_data.ipc_lock);
-//	}
+	spinlock_release(&q.lock);
+
 	return ERROR_SUCCESS;
 }
 
 error_code process::process_receive_msg(OUT void** msg, OUT size_t* sz)
 {
-	// sleep until some message is sent
-	while (current->ipc_data.sender_pid != 0)
-	{
-		process_sleep((size_t)&current->ipc_data, &current->ipc_data.ipc_lock);
-	}
+	spinlock_acquire(&q.lock);
 
-	*sz = current->ipc_data.msg_size;
-	memmove(*msg, current->ipc_data.ipc_buf, *sz);
+	while (q.ptr == nullptr)
+		process_sleep((size_t)&q, &q.lock);
 
-	// clean up
-	memset(current->ipc_data.ipc_buf, 0, sizeof(current->ipc_data.ipc_buf));
-	current->ipc_data.sender_pid = 0;
-	current->ipc_data.msg_size = 0;
+	q.ptr = nullptr;
 
-	// wake up sender
-//	process_wakeup((size_t)&current->ipc_data);
+	spinlock_release(&q.lock);
 
 	return ERROR_SUCCESS;
 }

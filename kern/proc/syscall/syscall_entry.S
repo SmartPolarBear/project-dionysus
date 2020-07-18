@@ -8,10 +8,10 @@
 .global syscall_x64_entry
 syscall_x64_entry:
 
-    call safe_swap_gs
-
+    swapgs
     movq %rsp, %gs:(KERNEL_GS_USTACK)
     movq %gs:(KERNEL_GS_KSTACK), %rsp
+    swapgs
 
     pushq %r15
     pushq %r14
@@ -50,8 +50,8 @@ syscall_x64_entry:
     popq %r14
     popq %r15
 
+    swapgs
     movq %gs:(KERNEL_GS_USTACK), %rsp
-
-    call safe_swap_gs
+    swapgs
 
     sysretq

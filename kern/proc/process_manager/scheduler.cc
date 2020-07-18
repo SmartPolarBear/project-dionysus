@@ -14,6 +14,7 @@
 #include "drivers/lock/spinlock.h"
 
 #include "libraries/libkern/data/list.h"
+#include "libraries/libkernel/console/builtin_console.hpp"
 
 using libk::list_add;
 using libk::list_empty;
@@ -61,6 +62,7 @@ using lock::spinlock_holding;
 
 				trap::popcli();
 
+				put_str("context_switch in scheduler_loop\n");
 				context_switch(&cpu->scheduler, current->context);
 
 				current = nullptr;
@@ -95,6 +97,9 @@ void scheduler::scheduler_enter()
 	}
 
 	auto intr_enable = cpu->intr_enable;
+
+	put_str("context_switch in scheduler_enter\n");
+
 	context_switch(&current->context, cpu->scheduler);
 	cpu->intr_enable = intr_enable;
 }
