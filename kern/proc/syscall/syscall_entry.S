@@ -11,7 +11,6 @@ syscall_x64_entry:
     swapgs
     movq %rsp, %gs:(KERNEL_GS_USTACK)
     movq %gs:(KERNEL_GS_KSTACK), %rsp
-    swapgs
 
     pushq %r15
     pushq %r14
@@ -50,8 +49,9 @@ syscall_x64_entry:
     popq %r14
     popq %r15
 
-    swapgs
     movq %gs:(KERNEL_GS_USTACK), %rsp
+    movq $0xcaffe, %r13
+    movq %r13, %gs:(KERNEL_GS_USTACK)
     swapgs
 
     sysretq
