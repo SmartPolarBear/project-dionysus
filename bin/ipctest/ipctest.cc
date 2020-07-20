@@ -65,7 +65,7 @@ extern "C" int main(int argc, const char** argv)
 
 			if (ret.r == (i + j))
 			{
-				put_str("yes\n");
+				write_format("yes. %d+%d=%d\n", i, j, ret.r);
 			}
 			else
 			{
