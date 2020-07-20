@@ -373,6 +373,9 @@ error_code process::process_send_msg(pid id, size_t msg_sz, IN void* msg)
 	while (target->ipc_data.ptr != nullptr);
 
 	target->ipc_data.ptr = target->ipc_data.ipc_buf;
+	target->ipc_data.msg_size = msg_sz;
+
+	memmove(target->ipc_data.ipc_buf, msg, msg_sz);
 
 	spinlock_release(&target->ipc_data.ipc_lock);
 
@@ -387,6 +390,9 @@ error_code process::process_receive_msg(OUT void** msg, OUT size_t* sz)
 
 	while (current->ipc_data.ptr == nullptr)
 		process_sleep((size_t)&current->ipc_data, &current->ipc_data.ipc_lock);
+
+	memmove((void*)(*msg), current->ipc_data.ptr, current->ipc_data.msg_size);
+	*sz = current->ipc_data.msg_size;
 
 	current->ipc_data.ptr = nullptr;
 

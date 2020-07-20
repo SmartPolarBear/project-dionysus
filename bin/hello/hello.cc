@@ -41,7 +41,7 @@ extern "C" int main(int argc, const char** argv)
 		ret.r = add.a + add.b;
 		ret.hdr.type = RETMSG;
 
-		send(1, sizeof(ret), &ret);
+		send(0, sizeof(ret), &ret);
 	}
 //	for (int i = 0; i < 0x7fffffff; i++)
 //	{
