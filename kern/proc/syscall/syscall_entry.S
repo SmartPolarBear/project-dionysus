@@ -13,6 +13,9 @@ syscall_x64_entry:
     movq %rsp, %gs:(KERNEL_GS_USTACK)
     movq %gs:(KERNEL_GS_KSTACK), %rsp
 
+    // store user stack pointer in kernel stack
+    // otherwise if context switching happen in syscall handling,
+    // we would not be able to restore the context right.
     pushq %gs:(KERNEL_GS_USTACK)
     movl $0x123caffe, %gs:(KERNEL_GS_USTACK)
 
@@ -55,6 +58,7 @@ syscall_x64_entry:
     popq %r14
     popq %r15
 
+    // restore the user stack pointer
     popq %rsp
 
     sysretq

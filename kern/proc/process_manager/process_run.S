@@ -51,13 +51,7 @@ run_process:
 // assume that the stack is firstly kstack pointer and then a trapframe
 .global user_proc_entry
 user_proc_entry:
-    popq %rsi   // pop kstack address
-
-    // call safe_swap_gs
-
-    // movq %rsi, %gs:(KERNEL_GS_KSTACK)
-
-    // call safe_swap_gs
+    popq %rsi   // pop kstack address, we currently do nothing for it.
 
     popq %rax
     popq %rbx

@@ -1,6 +1,4 @@
 #pragma once
-// #if !defined(__INCLUDE_DRIVERS_ACPI_CPU_H)
-// #define __INCLUDE_DRIVERS_ACPI_CPU_H
 
 #include "arch/amd64/cpu.h"
 
@@ -61,12 +59,41 @@ struct cpu_struct
 	}
 };
 
+
 constexpr size_t CPU_COUNT_LIMIT = 8;
 
 extern cpu_struct cpus[CPU_COUNT_LIMIT];
 extern uint8_t cpu_count;
 
 extern CLSItem<cpu_struct*, CLS_CPU_STRUCT_PTR> cpu;
+
+#pragma clang diagnostic push
+
+// bypass the problem caused by the fault of clang
+// that parameters used in inline asm are always reported to be unused
+
+#pragma clang diagnostic ignored "-Wunused-variable"
+#pragma clang diagnostic ignored "-Wunused-parameter"
+
+template<typename T>
+static inline T gs_get_cpu_dependent(uintptr_t n)
+requires Pointer<T>
+{
+	uintptr_t* target_gs_ptr = (uintptr_t*)(((uint8_t*)cpu->kernel_gs) + n);
+	uintptr_t ret = *target_gs_ptr;
+	return (T)(void*)ret;
+}
+
+template<typename T>
+static inline void gs_put_cpu_dependent(uintptr_t n, T v)
+requires Pointer<T>
+{
+	uintptr_t val = (uintptr_t)v;
+	uintptr_t* target_gs_ptr = (uintptr_t*)(((uint8_t*)cpu->kernel_gs) + n);
+	*target_gs_ptr = val;
+}
+
+#pragma clang diagnostic pop
 
 namespace ap
 {

@@ -45,33 +45,38 @@ char txtbuf[32] = {};
 extern "C" int main(int argc, const char** argv)
 {
 
-	for (int i = 1; i < 1024; i++)
+//	for (int i = 1; i < 1024; i++)
+//	{
+//		for (int j = 1; j < 1024; j++)
+//		{
+//			add_message msg;
+//			msg.hdr.type = ADDMSG;
+//			msg.a = i;
+//			msg.b = j;
+//
+//			send(0, sizeof(msg), &msg);
+//
+//			ret_message ret;
+//			size_t sz = 0;
+//			auto retp = &ret;
+//			auto szp = &sz;
+//
+//			receive((void**)&retp, szp);
+//
+//			if (ret.r == (i + j))
+//			{
+////				put_str("yes\n");
+//			}
+//			else
+//			{
+////				put_str("no\n");
+//			}
+//		}
+//	}
+
+	for (int i = 0; i < 0x7fffffff; i++)
 	{
-		for (int j = 1; j < 1024; j++)
-		{
-			add_message msg;
-			msg.hdr.type = ADDMSG;
-			msg.a = i;
-			msg.b = j;
-
-			send(0, sizeof(msg), &msg);
-
-			ret_message ret;
-			size_t sz = 0;
-			auto retp = &ret;
-			auto szp = &sz;
-
-			receive((void**)&retp, szp);
-
-			if (ret.r == (i + j))
-			{
-//				put_str("yes\n");
-			}
-			else
-			{
-//				put_str("no\n");
-			}
-		}
+		put_str("fuck \n");
 	}
 	return 0;
 }
