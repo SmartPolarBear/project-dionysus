@@ -1,4 +1,5 @@
 #include "process.hpp"
+#include "syscall.h"
 
 #include "arch/amd64/atomic.h"
 #include "arch/amd64/cpu.h"
@@ -59,6 +60,13 @@ using lock::spinlock_holding;
 				lcr3(V2P((uintptr_t)current->mm->pgdir));
 
 				cpu()->tss.rsp0 = current->kstack + process::process_dispatcher::KERNSTACK_SIZE;
+
+//				swap_gs();
+//				gs_put(KERNEL_GS_KSTACK, (void*)current->kstack);
+//				swap_gs();
+
+				uintptr_t* kstack_gs = (uintptr_t*)(((uint8_t*)cpu->kernel_gs) + KERNEL_GS_KSTACK);
+				*kstack_gs = current->kstack;
 
 				trap::popcli();
 

@@ -380,9 +380,9 @@ error_code process::process_send_msg(pid id, size_t msg_sz, IN void* msg)
 
 	q.ptr = q.buf;
 
-	process_wakeup((size_t)&q);
-
 	spinlock_release(&q.lock);
+
+	process_wakeup((size_t)&q);
 
 	return ERROR_SUCCESS;
 }
@@ -397,6 +397,8 @@ error_code process::process_receive_msg(OUT void** msg, OUT size_t* sz)
 	q.ptr = nullptr;
 
 	spinlock_release(&q.lock);
+
+	for (int i = 0; i < 0x7ffff; i++);
 
 	return ERROR_SUCCESS;
 }

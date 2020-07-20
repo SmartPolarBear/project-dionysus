@@ -33,7 +33,7 @@ struct cpu_struct
 
 	// Cpu-local storage variables
 	void* local_fs;
-	void* local_gs;
+	void* kernel_gs;
 
 	// scheduler context
 	context* scheduler;
@@ -45,7 +45,7 @@ struct cpu_struct
 		: id(0), apicid(0),
 		  started(0), nest_pushcli_depth(0),
 		  intr_enable(0), present(false),
-		  local_fs(nullptr), local_gs(nullptr),
+		  local_fs(nullptr), kernel_gs(nullptr),
 		  scheduler(nullptr)
 	{
 

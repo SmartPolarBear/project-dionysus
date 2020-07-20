@@ -20,7 +20,7 @@ QEMUGDB = -gdb tcp::$(GDBPORT)
 
 CPUS = 4
 
-QEMUOPTS = -no-reboot -drive file=$(BUILD)/disk.img,index=0,media=disk,format=raw -cpu Icelake-Client-v2
+QEMUOPTS = -no-reboot -drive file=$(BUILD)/disk.img,index=0,media=disk,format=raw
 QEMUOPTS += -d int
 QEMUOPTS += -smp $(CPUS) -m 8G $(QEMUEXTRA)
 

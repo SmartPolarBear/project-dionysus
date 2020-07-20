@@ -53,11 +53,11 @@ run_process:
 user_proc_entry:
     popq %rsi   // pop kstack address
 
-    call safe_swap_gs
+    // call safe_swap_gs
 
-    movq %rsi, %gs:(KERNEL_GS_KSTACK)
+    // movq %rsi, %gs:(KERNEL_GS_KSTACK)
 
-    call safe_swap_gs
+    // call safe_swap_gs
 
     popq %rax
     popq %rbx

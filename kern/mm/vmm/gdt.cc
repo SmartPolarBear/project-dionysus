@@ -133,7 +133,7 @@ void vmm::install_gdt()
 	memset(cpu_kernel_gs, 0, PAGE_SIZE);
 	wrmsr(MSR_KERNEL_GS_BASE, ((uintptr_t)cpu_kernel_gs));
 
-	current_cpu->local_gs = cpu_kernel_gs;
+	current_cpu->kernel_gs = cpu_kernel_gs;
 
 	current_cpu->tss.iopb_offset = sizeof(current_cpu->tss);
 
