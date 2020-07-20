@@ -28,24 +28,24 @@ struct ret_message
 
 extern "C" int main(int argc, const char** argv)
 {
-//	for (;;)
-//	{
-//		add_message add;
-//		size_t sz = 0;
-//		auto addp = &add;
-//		auto szp = &sz;
-//
-//		receive((void**)&addp, szp);
-//
-//		ret_message ret;
-//		ret.r = add.a + add.b;
-//		ret.hdr.type = RETMSG;
-//
-//		send(1, sizeof(ret), &ret);
-//	}
-	for (int i = 0; i < 0x7fffffff; i++)
+	for (;;)
 	{
-		put_str("be fucked\n");
+		add_message add;
+		size_t sz = 0;
+		auto addp = &add;
+		auto szp = &sz;
+
+		receive((void**)&addp, szp);
+
+		ret_message ret;
+		ret.r = add.a + add.b;
+		ret.hdr.type = RETMSG;
+
+		send(1, sizeof(ret), &ret);
 	}
+//	for (int i = 0; i < 0x7fffffff; i++)
+//	{
+//		put_str("be fucked\n");
+//	}
 	return 0;
 }

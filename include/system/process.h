@@ -86,7 +86,10 @@ namespace process
 
 			lock::spinlock ipc_lock;
 
-			uint8_t* ipc_buf[IPC_BUF_MAX_SIZE];
+			uint8_t ipc_buf[IPC_BUF_MAX_SIZE];
+
+			uint8_t *ptr;
+
 			size_t msg_size;
 			pid sender_pid;
 

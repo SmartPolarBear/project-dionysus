@@ -363,42 +363,34 @@ error_code process::process_wakeup_nolock(size_t channel)
 	return ERROR_SUCCESS;
 }
 
-struct msgbuf
-{
-	spinlock lock;
-	char buf[256];
-
-	char* ptr;
-} q;
-
 // send and receive message
 error_code process::process_send_msg(pid id, size_t msg_sz, IN void* msg)
 {
-	spinlock_acquire(&q.lock);
+	auto target = find_process(id);
 
-	while (q.ptr != nullptr);
+	spinlock_acquire(&target->ipc_data.ipc_lock);
 
-	q.ptr = q.buf;
+	while (target->ipc_data.ptr != nullptr);
 
-	spinlock_release(&q.lock);
+	target->ipc_data.ptr = target->ipc_data.ipc_buf;
 
-	process_wakeup((size_t)&q);
+	spinlock_release(&target->ipc_data.ipc_lock);
+
+	process_wakeup((size_t)&target->ipc_data);
 
 	return ERROR_SUCCESS;
 }
 
 error_code process::process_receive_msg(OUT void** msg, OUT size_t* sz)
 {
-	spinlock_acquire(&q.lock);
+	spinlock_acquire(&current->ipc_data.ipc_lock);
 
-	while (q.ptr == nullptr)
-		process_sleep((size_t)&q, &q.lock);
+	while (current->ipc_data.ptr == nullptr)
+		process_sleep((size_t)&current->ipc_data, &current->ipc_data.ipc_lock);
 
-	q.ptr = nullptr;
+	current->ipc_data.ptr = nullptr;
 
-	spinlock_release(&q.lock);
-
-	for (int i = 0; i < 0x7ffff; i++);
+	spinlock_release(&current->ipc_data.ipc_lock);
 
 	return ERROR_SUCCESS;
 }
