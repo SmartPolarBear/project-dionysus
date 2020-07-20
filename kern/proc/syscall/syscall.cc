@@ -13,7 +13,12 @@
 #include "libraries/libkernel/console/builtin_console.hpp"
 
 using namespace syscall;
+using namespace trap;
 
+[[noreturn]] void system_call_entry_x86()
+{
+	KDEBUG_GENERALPANIC("Syscall in compatibility isn't supported.\n");
+}
 
 PANIC void syscall::system_call_init()
 {
@@ -36,13 +41,12 @@ PANIC void syscall::system_call_init()
 	}
 
 	wrmsr(MSR_STAR, (SEGMENTSEL_UNULL << 48ull) | (SEGMENTSEL_KCODE << 32ull));
+
 	wrmsr(MSR_LSTAR, (uintptr_t)syscall_x64_entry);
 
-	using namespace trap;
+	// we do not support 32bit compatibility mode
+	wrmsr(MSR_CSTAR, (uintptr_t)system_call_entry_x86);
+
 	wrmsr(MSR_SYSCALL_MASK, EFLAG_TF | EFLAG_DF | EFLAG_IF |
 		EFLAG_IOPL_MASK | EFLAG_AC | EFLAG_NT);
-
-	// TODO:support 32bit compatibility mode
-	// we do not support 32bit compatibility mode now
-	//// wrmsr(MSR_CSTAR, (uintptr_t)system_call_entry_x86);
 }
