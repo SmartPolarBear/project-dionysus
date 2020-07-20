@@ -7,17 +7,19 @@
 #include "system/syscall.h"
 #include "system/error.h"
 
+#include "system/messaging.hpp"
+
 extern "C" error_code app_terminate(error_code err)
 {
 	return trigger_syscall(syscall::SYS_exit, 1, err);
 }
 
-extern "C" error_code send(size_t pid, size_t msg_sz, void* msg)
+extern "C" error_code ipc_send(IN const MessageBase* msg)
 {
-	return trigger_syscall(syscall::SYS_send, 3, pid, msg_sz, msg);
+	return trigger_syscall(syscall::SYS_send, 1, msg);
 }
 
-extern "C" error_code receive(void** msg, size_t* sz)
+extern "C" error_code ipc_receive(OUT  MessageBase* msg)
 {
-	return trigger_syscall(syscall::SYS_receive, 2, msg, sz);
+	return trigger_syscall(syscall::SYS_receive, 1, msg);
 }

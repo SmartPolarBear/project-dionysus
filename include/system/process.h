@@ -6,6 +6,7 @@
 #include "system/types.h"
 #include "system/vmm.h"
 #include "system/syscall.h"
+#include "system/messaging.hpp"
 
 #include "drivers/apic/traps.h"
 #include "drivers/lock/spinlock.h"
@@ -15,6 +16,7 @@
 
 namespace process
 {
+
 	enum process_state
 	{
 		PROC_STATE_UNUSED,
@@ -41,14 +43,12 @@ namespace process
 		PROC_WAITING_TIMER = 0x2ul | PROC_WAITING_INTERRUPTED,
 	};
 
-	using pid = int64_t;
-
 	constexpr size_t PROC_NAME_LEN = 32;
 
 // it should be enough
 	constexpr size_t PROC_MAX_COUNT = INT32_MAX;
 
-	constexpr pid PID_MAX = INT64_MAX;
+	constexpr process_id PID_MAX = INT64_MAX;
 
 // Per-process state
 	struct process_dispatcher
@@ -60,8 +60,8 @@ namespace process
 
 		process_state state;
 
-		pid id;
-		pid parent_id;
+		process_id id;
+		process_id parent_id;
 
 		size_t runs;
 		uintptr_t kstack;
@@ -82,28 +82,23 @@ namespace process
 
 		struct ipc_data_struct
 		{
-			static constexpr size_t IPC_BUF_MAX_SIZE = 64;
+			lock::spinlock lock;
+			MessageBase* data;
 
-			lock::spinlock ipc_lock;
-
-			uint8_t ipc_buf[IPC_BUF_MAX_SIZE];
-
-			uint8_t *ptr;
-
-			size_t msg_size;
-			pid sender_pid;
-
-		} ipc_data{};
+			static constexpr size_t INTERNAL_BUF_SIZE = 64;
+			uint8_t internal_buf[INTERNAL_BUF_SIZE];
+		} messaging_data{};
 
 		list_head link;
 
-		process_dispatcher(const char* name, pid id, pid parent_id, size_t flags)
+		process_dispatcher(const char* name, process_id id, process_id parent_id, size_t flags)
 			: state(PROC_STATE_EMBRYO), id(id), parent_id(parent_id),
 			  runs(0), kstack(0), mm(nullptr), flags(flags), wating_state(PROC_WAITING_NONE),
 			  exit_code(ERROR_SUCCESS), tf(nullptr), context(nullptr)
 		{
 			memmove(this->name, name, std::min((size_t)strlen(name), PROC_NAME_LEN));
-			lock::spinlock_initlock(&ipc_data.ipc_lock, name);
+
+			lock::spinlock_initlock(&messaging_data.lock, name);
 		}
 	};
 
@@ -139,8 +134,8 @@ namespace process
 	error_code process_wakeup_nolock(size_t channel);
 
 	// send and receive message
-	error_code process_send_msg(pid id, size_t msg_sz, IN void* msg);
-	error_code process_receive_msg(OUT void** msg, OUT size_t* sz);
+	error_code process_ipc_send(IN const MessageBase* message);
+	error_code process_ipc_receive(OUT MessageBase* message_out);
 
 } // namespace process
 
