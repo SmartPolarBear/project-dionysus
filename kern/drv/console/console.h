@@ -2,7 +2,7 @@
 
 #include "system/types.h"
 
-#include "libraries/libkernel/containers/list.h"
+#include "libraries/libkernel/data/list.h"
 
 #include "drivers/console/console.h"
 
