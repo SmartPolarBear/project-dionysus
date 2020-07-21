@@ -4,43 +4,35 @@
 
 struct MessageHeader
 {
-	// fill by sender
 	size_t type;
-	// fill by sender
-	size_t size;
-
-	// fill by sender
-	process_id to;
-
-	// fill by process_ipc_send
-	process_id from;
-
-	uint8_t data[0];
 }__attribute__((packed));
 
-struct MessageBase
+struct BasicMessage
 {
-	MessageHeader header;
+	const MessageHeader header;
 };
 
 enum MessageType
 {
-	kMsgTypeRegisterServiceMessage,
-	kMsgTypeAddMessage,
-	kMsgTypeAddRetMessage,
+	REGISTER_SERVICE_MSG = 1,
+	ADD_MSG,
+	ADD_RET_MSG,
 };
 
-struct RegisterServiceMessage : MessageBase
+struct RegisterServiceMessage
 {
+	const MessageHeader header{ .type=REGISTER_SERVICE_MSG };
 	size_t service_id;
 };
 
-struct AddMessage : MessageBase
+struct AddMessage
 {
+	const MessageHeader header{ .type=ADD_MSG };
 	size_t a, b;
 };
 
-struct AddRetMessage : MessageBase
+struct AddRetMessage
 {
+	const MessageHeader header{ .type=ADD_RET_MSG };
 	size_t ret;
 };

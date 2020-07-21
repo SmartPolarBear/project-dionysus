@@ -83,7 +83,8 @@ namespace process
 		struct ipc_data_struct
 		{
 			lock::spinlock lock;
-			MessageBase* data;
+			void* data;
+			size_t data_size;
 
 			static constexpr size_t INTERNAL_BUF_SIZE = 64;
 			uint8_t internal_buf[INTERNAL_BUF_SIZE];
@@ -134,8 +135,8 @@ namespace process
 	error_code process_wakeup_nolock(size_t channel);
 
 	// send and receive message
-	error_code process_ipc_send(IN const MessageBase* message);
-	error_code process_ipc_receive(OUT MessageBase* message_out);
+	error_code process_ipc_send(process_id pid, IN const void* message, size_t size);
+	error_code process_ipc_receive(OUT void* message_out);
 
 } // namespace process
 

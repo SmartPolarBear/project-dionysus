@@ -10,13 +10,11 @@ extern "C" int main(int argc, const char** argv)
 		{
 
 			AddMessage add_msg;
-			initialize_message(add_msg, kMsgTypeAddMessage, 1);
 			add_msg.a = i;
 			add_msg.b = j;
-			ipc_send(&add_msg);
+			ipc_send(1,&add_msg,sizeof(add_msg));
 
 			AddRetMessage ret_msg;
-			initialize_message(ret_msg, kMsgTypeAddRetMessage, -1);
 			ipc_receive(&ret_msg);
 
 			if (ret_msg.ret == (i + j))
@@ -29,10 +27,5 @@ extern "C" int main(int argc, const char** argv)
 			}
 		}
 	}
-//
-//	for (int i = 0; i < 0x7fffffff; i++)
-//	{
-//		put_str("fuck \n");
-//	}
 	return 0;
 }

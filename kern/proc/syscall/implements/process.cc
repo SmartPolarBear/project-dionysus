@@ -22,11 +22,13 @@ error_code sys_exit(const syscall_regs* regs)
 
 error_code sys_send(const syscall_regs* regs)
 {
-	return process::process_ipc_send((MessageBase*)get_nth_arg(regs, 0));
+	return process::process_ipc_send((process_id)get_nth_arg(regs, 0),
+		(void*)get_nth_arg(regs, 1),
+		(size_t)get_nth_arg(regs, 2));
 }
 
 error_code sys_receive(const syscall_regs* regs)
 {
-	return process::process_ipc_receive((MessageBase*)get_nth_arg(regs, 0));
+	return process::process_ipc_receive((void*)get_nth_arg(regs, 0));
 }
 

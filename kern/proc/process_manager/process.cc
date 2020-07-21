@@ -366,9 +366,9 @@ error_code process::process_wakeup_nolock(size_t channel)
 }
 
 // send and receive message
-error_code process::process_ipc_send(IN const MessageBase* message)
+error_code process::process_ipc_send(process_id pid, IN const void* message, size_t size)
 {
-	auto target = find_process(message->header.to);
+	auto target = find_process(pid);
 	if (target == nullptr)
 	{
 		return -ERROR_INVALID_ARG;
@@ -380,18 +380,18 @@ error_code process::process_ipc_send(IN const MessageBase* message)
 		// wait until it is consumed
 		;
 
-	if (message->header.size >= target->messaging_data.INTERNAL_BUF_SIZE)
+	if (size >= target->messaging_data.INTERNAL_BUF_SIZE)
 	{
-		target->messaging_data.data = (MessageBase*)kmalloc(message->header.size, 0);
+		target->messaging_data.data = kmalloc(size, 0);
 	}
 	else
 	{
-		target->messaging_data.data = (MessageBase*)target->messaging_data.internal_buf;
+		target->messaging_data.data = target->messaging_data.internal_buf;
 	}
 
-	memmove(target->messaging_data.data, message, message->header.size);
+	memmove(target->messaging_data.data, message, size);
 
-	target->messaging_data.data->header.from = current->id;
+	target->messaging_data.data_size = size;
 
 	process_wakeup((size_t)&target->messaging_data);
 
@@ -400,7 +400,7 @@ error_code process::process_ipc_send(IN const MessageBase* message)
 	return ERROR_SUCCESS;
 }
 
-error_code process::process_ipc_receive(OUT MessageBase* message_out)
+error_code process::process_ipc_receive(OUT void* message_out)
 {
 	spinlock_acquire(&current->messaging_data.lock);
 
@@ -409,7 +409,7 @@ error_code process::process_ipc_receive(OUT MessageBase* message_out)
 		process_sleep((size_t)&current->messaging_data, &current->messaging_data.lock);
 	}
 
-	memmove(message_out, current->messaging_data.data, current->messaging_data.data->header.size);
+	memmove(message_out, current->messaging_data.data, current->messaging_data.data_size);
 
 	if (((uintptr_t)current->messaging_data.data) != (uintptr_t)(current->messaging_data.internal_buf))
 	{
@@ -417,6 +417,7 @@ error_code process::process_ipc_receive(OUT MessageBase* message_out)
 	}
 
 	current->messaging_data.data = nullptr;
+	current->messaging_data.data_size = 0;
 
 	spinlock_release(&current->messaging_data.lock);
 

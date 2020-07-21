@@ -14,12 +14,12 @@ extern "C" error_code app_terminate(error_code err)
 	return trigger_syscall(syscall::SYS_exit, 1, err);
 }
 
-extern "C" error_code ipc_send(IN const MessageBase* msg)
+extern "C" error_code ipc_send(process_id pid, IN const void* msg, size_t size)
 {
-	return trigger_syscall(syscall::SYS_send, 1, msg);
+	return trigger_syscall(syscall::SYS_send, 3, pid, msg, size);
 }
 
-extern "C" error_code ipc_receive(OUT  MessageBase* msg)
+extern "C" error_code ipc_receive(OUT  void* msg)
 {
 	return trigger_syscall(syscall::SYS_receive, 1, msg);
 }
