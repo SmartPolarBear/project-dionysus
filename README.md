@@ -3,11 +3,12 @@ The project "Dionysus" aims at apply theories and practices concerning operation
 
 ## Motivation
 
-// TO BE DONE
+The techniques used and concepts of programming and design of operation system have changed over time. And I want to adapt the advanced ones in a single project as a good model or reference for the further researches and progress in these fields
 
 ## Tech/framework used
 <b>Built with</b>
-- [Visual Studio Code](https://code.visualstudio.com/)
+- CMake
+- LLVM/Clang toolchian
 
 ## API Reference
 
@@ -25,6 +26,15 @@ xv6 inspired me to start the project to build a kernel, with which I got knowled
 A series of papers and books about the development of minix 3 not only let me know about what is microkernel and how does it work but also have a deep influence on the goal and development of this project
 
 ## License
-MIT © [SmartPolarBear](clevercoolbear@outlook.com)   
+Copyright (c) 2020 SmartPolarBear
 
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
