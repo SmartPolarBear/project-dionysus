@@ -51,7 +51,8 @@ def func_process_file_mappings(conf_name: str, builddir: str, mountpoint: str):
         for mapping in mappings:
             mapping_from: str = builddir + "/" + str(mapping['from'])
             mapping_to: str = mountpoint + "/" + str(mapping['to'])
-            print("File mapping: " + mapping_from + "->" + mapping_to + ":")
+            print("File mapping: " + "[build_dir]/" + str(mapping['from']) + " -> " + "[target_dir]/" + str(
+                mapping['to']) + ":")
             shell_cmd = getcmd_cp(mapping_from, mapping_to, True)
             subprocess.run(shell_cmd, check=True, shell=True)
             print("     DONE: " + shell_cmd)
