@@ -1,0 +1,22 @@
+{
+  "image_directories": [
+  ],
+  "file_mappings": [
+    {
+      "from": "kern/kernel",
+      "to": "kernel"
+    },
+    {
+      "from": "ap_boot",
+      "to": "ap_boot"
+    },
+    {
+      "from": "bin/hello/hello",
+      "to": "hello"
+    },
+    {
+      "from": "bin/ipctest/ipctest",
+      "to": "ipctest"
+    }
+  ]
+}

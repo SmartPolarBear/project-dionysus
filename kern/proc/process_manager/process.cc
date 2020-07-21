@@ -194,7 +194,7 @@ error_code process::create_process(IN const char* name,
 
 	proc->tf->rflags |= trap::EFLAG_IF;
 
-	if (flags & PROC_SYS_SERVER)
+	if ((flags & PROC_SYS_SERVER) || (flags & PROC_DRIVER))
 	{
 		proc->tf->rflags |= trap::EFLAG_IOPL_MASK;
 	}

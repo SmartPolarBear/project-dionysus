@@ -31,8 +31,8 @@ namespace process
 	{
 		PROC_EXITING = 0b1,
 		PROC_SYS_SERVER = 0x10,
-		PROC_USER = 0b100,
-		PROC_DRIVER = 0b1000,
+		PROC_DRIVER = 0b100,
+		PROC_USER = 0b1000,
 	};
 
 	constexpr size_t PROC_WAITING_INTERRUPTED = 0x80000000;

@@ -32,7 +32,7 @@ add_subdirectory(external)
 # custom targets
 
 add_custom_target(disk.img ALL
-        COMMAND python3 "${CMAKE_SOURCE_DIR}/tools/diskimg/diskimg.py" update "${CMAKE_SOURCE_DIR}" "${CMAKE_SOURCE_DIR}/config/build/hdimage.list" 
+        COMMAND python3 "${CMAKE_SOURCE_DIR}/tools/diskimg/diskimg.py" update "${CMAKE_SOURCE_DIR}" "${CMAKE_SOURCE_DIR}/config/build/image.json"
         DEPENDS kernel ap_boot.elf
 		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )

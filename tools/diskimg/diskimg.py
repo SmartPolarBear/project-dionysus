@@ -1,6 +1,7 @@
 import subprocess
 import sys
 import os.path
+import json
 import fileinput
 from enum import Enum
 
@@ -10,7 +11,7 @@ class MountAction(Enum):
     UMOUNT = 2,
 
 
-def getcmd_cp(src, dest, force: bool = False, sudo: bool = True, sanitycheck: bool = True):
+def getcmd_cp(src: str, dest: str, force: bool = False, sudo: bool = True, sanitycheck: bool = True):
     if sanitycheck:
         if os.path.exists(src) != True:
             print("Error in getcmd_cp: " + src + " isn't exist.")
@@ -43,13 +44,25 @@ def get_argidx(base, offset):
 argidx_st: int = 2
 
 
+def func_process_file_mappings(conf_name: str, builddir: str, mountpoint: str):
+    with open(conf_name) as conf_f:
+        json_obj: list = json.load(conf_f)
+        mappings: list = json_obj['file_mappings']
+        for mapping in mappings:
+            mapping_from: str = builddir + "/" + str(mapping['from'])
+            mapping_to: str = mountpoint + "/" + str(mapping['to'])
+            print("File mapping: " + mapping_from + "->" + mapping_to + ":")
+            shell_cmd = getcmd_cp(mapping_from, mapping_to, True)
+            subprocess.run(shell_cmd, check=True, shell=True)
+            print("     DONE: " + shell_cmd)
+    return
+
+
 # fname: filelist name
 def func_update_diskimage(main_argv):
     if os.path.exists(main_argv[get_argidx(argidx_st, 1)]) != True:
         print("File list does not exist.")
         exit(-1)
-
-    fname = main_argv[get_argidx(argidx_st, 1)]
 
     currentdir = os.getcwd()
     builddir = currentdir + "/build"
@@ -90,14 +103,8 @@ def func_update_diskimage(main_argv):
     subprocess.run(mount_cmd, check=True, shell=True)
     print("COMPLETE: " + mount_cmd)
 
-    with open(fname) as f:
-        for line in f:
-            lhs, rhs = line.split(":")
-            lhs = builddir + "/" + lhs
-            rhs = mountpoint + "/" + rhs
-            cpitem_cmd = getcmd_cp(lhs, rhs, True)
-            subprocess.run(cpitem_cmd, check=True, shell=True)
-            print("COMPLETE: " + cpitem_cmd)
+    config_file_name: str = main_argv[get_argidx(argidx_st, 1)]
+    func_process_file_mappings(config_file_name, builddir, mountpoint)
 
     cpcfg_cmd = getcmd_cp("grub.cfg", mountpoint +
                           "/boot/grub/grub.cfg", force=True)
@@ -140,16 +147,24 @@ def func_convert_diskimage(main_argv):
     return
 
 
+def func_test_prog(main_argv):
+    # config_file_name: str = main_argv[get_argidx(argidx_st, 1)]
+    # func_process_file_mappings(config_file_name)
+    return
+
+
 def main(argv):
     funcname: str = argv[get_argidx(argidx_st, -1)]
 
-    if (funcname != "update" and funcname != "convert"):
-        print("Only update and convert is available, but " + funcname + " is given.")
+    if (funcname != "update" and funcname != "convert" and funcname != "test"):
+        print("Only update and convert and test is available, but " + funcname + " is given.")
         exit(-1)
 
     if os.path.exists(argv[get_argidx(argidx_st, 0)]) != True:
         print("Work dir does not exist.")
         exit(-1)
+
+    print("Working dir:" + argv[get_argidx(argidx_st, 0)])
 
     os.chdir(argv[get_argidx(argidx_st, 0)])
 
@@ -159,6 +174,10 @@ def main(argv):
 
     if funcname == "convert":
         func_convert_diskimage(argv)
+        exit(0)
+
+    if funcname == "test":
+        func_test_prog(argv)
         exit(0)
 
     pass

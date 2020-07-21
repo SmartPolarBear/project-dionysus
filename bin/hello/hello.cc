@@ -1,7 +1,7 @@
 #include "io.hpp"
 #include "process.hpp"
 
-extern "C" int main(int argc, const char** argv)
+int main(int argc, const char** argv)
 {
 	for (;;)
 	{
