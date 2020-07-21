@@ -1,4 +1,0 @@
-kern/kernel:kernel
-ap_boot:ap_boot
-bin/hello/hello:hello
-bin/ipctest/ipctest:ipctest
