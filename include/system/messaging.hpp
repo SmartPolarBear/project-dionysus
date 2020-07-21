@@ -2,8 +2,11 @@
 
 #include "system/types.h"
 
+constexpr size_t MESSAGE_MAGIC = 0x3caffe3effac;
+
 struct MessageHeader
 {
+	const size_t magic = MESSAGE_MAGIC;
 	size_t type;
 }__attribute__((packed));
 
