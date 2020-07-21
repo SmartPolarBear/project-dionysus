@@ -7,10 +7,10 @@
 
 #include "drivers/lock/spinlock.h"
 
-using libk::list_add;
-using libk::list_for_each;
-using libk::list_init;
-using libk::list_remove;
+using libkernel::list_add;
+using libkernel::list_for_each;
+using libkernel::list_init;
+using libkernel::list_remove;
 
 // spinlock
 using lock::spinlock;

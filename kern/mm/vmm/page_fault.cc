@@ -47,11 +47,11 @@ using vmm::vma_struct;
 using pmm::boot_mem::boot_alloc_page;
 
 // linked list
-using libk::list_add;
-using libk::list_empty;
-using libk::list_for_each;
-using libk::list_init;
-using libk::list_remove;
+using libkernel::list_add;
+using libkernel::list_empty;
+using libkernel::list_for_each;
+using libkernel::list_init;
+using libkernel::list_remove;
 
 static inline error_code page_fault_impl(mm_struct* mm, size_t err, uintptr_t addr)
 {

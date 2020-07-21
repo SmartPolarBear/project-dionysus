@@ -5,16 +5,16 @@
 
 #include "drivers/debug/kdebug.h"
 
-#include "libraries/libkern/data/list.h"
+#include "libraries/libkernel/containers/list.h"
 
 #include <cstring>
 
-using libk::list_add;
-using libk::list_add_tail;
-using libk::list_empty;
-using libk::list_for_each;
-using libk::list_init;
-using libk::list_remove;
+using libkernel::list_add;
+using libkernel::list_add_tail;
+using libkernel::list_empty;
+using libkernel::list_for_each;
+using libkernel::list_init;
+using libkernel::list_remove;
 
 using pmm::buddy_pmm::buddy_alloc_pages;
 using pmm::buddy_pmm::buddy_free_pages;

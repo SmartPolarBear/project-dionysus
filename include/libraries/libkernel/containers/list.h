@@ -2,7 +2,7 @@
 
 #include "system/types.h"
 
-namespace libk
+namespace libkernel
 {
 
 namespace __list_internals

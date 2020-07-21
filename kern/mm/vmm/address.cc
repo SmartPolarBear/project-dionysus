@@ -46,11 +46,11 @@ using vmm::vma_struct;
 using pmm::boot_mem::boot_alloc_page;
 
 // linked list
-using libk::list_add;
-using libk::list_empty;
-using libk::list_for_each;
-using libk::list_init;
-using libk::list_remove;
+using libkernel::list_add;
+using libkernel::list_empty;
+using libkernel::list_for_each;
+using libkernel::list_init;
+using libkernel::list_remove;
 
 uintptr_t V2P(uintptr_t x)
 {

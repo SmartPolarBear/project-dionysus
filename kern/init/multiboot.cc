@@ -5,17 +5,17 @@
 #include "system/multiboot.h"
 
 #include "string.h"
-#include "libraries/libkern/data/list.h"
+#include "libraries/libkernel/containers/list.h"
 
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 
 using namespace multiboot;
 
-using libk::list_add;
-using libk::list_for_each;
-using libk::list_init;
-using libk::list_remove;
+using libkernel::list_add;
+using libkernel::list_for_each;
+using libkernel::list_init;
+using libkernel::list_remove;
 
 // define the multiboot parameters
 extern "C" void* mbi_structptr = nullptr;

@@ -7,7 +7,7 @@
 
 #include "system/types.h"
 
-#include "libraries/libkern/data/list.h"
+#include "libraries/libkernel/containers/list.h"
 
 // the end of the kernel binary
 extern uint8_t end[]; // kernel.ld
