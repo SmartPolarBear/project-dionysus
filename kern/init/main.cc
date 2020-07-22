@@ -43,11 +43,11 @@
 #include "system/syscall.h"
 #include "system/vmm.h"
 
-#include "libraries/libkernel/data/list.h"
-#include "libraries/libkernel/data/queue.hpp"
+#include "libraries/libkernel/data/AVLTree.hpp"
 #include "libraries/libkernel/console/builtin_console.hpp"
 
 #include <cstring>
+
 
 
 // global entry of the kernel
