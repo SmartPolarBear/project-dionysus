@@ -5,7 +5,7 @@
 #include "system/multiboot.h"
 
 #include "string.h"
-#include "libraries/libkernel/data/list.h"
+#include "libraries/libkernel/data/List.h"
 
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
