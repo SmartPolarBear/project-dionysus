@@ -54,234 +54,258 @@ using libkernel::list_for_each;
 using libkernel::list_init;
 using libkernel::list_remove;
 
+// spinlock
+using lock::spinlock;
+using lock::spinlock_acquire;
+using lock::spinlock_initlock;
+using lock::spinlock_release;
+using lock::spinlock_holding;
+
 // The design of the new vm manager:
 // 1) When called by pmm, first map [0,2GiB] to [KERNEL_VIRTUALBASE,KERNEL_VIRTUALEND]
 // 2) provide an interface to dynamically map memory
 // 3) handle the page fault so as to map pages on demand
 
-static inline void check_vma_overlap(struct vma_struct *prev, struct vma_struct *next)
+static inline void check_vma_overlap(struct vma_struct* prev, struct vma_struct* next)
 {
-  KDEBUG_ASSERT(prev->vm_start < prev->vm_end);
-  KDEBUG_ASSERT(prev->vm_end <= next->vm_start);
-  KDEBUG_ASSERT(next->vm_start < next->vm_end);
+	KDEBUG_ASSERT(prev->vm_start < prev->vm_end);
+	KDEBUG_ASSERT(prev->vm_end <= next->vm_start);
+	KDEBUG_ASSERT(next->vm_start < next->vm_end);
 }
 
 void vmm::init_vmm(void)
 {
-  // create the global pml4t
-  pgdir_cache_init();
+	// create the global pml4t
+	pgdir_cache_init();
 
-  g_kpml4t = pgdir_entry_alloc();
+	g_kpml4t = pgdir_entry_alloc();
 
-  memset(g_kpml4t, 0, PGTABLE_SIZE);
+	memset(g_kpml4t, 0, PGTABLE_SIZE);
 
-  // register the page fault handle
+	// register the page fault handle
 	trap::trap_handle_register(trap::TRAP_PGFLT, trap::trap_handle{
 		.handle = handle_pgfault,
 		.enable = true });
 }
 
-vma_struct *vmm::find_vma(mm_struct *mm, uintptr_t addr)
+vma_struct* vmm::find_vma(mm_struct* mm, uintptr_t addr)
 {
-  KDEBUG_ASSERT(mm != nullptr);
-  vma_struct *ret = mm->mmap_cache;
-  if (!(ret != nullptr &&
-	  ret->vm_start <= addr &&
-	  ret->vm_end > addr))
-  {
-	ret = nullptr;
-	list_head *entry = nullptr;
-	list_for(entry, &mm->vma_list)
+	KDEBUG_ASSERT(mm != nullptr);
+	vma_struct* ret = mm->mmap_cache;
+	if (!(ret != nullptr &&
+		ret->vm_start <= addr &&
+		ret->vm_end > addr))
 	{
-	  auto vma = container_of(entry, vma_struct, vma_link);
-	  if (vma->vm_start <= addr && addr < vma->vm_end)
-	  {
-		ret = vma;
-		break;
-	  }
+		ret = nullptr;
+		list_head* entry = nullptr;
+		list_for(entry, &mm->vma_list)
+		{
+			auto vma = container_of(entry, vma_struct, vma_link);
+			if (vma->vm_start <= addr && addr < vma->vm_end)
+			{
+				ret = vma;
+				break;
+			}
+		}
 	}
-  }
 
-  if (ret != nullptr)
-  {
-	mm->mmap_cache = ret;
-  }
-
-  return ret;
-}
-
-vma_struct *vmm::vma_create(uintptr_t vm_start, uintptr_t vm_end, size_t vm_flags)
-{
-  vma_struct *vma = reinterpret_cast<decltype(vma)>(memory::kmalloc(sizeof(vma_struct), 0));
-
-  if (vma != nullptr)
-  {
-	vma->vm_start = vm_start;
-	vma->vm_end = vm_end;
-	vma->flags = vm_flags;
-  }
-
-  return vma;
-}
-
-void vmm::insert_vma_struct(mm_struct *mm, vma_struct *vma)
-{
-  KDEBUG_ASSERT(vma->vm_start < vma->vm_end);
-
-  // find the place to insert to
-  list_head *prev = &mm->vma_list;
-
-  list_head *iter = nullptr;
-  list_for(iter, &mm->vma_list)
-  {
-	auto prev_vma = container_of(iter, vma_struct, vma_link);
-	if (prev_vma->vm_start > vma->vm_start)
+	if (ret != nullptr)
 	{
-	  break;
+		mm->mmap_cache = ret;
 	}
-	prev = iter;
-  }
 
-  auto next = prev->next;
-
-  if (prev != &mm->vma_list)
-  {
-	check_vma_overlap(container_of(prev, vma_struct, vma_link), vma);
-  }
-
-  if (next != &mm->vma_list)
-  {
-	check_vma_overlap(vma, container_of(next, vma_struct, vma_link));
-  }
-
-  vma->mm = mm;
-  list_add(&vma->vma_link, prev);
-
-  mm->map_count++;
-}
-
-mm_struct *vmm::mm_create(void)
-{
-  mm_struct *mm = reinterpret_cast<decltype(mm)>(memory::kmalloc(sizeof(mm_struct), 0));
-  if (mm != nullptr)
-  {
-	list_init(&mm->vma_list);
-
-	mm->mmap_cache = nullptr;
-	mm->pgdir = nullptr;
-	mm->map_count = 0;
-  }
-
-  return mm;
-}
-
-error_code vmm::mm_map(IN mm_struct *mm, IN uintptr_t addr, IN size_t len, IN uint32_t vm_flags,
-					   OPTIONAL OUT vma_struct **vma_store)
-{
-  if (mm == nullptr)
-  {
-	return -ERROR_INVALID_ARG;
-  }
-
-  uintptr_t start = rounddown(addr, PAGE_SIZE), end = roundup(addr + len, PAGE_SIZE);
-  if (!VALID_USER_REGION(start, end))
-  {
-	return -ERROR_INVALID_ADDR;
-  }
-
-  error_code ret = ERROR_SUCCESS;
-
-  vma_struct *vma = nullptr;
-  if ((vma = find_vma(mm, start)) != nullptr && end > vma->vm_start)
-  {
-	// the vma exists
 	return ret;
-  } else
-  {
-	vm_flags &= ~VM_SHARE;
-	if ((vma = vma_create(start, end, vm_flags)) == nullptr)
+}
+
+vma_struct* vmm::vma_create(uintptr_t vm_start, uintptr_t vm_end, size_t vm_flags)
+{
+	vma_struct* vma = reinterpret_cast<decltype(vma)>(memory::kmalloc(sizeof(vma_struct), 0));
+
+	if (vma != nullptr)
 	{
-	  return -ERROR_MEMORY_ALLOC;
+		vma->vm_start = vm_start;
+		vma->vm_end = vm_end;
+		vma->flags = vm_flags;
 	}
 
-	insert_vma_struct(mm, vma);
-
-	if (vma_store != nullptr)
-	{
-	  *vma_store = vma;
-	}
-  }
-
-  return ret;
+	return vma;
 }
 
-error_code vmm::mm_unmap(IN mm_struct *mm, IN uintptr_t addr, IN size_t len)
+void vmm::insert_vma_struct(mm_struct* mm, vma_struct* vma)
 {
-  //TODO
-  KDEBUG_NOT_IMPLEMENTED;
-  return ERROR_SUCCESS;
-}
+	KDEBUG_ASSERT(vma->vm_start < vma->vm_end);
 
-error_code vmm::mm_duplicate(IN mm_struct *to, IN const mm_struct *from)
-{
-  if (to != nullptr && from != nullptr)
-  {
-	return -ERROR_INVALID_ARG;
-  }
+	// find the place to insert to
+	list_head* prev = &mm->vma_list;
 
-  list_head *iter = nullptr;
-  list_for(iter, &from->vma_list)
-  {
-	auto vma = container_of(iter, vma_struct, vma_link);
-	auto new_vma = vma_create(vma->vm_start, vma->vm_end, vma->flags);
-	if (new_vma == nullptr)
+	list_head* iter = nullptr;
+	list_for(iter, &mm->vma_list)
 	{
-	  return -ERROR_MEMORY_ALLOC;
+		auto prev_vma = container_of(iter, vma_struct, vma_link);
+		if (prev_vma->vm_start > vma->vm_start)
+		{
+			break;
+		}
+		prev = iter;
 	}
 
-	//TODO: process shared memory
+	auto next = prev->next;
 
-	insert_vma_struct(to, new_vma);
+	if (prev != &mm->vma_list)
+	{
+		check_vma_overlap(container_of(prev, vma_struct, vma_link), vma);
+	}
 
-	//TODO: copy pgdir content
-  }
-  return ERROR_SUCCESS;
+	if (next != &mm->vma_list)
+	{
+		check_vma_overlap(vma, container_of(next, vma_struct, vma_link));
+	}
+
+	vma->mm = mm;
+	list_add(&vma->vma_link, prev);
+
+	mm->map_count++;
 }
 
-void vmm::mm_destroy(mm_struct *mm)
+mm_struct* vmm::mm_create(void)
 {
-  for (list_head *iter = mm->vma_list.next; iter != &mm->vma_list;)
-  {
-	auto next = iter->next;
+	mm_struct* mm = reinterpret_cast<decltype(mm)>(memory::kmalloc(sizeof(mm_struct), 0));
+	if (mm != nullptr)
+	{
+		list_init(&mm->vma_list);
 
-	list_remove(iter);
-	memory::kfree(container_of(iter, vma_struct, vma_link));
+		mm->mmap_cache = nullptr;
+		mm->pgdir = nullptr;
+		mm->map_count = 0;
+	}
 
-	iter = next;
-  }
-  memory::kfree(mm);
-  mm = nullptr;
+	spinlock_initlock(&mm->lock, "mm_lock");
+
+	return mm;
 }
 
-void vmm::mm_free(mm_struct *mm)
+error_code vmm::mm_map(IN mm_struct* mm, IN uintptr_t addr, IN size_t len, IN uint32_t vm_flags,
+	OPTIONAL OUT vma_struct** vma_store)
 {
-  KDEBUG_ASSERT(mm != nullptr && mm->map_count == 0);
-  auto pgdir = mm->pgdir;
+	if (mm == nullptr)
+	{
+		return -ERROR_INVALID_ARG;
+	}
 
-  list_head *iter = nullptr;
+	spinlock_acquire(&mm->lock);
 
-  list_for(iter, &mm->vma_list)
-  {
-	auto vma = container_of(iter, vma_struct, vma_link);
-	unmap_range(pgdir, vma->vm_start, vma->vm_end);
-  }
+	uintptr_t start = rounddown(addr, PAGE_SIZE), end = roundup(addr + len, PAGE_SIZE);
+	if (!VALID_USER_REGION(start, end))
+	{
+		spinlock_release(&mm->lock);
+		return -ERROR_INVALID_ADDR;
+	}
 
-  iter = nullptr;
-  list_for(iter, &mm->vma_list)
-  {
-	auto vma = container_of(iter, vma_struct, vma_link);
-	free_range(pgdir, vma->vm_start, vma->vm_end);
-  }
+	error_code ret = ERROR_SUCCESS;
 
+	vma_struct* vma = nullptr;
+	if ((vma = find_vma(mm, start)) != nullptr && end > vma->vm_start)
+	{
+		// the vma exists
+		spinlock_release(&mm->lock);
+		return ret;
+	}
+	else
+	{
+		vm_flags &= ~VM_SHARE;
+		if ((vma = vma_create(start, end, vm_flags)) == nullptr)
+		{
+			spinlock_release(&mm->lock);
+			return -ERROR_MEMORY_ALLOC;
+		}
 
+		insert_vma_struct(mm, vma);
+
+		if (vma_store != nullptr)
+		{
+			*vma_store = vma;
+		}
+	}
+
+	spinlock_release(&mm->lock);
+	return ret;
+}
+
+error_code vmm::mm_unmap(IN mm_struct* mm, IN uintptr_t addr, IN size_t len)
+{
+	//TODO
+	KDEBUG_NOT_IMPLEMENTED;
+	return ERROR_SUCCESS;
+}
+
+error_code vmm::mm_duplicate(IN mm_struct* to, IN const mm_struct* from)
+{
+	if (to != nullptr && from != nullptr)
+	{
+		return -ERROR_INVALID_ARG;
+	}
+
+	spinlock_acquire(&to->lock);
+	list_head* iter = nullptr;
+	list_for(iter, &from->vma_list)
+	{
+		auto vma = container_of(iter, vma_struct, vma_link);
+		auto new_vma = vma_create(vma->vm_start, vma->vm_end, vma->flags);
+		if (new_vma == nullptr)
+		{
+			spinlock_release(&to->lock);
+			return -ERROR_MEMORY_ALLOC;
+		}
+
+		//TODO: process shared memory
+
+		insert_vma_struct(to, new_vma);
+
+		//TODO: copy pgdir content
+	}
+
+	spinlock_release(&to->lock);
+	return ERROR_SUCCESS;
+}
+
+void vmm::mm_destroy(mm_struct* mm)
+{
+	spinlock_acquire(&mm->lock);
+	for (list_head* iter = mm->vma_list.next; iter != &mm->vma_list;)
+	{
+		auto next = iter->next;
+
+		list_remove(iter);
+		memory::kfree(container_of(iter, vma_struct, vma_link));
+
+		iter = next;
+	}
+
+	spinlock_release(&mm->lock);
+	memory::kfree(mm);
+	mm = nullptr;
+}
+
+void vmm::mm_free(mm_struct* mm)
+{
+	KDEBUG_ASSERT(mm != nullptr && mm->map_count == 0);
+	spinlock_acquire(&mm->lock);
+	auto pgdir = mm->pgdir;
+
+	list_head* iter = nullptr;
+
+	list_for(iter, &mm->vma_list)
+	{
+		auto vma = container_of(iter, vma_struct, vma_link);
+		unmap_range(pgdir, vma->vm_start, vma->vm_end);
+	}
+
+	iter = nullptr;
+	list_for(iter, &mm->vma_list)
+	{
+		auto vma = container_of(iter, vma_struct, vma_link);
+		free_range(pgdir, vma->vm_start, vma->vm_end);
+	}
+
+	spinlock_release(&mm->lock);
 }

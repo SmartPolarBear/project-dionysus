@@ -24,6 +24,8 @@
 
 #include "system/types.h"
 
+#include "drivers/lock/spinlock.h"
+
 namespace vmm
 {
 	using pde_t = size_t;
@@ -38,9 +40,9 @@ namespace vmm
 		vma_struct* mmap_cache; // for quicker search of vma
 		pde_ptr_t pgdir;
 		size_t map_count;
-		size_t locked_by;
 		uintptr_t brk_start, brk;
 
+		lock::spinlock lock;
 	};
 
 	struct vma_struct
