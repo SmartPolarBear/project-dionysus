@@ -63,7 +63,6 @@ static inline constexpr size_t remove_flags(vmm::pde_t pde)
 	return (pde >> FLAGS_SHIFT) << FLAGS_SHIFT;
 }
 
-
 static inline void do_free_range_pgdir(pde_ptr_t pdpte, uintptr_t st, uintptr_t ed)
 {
 	auto pgdir = reinterpret_cast<decltype(pdpte)>(P2V(remove_flags(*pdpte)));
@@ -105,19 +104,19 @@ static inline void do_free_range_pml4t(pde_ptr_t pml4t, uintptr_t st, uintptr_t 
 // find the pde corresponding to the given va
 // perm is only valid when create_if_not_exist = true
 static inline pde_ptr_t walk_pgdir(const pde_ptr_t pml4t,
-		uintptr_t vaddr,
-		bool create_if_not_exist = false,
-		size_t perm = 0)
+	uintptr_t vaddr,
+	bool create_if_not_exist = false,
+	size_t perm = 0)
 {
 	// #define WALK_PGDIR_PRINT_INTERMEDIATE_VAL
 
 	// the pml4, which's the content of CR3, is held in kpml4t
 	// firstly find the 3rd page directory (PDPT) from it.
 	pde_ptr_t pml4e = &pml4t[P4X(vaddr)],
-			pdpt = nullptr,
-			pdpte = nullptr,
-			pgdir = nullptr,
-			pde = nullptr;
+		pdpt = nullptr,
+		pdpte = nullptr,
+		pgdir = nullptr,
+		pde = nullptr;
 
 #ifdef WALK_PGDIR_PRINT_INTERMEDIATE_VAL
 	if (vaddr == 0x10000000)
@@ -270,6 +269,20 @@ void vmm::free_range(pde_ptr_t pml4t, uintptr_t start, uintptr_t end)
 	do_free_range_pml4t(pml4t, start, end);
 }
 
+void vmm::copy_range(pde_ptr_t from, pde_ptr_t to, uintptr_t start, uintptr_t end)
+{
+	for (uintptr_t addr = start; addr <= end; addr += PAGE_SIZE)
+	{
+		auto pte = walk_pgdir(from, addr, false);
+
+		if ((*pte) & PG_P)
+		{
+			auto perm = *pte & (PG_P | PG_W | PG_U);
+			pmm::page_insert(to, true, pmm::pde_to_page(pte), addr, perm);
+		}
+	}
+}
+
 void vmm::install_kernel_pml4t()
 {
 	lcr3(V2P((uintptr_t)g_kpml4t));
@@ -291,7 +304,7 @@ void vmm::boot_map_kernel_mem()
 {
 	auto memtag = multiboot::acquire_tag_ptr<multiboot_tag_mmap>(MULTIBOOT_TAG_TYPE_MMAP);
 	size_t entry_count =
-			(memtag->size - sizeof(multiboot_uint32_t) * 4ul - sizeof(memtag->entry_size)) / memtag->entry_size;
+		(memtag->size - sizeof(multiboot_uint32_t) * 4ul - sizeof(memtag->entry_size)) / memtag->entry_size;
 
 	auto max_pa = 0ull;
 
@@ -311,7 +324,7 @@ void vmm::boot_map_kernel_mem()
 	else if (ret == -ERROR_REWRITE)
 	{
 		KDEBUG_RICHPANIC("Remap a mapped page.", "KERNEL PANIC:ERROR_REMAP",
-				true, "");
+			true, "");
 	}
 
 	// remap all the physical memory
@@ -324,7 +337,7 @@ void vmm::boot_map_kernel_mem()
 	else if (ret == -ERROR_REWRITE)
 	{
 		KDEBUG_RICHPANIC("Remap a mapped page.", "KERNEL PANIC:ERROR_REMAP",
-				true, "");
+			true, "");
 	}
 }
 

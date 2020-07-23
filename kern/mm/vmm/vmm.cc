@@ -257,11 +257,10 @@ error_code vmm::mm_duplicate(IN mm_struct* to, IN const mm_struct* from)
 			return -ERROR_MEMORY_ALLOC;
 		}
 
-		//TODO: process shared memory
-
 		insert_vma_struct(to, new_vma);
 
-		//TODO: copy pgdir content
+		//TODO: process shared memory
+		copy_range(from->pgdir, to->pgdir, vma->vm_start, vma->vm_end);
 	}
 
 	spinlock_release(&to->lock);

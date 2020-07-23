@@ -120,6 +120,8 @@ namespace vmm
 
 	void unmap_range(pde_ptr_t pgdir, uintptr_t start, uintptr_t end);
 
+	void copy_range(pde_ptr_t from, pde_ptr_t to, uintptr_t start, uintptr_t end);
+
 } // namespace vmm
 
 
