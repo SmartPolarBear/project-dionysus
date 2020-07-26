@@ -119,7 +119,7 @@ static inline size_t process_terminal_impl(process::process_dispatcher* proc,
 static inline process::process_dispatcher* find_process(process_id pid)
 {
 	list_head* iter = nullptr;
-	list_for(iter, &proc_list.run_head)
+	list_for(iter, &proc_list.active_head)
 	{
 		auto proc_item = container_of(iter, process::process_dispatcher, link);
 
@@ -136,7 +136,7 @@ void process::process_init(void)
 {
 	proc_list.proc_count = 0;
 	spinlock_initlock(&proc_list.lock, "proc");
-	list_init(&proc_list.run_head);
+	list_init(&proc_list.active_head);
 }
 
 error_code process::create_process(IN const char* name,
@@ -204,7 +204,7 @@ error_code process::create_process(IN const char* name,
 		// TODO: copy data from parent process
 	}
 
-	list_add(&proc->link, &proc_list.run_head);
+	list_add(&proc->link, &proc_list.active_head);
 
 	spinlock_release(&proc_list.lock);
 
@@ -273,7 +273,7 @@ void process::process_exit(IN process_dispatcher* proc)
 
 	// TODO: recycle the memory
 
-	auto mm = current->mm;
+	auto mm = proc->mm;
 	if (mm != nullptr)
 	{
 		if ((--mm->map_count) == 0)
@@ -288,19 +288,17 @@ void process::process_exit(IN process_dispatcher* proc)
 
 			trap::pushcli();
 
-			//TODO remove process mm link
-
 			trap::popcli();
 
 			vmm::mm_destroy(mm);
 		}
 	}
 
-	current->mm = nullptr;
-
+	proc->mm = nullptr;
 
 	// set process state and call the scheduler
 	proc->state = PROC_STATE_ZOMBIE;
+	proc_list.zombie_queue.push(proc);
 
 	scheduler::scheduler_enter();
 }
@@ -354,7 +352,7 @@ error_code process::process_wakeup(size_t channel)
 error_code process::process_wakeup_nolock(size_t channel)
 {
 	list_head* iter = nullptr;
-	list_for(iter, &proc_list.run_head)
+	list_for(iter, &proc_list.active_head)
 	{
 		auto iter_proc = list_entry(iter, process::process_dispatcher, link);
 		if (iter_proc->state == PROC_STATE_SLEEPING && iter_proc->sleep_data.channel == channel)

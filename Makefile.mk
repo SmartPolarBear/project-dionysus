@@ -22,7 +22,7 @@ CPUS = 4
 
 QEMUOPTS = -no-reboot -drive file=$(BUILD)/disk.img,index=0,media=disk,format=raw
 QEMUOPTS += -d int
-QEMUOPTS += -smp $(CPUS) -m 8G $(QEMUEXTRA)
+QEMUOPTS += -smp $(CPUS) -m 6G $(QEMUEXTRA)
 
 VBOX_MACHINENAME = Test
 VBOXMANAGE = VBoxManage.exe

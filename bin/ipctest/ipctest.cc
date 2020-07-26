@@ -25,6 +25,8 @@ int main(int argc, const char** argv)
 			{
 				put_str("no\n");
 			}
+
+			return 0;
 		}
 	}
 	return 0;

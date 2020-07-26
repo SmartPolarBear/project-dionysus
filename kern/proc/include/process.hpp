@@ -7,23 +7,27 @@
 #include "drivers/lock/spinlock.h"
 #include "drivers/apic/traps.h"
 
+#include "libraries/libkernel/data/Queue.hpp"
+
 using lock::spinlock;
 using lock::spinlock_acquire;
 using lock::spinlock_initlock;
 using lock::spinlock_release;
 
+//extern __thread process::process_dispatcher *current;
+extern CLSItem<process::process_dispatcher*, CLS_PROC_STRUCT_PTR> current;
+
+
 struct process_list_struct
 {
 	spinlock lock;
-	list_head run_head;
 	size_t proc_count;
+	list_head active_head;
+	libkernel::Queue<process::process_dispatcher*> zombie_queue;
 };
 
 extern process_list_struct proc_list;
 
-//extern __thread process::process_dispatcher *current;
-
-extern CLSItem<process::process_dispatcher*, CLS_PROC_STRUCT_PTR> current;
 
 [[maybe_unused]] extern "C" [[noreturn]] void run_process(trap::trap_frame* tf, uintptr_t kstack);
 

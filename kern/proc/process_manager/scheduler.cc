@@ -38,9 +38,10 @@ using lock::spinlock_holding;
 
 		spinlock_acquire(&proc_list.lock);
 
-		list_head* iter = nullptr;
-		// find runnable ones
-		list_for(iter, &proc_list.run_head)
+		// find runnable ones, we may do exiting works and therefore may remove entries, so
+		// we use list_for_safe
+		list_head* iter = nullptr, * tmp = nullptr;
+		list_for_safe(iter, tmp, &proc_list.active_head)
 		{
 			auto iter_proc = list_entry(iter, process::process_dispatcher, link);
 			if (iter_proc->state == process::PROC_STATE_RUNNABLE)
@@ -53,7 +54,6 @@ using lock::spinlock_holding;
 				current->state = process::PROC_STATE_RUNNING;
 				current->runs++;
 
-				// FIXME: this failed randomly
 				KDEBUG_ASSERT(current != nullptr);
 				KDEBUG_ASSERT(current->mm != nullptr);
 
@@ -71,6 +71,18 @@ using lock::spinlock_holding;
 				trap::popcli();
 
 				context_switch(&cpu->scheduler, current->context);
+
+				// In scheduler, we check if there's process to be killed
+				while (proc_list.zombie_queue.size())
+				{
+					auto zombie = proc_list.zombie_queue.pop();
+
+					delete[] (uint8_t*)zombie->kstack;
+
+					list_remove(&zombie->link);
+
+					delete zombie;
+				}
 
 				current = nullptr;
 			}

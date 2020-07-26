@@ -64,6 +64,7 @@ namespace process
 		process_id parent_id;
 
 		size_t runs;
+		
 		uintptr_t kstack;
 
 		vmm::mm_struct* mm;
