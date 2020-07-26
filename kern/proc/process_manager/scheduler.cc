@@ -72,19 +72,21 @@ using lock::spinlock_holding;
 
 				context_switch(&cpu->scheduler, current->context);
 
-				// In scheduler, we check if there's process to be killed
-				while (proc_list.zombie_queue.size())
-				{
-					auto zombie = proc_list.zombie_queue.pop();
-
-					delete[] (uint8_t*)zombie->kstack;
-
-					list_remove(&zombie->link);
-
-					delete zombie;
-				}
-
 				current = nullptr;
+			}
+
+			// In scheduler, we check if there's process to be killed
+			while (proc_list.zombie_queue.size())
+			{
+				auto zombie = proc_list.zombie_queue.pop();
+
+				delete[] (uint8_t*)zombie->kstack;
+
+				list_remove(&zombie->link);
+
+				zombie->state = process::PROC_STATE_UNUSED;
+
+				delete zombie;
 			}
 		}
 
@@ -124,8 +126,11 @@ void scheduler::scheduler_enter()
 void scheduler::scheduler_yield()
 {
 	spinlock_acquire(&proc_list.lock);
+
 	current->state = process::PROC_STATE_RUNNABLE;
+
 	scheduler_enter();
+
 	spinlock_release(&proc_list.lock);
 }
 

@@ -52,7 +52,17 @@ extern "C" [[clang::optnone]] error_code syscall_body(const syscall_regs* regs)
 		KDEBUG_FOLLOWPANIC("Syscall number out of range.");
 	}
 
+	if (current->flags & process::PROC_EXITING)
+	{
+		process::process_exit(current());
+	}
+
 	auto ret = syscall_table[syscall_no](regs);
+
+	if (current->flags & process::PROC_EXITING)
+	{
+		process::process_exit(current());
+	}
 
 	return ret;
 }

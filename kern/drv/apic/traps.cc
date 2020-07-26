@@ -178,6 +178,14 @@ extern "C" void trap_body(trap::trap_frame info)
 	// finish the trap handle
 	local_apic::write_eoi();
 
+	// If in the user space, directly kill it
+	if (current() != nullptr
+		&& (current->flags & process::PROC_EXITING)
+		&& ((info.cs & 0b11) == DPL_USER))
+	{
+		process::process_exit(current());
+	}
+
 	if (error != ERROR_SUCCESS)
 	{
 		KDEBUG_RICHPANIC_CODE(error, true, "");

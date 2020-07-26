@@ -89,6 +89,7 @@ namespace process
 
 			static constexpr size_t INTERNAL_BUF_SIZE = 64;
 			uint8_t internal_buf[INTERNAL_BUF_SIZE];
+
 		} messaging_data{};
 
 		list_head link;

@@ -100,17 +100,20 @@ static inline error_code setup_mm(process::process_dispatcher* proc)
 static inline size_t process_terminal_impl(process::process_dispatcher* proc,
 	error_code err)
 {
-
 	if ((proc->flags & process::PROC_EXITING) == 0)
 	{
 		proc->flags |= process::PROC_EXITING;
 		proc->exit_code = err;
-		if (proc->wating_state & process::PROC_WAITING_INTERRUPTED)
+
+//		if (proc->wating_state & process::PROC_WAITING_INTERRUPTED)
+//		{
+//
+//		}
+		if (proc->state == process::PROC_STATE_SLEEPING)
 		{
-			//TODO Wake up the proc
+			proc->state = process::PROC_STATE_RUNNABLE;
 		}
-		// FIXME temporarily directly kill it
-		process::process_exit(proc);
+
 		return ERROR_SUCCESS;
 	}
 	return -ERROR_HAS_KILLED;
@@ -298,6 +301,7 @@ void process::process_exit(IN process_dispatcher* proc)
 
 	// set process state and call the scheduler
 	proc->state = PROC_STATE_ZOMBIE;
+
 	proc_list.zombie_queue.push(proc);
 
 	scheduler::scheduler_enter();
