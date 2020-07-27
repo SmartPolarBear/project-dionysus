@@ -63,7 +63,7 @@ static inline constexpr size_t remove_flags(vmm::pde_t pde)
 	return (pde >> FLAGS_SHIFT) << FLAGS_SHIFT;
 }
 
-static inline void do_free_range_pgdir(pde_ptr_t pdpte, uintptr_t st, uintptr_t ed)
+static inline void do_free_range_pgdir(pde_ptr_t pdpte)
 {
 	auto pgdir = reinterpret_cast<decltype(pdpte)>(P2V(remove_flags(*pdpte)));
 
@@ -78,7 +78,7 @@ static inline void do_free_range_pdpt(pde_ptr_t pml4e, uintptr_t st, uintptr_t e
 	for (uintptr_t addr = st; addr <= ed; addr += PDPT_SIZE)
 	{
 		auto pdpte = &pdpt[P3X(addr)];
-		do_free_range_pgdir(pdpte, st, ed);
+		do_free_range_pgdir(pdpte);
 
 		*pdpte = 0;
 		vmm::pgdir_entry_free(pdpte);

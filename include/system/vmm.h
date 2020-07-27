@@ -94,7 +94,7 @@ namespace vmm
 
 	vma_struct* mm_intersect_vma(IN mm_struct* mm, uintptr_t start, uintptr_t end);
 
-	bool valid_user_space(IN mm_struct* mm, uintptr_t addr, size_t len, bool writable);
+	bool check_user_memory(IN mm_struct* mm, uintptr_t addr, size_t len, bool writable);
 
 	void mm_destroy(mm_struct* mm);
 

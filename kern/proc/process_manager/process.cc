@@ -452,7 +452,7 @@ error_code process::process_heap_change_size(IN process_dispatcher* proc, IN OUT
 		return -ERROR_INVALID_ARG;
 	}
 
-	if (!valid_user_space(mm, (uintptr_t)heap_ptr, sizeof(uintptr_t), true))
+	if (!check_user_memory(mm, (uintptr_t)heap_ptr, sizeof(uintptr_t), true))
 	{
 		return -ERROR_INVALID_ARG;
 	}
