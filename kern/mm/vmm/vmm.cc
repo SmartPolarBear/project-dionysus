@@ -234,7 +234,7 @@ error_code vmm::mm_map(IN mm_struct* mm, IN uintptr_t addr, IN size_t len, IN ui
 error_code vmm::mm_unmap(IN mm_struct* mm, IN uintptr_t addr, IN size_t len)
 {
 	//TODO
-	KDEBUG_NOT_IMPLEMENTED;
+
 	return ERROR_SUCCESS;
 }
 
@@ -322,10 +322,40 @@ vma_struct* vmm::mm_intersect_vma(mm_struct* mm, uintptr_t start, uintptr_t end)
 bool vmm::valid_user_space(IN mm_struct* mm, uintptr_t addr, size_t len, bool writable)
 {
 	//TODO
+	KDEBUG_NOT_IMPLEMENTED;
 	return true;
 }
 
 error_code vmm::mm_change_size(IN mm_struct* mm, uintptr_t addr, size_t len)
 {
+	uintptr_t start = PAGE_ROUNDDOWN(addr), end = PAGE_ROUNDUP((addr + len));
+	if (!VALID_USER_REGION(start, end))
+	{
+		return -ERROR_INVALID_ARG;
+	}
+
+	error_code ret = ERROR_SUCCESS;
+
+	if ((ret = mm_unmap(mm, start, end - start)) != ERROR_SUCCESS)
+	{
+		return ret;
+	}
+
+	constexpr auto VM_FLAGS = VM_READ | VM_WRITE;
+
+	auto vma = find_vma(mm, start - 1);
+	if (vma != nullptr && vma->vm_end == start && vma->flags == VM_FLAGS)
+	{
+		vma->vm_end = end;
+		return ERROR_SUCCESS;
+	}
+
+	if ((vma = vma_create(start, end, VM_FLAGS)) == nullptr)
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
+
+	insert_vma_struct(mm, vma);
+
 	return ERROR_SUCCESS;
 }
