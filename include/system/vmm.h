@@ -75,6 +75,10 @@ namespace vmm
 
 	vma_struct* vma_create(uintptr_t vm_start, uintptr_t vm_end, size_t vm_flags);
 
+	error_code vma_resize(vma_struct* vma, uintptr_t start, uintptr_t end);
+
+	void vma_destroy(vma_struct *vma);
+
 	void insert_vma_struct(mm_struct* mm, vma_struct* vma);
 
 	mm_struct* mm_create(void);

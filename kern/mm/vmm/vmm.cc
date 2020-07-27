@@ -73,6 +73,12 @@ static inline void check_vma_overlap(struct vma_struct* prev, struct vma_struct*
 	KDEBUG_ASSERT(next->vm_start < next->vm_end);
 }
 
+static inline void remove_vma(mm_struct* mm, vma_struct* vma)
+{
+	list_remove(&vma->vma_link);
+	mm->map_count--;
+}
+
 void vmm::init_vmm(void)
 {
 	// create the global pml4t
@@ -167,6 +173,34 @@ void vmm::insert_vma_struct(mm_struct* mm, vma_struct* vma)
 	mm->map_count++;
 }
 
+error_code vmm::vma_resize(vma_struct* vma, uintptr_t start, uintptr_t end)
+{
+	if ((start % PAGE_SIZE) != 0 || (end % PAGE_SIZE) != 0)
+	{
+		return -ERROR_INVALID_ARG;
+	}
+
+	if (start >= end)
+	{
+		return -ERROR_INVALID_ARG;
+	}
+
+	if (!(vma->vm_start <= start && end <= vma->vm_end))
+	{
+		return -ERROR_INVALID_ARG;
+	}
+
+	vma->vm_start = start;
+	vma->vm_end = end;
+
+	return ERROR_SUCCESS;
+}
+
+void vmm::vma_destroy(vma_struct* vma)
+{
+	memory::kfree(vma);
+}
+
 mm_struct* vmm::mm_create(void)
 {
 	mm_struct* mm = reinterpret_cast<decltype(mm)>(memory::kmalloc(sizeof(mm_struct), 0));
@@ -233,7 +267,95 @@ error_code vmm::mm_map(IN mm_struct* mm, IN uintptr_t addr, IN size_t len, IN ui
 
 error_code vmm::mm_unmap(IN mm_struct* mm, IN uintptr_t addr, IN size_t len)
 {
-	//TODO
+	uintptr_t start = PAGE_ROUNDDOWN(addr), end = PAGE_ROUNDUP(addr + len);
+	if (!VALID_USER_REGION(start, end))
+	{
+		return -ERROR_INVALID_ARG;
+	}
+
+	if (mm == nullptr)
+	{
+		return -ERROR_INVALID_ARG;
+	}
+
+	auto vma = find_vma(mm, start);
+	if (vma == nullptr || end < vma->vm_start)
+	{
+		return ERROR_SUCCESS; // no need to remove
+	}
+
+	if (vma->vm_start < start && end < vma->vm_end)
+	{
+		//           range to remove
+		//    [       [***********]       ]
+		//     |------|      ^    |-------|
+		//	  Create new     |     Shrink old
+		//                   |
+		//                 unmap
+
+		auto new_vma = vma_create(vma->vm_start, start, vma->flags);
+		if (new_vma == nullptr)
+		{
+			return -ERROR_MEMORY_ALLOC;
+		}
+
+		auto ret = vma_resize(vma, end, vma->vm_end);
+		if (ret != ERROR_SUCCESS)
+		{
+			return ret;
+		}
+
+		insert_vma_struct(mm, new_vma);
+
+		unmap_range(mm->pgdir, start, end);
+
+		return ERROR_SUCCESS;
+	}
+
+	list_head free_list{};
+	list_init(&free_list);
+
+	for (list_head* iter = &vma->vma_link; iter != (&mm->vma_list); iter = iter->next)
+	{
+		auto iter_vma = list_entry(iter, vma_struct, vma_link);
+
+		// vma list is sorted
+		if (iter_vma->vm_start >= end)
+		{
+			break;
+		}
+
+		remove_vma(mm, iter_vma);
+		list_add(&free_list, &(iter_vma->vma_link));
+	}
+
+	list_head* iter = nullptr;
+	list_for(iter, &free_list)
+	{
+		auto iter_vma = list_entry(iter, vma_struct, vma_link);
+		uintptr_t unmap_start = iter_vma->vm_start, unmap_end = iter_vma->vm_end;
+
+		if (iter_vma->vm_start < start)
+		{
+			unmap_start = start;
+			vma_resize(iter_vma, iter_vma->vm_start, start);
+			insert_vma_struct(mm, iter_vma);
+		}
+		else
+		{
+			if (end < iter_vma->vm_end)
+			{
+				unmap_end = end;
+				vma_resize(iter_vma, end, iter_vma->vm_end);
+				insert_vma_struct(mm, iter_vma);
+			}
+			else
+			{
+				vma_destroy(iter_vma);
+			}
+		}
+		unmap_range(mm->pgdir, unmap_start, unmap_end);
+	}
 
 	return ERROR_SUCCESS;
 }
