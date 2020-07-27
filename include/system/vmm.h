@@ -80,11 +80,17 @@ namespace vmm
 	mm_struct* mm_create(void);
 
 	error_code mm_map(IN mm_struct* mm, IN uintptr_t addr, IN size_t len, IN uint32_t vm_flags,
-			OPTIONAL OUT vma_struct** vma_store);
+		OPTIONAL OUT vma_struct** vma_store);
 
 	error_code mm_unmap(IN mm_struct* mm, IN uintptr_t addr, IN size_t len);
 
 	error_code mm_duplicate(IN mm_struct* to, IN const mm_struct* from);
+
+	error_code mm_change_size(IN mm_struct* mm, uintptr_t addr, size_t len);
+
+	vma_struct* mm_intersect_vma(IN mm_struct* mm, uintptr_t start, uintptr_t end);
+
+	bool valid_user_space(IN mm_struct* mm, uintptr_t addr, size_t len, bool writable);
 
 	void mm_destroy(mm_struct* mm);
 
@@ -98,7 +104,6 @@ namespace vmm
 // When called by pmm, first map [0,2GiB] to [KERNEL_VIRTUALBASE,KERNEL_VIRTUALEND]
 // and then map all the memories to PHYREMAP_VIRTUALBASE
 	void boot_map_kernel_mem(void);
-
 
 // install GDT
 	void install_gdt(void);

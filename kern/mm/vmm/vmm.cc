@@ -308,3 +308,24 @@ void vmm::mm_free(mm_struct* mm)
 
 	spinlock_release(&mm->lock);
 }
+
+vma_struct* vmm::mm_intersect_vma(mm_struct* mm, uintptr_t start, uintptr_t end)
+{
+	auto vma = find_vma(mm, start);
+	if (vma != nullptr && end <= vma->vm_start)
+	{
+		return nullptr;
+	}
+	return vma;
+}
+
+bool vmm::valid_user_space(IN mm_struct* mm, uintptr_t addr, size_t len, bool writable)
+{
+	//TODO
+	return true;
+}
+
+error_code vmm::mm_change_size(IN mm_struct* mm, uintptr_t addr, size_t len)
+{
+	return ERROR_SUCCESS;
+}

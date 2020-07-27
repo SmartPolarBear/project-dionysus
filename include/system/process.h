@@ -64,7 +64,7 @@ namespace process
 		process_id parent_id;
 
 		size_t runs;
-		
+
 		uintptr_t kstack;
 
 		vmm::mm_struct* mm;
@@ -139,6 +139,9 @@ namespace process
 	// send and receive message
 	error_code process_ipc_send(process_id pid, IN const void* message, size_t size);
 	error_code process_ipc_receive(OUT void* message_out);
+
+	// allocate more memory
+	error_code process_heap_change_size(IN process_dispatcher* proc, IN OUT uintptr_t* heap_ptr);
 
 } // namespace process
 

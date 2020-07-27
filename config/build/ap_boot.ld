@@ -1,6 +1,3 @@
-/* Simple linker script for the JOS kernel.
-   See the GNU ld 'info' manual ("info ld") to learn the syntax. */
-
 OUTPUT_FORMAT("elf64-x86-64", "elf64-x86-64", "elf64-x86-64")
 OUTPUT_ARCH(i386:x86-64)
 ENTRY(start)

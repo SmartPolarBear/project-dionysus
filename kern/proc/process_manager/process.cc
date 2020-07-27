@@ -56,6 +56,7 @@ using lock::spinlock_holding;
 using process::process_dispatcher;
 
 using namespace memory;
+using namespace vmm;
 
 CLSItem<process_dispatcher*, CLS_PROC_STRUCT_PTR> current;
 
@@ -238,6 +239,11 @@ error_code process::process_load_binary(IN process_dispatcher* proc,
 	{
 		proc->tf->rip = entry_addr;
 
+		vmm::mm_map(proc->mm,
+			USER_TOP - process::process_dispatcher::KERNSTACK_SIZE,
+			process::process_dispatcher::KERNSTACK_PAGES * PAGE_SIZE,
+			vmm::VM_STACK, nullptr);
+
 		// allocate an stack
 		for (size_t i = 0;
 			 i < process::process_dispatcher::KERNSTACK_PAGES;
@@ -245,7 +251,13 @@ error_code process::process_load_binary(IN process_dispatcher* proc,
 		{
 			uintptr_t va = USER_TOP - process::process_dispatcher::KERNSTACK_SIZE + i * PAGE_SIZE;
 			page_info* page_ret = nullptr;
-			auto ret = pmm::pgdir_alloc_page(proc->mm->pgdir, true, va, PG_W | PG_U | PG_PS | PG_P, &page_ret);
+
+			auto ret = pmm::pgdir_alloc_page(proc->mm->pgdir,
+				true,
+				va,
+				PG_W | PG_U | PG_PS | PG_P,
+				&page_ret);
+
 			if (ret != ERROR_SUCCESS)
 			{
 				return -ERROR_MEMORY_ALLOC;
@@ -395,7 +407,7 @@ error_code process::process_ipc_send(process_id pid, IN const void* message, siz
 
 	target->messaging_data.data_size = size;
 
-	process_wakeup((size_t)&target->messaging_data);
+	process_wakeup((size_t) & target->messaging_data);
 
 	spinlock_release(&target->messaging_data.lock);
 
@@ -408,7 +420,7 @@ error_code process::process_ipc_receive(OUT void* message_out)
 
 	while (current->messaging_data.data == nullptr)
 	{
-		process_sleep((size_t)&current->messaging_data, &current->messaging_data.lock);
+		process_sleep((size_t) & current->messaging_data, &current->messaging_data.lock);
 	}
 
 	memmove(message_out, current->messaging_data.data, current->messaging_data.data_size);
@@ -425,4 +437,74 @@ error_code process::process_ipc_receive(OUT void* message_out)
 
 	return ERROR_SUCCESS;
 }
+
+error_code process::process_heap_change_size(IN process_dispatcher* proc, IN OUT uintptr_t* heap_ptr)
+{
+	if (heap_ptr == nullptr)
+	{
+		return -ERROR_INVALID_ARG;
+	}
+
+	auto mm = proc->mm;
+
+	if (mm == nullptr)
+	{
+		return -ERROR_INVALID_ARG;
+	}
+
+	if (!valid_user_space(mm, (uintptr_t)heap_ptr, sizeof(uintptr_t), true))
+	{
+		return -ERROR_INVALID_ARG;
+	}
+
+	spinlock_acquire(&mm->lock);
+
+	uintptr_t heap = 0;
+	memmove(&heap, heap_ptr, sizeof(heap));
+
+	if (heap < mm->brk_start)
+	{
+		*heap_ptr = mm->brk_start;
+	}
+	else
+	{
+		uintptr_t new_heap = PAGE_ROUNDUP(heap), old_heap = mm->brk;
+
+		if ((old_heap % PAGE_SIZE) != 0)
+		{
+			return -ERROR_INVALID_DATA;
+		}
+
+		if (new_heap == old_heap)
+		{
+			*heap_ptr = mm->brk_start;
+		}
+		else if (new_heap < old_heap) // shrink
+		{
+			if (mm_unmap(mm, new_heap, old_heap - new_heap) != ERROR_SUCCESS)
+			{
+				*heap_ptr = mm->brk_start;
+			}
+		}
+		else if (new_heap > old_heap) // expand
+		{
+			if (mm_intersect_vma(mm, old_heap, new_heap + PAGE_SIZE) != nullptr)
+			{
+				*heap_ptr = mm->brk_start;
+			}
+			else
+			{
+				if (mm_change_size(mm, old_heap, (size_t)new_heap - old_heap) != ERROR_SUCCESS)
+				{
+					*heap_ptr = mm->brk_start;
+				}
+			}
+		}
+	}
+
+	spinlock_release(&mm->lock);
+
+	return ERROR_SUCCESS;
+}
+
 
