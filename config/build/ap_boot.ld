@@ -4,7 +4,7 @@ ENTRY(start)
 
 SECTIONS
 {
-	/* Link the kernel at this address: "." means the current address */
+	/* Link the kernel at this address: "." means the curproc address */
         /* Must be equal to KERNLINK */
 	. = 0x7000; 
 

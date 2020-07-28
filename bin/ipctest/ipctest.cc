@@ -1,7 +1,7 @@
 #include "io.hpp"
 #include "process.hpp"
 
-int main(int argc, const char** argv)
+int main()
 {
 
 	for (int i = 1; i < 1024; i++)

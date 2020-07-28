@@ -9,6 +9,7 @@
 #include "system/messaging.hpp"
 
 extern "C" error_code app_terminate(error_code e);
+extern "C" error_code app_set_heap(uintptr_t* size);
 
 extern "C" error_code ipc_send(process_id pid, IN const void* msg, size_t size);
 extern "C" error_code ipc_receive(OUT void* msg);

@@ -10,7 +10,7 @@ mboot_load_addr = 0x00100000;
 
 SECTIONS
 {
-	/* Link the kernel at this address: "." means the current address */
+	/* Link the kernel at this address: "." means the curproc address */
         /* Must be equal to KERNLINK */
 	. = 0xFFFFFFFF80100000; 
 

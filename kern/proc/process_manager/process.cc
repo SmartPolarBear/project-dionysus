@@ -58,7 +58,7 @@ using process::process_dispatcher;
 using namespace memory;
 using namespace vmm;
 
-CLSItem<process_dispatcher*, CLS_PROC_STRUCT_PTR> current;
+CLSItem<process_dispatcher*, CLS_PROC_STRUCT_PTR> cur_proc;
 
 process_list_struct proc_list;
 
@@ -155,7 +155,7 @@ error_code process::create_process(IN const char* name,
 		return -ERROR_TOO_MANY_PROC;
 	}
 
-	auto proc = new process_dispatcher(name, alloc_pid(), current == nullptr ? 0 : current->id, flags);
+	auto proc = new process_dispatcher(name, alloc_pid(), cur_proc == nullptr ? 0 : cur_proc->id, flags);
 
 	//setup kernel stack
 	proc->kstack = (uintptr_t)new BLOCK<process::process_dispatcher::KERNSTACK_SIZE>;
@@ -275,7 +275,7 @@ error_code process::process_terminate(error_code err)
 	// it in fact won't return, so swap gs first
 	safe_swap_gs();
 
-	return process_terminal_impl(current(), err);
+	return process_terminal_impl(cur_proc(), err);
 }
 
 void process::process_exit(IN process_dispatcher* proc)
@@ -322,7 +322,7 @@ void process::process_exit(IN process_dispatcher* proc)
 // let current process sleep on certain channel
 error_code process::process_sleep(size_t channel, lock::spinlock* lock)
 {
-	if (current == nullptr)
+	if (cur_proc == nullptr)
 	{
 		return -ERROR_INVALID_DATA;
 	}
@@ -339,12 +339,12 @@ error_code process::process_sleep(size_t channel, lock::spinlock* lock)
 		spinlock_release(lock);
 	}
 
-	current->sleep_data.channel = channel;
-	current->state = PROC_STATE_SLEEPING;
+	cur_proc->sleep_data.channel = channel;
+	cur_proc->state = PROC_STATE_SLEEPING;
 
 	scheduler::scheduler_enter();
 
-	current->sleep_data.channel = 0;
+	cur_proc->sleep_data.channel = 0;
 
 	// restore the lock
 	if (lock != &proc_list.lock)
@@ -416,24 +416,24 @@ error_code process::process_ipc_send(process_id pid, IN const void* message, siz
 
 error_code process::process_ipc_receive(OUT void* message_out)
 {
-	spinlock_acquire(&current->messaging_data.lock);
+	spinlock_acquire(&cur_proc->messaging_data.lock);
 
-	while (current->messaging_data.data == nullptr)
+	while (cur_proc->messaging_data.data == nullptr)
 	{
-		process_sleep((size_t) & current->messaging_data, &current->messaging_data.lock);
+		process_sleep((size_t) & cur_proc->messaging_data, &cur_proc->messaging_data.lock);
 	}
 
-	memmove(message_out, current->messaging_data.data, current->messaging_data.data_size);
+	memmove(message_out, cur_proc->messaging_data.data, cur_proc->messaging_data.data_size);
 
-	if (((uintptr_t)current->messaging_data.data) != (uintptr_t)(current->messaging_data.internal_buf))
+	if (((uintptr_t)cur_proc->messaging_data.data) != (uintptr_t)(cur_proc->messaging_data.internal_buf))
 	{
-		kfree(current->messaging_data.data);
+		kfree(cur_proc->messaging_data.data);
 	}
 
-	current->messaging_data.data = nullptr;
-	current->messaging_data.data_size = 0;
+	cur_proc->messaging_data.data = nullptr;
+	cur_proc->messaging_data.data_size = 0;
 
-	spinlock_release(&current->messaging_data.lock);
+	spinlock_release(&cur_proc->messaging_data.lock);
 
 	return ERROR_SUCCESS;
 }

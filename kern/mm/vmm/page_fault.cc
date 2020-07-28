@@ -104,9 +104,9 @@ static inline error_code page_fault_impl(mm_struct* mm, size_t err, uintptr_t ad
 error_code handle_pgfault([[maybe_unused]] trap::trap_frame info)
 {
 	uintptr_t addr = rcr2();
-	mm_struct* mm = current != nullptr ? current->mm : nullptr;
+	mm_struct* mm = cur_proc != nullptr ? cur_proc->mm : nullptr;
 
-	KDEBUG_ASSERT(current != nullptr && current->mm != nullptr);
+	KDEBUG_ASSERT(cur_proc != nullptr && cur_proc->mm != nullptr);
 
 	// The address belongs to the kernel.
 	if (mm == nullptr)

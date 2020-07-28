@@ -80,7 +80,7 @@ error_code trap_handle_tick([[maybe_unused]] trap::trap_frame info)
 
 		local_apic::write_eoi();
 
-		if (current != nullptr && current->state == process::PROC_STATE_RUNNING)
+		if (cur_proc != nullptr && cur_proc->state == process::PROC_STATE_RUNNING)
 		{
 			scheduler::scheduler_yield();
 		}

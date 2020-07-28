@@ -146,4 +146,4 @@ namespace process
 } // namespace process
 
 //extern __thread process::process_dispatcher* current;
-extern CLSItem<process::process_dispatcher*, CLS_PROC_STRUCT_PTR> current;
+extern CLSItem<process::process_dispatcher*, CLS_PROC_STRUCT_PTR> cur_proc;

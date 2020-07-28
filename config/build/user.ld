@@ -3,7 +3,7 @@ OUTPUT_ARCH(i386:x86-64)
 ENTRY(_start)
 
 SECTIONS {
-    /* Load programs at this address: "." means the current address */
+    /* Load programs at this address: "." means the curproc address */
     . = 0x0000000001000000;
 
     .text 0x0000000010000000 : {

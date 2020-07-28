@@ -1,7 +1,7 @@
 #include "io.hpp"
 #include "process.hpp"
 
-int main(int argc, const char** argv)
+int main()
 {
 	AddMessage add;
 	ipc_receive(&add);

@@ -18,5 +18,6 @@ DEF_SYSCALL_HANDLE(sys_put_char);
 DEF_SYSCALL_HANDLE(sys_exit);
 DEF_SYSCALL_HANDLE(sys_send);
 DEF_SYSCALL_HANDLE(sys_receive);
+DEF_SYSCALL_HANDLE(sys_set_heap);
 
 #undef DEF_SYSCALL_HANDLE

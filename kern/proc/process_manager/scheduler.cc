@@ -49,30 +49,30 @@ using lock::spinlock_holding;
 
 				trap::pushcli();
 
-				current = iter_proc;
+				cur_proc = iter_proc;
 
-				current->state = process::PROC_STATE_RUNNING;
-				current->runs++;
+				cur_proc->state = process::PROC_STATE_RUNNING;
+				cur_proc->runs++;
 
-				KDEBUG_ASSERT(current != nullptr);
-				KDEBUG_ASSERT(current->mm != nullptr);
+				KDEBUG_ASSERT(cur_proc != nullptr);
+				KDEBUG_ASSERT(cur_proc->mm != nullptr);
 
-				lcr3(V2P((uintptr_t)current->mm->pgdir));
+				lcr3(V2P((uintptr_t)cur_proc->mm->pgdir));
 
-				cpu()->tss.rsp0 = current->kstack + process::process_dispatcher::KERNSTACK_SIZE;
+				cpu()->tss.rsp0 = cur_proc->kstack + process::process_dispatcher::KERNSTACK_SIZE;
 
 				swap_gs();
-				gs_put(KERNEL_GS_KSTACK, (void*)current->kstack);
+				gs_put(KERNEL_GS_KSTACK, (void*)cur_proc->kstack);
 				swap_gs();
 
 				uintptr_t* kstack_gs = (uintptr_t*)(((uint8_t*)cpu->kernel_gs) + KERNEL_GS_KSTACK);
-				*kstack_gs = current->kstack;
+				*kstack_gs = cur_proc->kstack;
 
 				trap::popcli();
 
-				context_switch(&cpu->scheduler, current->context);
+				context_switch(&cpu->scheduler, cur_proc->context);
 
-				current = nullptr;
+				cur_proc = nullptr;
 			}
 
 			// In scheduler, we check if there's process to be killed
@@ -107,7 +107,7 @@ void scheduler::scheduler_enter()
 		KDEBUG_GENERALPANIC("scheduler_enter should validly hold proc_list.lock");
 	}
 
-	if (current->state == process::PROC_STATE_RUNNING)
+	if (cur_proc->state == process::PROC_STATE_RUNNING)
 	{
 		KDEBUG_GENERALPANIC("scheduler_enter should have current proc not running");
 	}
@@ -119,7 +119,7 @@ void scheduler::scheduler_enter()
 
 	auto intr_enable = cpu->intr_enable;
 
-	context_switch(&current->context, cpu->scheduler);
+	context_switch(&cur_proc->context, cpu->scheduler);
 	cpu->intr_enable = intr_enable;
 }
 
@@ -127,7 +127,7 @@ void scheduler::scheduler_yield()
 {
 	spinlock_acquire(&proc_list.lock);
 
-	current->state = process::PROC_STATE_RUNNABLE;
+	cur_proc->state = process::PROC_STATE_RUNNABLE;
 
 	scheduler_enter();
 

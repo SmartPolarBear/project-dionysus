@@ -246,7 +246,7 @@ error_code vmm::mm_duplicate(IN mm_struct* to, IN const mm_struct* from)
 		}
 
 		insert_vma_struct(to, new_vma);
-		
+
 		copy_range(from->pgdir, to->pgdir, vma->vm_start, vma->vm_end);
 	}
 

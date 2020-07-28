@@ -17,7 +17,7 @@ error_code sys_hello(const syscall_regs* regs)
 {
 
 	write_format("[pid %d]hello ! %lld %lld %lld %lld\n",
-		current->id,
+		cur_proc->id,
 		get_nth_arg(regs, 0),
 		get_nth_arg(regs, 1),
 		get_nth_arg(regs, 2),

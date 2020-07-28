@@ -179,11 +179,11 @@ extern "C" void trap_body(trap::trap_frame info)
 	local_apic::write_eoi();
 
 	// If in the user space, directly kill it
-	if (current() != nullptr
-		&& (current->flags & process::PROC_EXITING)
+	if (cur_proc() != nullptr
+		&& (cur_proc->flags & process::PROC_EXITING)
 		&& ((info.cs & 0b11) == DPL_USER))
 	{
-		process::process_exit(current());
+		process::process_exit(cur_proc());
 	}
 
 	if (error != ERROR_SUCCESS)

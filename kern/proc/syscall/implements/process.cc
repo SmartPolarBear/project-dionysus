@@ -20,6 +20,11 @@ error_code sys_exit(const syscall_regs* regs)
 	return process::process_terminate((error_code)get_nth_arg(regs, 0));
 }
 
+error_code sys_set_heap(const syscall_regs* regs)
+{
+	return process::process_heap_change_size(cur_proc(), (uintptr_t*)get_nth_arg(regs, 0));
+}
+
 error_code sys_send(const syscall_regs* regs)
 {
 	return process::process_ipc_send((process_id)get_nth_arg(regs, 0),

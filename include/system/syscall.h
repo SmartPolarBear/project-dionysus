@@ -21,6 +21,7 @@ namespace syscall
 		SYS_put_char,
 		SYS_send,
 		SYS_receive,
+		SYS_set_heap
 	};
 
 	struct syscall_regs
