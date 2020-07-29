@@ -1,5 +1,4 @@
-#include "system/types.h"
-#include "process.hpp"
+#include "dionysus.hpp"
 
 // Memory allocator by Kernighan and Ritchie,
 // The C programming Language, 2nd ed.  Section 8.7.
