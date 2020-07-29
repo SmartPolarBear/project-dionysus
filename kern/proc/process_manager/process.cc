@@ -407,7 +407,7 @@ error_code process::process_ipc_send(process_id pid, IN const void* message, siz
 
 	target->messaging_data.data_size = size;
 
-	process_wakeup((size_t) & target->messaging_data);
+	process_wakeup((size_t)&target->messaging_data);
 
 	spinlock_release(&target->messaging_data.lock);
 
@@ -420,7 +420,7 @@ error_code process::process_ipc_receive(OUT void* message_out)
 
 	while (cur_proc->messaging_data.data == nullptr)
 	{
-		process_sleep((size_t) & cur_proc->messaging_data, &cur_proc->messaging_data.lock);
+		process_sleep((size_t)&cur_proc->messaging_data, &cur_proc->messaging_data.lock);
 	}
 
 	memmove(message_out, cur_proc->messaging_data.data, cur_proc->messaging_data.data_size);
@@ -440,11 +440,6 @@ error_code process::process_ipc_receive(OUT void* message_out)
 
 error_code process::process_heap_change_size(IN process_dispatcher* proc, IN OUT uintptr_t* heap_ptr)
 {
-	if (heap_ptr == nullptr)
-	{
-		return -ERROR_INVALID_ARG;
-	}
-
 	auto mm = proc->mm;
 
 	if (mm == nullptr)

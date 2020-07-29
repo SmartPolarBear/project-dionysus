@@ -8,8 +8,11 @@
 #include "system/error.h"
 #include "system/messaging.hpp"
 
-extern "C" error_code app_terminate(error_code e);
-extern "C" error_code app_set_heap(uintptr_t* size);
+extern "C" error_code terminate(error_code e);
+extern "C" error_code set_heap(uintptr_t* size);
+
+void heap_free(void* ap);
+void* heap_alloc(size_t size, [[maybe_unused]]uint64_t flags);
 
 extern "C" error_code ipc_send(process_id pid, IN const void* msg, size_t size);
 extern "C" error_code ipc_receive(OUT void* msg);

@@ -9,12 +9,12 @@
 
 #include "system/messaging.hpp"
 
-extern "C" error_code app_terminate(error_code err)
+extern "C" error_code terminate(error_code e)
 {
-	return trigger_syscall(syscall::SYS_exit, 1, err);
+	return trigger_syscall(syscall::SYS_exit, 1, e);
 }
 
-extern "C" error_code app_set_heap(uintptr_t* size)
+extern "C" error_code set_heap(uintptr_t* size)
 {
 	return trigger_syscall(syscall::SYS_set_heap, 1, size);
 }

@@ -5,6 +5,7 @@ add_library(libuser STATIC uentry.S uentry_main.cc)
 add_subdirectory(syscall)
 add_subdirectory(io)
 add_subdirectory(math)
+add_subdirectory(memory)
 
 set_property(SOURCE uentry.S PROPERTY LANGUAGE C)
 
