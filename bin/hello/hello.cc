@@ -2,11 +2,23 @@
 
 int main()
 {
-	AddMessage add;
-	ipc_receive(&add);
+	for (;;)
+	{
+//		AddMessage add;
+//		ipc_receive(&add);
+//
+//		AddRetMessage ret;
+//		ret.ret = add.a + add.b;
+//		ipc_send(0, &ret, sizeof(ret));
 
-	AddRetMessage ret;
-	ret.ret = add.a + add.b;
-	ipc_send(0, &ret, sizeof(ret));
+		AddMessage* add = new AddMessage{};
+		ipc_receive(add);
+
+		AddRetMessage* ret = new AddRetMessage{ .ret=add->a + add->b };
+		ipc_send(0, &ret, sizeof(ret));
+
+		delete add;
+		delete ret;
+	}
 	return 0;
 }

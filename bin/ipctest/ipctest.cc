@@ -24,8 +24,6 @@ int main()
 			{
 				put_str("no\n");
 			}
-
-			return 0;
 		}
 	}
 	return 0;
