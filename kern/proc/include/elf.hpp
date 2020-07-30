@@ -22,7 +22,7 @@ struct elfhdr
     uint16_t shentsize;
     uint16_t shnum;
     uint16_t shstrndx;
-};
+}__attribute__((__packed__));
 
 struct proghdr
 {
@@ -34,7 +34,7 @@ struct proghdr
     uint64_t filesz;
     uint64_t memsz;
     uint64_t align;
-};
+}__attribute__((__packed__));
 
 // Values for Proghdr type
 enum prog_header_types

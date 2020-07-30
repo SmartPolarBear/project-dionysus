@@ -14,7 +14,7 @@ static_assert(sizeof(Header) % sizeof(uint64_t) == 0);
 static Header base;
 static Header* freep;
 
-static inline Header* HeapExpand(size_t nu)
+static inline Header* heap_expand(size_t nu)
 {
 	uintptr_t heap_ptr = 0;
 
@@ -44,6 +44,7 @@ void heap_free(void* ap)
 	for (p = freep; !(bp > p && bp < p->ptr); p = p->ptr)
 		if (p >= p->ptr && (bp > p || bp < p->ptr))
 			break;
+
 	if (bp + bp->size == p->ptr)
 	{
 		bp->size += p->ptr->size;
@@ -73,6 +74,7 @@ void* heap_alloc(size_t size, [[maybe_unused]]uint64_t flags)
 		base.size = 0;
 	}
 
+
 	for (auto p = prevp->ptr;; prevp = p, p = p->ptr)
 	{
 		if (p->size >= nunits)
@@ -89,7 +91,12 @@ void* heap_alloc(size_t size, [[maybe_unused]]uint64_t flags)
 			return (void*)(p + 1);
 		}
 		if (p == freep)
-			if ((p = HeapExpand(nunits)) == nullptr)
+		{
+			put_str("expand heap\n");
+			if ((p = heap_expand(nunits)) == nullptr)
+			{
 				return nullptr;
+			}
+		}
 	}
 }
