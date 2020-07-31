@@ -179,4 +179,22 @@ namespace executable
 		SHF_MASKOS = 0x0F000000, //Environment-specific use
 		SHF_MASKPROC = 0xF0000000,//Processor-specific use
 	};
+
+	enum Elf_Program_Header_Types
+	{
+		PT_NULL = 0,// Unused entry
+		PT_LOAD = 1,// Loadable segment
+		PT_DYNAMIC = 2,// Dynamic linking tables
+		PT_INTERP = 3,// Program interpreter path name
+		PT_NOTE = 4 //Note sections
+	};
+
+	enum Elf_Pogram_Header_Attributes
+	{
+		PF_X = 0x1,//Execute permission
+		PF_W = 0x2,//Write permission
+		PF_R = 0x4,//Read permission
+		PF_MASKOS = 0x00FF0000,//These flag bits are reserved for environment-specific use
+		PF_MASKPROC = 0xFF000000,//These flag bits are reserved for processor-specific use
+	};
 }

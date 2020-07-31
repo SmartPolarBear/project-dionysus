@@ -1,5 +1,7 @@
-#include "elf.hpp"
+#include "elf/elf.hpp"
 #include "system/error.h"
+
+#include <cstring>
 
 using namespace executable;
 
@@ -20,56 +22,83 @@ error_code elf_executable::parse(binary _bin)
 
 	m_valid = true;
 
+	prog_headers = (Elf64_Phdr*)(bin.data + elf_header->e_phoff);
+	section_headers = (Elf64_Shdr*)(bin.data + elf_header->e_shoff);
+
 	return ERROR_SUCCESS;
 }
 
-error_code elf_executable::get_elf_header(OUT Elf64_Ehdr* out)
+uint8_t* elf_executable::get_data() const
+{
+	return bin.data;
+}
+
+error_code elf_executable::get_elf_header(OUT Elf64_Ehdr** out) const
 {
 	if (!m_valid)
 	{
 		return -ERROR_INVALID_DATA;
 	}
 
-	if (out == nullptr)
+	if (*out == nullptr)
 	{
-		return -ERROR_INVALID_ARG;
+		*out = elf_header;
+	}
+	else
+	{
+		**out = *elf_header;
 	}
 
-	out = elf_header;
 	return ERROR_SUCCESS;
 }
 
-error_code elf_executable::get_program_headers(OUT Elf64_Phdr* out, OUT size_t* count)
+error_code elf_executable::get_program_headers(OUT Elf64_Phdr** out, OUT size_t* count) const
 {
 	if (!m_valid)
 	{
 		return -ERROR_INVALID_DATA;
 	}
 
-	if (out == nullptr || count == nullptr)
+	if (count == nullptr)
 	{
 		return -ERROR_INVALID_ARG;
 	}
 
-	*out = *prog_headers;
+	if (*out == nullptr)
+	{
+		*out = prog_headers;
+	}
+	else
+	{
+		memmove(*out, prog_headers, elf_header->e_phnum);
+	}
+
 	*count = elf_header->e_phnum;
 
 	return ERROR_SUCCESS;
 }
 
-error_code elf_executable::get_section_headers(OUT Elf64_Shdr* out, OUT size_t* count)
+error_code elf_executable::get_section_headers(OUT Elf64_Shdr** out, OUT size_t* count) const
 {
 	if (!m_valid)
 	{
 		return -ERROR_INVALID_DATA;
 	}
 
-	if (out == nullptr || count == nullptr)
+	if (count == nullptr)
 	{
 		return -ERROR_INVALID_ARG;
 	}
 
-	*out = *section_headers;
+	if (*out == nullptr)
+	{
+		*out = section_headers;
+	}
+	else
+	{
+		memmove(*out, section_headers, elf_header->e_shnum);
+	}
+
 	*count = elf_header->e_shnum;
 
 	return ERROR_SUCCESS;

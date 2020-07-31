@@ -21,7 +21,7 @@
  */
 
 #include "process.hpp"
-#include "elf.hpp"
+#include "load_code.hpp"
 #include "syscall.h"
 
 #include "arch/amd64/cpu.h"
@@ -73,6 +73,40 @@ static inline void new_proc_begin()
 static inline process_id alloc_pid(void)
 {
 	return proc_list.proc_count++;
+}
+
+static inline error_code alloc_ustack(process::process_dispatcher* proc)
+{
+	auto ret = vmm::mm_map(proc->mm,
+		USER_TOP - process::process_dispatcher::KERNSTACK_SIZE - 1,
+		process::process_dispatcher::KERNSTACK_PAGES * PAGE_SIZE,
+		vmm::VM_STACK, nullptr);
+	if (ret != ERROR_SUCCESS)
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
+
+	// allocate an stack
+	for (size_t i = 0;
+		 i < process::process_dispatcher::KERNSTACK_PAGES;
+		 i++)
+	{
+		uintptr_t va = USER_TOP - process::process_dispatcher::KERNSTACK_SIZE + i * PAGE_SIZE;
+		page_info* page_ret = nullptr;
+
+		ret = pmm::pgdir_alloc_page(proc->mm->pgdir,
+			true,
+			va,
+			PG_W | PG_U | PG_PS | PG_P,
+			&page_ret);
+
+		if (ret != ERROR_SUCCESS)
+		{
+			return -ERROR_MEMORY_ALLOC;
+		}
+	}
+
+	return ERROR_SUCCESS;
 }
 
 static inline error_code setup_mm(process::process_dispatcher* proc)
@@ -227,8 +261,7 @@ error_code process::process_load_binary(IN process_dispatcher* proc,
 	uintptr_t entry_addr = 0;
 	if (type == BINARY_ELF)
 	{
-
-		ret = elf_load_binary(proc, bin, &entry_addr);
+		ret = load_binary(proc, bin, binary_size, &entry_addr);
 	}
 	else
 	{
@@ -237,34 +270,18 @@ error_code process::process_load_binary(IN process_dispatcher* proc,
 
 	if (ret == ERROR_SUCCESS)
 	{
-		proc->tf->rip = entry_addr;
+		ret = alloc_ustack(proc);
 
-		vmm::mm_map(proc->mm,
-			USER_TOP - process::process_dispatcher::KERNSTACK_SIZE,
-			process::process_dispatcher::KERNSTACK_PAGES * PAGE_SIZE,
-			vmm::VM_STACK, nullptr);
-
-		// allocate an stack
-		for (size_t i = 0;
-			 i < process::process_dispatcher::KERNSTACK_PAGES;
-			 i++)
+		if (ret == ERROR_SUCCESS)
 		{
-			uintptr_t va = USER_TOP - process::process_dispatcher::KERNSTACK_SIZE + i * PAGE_SIZE;
-			page_info* page_ret = nullptr;
+			proc->tf->rip = entry_addr;
 
-			auto ret = pmm::pgdir_alloc_page(proc->mm->pgdir,
-				true,
-				va,
-				PG_W | PG_U | PG_PS | PG_P,
-				&page_ret);
-
-			if (ret != ERROR_SUCCESS)
-			{
-				return -ERROR_MEMORY_ALLOC;
-			}
+			proc->state = PROC_STATE_RUNNABLE;
 		}
-
-		proc->state = PROC_STATE_RUNNABLE;
+		else
+		{
+			return ret;
+		}
 	}
 
 	return ret;
@@ -447,10 +464,10 @@ error_code process::process_heap_change_size(IN process_dispatcher* proc, IN OUT
 		return -ERROR_INVALID_ARG;
 	}
 
-	if (!check_user_memory(mm, (uintptr_t)heap_ptr, sizeof(uintptr_t), true))
-	{
-		return -ERROR_INVALID_ARG;
-	}
+//	if (!check_user_memory(mm, (uintptr_t)heap_ptr, sizeof(uintptr_t), true))
+//	{
+//		return -ERROR_INVALID_ARG;
+//	}
 
 	spinlock_acquire(&mm->lock);
 

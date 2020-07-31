@@ -5,6 +5,17 @@ add_library(executable STATIC elf.cc)
 target_include_directories(executable PUBLIC "include")
 target_include_directories(executable PRIVATE "${CMAKE_SOURCE_DIR}/include")
 
+target_include_directories(executable BEFORE
+        PRIVATE "${CMAKE_BINARY_DIR}/external/third_party_root/include/sys"
+        PRIVATE "${CMAKE_BINARY_DIR}/external/third_party_root/include"
+        PRIVATE "${CMAKE_BINARY_DIR}/external/third_party_root/include/c++/v1")
+
+add_dependencies(executable libcxx_build libcxxabi_build newlib_build)
+
+target_link_directories(executable INTERFACE ${CMAKE_BINARY_DIR}/external/third_party_root/lib)
+
+target_link_libraries(executable c g m c++ c++abi c++experimental)
+
 target_compile_options(executable BEFORE
         PRIVATE -g
         PRIVATE --target=x86_64-pc-linux-elf

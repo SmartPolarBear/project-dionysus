@@ -92,7 +92,6 @@ void* heap_alloc(size_t size, [[maybe_unused]]uint64_t flags)
 		}
 		if (p == freep)
 		{
-			put_str("expand heap\n");
 			if ((p = heap_expand(nunits)) == nullptr)
 			{
 				return nullptr;

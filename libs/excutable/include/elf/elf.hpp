@@ -9,7 +9,7 @@ namespace executable
 	struct binary
 	{
 		size_t size;
-		void* data;
+		uint8_t* data;
 	};
 
 	class elf_executable
@@ -32,10 +32,12 @@ namespace executable
 
 		error_code parse(binary bin);
 
-		error_code get_elf_header(OUT Elf64_Ehdr* out);
+		uint8_t* get_data() const;
 
-		error_code get_program_headers(OUT Elf64_Phdr* out, OUT size_t *count);
+		error_code get_elf_header(OUT Elf64_Ehdr** out) const;
 
-		error_code get_section_headers(OUT Elf64_Shdr* out, OUT size_t *count);
+		error_code get_program_headers(OUT Elf64_Phdr** out, OUT size_t* count) const;
+
+		error_code get_section_headers(OUT Elf64_Shdr** out, OUT size_t* count) const;
 	};
 }

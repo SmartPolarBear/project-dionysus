@@ -95,6 +95,9 @@ error_code vmm::mm_map(IN mm_struct* mm, IN uintptr_t addr, IN size_t len, IN ui
 	spinlock_acquire(&mm->lock);
 
 	uintptr_t start = rounddown(addr, PAGE_SIZE), end = roundup(addr + len, PAGE_SIZE);
+
+	end = std::min(end, USER_TOP);
+
 	if (!VALID_USER_REGION(start, end))
 	{
 		spinlock_release(&mm->lock);
