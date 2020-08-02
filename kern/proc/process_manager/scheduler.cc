@@ -14,8 +14,8 @@
 #include "drivers/apic/traps.h"
 #include "drivers/lock/spinlock.h"
 
-#include "libraries/libkernel/data/List.h"
-#include "libraries/libkernel/console/builtin_console.hpp"
+#include "libkernel/data/List.h"
+#include "libkernel/console/builtin_console.hpp"
 
 using libkernel::list_add;
 using libkernel::list_empty;

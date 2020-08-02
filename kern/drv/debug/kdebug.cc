@@ -28,7 +28,7 @@
 #include "system/memlayout.h"
 #include "system/types.h"
 
-#include "libraries/libkernel/console/builtin_console.hpp"
+#include "libkernel/console/builtin_console.hpp"
 
 #include <utility>
 

@@ -37,7 +37,7 @@
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 
-#include "libraries/libkernel/console/builtin_console.hpp"
+#include "libkernel/console/builtin_console.hpp"
 
 #include <algorithm>
 #include <utility>

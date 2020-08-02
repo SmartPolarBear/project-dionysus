@@ -1,10 +1,10 @@
-#include "libraries/libkernel/console/builtin_console.hpp"
+#include "libkernel/console/builtin_console.hpp"
 
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 #include "drivers/lock/spinlock.h"
 
-#include "libraries/libkernel/maths/maths.hpp"
+#include "libkernel/maths/maths.hpp"
 
 #include <cstring>
 

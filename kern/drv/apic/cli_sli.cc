@@ -12,7 +12,7 @@
 #include "system/segmentation.hpp"
 #include "system/vmm.h"
 
-#include "libraries/libkernel/console/builtin_console.hpp"
+#include "libkernel/console/builtin_console.hpp"
 #include <cstring>
 
 // only works after gdt installation

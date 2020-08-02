@@ -10,7 +10,7 @@
 #include "arch/amd64/msr.h"
 #include "arch/amd64/regs.h"
 
-#include "libraries/libkernel/console/builtin_console.hpp"
+#include "libkernel/console/builtin_console.hpp"
 
 using namespace syscall;
 using namespace trap;

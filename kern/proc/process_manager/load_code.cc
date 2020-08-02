@@ -9,8 +9,8 @@
 
 #include "elf/elf64_spec.hpp"
 
-#include "libraries/libkernel/console/builtin_console.hpp"
-#include "libraries/libkernel/data/List.h"
+#include "libkernel/console/builtin_console.hpp"
+#include "libkernel/data/List.h"
 
 #include <utility>
 

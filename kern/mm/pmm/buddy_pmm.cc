@@ -5,7 +5,7 @@
 
 #include "drivers/debug/kdebug.h"
 
-#include "libraries/libkernel/data/List.h"
+#include "libkernel/data/List.h"
 
 #include <cstring>
 

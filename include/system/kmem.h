@@ -4,7 +4,7 @@
 #include "system/error.h"
 #include "system/types.h"
 
-#include "libraries/libkernel/data/List.h"
+#include "libkernel/data/List.h"
 
 #include "drivers/lock/spinlock.h"
 
