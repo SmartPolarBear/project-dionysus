@@ -1,4 +1,4 @@
-#include "libkernel/console/builtin_console.hpp"
+#include "libkernel/console/builtin_text_io.hpp"
 
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"

@@ -39,7 +39,7 @@
 #include "system/types.h"
 #include "system/vmm.h"
 
-#include "libkernel/console/builtin_console.hpp"
+#include "libkernel/console/builtin_text_io.hpp"
 #include <cstring>
 
 // in boot.S

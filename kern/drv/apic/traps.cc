@@ -16,7 +16,7 @@
 #include "system/vmm.h"
 #include "system/process.h"
 
-#include "libkernel/console/builtin_console.hpp"
+#include "libkernel/console/builtin_text_io.hpp"
 #include <cstring>
 
 using trap::trap_handle;

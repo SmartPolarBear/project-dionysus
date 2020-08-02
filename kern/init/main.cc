@@ -43,7 +43,7 @@
 #include "system/syscall.h"
 #include "system/vmm.h"
 
-#include "libkernel/console/builtin_console.hpp"
+#include "libkernel/console/builtin_text_io.hpp"
 
 #include <cstring>
 

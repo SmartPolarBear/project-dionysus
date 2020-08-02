@@ -10,7 +10,7 @@
 #include "system/memlayout.h"
 #include "system/mmu.h"
 
-#include "libkernel/console/builtin_console.hpp"
+#include "libkernel/console/builtin_text_io.hpp"
 
 using trap::TRAP_IRQ0;
 

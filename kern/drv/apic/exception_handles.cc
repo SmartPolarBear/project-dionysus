@@ -15,7 +15,7 @@
 #include "system/segmentation.hpp"
 #include "system/vmm.h"
 
-#include "libkernel/console/builtin_console.hpp"
+#include "libkernel/console/builtin_text_io.hpp"
 #include <utility>
 
 using std::pair;

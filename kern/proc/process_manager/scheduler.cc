@@ -15,7 +15,7 @@
 #include "drivers/lock/spinlock.h"
 
 #include "data/List.h"
-#include "libkernel/console/builtin_console.hpp"
+#include "libkernel/console/builtin_text_io.hpp"
 
 using libkernel::list_add;
 using libkernel::list_empty;
