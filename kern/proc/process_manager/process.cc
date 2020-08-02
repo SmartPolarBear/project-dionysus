@@ -243,7 +243,7 @@ error_code process::process_load_binary(IN process_dispatcher* proc,
 	}
 	else
 	{
-		ret = -ERROR_INVALID_ADDR;
+		ret = -ERROR_INVALID;
 	}
 
 	if (ret == ERROR_SUCCESS)
@@ -319,12 +319,12 @@ error_code process::process_sleep(size_t channel, lock::spinlock* lock)
 {
 	if (cur_proc == nullptr)
 	{
-		return -ERROR_INVALID_DATA;
+		return -ERROR_INVALID;
 	}
 
 	if (lock == nullptr)
 	{
-		return -ERROR_INVALID_ARG;
+		return -ERROR_INVALID;
 	}
 
 	// we always only hold proc_list.lock no matter what the lock is
@@ -380,7 +380,7 @@ error_code process::process_ipc_send(process_id pid, IN const void* message, siz
 	auto target = find_process(pid);
 	if (target == nullptr)
 	{
-		return -ERROR_INVALID_ARG;
+		return -ERROR_INVALID;
 	}
 
 	spinlock_acquire(&target->messaging_data.lock);
@@ -439,12 +439,12 @@ error_code process::process_heap_change_size(IN process_dispatcher* proc, IN OUT
 
 	if (mm == nullptr)
 	{
-		return -ERROR_INVALID_ARG;
+		return -ERROR_INVALID;
 	}
 
 	if (!VALID_USER_REGION((uintptr_t)heap_ptr, ((uintptr_t)heap_ptr) + sizeof(uintptr_t)))
 	{
-		return -ERROR_INVALID_ARG;
+		return -ERROR_INVALID;
 	}
 
 	spinlock_acquire(&mm->lock);
@@ -462,7 +462,7 @@ error_code process::process_heap_change_size(IN process_dispatcher* proc, IN OUT
 
 		if ((old_heap % PAGE_SIZE) != 0)
 		{
-			return -ERROR_INVALID_DATA;
+			return -ERROR_INVALID;
 		}
 
 		if (new_heap == old_heap)

@@ -17,7 +17,7 @@ error_code elf_executable::parse(binary _bin)
 		elf_header->e_ident[EI_MAG3] != 'F')
 	{
 		m_valid = false;
-		return -ERROR_INVALID_DATA;
+		return -ERROR_INVALID;
 	}
 
 	m_valid = true;
@@ -37,7 +37,7 @@ error_code elf_executable::get_elf_header(OUT Elf64_Ehdr** out) const
 {
 	if (!m_valid)
 	{
-		return -ERROR_INVALID_DATA;
+		return -ERROR_INVALID;
 	}
 
 	if (*out == nullptr)
@@ -56,12 +56,12 @@ error_code elf_executable::get_program_headers(OUT Elf64_Phdr** out, OUT size_t*
 {
 	if (!m_valid)
 	{
-		return -ERROR_INVALID_DATA;
+		return -ERROR_INVALID;
 	}
 
 	if (count == nullptr)
 	{
-		return -ERROR_INVALID_ARG;
+		return -ERROR_INVALID;
 	}
 
 	if (*out == nullptr)
@@ -82,12 +82,12 @@ error_code elf_executable::get_section_headers(OUT Elf64_Shdr** out, OUT size_t*
 {
 	if (!m_valid)
 	{
-		return -ERROR_INVALID_DATA;
+		return -ERROR_INVALID;
 	}
 
 	if (count == nullptr)
 	{
-		return -ERROR_INVALID_ARG;
+		return -ERROR_INVALID;
 	}
 
 	if (*out == nullptr)

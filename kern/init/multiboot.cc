@@ -151,7 +151,7 @@ error_code multiboot::find_module_by_cmdline(IN const char* cmdline, OUT size_t*
 	size_t count = get_all_tags(MULTIBOOT_TAG_TYPE_MODULE, nullptr, 0);
 	if (!count)
 	{
-		return -ERROR_INVALID_DATA;
+		return -ERROR_INVALID;
 	}
 
 	count = get_all_tags(MULTIBOOT_TAG_TYPE_MODULE, buf, count);
@@ -168,7 +168,7 @@ error_code multiboot::find_module_by_cmdline(IN const char* cmdline, OUT size_t*
 
 	if (tag == nullptr)
 	{
-		return -ERROR_INVALID_ARG;
+		return -ERROR_INVALID;
 	}
 
 	// fill result variables

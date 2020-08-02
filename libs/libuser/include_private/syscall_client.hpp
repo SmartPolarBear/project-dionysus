@@ -19,7 +19,7 @@ __attribute__((always_inline)) static inline error_code trigger_syscall(uint64_t
     if (syscall_number >= syscall::SYSCALL_COUNT ||
         para_count > syscall::SYSCALL_PARAMETER_MAX)
     {
-        return -ERROR_INVALID_ARG;
+        return -ERROR_INVALID;
     }
 
     // copy out parameters in advance to avoid rewriting %rdx

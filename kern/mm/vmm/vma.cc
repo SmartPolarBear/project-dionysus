@@ -162,17 +162,17 @@ error_code vmm::vma_resize(vma_struct* vma, uintptr_t start, uintptr_t end)
 {
 	if ((start % PAGE_SIZE) != 0 || (end % PAGE_SIZE) != 0)
 	{
-		return -ERROR_INVALID_ARG;
+		return -ERROR_INVALID;
 	}
 
 	if (start >= end)
 	{
-		return -ERROR_INVALID_ARG;
+		return -ERROR_INVALID;
 	}
 
 	if (!(vma->vm_start <= start && end <= vma->vm_end))
 	{
-		return -ERROR_INVALID_ARG;
+		return -ERROR_INVALID;
 	}
 
 	vma->vm_start = start;

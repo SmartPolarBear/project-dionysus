@@ -89,7 +89,7 @@ error_code vmm::mm_map(IN mm_struct* mm, IN uintptr_t addr, IN size_t len, IN ui
 {
 	if (mm == nullptr)
 	{
-		return -ERROR_INVALID_ARG;
+		return -ERROR_INVALID;
 	}
 
 	spinlock_acquire(&mm->lock);
@@ -101,7 +101,7 @@ error_code vmm::mm_map(IN mm_struct* mm, IN uintptr_t addr, IN size_t len, IN ui
 	if (!VALID_USER_REGION(start, end))
 	{
 		spinlock_release(&mm->lock);
-		return -ERROR_INVALID_ADDR;
+		return -ERROR_INVALID;
 	}
 
 	error_code ret = ERROR_SUCCESS;
@@ -139,12 +139,12 @@ error_code vmm::mm_unmap(IN mm_struct* mm, IN uintptr_t addr, IN size_t len)
 	uintptr_t start = PAGE_ROUNDDOWN(addr), end = PAGE_ROUNDUP(addr + len);
 	if (!VALID_USER_REGION(start, end))
 	{
-		return -ERROR_INVALID_ARG;
+		return -ERROR_INVALID;
 	}
 
 	if (mm == nullptr)
 	{
-		return -ERROR_INVALID_ARG;
+		return -ERROR_INVALID;
 	}
 
 	auto vma = find_vma(mm, start);
@@ -233,7 +233,7 @@ error_code vmm::mm_duplicate(IN mm_struct* to, IN const mm_struct* from)
 {
 	if (to != nullptr && from != nullptr)
 	{
-		return -ERROR_INVALID_ARG;
+		return -ERROR_INVALID;
 	}
 
 	spinlock_acquire(&to->lock);
@@ -314,7 +314,7 @@ error_code vmm::mm_change_size(IN mm_struct* mm, uintptr_t addr, size_t len)
 	uintptr_t start = PAGE_ROUNDDOWN(addr), end = PAGE_ROUNDUP((addr + len));
 	if (!VALID_USER_REGION(start, end))
 	{
-		return -ERROR_INVALID_ARG;
+		return -ERROR_INVALID;
 	}
 
 	error_code ret = ERROR_SUCCESS;

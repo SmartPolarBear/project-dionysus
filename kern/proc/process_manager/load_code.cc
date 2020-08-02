@@ -192,5 +192,5 @@ error_code load_binary(IN process::process_dispatcher* proc,
 		return load_elf_binary(proc, elf);
 	}
 
-	return -ERROR_INVALID_DATA;
+	return -ERROR_INVALID;
 }

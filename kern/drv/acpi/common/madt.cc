@@ -43,12 +43,12 @@ size_t iso_count = 0;
     // KDEBUG_ASSERT(madt->header.length >= sizeof(*madt));
     if (madt == nullptr)
     {
-        return -ERROR_INVALID_ARG;
+        return -ERROR_INVALID;
     }
 
     if (madt->header.length < sizeof(*madt))
     {
-        return -ERROR_INVALID_DATA;
+        return -ERROR_INVALID;
     }
 
     local_apic::lapic = IO2V<decltype(local_apic::lapic)>((void *)static_cast<uintptr_t>(madt->lapic_addr_phys));
@@ -72,7 +72,7 @@ size_t iso_count = 0;
             // KDEBUG_ASSERT(sizeof(*lapic) == lapic->length);
             if (!(sizeof(*lapic) == lapic->length))
             {
-                return -ERROR_INVALID_DATA;
+                return -ERROR_INVALID;
             }
 
             if (!(lapic->flags & acpi::APIC_LAPIC_ENABLED))
@@ -93,7 +93,7 @@ size_t iso_count = 0;
             // KDEBUG_ASSERT(sizeof(*ioapic) == ioapic->length);
             if (!(sizeof(*ioapic) == ioapic->length))
             {
-                return -ERROR_INVALID_DATA;
+                return -ERROR_INVALID;
             }
 
             ioapics[ioapic_count] = madt_ioapic{*ioapic};
@@ -106,7 +106,7 @@ size_t iso_count = 0;
             // KDEBUG_ASSERT(sizeof(*iso) == iso->length);
             if (!(sizeof(*iso) == iso->length))
             {
-                return -ERROR_INVALID_DATA;
+                return -ERROR_INVALID;
             }
             intr_src_overrides[iso_count] = madt_iso{*iso};
             iso_count++;
@@ -125,7 +125,7 @@ size_t iso_count = 0;
 
     if (ioapic_count < 1)
     {
-        return -ERROR_INVALID_DATA;
+        return -ERROR_INVALID;
     }
 
     return ERROR_SUCCESS;

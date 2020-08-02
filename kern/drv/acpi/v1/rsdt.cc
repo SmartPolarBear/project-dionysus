@@ -34,7 +34,7 @@ error_code init_rsdt(const acpi::acpi_rsdp *rsdp)
     // KDEBUG_ASSERT(acpi_sdt_checksum(&rsdt->header) == true);
     if (!acpi_sdt_checksum(&rsdt->header))
     {
-        return -ERROR_INVALID_DATA;
+        return -ERROR_INVALID;
     }
 
     acpi_madt *madt = nullptr;
