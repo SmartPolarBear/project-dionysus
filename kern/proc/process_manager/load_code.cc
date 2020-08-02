@@ -10,7 +10,7 @@
 #include "elf/elf64_spec.hpp"
 
 #include "libkernel/console/builtin_console.hpp"
-#include "libkernel/data/List.h"
+#include "data/List.h"
 
 #include <utility>
 

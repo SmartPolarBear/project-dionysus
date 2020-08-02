@@ -7,7 +7,7 @@
 #include "drivers/lock/spinlock.h"
 #include "drivers/apic/traps.h"
 
-#include "libkernel/data/Queue.hpp"
+#include "data/Queue.hpp"
 
 using lock::spinlock;
 using lock::spinlock_acquire;
