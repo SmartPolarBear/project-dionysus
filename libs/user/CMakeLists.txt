@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
-add_library(libuser STATIC uentry.S uentry_main.cc)
+add_library(user STATIC uentry.S uentry_main.cc)
 
 add_subdirectory(syscall)
 add_subdirectory(io)
@@ -9,27 +9,27 @@ add_subdirectory(memory)
 
 set_property(SOURCE uentry.S PROPERTY LANGUAGE C)
 
-target_include_directories(libuser PUBLIC "${CMAKE_SOURCE_DIR}/include")
-target_include_directories(libuser PUBLIC "include")
-target_include_directories(libuser PRIVATE "include_private")
+target_include_directories(user PUBLIC "${CMAKE_SOURCE_DIR}/include")
+target_include_directories(user PUBLIC "include")
+target_include_directories(user PRIVATE "include_private")
 
-target_include_directories(libuser
+target_include_directories(user
         INTERFACE "${CMAKE_BINARY_DIR}/external/third_party_root_user/include/c++/v1"
         INTERFACE "${CMAKE_BINARY_DIR}/external/third_party_root_user/include/sys"
         INTERFACE "${CMAKE_BINARY_DIR}/external/third_party_root_user/include")
 
-target_sources(libuser PRIVATE uentry.S uentry_main.cc)
+target_sources(user PRIVATE uentry.S uentry_main.cc)
 
-target_link_directories(libuser BEFORE PRIVATE ${CMAKE_BINARY_DIR}/external/third_party_root_user/lib)
+target_link_directories(user BEFORE PRIVATE ${CMAKE_BINARY_DIR}/external/third_party_root_user/lib)
 
-add_dependencies(libuser libcxx_build_user libcxxabi_build_user newlib_build_user)
+add_dependencies(user libcxx_build_user libcxxabi_build_user newlib_build_user)
 
-target_link_directories(libuser INTERFACE ${CMAKE_BINARY_DIR}/external/third_party_root_user/lib)
+target_link_directories(user INTERFACE ${CMAKE_BINARY_DIR}/external/third_party_root_user/lib)
 
-target_link_libraries(libuser c g m c++ c++abi c++experimental)
+target_link_libraries(user c g m c++ c++abi c++experimental)
 
 #-mno-implicit-float is used to avoid xmm registers, which may cause GPF
-target_compile_options(libuser BEFORE
+target_compile_options(user BEFORE
         PRIVATE --target=x86_64-pc-linux-elf
         PRIVATE -gdwarf-2
         PRIVATE -fno-pie

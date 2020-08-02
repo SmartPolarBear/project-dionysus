@@ -8,7 +8,7 @@ add_custom_command(TARGET ipctest POST_BUILD
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         )
 
-target_link_libraries(ipctest libuser)
+target_link_libraries(ipctest user)
 
 set_target_properties(ipctest PROPERTIES LINK_FLAGS "-Wl,-T ${CMAKE_SOURCE_DIR}/config/build/user.ld")
 

@@ -1,4 +1,4 @@
 cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
-add_subdirectory(libuser)
+add_subdirectory(user)
 add_subdirectory(excutable)

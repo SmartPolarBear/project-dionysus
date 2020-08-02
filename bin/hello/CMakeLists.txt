@@ -8,7 +8,7 @@ add_custom_command(TARGET hello POST_BUILD
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         )
 
-target_link_libraries(hello libuser)
+target_link_libraries(hello user)
 
 set_target_properties(hello PROPERTIES LINK_FLAGS "-Wl,-T ${CMAKE_SOURCE_DIR}/config/build/user.ld")
 
