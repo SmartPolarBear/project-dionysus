@@ -100,6 +100,7 @@ error_code process::process_ipc_send_page(process_id pid, uint64_t unique_val, c
 	auto target = find_process(pid);
 	if (target == nullptr)
 	{
+		spinlock_release(&cur_proc->messaging_data.lock);
 		return -ERROR_INVALID;
 	}
 
@@ -119,26 +120,30 @@ error_code process::process_ipc_send_page(process_id pid, uint64_t unique_val, c
 		uintptr_t src_va = (uintptr_t)page;
 		if (src_va % PAGE_SIZE)
 		{
+			spinlock_release(&cur_proc->messaging_data.lock);
 			return -ERROR_INVALID;
 		}
 
 		constexpr size_t VALID_PERM_READONLY = PG_P | PG_U;
 		constexpr size_t VALID_PERM_RW = PG_P | PG_U | PG_W;
-		if (((perm | VALID_PERM_READONLY) != VALID_PERM_READONLY) || ((perm | VALID_PERM_RW) != VALID_PERM_RW))
+		if (((perm & VALID_PERM_READONLY) != VALID_PERM_READONLY) || ((perm | VALID_PERM_RW) != VALID_PERM_RW))
 		{
+			spinlock_release(&cur_proc->messaging_data.lock);
 			return -ERROR_INVALID;
 		}
 
-		auto page = pmm::va_to_page(src_va);
 		auto pte = vmm::walk_pgdir(cur_proc->mm->pgdir, src_va, false);
+		auto page = pmm::pde_to_page(pte);
 
 		if (page == nullptr)
 		{
+			spinlock_release(&cur_proc->messaging_data.lock);
 			return -ERROR_INVALID;
 		}
 
 		if ((perm & PG_W) && !(*pte & PG_W))
 		{
+			spinlock_release(&cur_proc->messaging_data.lock);
 			return -ERROR_INVALID;
 		}
 
@@ -147,6 +152,7 @@ error_code process::process_ipc_send_page(process_id pid, uint64_t unique_val, c
 			auto ret = pmm::page_insert(target->mm->pgdir, true, page, (uintptr_t)target->messaging_data.dst, perm);
 			if (ret != ERROR_SUCCESS)
 			{
+				spinlock_release(&cur_proc->messaging_data.lock);
 				return ret;
 			}
 			target->messaging_data.perms = perm;
@@ -159,7 +165,6 @@ error_code process::process_ipc_send_page(process_id pid, uint64_t unique_val, c
 	process_wakeup((size_t)(&target->messaging_data.can_receive));
 
 	spinlock_release(&cur_proc->messaging_data.lock);
-
 	return ERROR_SUCCESS;
 }
 

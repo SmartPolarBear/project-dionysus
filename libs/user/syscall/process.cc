@@ -14,7 +14,7 @@ extern "C" error_code terminate(error_code e)
 	return trigger_syscall(syscall::SYS_exit, 1, e);
 }
 
-extern "C" error_code set_heap(uintptr_t* size)
+extern "C" error_code set_heap_size(uintptr_t* size)
 {
 	return trigger_syscall(syscall::SYS_set_heap_size, 1, size);
 }
@@ -26,7 +26,7 @@ extern "C" error_code ipc_send(process_id pid, IN const void* msg, size_t size)
 
 extern "C" error_code ipc_send_page(process_id pid, uint64_t value, IN const void* src, size_t perm)
 {
-	return trigger_syscall(syscall::SYS_send, 4, pid, value, src, perm);
+	return trigger_syscall(syscall::SYS_send_page, 4, pid, value, src, perm);
 }
 
 extern "C" error_code ipc_receive(OUT  void* msg)
@@ -34,8 +34,8 @@ extern "C" error_code ipc_receive(OUT  void* msg)
 	return trigger_syscall(syscall::SYS_receive, 1, msg);
 }
 
-extern "C" error_code ipc_receive_page(OUT  void* dst, OUT process_id* out_pid, OUT size_t* perms)
+extern "C" error_code ipc_receive_page(OUT  void* dst, OUT uint64_t* out_val, OUT process_id* out_pid, OUT size_t* perms)
 {
-	return trigger_syscall(syscall::SYS_receive, 3, dst, out_pid, perms);
+	return trigger_syscall(syscall::SYS_receive_page, 4, dst, out_val, out_pid, perms);
 }
 

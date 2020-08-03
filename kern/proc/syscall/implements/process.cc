@@ -49,10 +49,13 @@ error_code sys_receive_page(const syscall_regs* regs)
 {
 	auto ret = process::process_ipc_receive_page((void*)get_nth_arg(regs, 0));
 
-	process_id* out_pid = (process_id*)get_nth_arg(regs, 1);
+	uint64_t* out_val = (uint64_t*)get_nth_arg(regs, 1);
+	*out_val = cur_proc->messaging_data.unique_value;
+
+	process_id* out_pid = (process_id*)get_nth_arg(regs, 2);
 	*out_pid = cur_proc->messaging_data.from;
 
-	size_t* out_perms = (size_t*)get_nth_arg(regs, 2);
+	size_t* out_perms = (size_t*)get_nth_arg(regs, 3);
 	*out_perms = cur_proc->messaging_data.perms;
 
 	return ret;

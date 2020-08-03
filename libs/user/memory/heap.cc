@@ -18,13 +18,13 @@ static inline Header* heap_expand(size_t nu)
 {
 	uintptr_t heap_ptr = 0;
 
-	if (set_heap(&heap_ptr) != ERROR_SUCCESS)
+	if (set_heap_size(&heap_ptr) != ERROR_SUCCESS)
 	{
 		return nullptr;
 	}
 
 	uintptr_t new_heap_ptr = heap_ptr + nu * sizeof(Header);
-	if (set_heap(&new_heap_ptr) != ERROR_SUCCESS || new_heap_ptr < heap_ptr)
+	if (set_heap_size(&new_heap_ptr) != ERROR_SUCCESS || new_heap_ptr < heap_ptr)
 	{
 		return nullptr;
 	}
