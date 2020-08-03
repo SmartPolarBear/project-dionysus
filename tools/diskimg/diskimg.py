@@ -89,42 +89,50 @@ def func_update_diskimage(main_argv):
         print("COMPLETE: " + getcmd_cp(src=diskimgtemplate,
                                        dest=diskimgtarget, force=False))
 
-    lo0name = subprocess.getoutput("losetup -f")
-    setuplo0_cmd = getcmd_losetup(lo0name, diskimgtarget)
-    subprocess.run(setuplo0_cmd, check=True, shell=True)
-    print("COMPLETE: " + setuplo0_cmd)
+    try:
+        lo0name = subprocess.getoutput("losetup -f")
+        setuplo0_cmd = getcmd_losetup(lo0name, diskimgtarget)
+        subprocess.run(setuplo0_cmd, check=True, shell=True)
+        print("COMPLETE: " + setuplo0_cmd)
 
-    lo1name = subprocess.getoutput("losetup -f")
-    setuplo1_cmd = getcmd_losetup(lo1name, lo0name, offset=1048576)
-    subprocess.run(setuplo1_cmd, check=True, shell=True)
-    print("COMPLETE: " + setuplo1_cmd)
+        lo1name = subprocess.getoutput("losetup -f")
+        setuplo1_cmd = getcmd_losetup(lo1name, lo0name, offset=1048576)
+        subprocess.run(setuplo1_cmd, check=True, shell=True)
+        print("COMPLETE: " + setuplo1_cmd)
 
-    mount_cmd = getcmd_mount(MountAction.MOUNT, mountpoint, lo1name)
+        mount_cmd = getcmd_mount(MountAction.MOUNT, mountpoint, lo1name)
 
-    subprocess.run(mount_cmd, check=True, shell=True)
-    print("COMPLETE: " + mount_cmd)
+        subprocess.run(mount_cmd, check=True, shell=True)
+        print("COMPLETE: " + mount_cmd)
 
-    config_file_name: str = main_argv[get_argidx(argidx_st, 1)]
-    func_process_file_mappings(config_file_name, builddir, mountpoint)
+        config_file_name: str = main_argv[get_argidx(argidx_st, 1)]
+        func_process_file_mappings(config_file_name, builddir, mountpoint)
 
-    cpcfg_cmd = getcmd_cp("grub.cfg", mountpoint +
-                          "/boot/grub/grub.cfg", force=True)
-    subprocess.run(cpcfg_cmd, check=True, shell=True)
-    print("COMPLETE: " + cpcfg_cmd)
+        cpcfg_cmd = getcmd_cp("grub.cfg", mountpoint +
+                              "/boot/grub/grub.cfg", force=True)
+        subprocess.run(cpcfg_cmd, check=True, shell=True)
+        print("COMPLETE: " + cpcfg_cmd)
 
-    umount_cmd = getcmd_mount(MountAction.UMOUNT, mountpoint=mountpoint)
-    subprocess.run(umount_cmd, check=True, shell=True)
-    print("COMPLETE: " + umount_cmd)
+        print("Update all succeeded!")
 
-    delosetuplo1_cmd = getcmd_delosetup(lo1name)
-    subprocess.run(delosetuplo1_cmd, check=True, shell=True)
-    print("COMPLETE: " + delosetuplo1_cmd)
+    except Exception as err:
+        print(type(err))  # the exception instance
+        print(err.args)  # arguments stored in .args
+        print(err)
+        print("Update all Failed.")
+    finally:
+        umount_cmd = getcmd_mount(MountAction.UMOUNT, mountpoint=mountpoint)
+        subprocess.run(umount_cmd, check=True, shell=True)
+        print("COMPLETE: " + umount_cmd)
 
-    delosetuplo0_cmd = getcmd_delosetup(lo0name)
-    subprocess.run(delosetuplo0_cmd, check=True, shell=True)
-    print("COMPLETE: " + delosetuplo0_cmd)
+        delosetuplo1_cmd = getcmd_delosetup(lo1name)
+        subprocess.run(delosetuplo1_cmd, check=True, shell=True)
+        print("COMPLETE: " + delosetuplo1_cmd)
 
-    print("Update all succeeded!")
+        delosetuplo0_cmd = getcmd_delosetup(lo0name)
+        subprocess.run(delosetuplo0_cmd, check=True, shell=True)
+        print("COMPLETE: " + delosetuplo0_cmd)
+
     return
 
 

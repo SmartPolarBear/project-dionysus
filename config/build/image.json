@@ -18,6 +18,14 @@
     {
       "from": "bin/ipctest/ipctest",
       "to": "ipctest"
+    },
+    {
+      "from": "kern/servers/monitor/monitor",
+      "to": "monitor"
+    },
+    {
+      "from": "kern/servers/fs/fs",
+      "to": "fs"
     }
   ]
 }

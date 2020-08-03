@@ -119,7 +119,6 @@ void ap::all_processor_main()
 	{
 		run("/ipctest");
 		run("/hello");
-
 	}
 
 	timer::set_enable_on_cpu(cpu->id, true);
