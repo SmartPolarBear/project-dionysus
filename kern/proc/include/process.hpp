@@ -35,4 +35,7 @@ extern "C" [[noreturn]] void user_proc_entry();
 
 extern "C" void context_switch(context** oldcontext, context* newcontext);
 
+// process.cc
+process::process_dispatcher* find_process(process_id pid);
+
 

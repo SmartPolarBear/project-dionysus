@@ -32,8 +32,20 @@ error_code sys_send(const syscall_regs* regs)
 		(size_t)get_nth_arg(regs, 2));
 }
 
+error_code sys_send_page(const syscall_regs* regs)
+{
+	return process::process_ipc_send_page((process_id)get_nth_arg(regs, 0),
+		(uint64_t)get_nth_arg(regs, 1),
+		(void*)get_nth_arg(regs, 2),
+		(size_t)get_nth_arg(regs, 3));
+}
+
 error_code sys_receive(const syscall_regs* regs)
 {
 	return process::process_ipc_receive((void*)get_nth_arg(regs, 0));
 }
 
+error_code sys_receive_page(const syscall_regs* regs)
+{
+	return process::process_ipc_receive_page((void*)get_nth_arg(regs, 0));
+}

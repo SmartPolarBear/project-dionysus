@@ -30,8 +30,10 @@ extern "C" syscall_entry syscall_table[SYSCALL_COUNT + 1] = {
 	[SYS_put_str] = sys_put_str,
 	[SYS_put_char] = sys_put_char,
 	[SYS_send]=sys_send,
+	[SYS_send_page]=sys_send_page,
 	[SYS_receive]=sys_receive,
-	[SYS_set_heap]=sys_set_heap
+	[SYS_receive_page]=sys_receive_page,
+	[SYS_set_heap_size]=sys_set_heap
 };
 
 #pragma clang diagnostic pop

@@ -81,14 +81,23 @@ namespace process
 			size_t channel;
 		} sleep_data{};
 
-		struct ipc_data_struct
+		struct messaging_data_struct
 		{
+			static constexpr size_t INTERNAL_BUF_SIZE = 64;
+
 			lock::spinlock lock;
+
+			// message passing
 			void* data;
 			size_t data_size;
-
-			static constexpr size_t INTERNAL_BUF_SIZE = 64;
 			uint8_t internal_buf[INTERNAL_BUF_SIZE];
+
+			// page passing
+			bool can_receive;
+			void *dst;
+			size_t unique_value;
+			process_id  from;
+			uint64_t perms;
 
 		} messaging_data{};
 
@@ -139,6 +148,10 @@ namespace process
 	// send and receive message
 	error_code process_ipc_send(process_id pid, IN const void* message, size_t size);
 	error_code process_ipc_receive(OUT void* message_out);
+	// send and receive a page
+	error_code process_ipc_send_page(process_id pid, uint64_t unique_val, IN const void* page, size_t perm);
+	error_code process_ipc_receive_page(OUT void *out_page);
+
 
 	// allocate more memory
 	error_code process_heap_change_size(IN process_dispatcher* proc, IN OUT uintptr_t* heap_ptr);

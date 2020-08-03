@@ -132,7 +132,7 @@ static inline size_t process_terminal_impl(process::process_dispatcher* proc,
 	return -ERROR_HAS_KILLED;
 }
 
-static inline process::process_dispatcher* find_process(process_id pid)
+process::process_dispatcher* find_process(process_id pid)
 {
 	list_head* iter = nullptr;
 	list_for(iter, &proc_list.active_head)
@@ -371,65 +371,6 @@ error_code process::process_wakeup_nolock(size_t channel)
 			iter_proc->state = PROC_STATE_RUNNABLE;
 		}
 	}
-	return ERROR_SUCCESS;
-}
-
-// send and receive message
-error_code process::process_ipc_send(process_id pid, IN const void* message, size_t size)
-{
-	auto target = find_process(pid);
-	if (target == nullptr)
-	{
-		return -ERROR_INVALID;
-	}
-
-	spinlock_acquire(&target->messaging_data.lock);
-
-	while (target->messaging_data.data != nullptr)
-		// wait until it is consumed
-		;
-
-	if (size >= target->messaging_data.INTERNAL_BUF_SIZE)
-	{
-		target->messaging_data.data = kmalloc(size, 0);
-	}
-	else
-	{
-		target->messaging_data.data = target->messaging_data.internal_buf;
-	}
-
-	memmove(target->messaging_data.data, message, size);
-
-	target->messaging_data.data_size = size;
-
-	process_wakeup((size_t)&target->messaging_data);
-
-	spinlock_release(&target->messaging_data.lock);
-
-	return ERROR_SUCCESS;
-}
-
-error_code process::process_ipc_receive(OUT void* message_out)
-{
-	spinlock_acquire(&cur_proc->messaging_data.lock);
-
-	while (cur_proc->messaging_data.data == nullptr)
-	{
-		process_sleep((size_t)&cur_proc->messaging_data, &cur_proc->messaging_data.lock);
-	}
-
-	memmove(message_out, cur_proc->messaging_data.data, cur_proc->messaging_data.data_size);
-
-	if (((uintptr_t)cur_proc->messaging_data.data) != (uintptr_t)(cur_proc->messaging_data.internal_buf))
-	{
-		kfree(cur_proc->messaging_data.data);
-	}
-
-	cur_proc->messaging_data.data = nullptr;
-	cur_proc->messaging_data.data_size = 0;
-
-	spinlock_release(&cur_proc->messaging_data.lock);
-
 	return ERROR_SUCCESS;
 }
 

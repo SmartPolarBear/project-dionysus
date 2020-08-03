@@ -20,8 +20,10 @@ namespace syscall
 		SYS_put_str,
 		SYS_put_char,
 		SYS_send,
+		SYS_send_page,
 		SYS_receive,
-		SYS_set_heap
+		SYS_receive_page,
+		SYS_set_heap_size,
 	};
 
 	struct syscall_regs

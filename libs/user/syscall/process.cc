@@ -16,7 +16,7 @@ extern "C" error_code terminate(error_code e)
 
 extern "C" error_code set_heap(uintptr_t* size)
 {
-	return trigger_syscall(syscall::SYS_set_heap, 1, size);
+	return trigger_syscall(syscall::SYS_set_heap_size, 1, size);
 }
 
 extern "C" error_code ipc_send(process_id pid, IN const void* msg, size_t size)
