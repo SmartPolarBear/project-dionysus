@@ -11,8 +11,9 @@ void heap_free(void* ap);
 void* heap_alloc(size_t size, [[maybe_unused]]uint64_t flags);
 
 extern "C" error_code ipc_send(process_id pid, IN const void* msg, size_t size);
+extern "C" error_code ipc_send_page(process_id pid, uint64_t value, IN const void* src, size_t perm);
 extern "C" error_code ipc_receive(OUT void* msg);
-
+extern "C" error_code ipc_receive_page(OUT  void* dst, OUT process_id* out_pid, OUT size_t* perms);
 
 extern "C" size_t hello(size_t a, size_t b, size_t c, size_t d);
 extern "C" size_t put_str(const char* str);

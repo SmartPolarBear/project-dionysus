@@ -24,7 +24,18 @@ extern "C" error_code ipc_send(process_id pid, IN const void* msg, size_t size)
 	return trigger_syscall(syscall::SYS_send, 3, pid, msg, size);
 }
 
+extern "C" error_code ipc_send_page(process_id pid, uint64_t value, IN const void* src, size_t perm)
+{
+	return trigger_syscall(syscall::SYS_send, 4, pid, value, src, perm);
+}
+
 extern "C" error_code ipc_receive(OUT  void* msg)
 {
 	return trigger_syscall(syscall::SYS_receive, 1, msg);
 }
+
+extern "C" error_code ipc_receive_page(OUT  void* dst, OUT process_id* out_pid, OUT size_t* perms)
+{
+	return trigger_syscall(syscall::SYS_receive, 3, dst, out_pid, perms);
+}
+
