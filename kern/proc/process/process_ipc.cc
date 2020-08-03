@@ -95,21 +95,20 @@ error_code process::process_ipc_receive(OUT void* message_out)
 	return ERROR_SUCCESS;
 }
 
+// FIXME: can have racing condition
 error_code process::process_ipc_send_page(process_id pid, uint64_t unique_val, const void* page, size_t perm)
 {
 	auto target = find_process(pid);
 	if (target == nullptr)
 	{
-		spinlock_release(&cur_proc->messaging_data.lock);
 		return -ERROR_INVALID;
 	}
 
-	spinlock_acquire(&cur_proc->messaging_data.lock);
+	spinlock_acquire(&target->messaging_data.lock);
 
-	while (!target->messaging_data.can_receive)
-	{
-		process_sleep((size_t)(&target->messaging_data.can_receive), &cur_proc->messaging_data.lock);
-	}
+	while (target->messaging_data.dst == nullptr)
+		// wait until it consumed
+		;
 
 	target->messaging_data.unique_value = unique_val;
 	target->messaging_data.perms = 0;
@@ -120,7 +119,7 @@ error_code process::process_ipc_send_page(process_id pid, uint64_t unique_val, c
 		uintptr_t src_va = (uintptr_t)page;
 		if (src_va % PAGE_SIZE)
 		{
-			spinlock_release(&cur_proc->messaging_data.lock);
+			spinlock_release(&target->messaging_data.lock);
 			return -ERROR_INVALID;
 		}
 
@@ -128,7 +127,7 @@ error_code process::process_ipc_send_page(process_id pid, uint64_t unique_val, c
 		constexpr size_t VALID_PERM_RW = PG_P | PG_U | PG_W;
 		if (((perm & VALID_PERM_READONLY) != VALID_PERM_READONLY) || ((perm | VALID_PERM_RW) != VALID_PERM_RW))
 		{
-			spinlock_release(&cur_proc->messaging_data.lock);
+			spinlock_release(&target->messaging_data.lock);
 			return -ERROR_INVALID;
 		}
 
@@ -137,13 +136,13 @@ error_code process::process_ipc_send_page(process_id pid, uint64_t unique_val, c
 
 		if (page == nullptr)
 		{
-			spinlock_release(&cur_proc->messaging_data.lock);
+			spinlock_release(&target->messaging_data.lock);
 			return -ERROR_INVALID;
 		}
 
 		if ((perm & PG_W) && !(*pte & PG_W))
 		{
-			spinlock_release(&cur_proc->messaging_data.lock);
+			spinlock_release(&target->messaging_data.lock);
 			return -ERROR_INVALID;
 		}
 
@@ -152,7 +151,7 @@ error_code process::process_ipc_send_page(process_id pid, uint64_t unique_val, c
 			auto ret = pmm::page_insert(target->mm->pgdir, true, page, (uintptr_t)target->messaging_data.dst, perm);
 			if (ret != ERROR_SUCCESS)
 			{
-				spinlock_release(&cur_proc->messaging_data.lock);
+				spinlock_release(&target->messaging_data.lock);
 				return ret;
 			}
 			target->messaging_data.perms = perm;
@@ -162,12 +161,14 @@ error_code process::process_ipc_send_page(process_id pid, uint64_t unique_val, c
 	target->messaging_data.can_receive = false;
 	target->messaging_data.from = cur_proc->id;
 
+	spinlock_release(&target->messaging_data.lock);
+
 	process_wakeup((size_t)(&target->messaging_data.can_receive));
 
-	spinlock_release(&cur_proc->messaging_data.lock);
 	return ERROR_SUCCESS;
 }
 
+// FIXME: can have racing condition
 error_code process::process_ipc_receive_page(void* out_page)
 {
 	if (out_page < (void*)USER_TOP && ((uintptr_t)out_page) % PAGE_SIZE)
@@ -175,12 +176,16 @@ error_code process::process_ipc_receive_page(void* out_page)
 		return -ERROR_INVALID;
 	}
 
+	cur_proc->messaging_data.dst = out_page;
+
 	spinlock_acquire(&cur_proc->messaging_data.lock);
 
 	cur_proc->messaging_data.can_receive = true;
-	cur_proc->messaging_data.dst = out_page;
 
-	process_sleep((size_t)(&cur_proc->messaging_data.can_receive), &cur_proc->messaging_data.lock);
+	while (cur_proc->messaging_data.can_receive)
+	{
+		process_sleep((size_t)(&cur_proc->messaging_data.can_receive), &cur_proc->messaging_data.lock);
+	}
 
 	spinlock_release(&cur_proc->messaging_data.lock);
 
