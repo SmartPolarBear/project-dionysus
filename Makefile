@@ -4,6 +4,9 @@ include $(TOP_SRC)/Makefile.mk
 qemu: #all 
 	$(QEMU_EXE) -serial mon:stdio -cpu Icelake-Client-v2 $(QEMUOPTS)
 
+qemu-native: #all
+	$(QEMU) -serial mon:stdio -cpu Icelake-Client-v2 $(QEMUOPTS)
+
 qemu-kvm: #all
 	$(QEMU) -serial mon:stdio --enable-kvm -cpu host $(QEMUOPTS)
 

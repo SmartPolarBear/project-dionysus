@@ -1,5 +1,5 @@
 #pragma once
 
-#include "../console.h"
+#include "drivers/console/console.h"
 
-extern console_dev cga_dev;
+extern console::console_dev cga_dev;

@@ -13,7 +13,7 @@ add_custom_command(TARGET monitor POST_BUILD
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         )
 
-target_link_libraries(monitor user)
+target_link_libraries(monitor server)
 
 set_target_properties(monitor PROPERTIES LINK_FLAGS "-Wl,-T ${CMAKE_SOURCE_DIR}/config/build/user.ld")
 
