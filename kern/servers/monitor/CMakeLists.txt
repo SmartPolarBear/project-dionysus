@@ -3,6 +3,11 @@ cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 add_executable(monitor
         monitor.cc)
 
+set_target_properties(monitor PROPERTIES
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS ON)
+
 add_custom_command(TARGET monitor POST_BUILD
         COMMAND objdump -S $<TARGET_FILE:monitor> > $<TARGET_FILE_DIR:monitor>/monitor.asm
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
@@ -14,7 +19,7 @@ set_target_properties(monitor PROPERTIES LINK_FLAGS "-Wl,-T ${CMAKE_SOURCE_DIR}/
 
 target_include_directories(monitor PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
-target_link_libraries(monitor c g m c++ c++abi c++experimental)
+target_link_libraries(monitor arch_amd64 c g m c++ c++abi c++experimental)
 
 target_compile_options(monitor BEFORE
         PRIVATE --target=x86_64-pc-linux-elf
@@ -33,8 +38,7 @@ target_compile_options(monitor BEFORE
         PRIVATE -mno-avx
         PRIVATE -mcmodel=large
         PRIVATE -mno-red-zone
-        PRIVATE -fmodules
-        PRIVATE -std=c++2a)
+        PRIVATE -fmodules)
 
 
 target_link_options(monitor
