@@ -44,7 +44,7 @@ static inline void run(char* name)
 	write_format("[cpu %d]load binary: %s, pid %d\n", cpu()->id, name, proc_he->id);
 }
 
-static inline void server_start()
+static inline void init_servers()
 {
 	// start monitor servers
 	monitor::monitor_init();
@@ -88,6 +88,12 @@ extern "C" [[noreturn]] void kmain()
 
 	write_format("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
 
+	run("/ipctest");
+	run("/hello");
+
+	// start kernel servers in user space
+	init_servers();
+
 	ap::all_processor_main();
 
 	for (;;);
@@ -99,16 +105,6 @@ void ap::all_processor_main()
 
 	// enable timer interrupt
 	timer::set_enable_on_cpu(cpu->id, true);
-
-	// boot cpu
-	if (cpu->id == 0)
-	{
-		run("/ipctest");
-		run("/hello");
-
-		// start kernel servers in user space
-		server_start();
-	}
 
 	scheduler::scheduler_loop();
 }

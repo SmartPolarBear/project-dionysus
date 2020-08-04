@@ -53,6 +53,9 @@ req_tag_start:
     .long MULTIBOOT_TAG_TYPE_MMAP
     .long MULTIBOOT_TAG_TYPE_ACPI_NEW
     .long MULTIBOOT_TAG_TYPE_ACPI_OLD
+    .long MULTIBOOT_TAG_TYPE_VBE
+    .long MULTIBOOT_TAG_TYPE_FRAMEBUFFER
+    .long MULTIBOOT_TAG_TYPE_NETWORK
 req_tag_end:
 
 .align 8

@@ -3,17 +3,12 @@ cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 add_executable(monitor
         monitor.cc)
 
-set_target_properties(monitor PROPERTIES
-        CXX_STANDARD 20
-        CXX_STANDARD_REQUIRED ON
-        CXX_EXTENSIONS ON)
-
 add_custom_command(TARGET monitor POST_BUILD
         COMMAND objdump -S $<TARGET_FILE:monitor> > $<TARGET_FILE_DIR:monitor>/monitor.asm
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         )
 
-target_link_libraries(monitor server)
+target_link_libraries(monitor user)
 
 set_target_properties(monitor PROPERTIES LINK_FLAGS "-Wl,-T ${CMAKE_SOURCE_DIR}/config/build/user.ld")
 

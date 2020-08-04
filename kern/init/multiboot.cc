@@ -159,6 +159,7 @@ error_code multiboot::find_module_by_cmdline(IN const char* cmdline, OUT size_t*
 	for (size_t i = 0; i < count; i++)
 	{
 		multiboot_tag_module* mdl_tag = reinterpret_cast<decltype(mdl_tag)>(buf[i]);
+
 		if (strncmp(mdl_tag->cmdline, cmdline, strlen(cmdline)) == 0)
 		{
 			tag = mdl_tag;

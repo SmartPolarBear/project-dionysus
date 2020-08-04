@@ -30,7 +30,7 @@ namespace process
 	enum process_flags
 	{
 		PROC_EXITING = 0b1,
-		PROC_SYS_SERVER = 0x10,
+		PROC_SYS_SERVER = 0b10,
 		PROC_DRIVER = 0b100,
 		PROC_USER = 0b1000,
 	};

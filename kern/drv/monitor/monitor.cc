@@ -9,36 +9,51 @@
 #include "system/process.h"
 #include "system/multiboot.h"
 
+#include "libkernel/console/builtin_text_io.hpp"
+
 #include <cstring>
 
 console::console_dev g_monitor_dev;
 
-static inline void load_monitor_binary()
+static inline error_code load_monitor_executable()
 {
 	uint8_t* bin = nullptr;
 	size_t size = 0;
 
-	const char* monitor_name = "/monitor";
+	const char* name = "/monitor";
 
-	// find multiboot info for monitor executable
-	auto ret = multiboot::find_module_by_cmdline(monitor_name, &size, &bin);
+	auto ret = multiboot::find_module_by_cmdline(name, &size, &bin);
 
-	KDEBUG_ASSERT(ret == ERROR_SUCCESS);
+	if (ret != ERROR_SUCCESS)
+	{
+		return ret;
+	}
 
 	process::process_dispatcher* proc_he = nullptr;
-	process::create_process(monitor_name, 0, false, &proc_he);
+	ret = process::create_process(name, process::PROC_SYS_SERVER, false, &proc_he);
 
-	KDEBUG_ASSERT(proc_he != nullptr);
+	if (ret != ERROR_SUCCESS)
+	{
+		return ret;
+	}
 
-	process::process_load_binary(proc_he, bin, size, process::BINARY_ELF);
+	ret = process::process_load_binary(proc_he, bin, size, process::BINARY_ELF);
+	if (ret != ERROR_SUCCESS)
+	{
+		return ret;
+	}
 
+	return ERROR_SUCCESS;
 }
 
 error_code monitor::monitor_init()
 {
-	load_monitor_binary();
+	auto ret = load_monitor_executable();
 
-	console::console_remove_internal_devs();
+	if (ret != ERROR_SUCCESS)
+	{
+		return ret;
+	}
 
-	console::console_add_dev(&g_monitor_dev);
+	return ERROR_SUCCESS;
 }
