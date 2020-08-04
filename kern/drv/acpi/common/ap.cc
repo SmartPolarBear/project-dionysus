@@ -92,40 +92,6 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
 	cpu.set_lock(true);
 }
 
-void run(char* name)
-{
-	uint8_t* bin = nullptr;
-	size_t size = 0;
-
-	auto ret = multiboot::find_module_by_cmdline(name, &size, &bin);
-
-	KDEBUG_ASSERT(ret == ERROR_SUCCESS);
-
-	process::process_dispatcher* proc_he = nullptr;
-	process::create_process(name, 0, false, &proc_he);
-
-	KDEBUG_ASSERT(proc_he != nullptr);
-
-	process::process_load_binary(proc_he, bin, size, process::BINARY_ELF);
-
-	write_format("[cpu %d]load binary: %s, pid %d\n", cpu()->id, name, proc_he->id);
-}
-
-void ap::all_processor_main()
-{
-	xchg(&cpu->started, 1u);
-
-	if (cpu->id == 0)
-	{
-		run("/ipctest");
-		run("/hello");
-	}
-
-	timer::set_enable_on_cpu(cpu->id, true);
-	scheduler::scheduler_loop();
-
-	while (true);
-}
 
 extern "C" [[clang::optnone]] void ap_enter(void)
 {
@@ -150,5 +116,6 @@ extern "C" [[clang::optnone]] void ap_enter(void)
 	// set registers converning syscall/sysret
 	syscall::system_call_init();
 
+	// in main.cc
 	ap::all_processor_main();
 }

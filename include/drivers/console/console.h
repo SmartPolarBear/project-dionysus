@@ -59,6 +59,7 @@ namespace console
 	};
 
 	void console_add_dev(IN console_dev* dev);
+	void console_remove_internal_devs();
 
 	void console_init();
 	void console_set_color(console_colors background, console_colors foreground);

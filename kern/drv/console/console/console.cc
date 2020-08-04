@@ -46,6 +46,11 @@ void console::console_add_dev(IN console_dev* dev)
 	list_add(&dev->dev_link, &cons.devs_head);
 }
 
+void console::console_remove_internal_devs()
+{
+	list_remove(&cga_dev.dev_link);
+}
+
 void console::console_init()
 {
 	// enable the linked-list of all console devices

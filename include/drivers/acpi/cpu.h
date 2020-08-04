@@ -98,6 +98,8 @@ requires Pointer<T>
 namespace ap
 {
 	void init_ap(void);
+
+	// in main.cc
 	void all_processor_main();
 } // namespace ap
 
