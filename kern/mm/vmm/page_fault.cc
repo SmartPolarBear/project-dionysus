@@ -69,7 +69,7 @@ static inline error_code page_fault_impl(mm_struct* mm, size_t err, uintptr_t ad
 		case 0b10: // write, not persent
 			if (!(vma->flags & vmm::VM_WRITE))
 			{
-				return -ERROR_PAGE_NOT_PERSENT;
+				return -ERROR_PAGE_NOT_PRESENT;
 			}
 			break;
 		case 0b01: // read, persent
@@ -78,7 +78,7 @@ static inline error_code page_fault_impl(mm_struct* mm, size_t err, uintptr_t ad
 		case 0b00: // read not persent
 			if (!(vma->flags & (vmm::VM_READ | vmm::VM_EXEC)))
 			{
-				return -ERROR_PAGE_NOT_PERSENT;
+				return -ERROR_PAGE_NOT_PRESENT;
 			}
 			break;
 		}
@@ -126,7 +126,7 @@ error_code handle_pgfault([[maybe_unused]] trap::trap_frame info)
 			false,
 			"Address: 0x%p\n", addr);
 	}
-	else if (ret == -ERROR_PAGE_NOT_PERSENT)
+	else if (ret == -ERROR_PAGE_NOT_PRESENT)
 	{
 		KDEBUG_RICHPANIC("A page's not persent.",
 			"KERNEL PANIC: PAGE FAULT",

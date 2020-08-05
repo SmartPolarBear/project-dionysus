@@ -21,14 +21,14 @@ const char *err_msg[] = {[ERROR_UNKOWN] = "Unkown error in kernel.",
                          [ERROR_MEMORY_ALLOC] = "Can't allocate enough memory.",
                          [ERROR_REWRITE] = "Rewrite unrewritable data",
                          [ERROR_VMA_NOT_FOUND] = "can't find a VMA",
-                         [ERROR_PAGE_NOT_PERSENT] = "Page not persent"};
+                         [ERROR_PAGE_NOT_PRESENT] = "Page not persent"};
 
 const char *err_title[] = {[ERROR_UNKOWN] = "ERROR_UNKOWN",
                            [ERROR_INVALID] = "ERROR_INVALID_DATA",
                            [ERROR_MEMORY_ALLOC] = "ERROR_MEMORY_ALLOC",
                            [ERROR_REWRITE] = "ERROR_REWRITE",
                            [ERROR_VMA_NOT_FOUND] = "ERROR_VMA_NOT_FOUND",
-                           [ERROR_PAGE_NOT_PERSENT] = "ERROR_PAGE_NOT_PERSENT"};
+                           [ERROR_PAGE_NOT_PRESENT] = "ERROR_PAGE_NOT_PERSENT"};
 
 const char *kdebug::error_message(error_code code)
 {

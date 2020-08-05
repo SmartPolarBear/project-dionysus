@@ -39,7 +39,9 @@ static inline void run(char* name)
 
 	KDEBUG_ASSERT(proc_he != nullptr);
 
-	process::process_load_binary(proc_he, bin, size, process::BINARY_ELF);
+	process::process_load_binary(proc_he, bin, size,
+		process::BINARY_ELF,
+		process::LOAD_BINARY_RUN_IMMEDIATELY);
 
 	write_format("[cpu %d]load binary: %s, pid %d\n", cpu()->id, name, proc_he->id);
 }

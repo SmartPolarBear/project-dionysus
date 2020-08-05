@@ -35,6 +35,11 @@ namespace process
 		PROC_USER = 0b1000,
 	};
 
+	enum load_binary_flags
+	{
+		LOAD_BINARY_RUN_IMMEDIATELY
+	};
+
 	constexpr size_t PROC_WAITING_INTERRUPTED = 0x80000000;
 	enum process_waiting_state : size_t
 	{
@@ -94,9 +99,9 @@ namespace process
 
 			// page passing
 			bool can_receive;
-			void *dst;
+			void* dst;
 			size_t unique_value;
-			process_id  from;
+			process_id from;
 			uint64_t perms;
 
 		} messaging_data{};
@@ -130,7 +135,8 @@ namespace process
 	error_code process_load_binary(IN process_dispatcher* porc,
 		IN uint8_t* bin,
 		IN size_t binary_size,
-		IN binary_types type);
+		IN binary_types type,
+		IN size_t flags);
 
 	// handle process cleanup when exiting
 	void process_exit(IN process_dispatcher* proc);
@@ -150,8 +156,7 @@ namespace process
 	error_code process_ipc_receive(OUT void* message_out);
 	// send and receive a page
 	error_code process_ipc_send_page(process_id pid, uint64_t unique_val, IN const void* page, size_t perm);
-	error_code process_ipc_receive_page(OUT void *out_page);
-
+	error_code process_ipc_receive_page(OUT void* out_page);
 
 	// allocate more memory
 	error_code process_heap_change_size(IN process_dispatcher* proc, IN OUT uintptr_t* heap_ptr);

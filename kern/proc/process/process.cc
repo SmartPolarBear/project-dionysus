@@ -231,7 +231,8 @@ error_code process::create_process(IN const char* name,
 error_code process::process_load_binary(IN process_dispatcher* proc,
 	IN uint8_t* bin,
 	[[maybe_unused]] IN size_t binary_size OPTIONAL,
-	IN binary_types type
+	IN binary_types type,
+	IN size_t flags
 )
 {
 	error_code ret = ERROR_SUCCESS;
@@ -254,7 +255,10 @@ error_code process::process_load_binary(IN process_dispatcher* proc,
 		{
 			proc->tf->rip = entry_addr;
 
-			proc->state = PROC_STATE_RUNNABLE;
+			if (flags & LOAD_BINARY_RUN_IMMEDIATELY)
+			{
+				proc->state = PROC_STATE_RUNNABLE;
+			}
 		}
 		else
 		{

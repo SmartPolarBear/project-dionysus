@@ -2,9 +2,6 @@ cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
 add_library(server STATIC entry.S entry_main.cc)
 
-add_subdirectory(syscall)
-add_subdirectory(memory)
-
 set_property(SOURCE entry.S PROPERTY LANGUAGE C)
 
 target_include_directories(server PUBLIC "${CMAKE_SOURCE_DIR}/include")
@@ -12,9 +9,9 @@ target_include_directories(server PUBLIC "include")
 target_include_directories(server PRIVATE "include_private")
 
 target_include_directories(server
-        INTERFACE "${CMAKE_BINARY_DIR}/external/third_party_root/include/c++/v1"
-        INTERFACE "${CMAKE_BINARY_DIR}/external/third_party_root/include/sys"
-        INTERFACE "${CMAKE_BINARY_DIR}/external/third_party_root/include")
+        PRIVATE "${CMAKE_BINARY_DIR}/external/third_party_root/include/c++/v1"
+        PRIVATE "${CMAKE_BINARY_DIR}/external/third_party_root/include/sys"
+        PRIVATE "${CMAKE_BINARY_DIR}/external/third_party_root/include")
 
 target_sources(server PRIVATE entry.S entry_main.cc)
 
@@ -25,6 +22,10 @@ add_dependencies(server libcxx_build libcxxabi_build newlib_build)
 target_link_directories(server INTERFACE ${CMAKE_BINARY_DIR}/external/third_party_root/lib)
 
 target_link_libraries(server c g m c++ c++abi c++experimental)
+
+add_subdirectory(syscall)
+add_subdirectory(memory)
+add_subdirectory(debug)
 
 target_compile_options(server BEFORE
         PRIVATE -g
