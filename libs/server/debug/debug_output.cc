@@ -3,7 +3,8 @@
 #include "system/syscall.h"
 #include "system/error.h"
 
-void* memset(void* s, int c, size_t n);
+#include <cstring>
+
 extern size_t ftoa_ex(double f, char *buf, int precision);
 extern size_t itoa_ex(char *buf, unsigned long long n, int base);
 

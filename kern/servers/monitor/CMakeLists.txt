@@ -8,32 +8,38 @@ add_custom_command(TARGET monitor POST_BUILD
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         )
 
-target_link_libraries(monitor user)
+target_link_libraries(monitor server)
 
 set_target_properties(monitor PROPERTIES LINK_FLAGS "-Wl,-T ${CMAKE_SOURCE_DIR}/config/build/user.ld")
 
 target_include_directories(monitor PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
-target_link_libraries(monitor arch_amd64 c g m c++ c++abi c++experimental)
+target_link_libraries(monitor arch_amd64 c++ c++abi c++experimental)
 
 target_compile_options(monitor BEFORE
+        PRIVATE -g
         PRIVATE --target=x86_64-pc-linux-elf
-        PRIVATE -gdwarf-2
         PRIVATE -fno-pie
         PRIVATE -fno-exceptions
         PRIVATE -fno-rtti
+        PRIVATE -fno-stack-protector
         PRIVATE -nostdlib
+        PRIVATE -ffreestanding
+        PRIVATE -fno-builtin
         PRIVATE -Wall
+        PRIVATE -Wno-gnu-include-next
         PRIVATE -Wextra
         PRIVATE -march=x86-64
         PRIVATE -mtls-direct-seg-refs
-        PRIVATE -mgeneral-regs-only
-        PRIVATE -mno-implicit-float
         PRIVATE -mno-sse
-        PRIVATE -mno-avx
+        PRIVATE -msoft-float
         PRIVATE -mcmodel=large
         PRIVATE -mno-red-zone
-        PRIVATE -fmodules)
+        PRIVATE -nostdlibinc
+        PRIVATE -D__ELF__
+        PRIVATE -D_LDBL_EQ_DBL
+        PRIVATE -D_GNU_SOURCE
+        PRIVATE -D_POSIX_TIMERS)
 
 
 target_link_options(monitor
