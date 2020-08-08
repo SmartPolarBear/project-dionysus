@@ -37,7 +37,7 @@ namespace process
 
 	enum load_binary_flags
 	{
-		LOAD_BINARY_RUN_IMMEDIATELY
+		LOAD_BINARY_RUN_IMMEDIATELY = 0b0001
 	};
 
 	constexpr size_t PROC_WAITING_INTERRUPTED = 0x80000000;

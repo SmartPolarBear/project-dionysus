@@ -102,6 +102,7 @@ static inline error_code load_server_info()
 
 error_code monitor::monitor_init()
 {
+
 	auto ret = load_monitor_executable();
 
 	if (ret != ERROR_SUCCESS)

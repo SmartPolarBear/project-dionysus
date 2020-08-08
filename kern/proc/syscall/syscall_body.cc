@@ -6,6 +6,7 @@
 
 #include "drivers/debug/kdebug.h"
 #include "drivers/apic/traps.h"
+#include "drivers/lock/spinlock.h"
 
 #include "arch/amd64/cpuid.h"
 #include "arch/amd64/msr.h"
@@ -14,6 +15,7 @@
 #include "libkernel/console/builtin_text_io.hpp"
 
 using namespace syscall;
+
 
 size_t get_nth_arg(const syscall_regs* regs, size_t n)
 {

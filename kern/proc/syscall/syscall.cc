@@ -5,6 +5,7 @@
 #include "system/syscall.h"
 
 #include "drivers/debug/kdebug.h"
+#include "drivers/lock/spinlock.h"
 
 #include "arch/amd64/cpuid.h"
 #include "arch/amd64/msr.h"
@@ -14,6 +15,12 @@
 
 using namespace syscall;
 using namespace trap;
+
+using lock::spinlock;
+using lock::spinlock_acquire;
+using lock::spinlock_initlock;
+using lock::spinlock_release;
+using lock::spinlock_holding;
 
 [[noreturn]] void system_call_entry_x86()
 {
@@ -39,6 +46,7 @@ PANIC void syscall::system_call_init()
 		ia32_EFER_val |= 0b1;
 		wrmsr(MSR_EFER, ia32_EFER_val);
 	}
+
 
 	wrmsr(MSR_STAR, (SEGMENTSEL_UNULL << 48ull) | (SEGMENTSEL_KCODE << 32ull));
 

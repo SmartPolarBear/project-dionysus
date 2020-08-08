@@ -61,9 +61,9 @@ using lock::spinlock_holding;
 
 				cpu()->tss.rsp0 = cur_proc->kstack + process::process_dispatcher::KERNSTACK_SIZE;
 
-				swap_gs();
-				gs_put(KERNEL_GS_KSTACK, (void*)cur_proc->kstack);
-				swap_gs();
+//				swap_gs();
+//				gs_put(KERNEL_GS_KSTACK, (void*)cur_proc->kstack);
+//				swap_gs();
 
 				uintptr_t* kstack_gs = (uintptr_t*)(((uint8_t*)cpu->kernel_gs) + KERNEL_GS_KSTACK);
 				*kstack_gs = cur_proc->kstack;
