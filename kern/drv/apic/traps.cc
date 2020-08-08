@@ -52,7 +52,7 @@ struct handle_table_struct
 // default handle of trap
 error_code default_trap_handle([[maybe_unused]] trap::trap_frame info)
 {
-	// TODO: the handle doesn't exist
+	// the handle doesn't exist
 
 	write_format("trap %d caused but not handled.\n",
 		info.trap_num);

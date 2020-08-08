@@ -49,7 +49,6 @@ static inline void run(char* name)
 static inline void init_servers()
 {
 	// start monitor servers
-	//FIXME this trigger a page fault after some context switchings
 	monitor::monitor_init();
 }
 

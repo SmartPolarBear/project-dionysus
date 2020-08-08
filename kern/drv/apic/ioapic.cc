@@ -29,10 +29,10 @@ Delivery Mode	    8 - 10	    How the interrupt will be sent to the CPU(s). It ca
 Destination Mode	11	        Specify how the Destination field shall be interpreted. 0: Physical Destination, 1: Logical Destination
 Delivery Status	    12	        If 0, the IRQ is just relaxed and waiting for something to happen (or it has fired and already processed by Local APIC(s)). If 1, it means that the IRQ has been sent to the Local APICs but it's still waiting to be delivered.
 Pin Polarity	    13	        0: Active high, 1: Active low. For ISA IRQs assume Active High unless otherwise specified in Interrupt Source Override descriptors of the MADT or in the MP Tables.
-Remote IRR	        14	        TODO
+Remote IRR	        14
 Trigger Mode	    15	        0: Edge, 1: Level. For ISA IRQs assume Edge unless otherwise specified in Interrupt Source Override descriptors of the MADT or in the MP Tables.
 Mask	            16	        Just like in the old PIC, you can temporary disable this IRQ by setting this bit, and reenable it by clearing the bit.
-Destination	        56 - 63	    This field is interpreted according to the Destination Format bit. If Physical destination is choosen, then this field is limited to bits 56 - 59 (only 16 CPUs addressable). You put here the APIC ID of the CPU that you want to receive the interrupt. TODO: Logical destination format...
+Destination	        56 - 63	    This field is interpreted according to the Destination Format bit. If Physical destination is choosen, then this field is limited to bits 56 - 59 (only 16 CPUs addressable). You put here the APIC ID of the CPU that you want to receive the interrupt.
 */
 
 union redirection_entry

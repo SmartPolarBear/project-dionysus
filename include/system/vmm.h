@@ -35,7 +35,7 @@ namespace vmm
 
 	struct mm_struct
 	{
-		// TODO: optimize with trees
+		// TODO: optimize it with trees
 		list_head vma_list;    // linked list of vma structures
 		vma_struct* mmap_cache; // for quicker search of vma
 		pde_ptr_t pgdir;

@@ -152,6 +152,6 @@ static inline PANIC madt_ioapic *first_ioapic(void)
 
 size_t get_intr_src_override_descriptors(size_t bufsz, OUT madt_iso **buf);
 
-//TODO: instead of copy madt_lapic to cpus array, directly provide interface to get them
+// instead of copy madt_lapic to cpus array, directly provide interface to get them
 
 } // namespace acpi
