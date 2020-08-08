@@ -271,9 +271,6 @@ error_code process::process_load_binary(IN process_dispatcher* proc,
 
 error_code process::process_terminate(error_code err)
 {
-	// it in fact won't return, so swap gs first
-	safe_swap_gs();
-
 	return process_terminal_impl(cur_proc(), err);
 }
 

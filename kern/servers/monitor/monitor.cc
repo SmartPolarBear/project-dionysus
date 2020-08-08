@@ -4,7 +4,6 @@
 
 extern "C" int main(int argc, char** argv)
 {
-//	debug_write_format("argc=%d, argv[0]=0x%x, argv[1]=0x%x\n", argc, argv[0], argv[1]);
-	while (true);
+	debug_write_format("argc=%d, argv[0]=0x%x, argv[1]=0x%x\n", argc, argv[0], argv[1]);
 	return 0;
 }
