@@ -12,12 +12,12 @@ int main()
 	size_t num = 1234567;
 	for (;;)
 	{
-		AddMessage add;
-		ipc_receive(&add);
-
-		AddRetMessage ret;
-		ret.ret = add.a + add.b;
-		ipc_send(0, &ret, sizeof(ret));
+//		AddMessage add;
+//		ipc_receive(&add);
+//
+//		AddRetMessage ret;
+//		ret.ret = add.a + add.b;
+//		ipc_send(0, &ret, sizeof(ret));
 
 //		AddMessage* add = new AddMessage{};
 //		ipc_receive(add);
@@ -28,9 +28,9 @@ int main()
 //		delete add;
 //		delete ret;
 
-//		memmove(buf, &num, sizeof(num));
-//		ipc_send_page(0, 12345, buf, 7);
-//		num++;
+		memmove(buf, &num, sizeof(num));
+		ipc_send_page(0, 12345, buf, 7);
+		num++;
 	}
 	return 0;
 }

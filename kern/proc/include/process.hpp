@@ -28,9 +28,6 @@ struct process_list_struct
 
 extern process_list_struct proc_list;
 
-
-[[maybe_unused]] extern "C" [[noreturn]] void run_process(trap::trap_frame* tf, uintptr_t kstack);
-
 extern "C" [[noreturn]] void user_proc_entry();
 
 extern "C" void context_switch(context** oldcontext, context* newcontext);

@@ -31,7 +31,7 @@ void write_format_a(const char* fmt, va_list ap)
 	constexpr size_t MAXNUMBER_LEN = 64;
 	char nbuf[MAXNUMBER_LEN] = {};
 
-	if (fmt == 0)
+	if (fmt == nullptr)
 	{
 		put_str("write_format: Invalid null format strings.\n");
 	}

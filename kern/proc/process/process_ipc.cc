@@ -95,7 +95,6 @@ error_code process::process_ipc_receive(OUT void* message_out)
 	return ERROR_SUCCESS;
 }
 
-// FIXME: can have racing condition
 error_code process::process_ipc_send_page(process_id pid, uint64_t unique_val, const void* page, size_t perm)
 {
 	auto target = find_process(pid);
@@ -168,7 +167,6 @@ error_code process::process_ipc_send_page(process_id pid, uint64_t unique_val, c
 	return ERROR_SUCCESS;
 }
 
-// FIXME: can have racing condition
 error_code process::process_ipc_receive_page(void* out_page)
 {
 	if (out_page < (void*)USER_TOP && ((uintptr_t)out_page) % PAGE_SIZE)

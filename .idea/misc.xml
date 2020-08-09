@@ -11,6 +11,7 @@
       <file path="$PROJECT_DIR$/../build" />
       <file path="$PROJECT_DIR$/../external" />
       <file path="$PROJECT_DIR$/external" />
+      <file path="$PROJECT_DIR$/venv" />
     </excludeRoots>
   </component>
   <component name="JavaScriptSettings">
