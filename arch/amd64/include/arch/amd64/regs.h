@@ -36,6 +36,20 @@ static inline void lcr3(uintptr_t val)
                  : "r"(val));
 }
 
+static inline uintptr_t rcr4(void) {
+	uintptr_t cr4;
+	asm volatile ("mov %%cr4, %0" : "=r" (cr4) :: "memory");
+	return cr4;
+}
+
+static inline void lcr4(uintptr_t val)
+{
+	asm volatile("mov %0,%%cr4"
+	:
+	: "r"(val));
+}
+
+
 //read eflags
 static inline size_t read_eflags(void)
 {

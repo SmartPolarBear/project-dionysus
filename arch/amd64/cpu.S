@@ -47,3 +47,19 @@ sti:
 hlt:
     hlt
     ret
+
+.global enable_avx
+enable_avx:
+    push %rax
+    push %rcx
+    push %rdx
+
+    xor %rcx,%rcx
+    xgetbv
+    or $0x7, %eax
+    xsetbv
+
+    pop %rdx
+    pop %rcx
+    pop %rax
+    ret

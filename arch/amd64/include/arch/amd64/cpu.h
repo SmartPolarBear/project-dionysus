@@ -13,3 +13,5 @@ extern "C" void swap_gs();
 extern "C" void cli();
 extern "C" void sti();
 extern "C" void hlt();
+
+extern "C" void enable_avx();

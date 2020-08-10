@@ -20,6 +20,7 @@
 #include "system/scheduler.h"
 #include "system/syscall.h"
 #include "system/vmm.h"
+#include "drivers/simd/simd.hpp"
 
 #include "libkernel/console/builtin_text_io.hpp"
 
@@ -81,6 +82,9 @@ extern "C" [[noreturn]] void kmain()
 
 	// initialize syscall
 	syscall::system_call_init();
+
+	// initialize SIMD like AVX and sse
+	simd::enable_simd();
 
 	// initialize user process manager
 	process::process_init();

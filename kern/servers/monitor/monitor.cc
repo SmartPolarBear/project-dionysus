@@ -3,10 +3,13 @@
 
 #include "boot/multiboot2.h"
 
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 
 uintptr_t g_framebuffer_addr = 0;
 multiboot_tag_framebuffer* g_tag_framebuffer = nullptr;
+
+char str[16] = { 0 };
 
 extern "C" int main(int argc, char** argv)
 {
@@ -17,8 +20,6 @@ extern "C" int main(int argc, char** argv)
 
 	g_tag_framebuffer = reinterpret_cast<decltype(g_tag_framebuffer)>(argv[1]);
 	g_framebuffer_addr = g_tag_framebuffer->common.framebuffer_addr;
-
-
 
 	return 0;
 }
