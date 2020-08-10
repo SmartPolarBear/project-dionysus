@@ -1,5 +1,5 @@
 #include "dionysus.hpp"
-extern "C" void* memmove(void* s1, const void* s2, size_t n);
+#include <cstring>
 
 uint8_t buf[4_MB] __attribute__((aligned(2_MB)));
 #pragma clang diagnostic push

@@ -8,33 +8,33 @@ add_custom_command(TARGET ipctest POST_BUILD
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         )
 
-target_link_libraries(ipctest user)
-
 set_target_properties(ipctest PROPERTIES LINK_FLAGS "-Wl,-T ${CMAKE_SOURCE_DIR}/config/build/user.ld")
 
 target_include_directories(ipctest PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
-target_link_libraries(ipctest c++ c++abi c++experimental)
-
 target_compile_options(ipctest BEFORE
+        PRIVATE -g
         PRIVATE --target=x86_64-pc-linux-elf
-        PRIVATE -gdwarf-2
         PRIVATE -fno-pie
         PRIVATE -fno-exceptions
         PRIVATE -fno-rtti
+        PRIVATE -fno-stack-protector
         PRIVATE -nostdlib
+        PRIVATE -fno-builtin
         PRIVATE -Wall
+        PRIVATE -Wno-gnu-include-next
         PRIVATE -Wextra
         PRIVATE -march=x86-64
         PRIVATE -mtls-direct-seg-refs
-        PRIVATE -mgeneral-regs-only
-        PRIVATE -mno-implicit-float
         PRIVATE -mno-sse
-        PRIVATE -mno-avx
+        PRIVATE -msoft-float
         PRIVATE -mcmodel=large
         PRIVATE -mno-red-zone
-        PRIVATE -fmodules
-        PRIVATE -std=c++2a)
+        PRIVATE -nostdlibinc
+        PRIVATE -D__ELF__
+        PRIVATE -D_LDBL_EQ_DBL
+        PRIVATE -D_GNU_SOURCE
+        PRIVATE -D_POSIX_TIMERS)
 
 
 target_link_options(ipctest
@@ -42,3 +42,5 @@ target_link_options(ipctest
         PRIVATE -nostdlib
         PRIVATE -nostartfiles
         PRIVATE -Wl,--build-id=none)
+
+target_link_libraries(ipctest user)
