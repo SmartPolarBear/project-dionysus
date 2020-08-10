@@ -1,9 +1,24 @@
 #include "server_syscalls.hpp"
 #include "debug_output.hpp"
-//#include "dionysus.hpp"
+
+#include "boot/multiboot2.h"
+
+#include <string.h>
+
+uintptr_t g_framebuffer_addr = 0;
+multiboot_tag_framebuffer* g_tag_framebuffer = nullptr;
 
 extern "C" int main(int argc, char** argv)
 {
-	debug_write_format("argc=%d, argv[0]=0x%x, argv[1]=0x%x\n", argc, argv[0], argv[1]);
+	if (argc < 2 || argv[1] == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	g_tag_framebuffer = reinterpret_cast<decltype(g_tag_framebuffer)>(argv[1]);
+	g_framebuffer_addr = g_tag_framebuffer->common.framebuffer_addr;
+
+
+
 	return 0;
 }

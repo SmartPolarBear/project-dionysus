@@ -51,9 +51,9 @@ req_tag_start:
     .short MULTIBOOT_HEADER_TAG_OPTIONAL
     .long req_tag_len
     .long MULTIBOOT_TAG_TYPE_MMAP
+    .long MULTIBOOT_TAG_TYPE_VBE
     .long MULTIBOOT_TAG_TYPE_ACPI_NEW
     .long MULTIBOOT_TAG_TYPE_ACPI_OLD
-    .long MULTIBOOT_TAG_TYPE_VBE
     .long MULTIBOOT_TAG_TYPE_FRAMEBUFFER
     .long MULTIBOOT_TAG_TYPE_NETWORK
 req_tag_end:

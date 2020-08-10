@@ -8,13 +8,9 @@ add_custom_command(TARGET monitor POST_BUILD
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         )
 
-target_link_libraries(monitor server)
-
 set_target_properties(monitor PROPERTIES LINK_FLAGS "-Wl,-T ${CMAKE_SOURCE_DIR}/config/build/user.ld")
 
 target_include_directories(monitor PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
-
-target_link_libraries(monitor arch_amd64 c++ c++abi c++experimental)
 
 target_compile_options(monitor BEFORE
         PRIVATE -g
@@ -24,7 +20,6 @@ target_compile_options(monitor BEFORE
         PRIVATE -fno-rtti
         PRIVATE -fno-stack-protector
         PRIVATE -nostdlib
-        PRIVATE -ffreestanding
         PRIVATE -fno-builtin
         PRIVATE -Wall
         PRIVATE -Wno-gnu-include-next
@@ -47,3 +42,5 @@ target_link_options(monitor
         PRIVATE -nostdlib
         PRIVATE -nostartfiles
         PRIVATE -Wl,--build-id=none)
+
+target_link_libraries(monitor arch_amd64 server)

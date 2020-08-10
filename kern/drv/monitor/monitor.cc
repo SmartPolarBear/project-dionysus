@@ -13,10 +13,14 @@
 
 #include "libkernel/console/builtin_text_io.hpp"
 
-#include <cstring>
-
 console::console_dev g_monitor_dev{};
 process::process_dispatcher* g_monitor_proc = nullptr;
+size_t g_framebuffer_size = 0;
+
+static inline size_t get_framebuffer_size(IN const multiboot_tag_framebuffer* tag)
+{
+	return 0;
+}
 
 static inline error_code load_monitor_executable()
 {
@@ -73,18 +77,20 @@ static inline error_code load_server_info()
 
 	// load multiboot tags
 	auto framebuffer_tag = multiboot::acquire_tag_ptr<multiboot_tag_framebuffer>(MULTIBOOT_TAG_TYPE_FRAMEBUFFER);
-	static_assert(sizeof(*framebuffer_tag) == sizeof(multiboot_tag_framebuffer),
-		"framebuffer_tag isn't a valid pointer");
 
-	if(framebuffer_tag==nullptr)
+	if (framebuffer_tag == nullptr)
 	{
 		return -ERROR_VMA_NOT_FOUND;
 	}
 
+	// map a page for framebuffer
+	vmm::mm_map(g_monitor_proc->mm, framebuffer_tag->common.framebuffer_addr,
+		PAGE_SIZE, vmm::VM_WRITE, nullptr);
+
 	uintptr_t heap_addr = pmm::page_to_va(pages);
 
 	// copy framebuffer tag to server's heap
-	uintptr_t frmbuf_tag_user =heap_addr;
+	uintptr_t frmbuf_tag_user = heap_addr;
 	heap_addr += sizeof(*framebuffer_tag);
 	memmove((void*)frmbuf_tag_user, framebuffer_tag, sizeof(*framebuffer_tag));
 
@@ -93,6 +99,8 @@ static inline error_code load_server_info()
 	argv_ptr += sizeof(uintptr_t); // argv[0] should be the path to program itself, now we leave it empty
 	*((uintptr_t*)argv_ptr) = frmbuf_tag_user;
 	argv_ptr += sizeof(uintptr_t);
+
+	heap_addr = argv_ptr;
 
 	g_monitor_proc->tf->rdi = 2; // argc
 	g_monitor_proc->tf->rsi = argv_start; // argv

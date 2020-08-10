@@ -92,7 +92,7 @@ add_dependencies(libcxx_build libcxxabi_build newlib_build)
 
 #libcxxabi user
 
-set(LIBCXXABI_CFLAGS_USER "-g -nostdlibinc -msoft-float -mno-sse -mno-avx -I${NEWLIB_USER_INC_PATH} -fdeclspec -mcmodel=large -D__ELF__ -U__APPLE__ -D_LDBL_EQ_DBL -D_LIBCPP_HAS_NO_THREADS -D_LIBCPP_HAS_NO_LIBRARY_ALIGNED_ALLOCATION")
+set(LIBCXXABI_CFLAGS_USER "-g -nostdlibinc -msoft-float -mno-sse -mno-avx -I${NEWLIB_USER_INC_PATH} -fdeclspec -mcmodel=large -D__ELF__ -U__APPLE__ -D_LDBL_EQ_DBL -D_LIBCPP_HAS_NO_THREADS -D_LIBCPP_HAS_NO_ATOMIC_HEADER  -D_LIBCPP_HAS_NO_LIBRARY_ALIGNED_ALLOCATION")
 
 list(APPEND LIBCXXABI_CMAKE_ARGS_USER
         -DCMAKE_AR=${AR}
@@ -130,7 +130,6 @@ add_dependencies(libcxxabi_build_user newlib_build_user)
 
 
 #libcxx user
-
 
 set(LIBCXX_CXXFLAGS_USER "-g -nostdlibinc -msoft-float -mno-avx -v -I${NEWLIB_USER_INC_PATH} -D__ELF__ -D_LIBUNWIND_IS_BAREMETAL=1 -D_LDBL_EQ_DBL -U__APPLE__ -D_LIBCPP_HAS_NO_LIBRARY_ALIGNED_ALLOCATION -D_GNU_SOURCE -D_POSIX_TIMERS -mcmodel=large" )
 set(LIBCXX_CFLAGS_USER "-g -nostdlibinc -msoft-float -mno-avx  -I${NEWLIB_USER_INC_PATH} -fdeclspec -D__ELF__ -D_LIBUNWIND_IS_BAREMETAL=1 -D_LDBL_EQ_DBL -U__APPLE__ -D_LIBCPP_HAS_NO_LIBRARY_ALIGNED_ALLOCATION -D_GNU_SOURCE -D_POSIX_TIMERS -mcmodel=large")
