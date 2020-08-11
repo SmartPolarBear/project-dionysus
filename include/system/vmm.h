@@ -124,7 +124,9 @@ namespace vmm
 
 	pde_ptr_t walk_pgdir(pde_ptr_t pgdir, size_t va, bool create);
 
-// unmap or free memory ranges
+// map/nmap or free memory ranges
+	error_code map_range(pde_ptr_t pgdir,uintptr_t va_start,uintptr_t pa_start,size_t len);
+
 	void free_range(pde_ptr_t pgdir, uintptr_t start, uintptr_t end);
 
 	void unmap_range(pde_ptr_t pgdir, uintptr_t start, uintptr_t end);

@@ -16,6 +16,23 @@
 console::console_dev g_monitor_dev{};
 process::process_dispatcher* g_monitor_proc = nullptr;
 
+static inline error_code map_framebuffer(multiboot_tag_framebuffer* framebuffer_tag)
+{
+	vmm::mm_map(g_monitor_proc->mm, framebuffer_tag->common.framebuffer_addr,
+		PAGE_SIZE, vmm::VM_WRITE, nullptr);
+
+	auto error = vmm::map_range(g_monitor_proc->mm->pgdir,
+		framebuffer_tag->common.framebuffer_addr,
+		framebuffer_tag->common.framebuffer_addr,
+		PAGE_SIZE);
+
+	if (error != ERROR_SUCCESS)
+	{
+		return error;
+	}
+
+	return ERROR_SUCCESS;
+}
 
 static inline error_code load_monitor_executable()
 {
@@ -79,8 +96,11 @@ static inline error_code load_server_info()
 	}
 
 	// map a page for framebuffer
-	vmm::mm_map(g_monitor_proc->mm, framebuffer_tag->common.framebuffer_addr,
-		PAGE_SIZE, vmm::VM_WRITE, nullptr);
+	ret = map_framebuffer(framebuffer_tag);
+	if (ret != ERROR_SUCCESS)
+	{
+		return ret;
+	}
 
 	uintptr_t heap_addr = pmm::page_to_va(pages);
 

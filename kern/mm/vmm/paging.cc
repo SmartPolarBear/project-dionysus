@@ -283,6 +283,14 @@ void vmm::copy_range(pde_ptr_t from, pde_ptr_t to, uintptr_t start, uintptr_t en
 	}
 }
 
+error_code vmm::map_range(pde_ptr_t pgdir, uintptr_t va_start, uintptr_t pa_start, size_t len)
+{
+	va_start = PAGE_ROUNDDOWN(va_start);
+	pa_start = PAGE_ROUNDDOWN(pa_start);
+	uintptr_t pa_end = PAGE_ROUNDUP(pa_start + len);
+	return map_pages(pgdir, va_start, pa_start, pa_end);
+}
+
 void vmm::install_kernel_pml4t()
 {
 	lcr3(V2P((uintptr_t)g_kpml4t));
