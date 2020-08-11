@@ -15,12 +15,7 @@
 
 console::console_dev g_monitor_dev{};
 process::process_dispatcher* g_monitor_proc = nullptr;
-size_t g_framebuffer_size = 0;
 
-static inline size_t get_framebuffer_size(IN const multiboot_tag_framebuffer* tag)
-{
-	return 0;
-}
 
 static inline error_code load_monitor_executable()
 {

@@ -8,6 +8,7 @@
 
 uintptr_t g_framebuffer_addr = 0;
 multiboot_tag_framebuffer* g_tag_framebuffer = nullptr;
+volatile uint16_t* g_framebuffer = nullptr;
 
 char str[16] = { 0 };
 
@@ -20,6 +21,15 @@ extern "C" int main(int argc, char** argv)
 
 	g_tag_framebuffer = reinterpret_cast<decltype(g_tag_framebuffer)>(argv[1]);
 	g_framebuffer_addr = g_tag_framebuffer->common.framebuffer_addr;
+
+	g_framebuffer = (volatile uint16_t*)g_framebuffer_addr;
+
+	for (size_t i = 0;
+		 i < g_tag_framebuffer->common.framebuffer_width * g_tag_framebuffer->common.framebuffer_height;
+		 i++)
+	{
+		g_framebuffer[i] = 0;
+	}
 
 	return 0;
 }
