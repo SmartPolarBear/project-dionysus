@@ -20,7 +20,8 @@ QEMUGDB = -gdb tcp::$(GDBPORT)
 
 CPUS = 4
 
-QEMUOPTS = -no-reboot -vga std -drive file=$(BUILD)/disk.img,index=0,media=disk,format=raw
+QEMUOPTS = -no-reboot -vga std -drive file=$(BUILD)/disk.img,index=0,media=disk,format=raw,id=A1,if=none \
+        -device nvme,drive=A1,serial=1234
 QEMUOPTS += -d int
 QEMUOPTS += -smp $(CPUS) -m 6G $(QEMUEXTRA)
 

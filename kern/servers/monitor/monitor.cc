@@ -10,12 +10,12 @@ uintptr_t g_framebuffer_addr = 0;
 multiboot_tag_framebuffer* g_tag_framebuffer = nullptr;
 volatile uint16_t* g_framebuffer = nullptr;
 
-static constexpr uint16_t make_cga_color_attrib(uint8_t freground, uint8_t background)
+static inline constexpr uint16_t make_cga_color_attrib(uint8_t freground, uint8_t background)
 {
 	return (background << 4) | (freground & 0x0F);
 }
 
-static constexpr uint16_t make_cga_char(char content, uint16_t attr)
+static inline constexpr uint16_t make_cga_char(char content, uint16_t attr)
 {
 	uint16_t ret = content | (attr << 8);
 	return ret;
@@ -33,12 +33,12 @@ extern "C" int main(int argc, char** argv)
 
 	g_framebuffer = (volatile uint16_t*)g_framebuffer_addr;
 
-	for (size_t i = 0;
-		 i < g_tag_framebuffer->common.framebuffer_width * g_tag_framebuffer->common.framebuffer_height;
-		 i++)
-	{
-		g_framebuffer[i] = make_cga_char('f', make_cga_color_attrib(1, 2));
-	}
+//	for (size_t i = 0;
+//		 i < g_tag_framebuffer->common.framebuffer_width * g_tag_framebuffer->common.framebuffer_height;
+//		 i++)
+//	{
+//		g_framebuffer[i] = make_cga_char('a' + (i % 25), make_cga_color_attrib(3, 2));
+//	}
 
 	return 0;
 }
