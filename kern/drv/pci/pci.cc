@@ -4,7 +4,7 @@
 
 #include "drivers/pci/pci.hpp"
 
-uint32_t pci::pci_config_read_dword(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset)
+uint32_t pci::pci_config_read_dword_legacy(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset)
 {
 	auto addr = (((uint32_t) bus) << 16u) |
 		(((uint32_t) slot) << 11u) |

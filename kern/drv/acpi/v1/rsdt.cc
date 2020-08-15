@@ -14,41 +14,36 @@
 
 #include <cstring>
 
-using acpi::acpi_desc_header;
-using acpi::acpi_madt;
-using acpi::acpi_rsdp;
-using acpi::acpi_rsdt;
-using acpi::acpi_xsdt;
-using acpi::madt_entry_header;
-using acpi::madt_ioapic;
-using acpi::madt_iso;
+using namespace acpi;
 
 using trap::TRAP_NUMBERMAX;
 
-error_code init_rsdt(const acpi::acpi_rsdp *rsdp)
+error_code init_rsdt(const acpi::acpi_rsdp* rsdp)
 {
-    acpi_rsdt *rsdt = reinterpret_cast<acpi_rsdt *>(P2V(rsdp->rsdt_addr_phys));
+	acpi_rsdt* rsdt = reinterpret_cast<acpi_rsdt*>(P2V(rsdp->rsdt_addr_phys));
 
-    size_t entrycnt = (rsdt->header.length - sizeof(rsdt->header)) / 4;
+	// KDEBUG_ASSERT(acpi_header_checksum(&rsdt->header) == true);
+	if (!acpi_header_checksum(&rsdt->header))
+	{
+		return -ERROR_INVALID;
+	}
 
-    // KDEBUG_ASSERT(acpi_sdt_checksum(&rsdt->header) == true);
-    if (!acpi_sdt_checksum(&rsdt->header))
-    {
-        return -ERROR_INVALID;
-    }
+	acpi_madt* madt = nullptr;
+	acpi_mcfg* mcfg = nullptr;
+	for (size_t i = 0;
+		 i < (rsdt->header.length - sizeof(acpi_desc_header)) / sizeof(uint32_t);
+		 i++)
+	{
+		auto header = reinterpret_cast<acpi_desc_header*>(P2V(rsdt->entry[i]));
+		if (strncmp((char*)header->signature, acpi::SIGNATURE_MADT, strlen(acpi::SIGNATURE_MADT)) == 0)
+		{
+			madt = reinterpret_cast<decltype(madt)>(header);
+		}
+		else if (strncmp((char*)header->signature, acpi::SIGNATURE_MCFG, strlen(acpi::SIGNATURE_MCFG)) == 0)
+		{
+			mcfg = reinterpret_cast<decltype(mcfg)>(header);
+		}
+	}
 
-    acpi_madt *madt = nullptr;
-    for (size_t i = 0; i < entrycnt; i++)
-    {
-        auto header = reinterpret_cast<acpi_desc_header *>(P2V(rsdt->entry[i]));
-        if (strncmp((char *)header->signature, acpi::SIGNATURE_MADT, strlen(acpi::SIGNATURE_MADT)) == 0)
-        {
-
-            madt = reinterpret_cast<decltype(madt)>(header);
-            break;
-        }
-    }
-
-
-    return acpi_madt_init(madt);
+	return acpi_madt_init(madt);
 }

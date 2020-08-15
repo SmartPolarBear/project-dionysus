@@ -98,3 +98,14 @@ PANIC void acpi::init_acpi(void)
         KDEBUG_RICHPANIC_CODE(ret, true, "");
     }
 }
+
+
+bool acpi::acpi_header_checksum(const acpi::acpi_desc_header *header)
+{
+    uint8_t sum = 0;
+    for (size_t i = 0; i < header->length; i++)
+    {
+        sum += ((char *)header)[i];
+    }
+    return sum == 0;
+}

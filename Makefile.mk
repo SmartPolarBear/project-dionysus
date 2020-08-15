@@ -20,7 +20,9 @@ QEMUGDB = -gdb tcp::$(GDBPORT)
 
 CPUS = 4
 
-QEMUOPTS = -no-reboot -vga std -drive file=$(BUILD)/disk.img,index=0,media=disk,format=raw
+QEMUOPTS = -no-reboot -vga std -drive file=$(BUILD)/disk.img,index=0,media=disk,format=raw,id=disk0,if=none \
+            -device ahci,id=ahci -device ide-hd,drive=disk0,bus=ahci.0 \
+            -machine type=q35
 QEMUOPTS += -d int
 QEMUOPTS += -smp $(CPUS) -m 6G $(QEMUEXTRA)
 
