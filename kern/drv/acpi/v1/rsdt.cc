@@ -22,8 +22,7 @@ error_code init_rsdt(const acpi::acpi_rsdp* rsdp)
 {
 	acpi_rsdt* rsdt = reinterpret_cast<acpi_rsdt*>(P2V(rsdp->rsdt_addr_phys));
 
-	// KDEBUG_ASSERT(acpi_header_checksum(&rsdt->header) == true);
-	if (!acpi_header_checksum(&rsdt->header))
+	if (!acpi_header_valid(&rsdt->header))
 	{
 		return -ERROR_INVALID;
 	}
@@ -45,5 +44,13 @@ error_code init_rsdt(const acpi::acpi_rsdp* rsdp)
 		}
 	}
 
-	return acpi_madt_init(madt);
+	auto ret = acpi_madt_init(madt);
+	if (ret != ERROR_SUCCESS)
+	{
+		return ret;
+	}
+
+	ret = acpi_mcfg_init(mcfg);
+
+	return ret;
 }

@@ -16,7 +16,6 @@
 #include <cstring>
 #include <algorithm>
 
-
 using acpi::acpi_desc_header;
 using acpi::acpi_madt;
 using acpi::acpi_rsdp;
@@ -37,98 +36,105 @@ size_t ioapic_count = 0;
 madt_iso intr_src_overrides[TRAP_NUMBERMAX] = {};
 size_t iso_count = 0;
 
-[[nodiscard]] error_code acpi_madt_init(const acpi_madt *madt)
+[[nodiscard]] error_code acpi_madt_init(const acpi_madt* madt)
 {
-    // KDEBUG_ASSERT(madt != nullptr);
-    // KDEBUG_ASSERT(madt->header.length >= sizeof(*madt));
-    if (madt == nullptr)
-    {
-        return -ERROR_INVALID;
-    }
+	// KDEBUG_ASSERT(madt != nullptr);
+	// KDEBUG_ASSERT(madt->header.length >= sizeof(*madt));
 
-    if (madt->header.length < sizeof(*madt))
-    {
-        return -ERROR_INVALID;
-    }
+	if (madt == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
 
-    local_apic::lapic = IO2V<decltype(local_apic::lapic)>((void *)static_cast<uintptr_t>(madt->lapic_addr_phys));
+	if (madt->header.length < sizeof(*madt))
+	{
+		return -ERROR_INVALID;
+	}
 
-    const madt_entry_header *begin = reinterpret_cast<decltype(begin)>(madt->table),
-                            *end = reinterpret_cast<decltype(begin)>(madt->table + madt->header.length - sizeof(*madt));
+	if (!acpi_header_valid(&madt->header))
+	{
+		return -ERROR_INVALID;
+	}
 
-    auto next_entry = [](auto entry) {
-        return reinterpret_cast<decltype(entry)>((void *)(uintptr_t(entry) + entry->length));
-    };
+	local_apic::lapic = IO2V<decltype(local_apic::lapic)>((void*)static_cast<uintptr_t>(madt->lapic_addr_phys));
 
-    for (auto entry = const_cast<madt_entry_header *>(begin);
-         entry != end;
-         entry = next_entry(entry))
-    {
-        switch (entry->type)
-        {
-        case acpi::MADT_ENTRY_LAPIC:
-        {
-            acpi::madt_lapic *lapic = reinterpret_cast<decltype(lapic)>(entry);
-            // KDEBUG_ASSERT(sizeof(*lapic) == lapic->length);
-            if (!(sizeof(*lapic) == lapic->length))
-            {
-                return -ERROR_INVALID;
-            }
+	const madt_entry_header* begin = reinterpret_cast<decltype(begin)>(madt->table),
+		* end = reinterpret_cast<decltype(begin)>(madt->table + madt->header.length - sizeof(*madt));
 
-            if (!(lapic->flags & acpi::APIC_LAPIC_ENABLED))
-            {
-                break;
-            }
+	auto next_entry = [](auto entry)
+	{
+	  return reinterpret_cast<decltype(entry)>((void*)(uintptr_t(entry) + entry->length));
+	};
 
-            cpus[cpu_count].id = cpu_count;
-            cpus[cpu_count].apicid = lapic->apic_id;
-            cpus[cpu_count].present = true;
+	for (auto entry = const_cast<madt_entry_header*>(begin);
+		 entry != end;
+		 entry = next_entry(entry))
+	{
+		switch (entry->type)
+		{
+		case acpi::MADT_ENTRY_LAPIC:
+		{
+			acpi::madt_lapic* lapic = reinterpret_cast<decltype(lapic)>(entry);
+			// KDEBUG_ASSERT(sizeof(*lapic) == lapic->length);
+			if (!(sizeof(*lapic) == lapic->length))
+			{
+				return -ERROR_INVALID;
+			}
 
-            cpu_count++;
-            break;
-        }
-        case acpi::MADT_ENTRY_IOAPIC:
-        {
-            acpi::madt_ioapic *ioapic = reinterpret_cast<decltype(ioapic)>(entry);
-            // KDEBUG_ASSERT(sizeof(*ioapic) == ioapic->length);
-            if (!(sizeof(*ioapic) == ioapic->length))
-            {
-                return -ERROR_INVALID;
-            }
+			if (!(lapic->flags & acpi::APIC_LAPIC_ENABLED))
+			{
+				break;
+			}
 
-            ioapics[ioapic_count] = madt_ioapic{*ioapic};
-            ioapic_count++;
-            break;
-        }
-        case acpi::MADT_ENTRY_ISO:
-        {
-            acpi::madt_iso *iso = reinterpret_cast<decltype(iso)>(entry);
-            // KDEBUG_ASSERT(sizeof(*iso) == iso->length);
-            if (!(sizeof(*iso) == iso->length))
-            {
-                return -ERROR_INVALID;
-            }
-            intr_src_overrides[iso_count] = madt_iso{*iso};
-            iso_count++;
-            break;
-        }
-        default:
-            break;
-        }
-    }
+			cpus[cpu_count].id = cpu_count;
+			cpus[cpu_count].apicid = lapic->apic_id;
+			cpus[cpu_count].present = true;
 
-    // the kernel must run with at lease 2 CPUs
-    if (cpu_count < 2)
-    {
-        return -ERROR_HARDWARE_NOT_COMPATIBLE;
-    }
+			cpu_count++;
+			break;
+		}
+		case acpi::MADT_ENTRY_IOAPIC:
+		{
+			acpi::madt_ioapic* ioapic = reinterpret_cast<decltype(ioapic)>(entry);
+			// KDEBUG_ASSERT(sizeof(*ioapic) == ioapic->length);
+			if (!(sizeof(*ioapic) == ioapic->length))
+			{
+				return -ERROR_INVALID;
+			}
 
-    if (ioapic_count < 1)
-    {
-        return -ERROR_INVALID;
-    }
+			ioapics[ioapic_count] = madt_ioapic{ *ioapic };
+			ioapic_count++;
+			break;
+		}
+		case acpi::MADT_ENTRY_ISO:
+		{
+			acpi::madt_iso* iso = reinterpret_cast<decltype(iso)>(entry);
+			// KDEBUG_ASSERT(sizeof(*iso) == iso->length);
+			if (!(sizeof(*iso) == iso->length))
+			{
+				return -ERROR_INVALID;
+			}
+			intr_src_overrides[iso_count] = madt_iso{ *iso };
+			iso_count++;
+			break;
+		}
+		default:
+			break;
+		}
+	}
 
-    return ERROR_SUCCESS;
+	// the kernel must run with at lease 2 CPUs
+	if (cpu_count < 2)
+	{
+		return -ERROR_HARDWARE_NOT_COMPATIBLE;
+	}
+
+	if (ioapic_count < 1)
+	{
+		return -ERROR_INVALID;
+	}
+
+	return ERROR_SUCCESS;
 }
 
 // size_t acpi::get_ioapic_count(void)
@@ -149,36 +155,36 @@ size_t iso_count = 0;
 //     return ioapics[0];
 // }
 
-size_t acpi::get_ioapic_descriptors(size_t bufsz, OUT madt_ioapic **buf)
+size_t acpi::get_ioapic_descriptors(size_t bufsz, OUT madt_ioapic** buf)
 {
-    if (buf == nullptr)
-    {
-        return ioapic_count;
-    }
+	if (buf == nullptr)
+	{
+		return ioapic_count;
+	}
 
-    size_t cpy_count = min(bufsz, ioapic_count);
-    for (size_t i = 0; i < cpy_count; i++)
-    {
-        buf[i] = &ioapics[i];
-    }
+	size_t cpy_count = min(bufsz, ioapic_count);
+	for (size_t i = 0; i < cpy_count; i++)
+	{
+		buf[i] = &ioapics[i];
+	}
 
-    return cpy_count;
+	return cpy_count;
 }
 
-size_t get_intr_src_override_descriptors(size_t bufsz, OUT madt_iso **buf)
+size_t get_intr_src_override_descriptors(size_t bufsz, OUT madt_iso** buf)
 {
-    if (buf == nullptr)
-    {
-        return iso_count;
-    }
+	if (buf == nullptr)
+	{
+		return iso_count;
+	}
 
-    size_t cpy_count = std::min(bufsz, ioapic_count);
-    for (size_t i = 0; i < cpy_count; i++)
-    {
-        buf[i] = &intr_src_overrides[i];
-    }
+	size_t cpy_count = std::min(bufsz, ioapic_count);
+	for (size_t i = 0; i < cpy_count; i++)
+	{
+		buf[i] = &intr_src_overrides[i];
+	}
 
-    return cpy_count;
+	return cpy_count;
 }
 
 // size_t acpi::get_iso_count(void)

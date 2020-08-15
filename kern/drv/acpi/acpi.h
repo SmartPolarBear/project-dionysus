@@ -20,4 +20,6 @@ extern acpi_version_adapter acpiv2_adapter;
 // madt.cc
 [[nodiscard]] error_code acpi_madt_init(const acpi::acpi_madt *madt);
 
+[[nodiscard]] error_code acpi_mcfg_init(const acpi::acpi_mcfg *mcfg);
+
 #endif // __DRIVERS_ACPI_ACPI_H

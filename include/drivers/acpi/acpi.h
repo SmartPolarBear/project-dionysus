@@ -151,7 +151,8 @@ namespace acpi
 
 	PANIC void init_acpi(void);
 
-	bool acpi_header_checksum(const acpi::acpi_desc_header* header);
+	// return true if valid
+	bool acpi_header_valid(const acpi::acpi_desc_header* header);
 
 // size_t get_ioapic_count(void);
 // void get_ioapics(madt_ioapic res[], size_t bufsz);

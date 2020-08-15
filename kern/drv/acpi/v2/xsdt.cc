@@ -31,8 +31,8 @@ error_code init_xsdt(const acpi::acpi_rsdp *rsdp)
 
     size_t entrycnt = (xsdt->header.length - sizeof(xsdt->header)) / 4;
 
-    // KDEBUG_ASSERT(acpi_header_checksum(&xsdt->header) == true);
-    if (!acpi_header_checksum(&xsdt->header))
+    // KDEBUG_ASSERT(acpi_header_valid(&xsdt->header) == true);
+    if (!acpi_header_valid(&xsdt->header))
     {
         return -ERROR_INVALID;
     }

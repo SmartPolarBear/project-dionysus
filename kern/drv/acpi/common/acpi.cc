@@ -100,7 +100,7 @@ PANIC void acpi::init_acpi(void)
 }
 
 
-bool acpi::acpi_header_checksum(const acpi::acpi_desc_header *header)
+bool acpi::acpi_header_valid(const acpi::acpi_desc_header *header)
 {
     uint8_t sum = 0;
     for (size_t i = 0; i < header->length; i++)

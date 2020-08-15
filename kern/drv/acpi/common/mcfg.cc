@@ -16,3 +16,14 @@
 #include <cstring>
 #include <algorithm>
 
+using namespace acpi;
+
+[[nodiscard]] error_code acpi_mcfg_init(const acpi::acpi_mcfg* mcfg)
+{
+	if(!acpi_header_valid(&mcfg->header))
+	{
+		return -ERROR_INVALID;
+	}
+
+	return ERROR_SUCCESS;
+}
