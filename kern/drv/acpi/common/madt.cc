@@ -75,8 +75,7 @@ size_t iso_count = 0;
 		case acpi::MADT_ENTRY_LAPIC:
 		{
 			acpi::madt_lapic* lapic = reinterpret_cast<decltype(lapic)>(entry);
-			// KDEBUG_ASSERT(sizeof(*lapic) == lapic->length);
-			if (!(sizeof(*lapic) == lapic->length))
+			if (sizeof(*lapic) != lapic->length)
 			{
 				return -ERROR_INVALID;
 			}
@@ -96,8 +95,8 @@ size_t iso_count = 0;
 		case acpi::MADT_ENTRY_IOAPIC:
 		{
 			acpi::madt_ioapic* ioapic = reinterpret_cast<decltype(ioapic)>(entry);
-			// KDEBUG_ASSERT(sizeof(*ioapic) == ioapic->length);
-			if (!(sizeof(*ioapic) == ioapic->length))
+
+			if (sizeof(*ioapic) != ioapic->length)
 			{
 				return -ERROR_INVALID;
 			}
@@ -110,7 +109,7 @@ size_t iso_count = 0;
 		{
 			acpi::madt_iso* iso = reinterpret_cast<decltype(iso)>(entry);
 			// KDEBUG_ASSERT(sizeof(*iso) == iso->length);
-			if (!(sizeof(*iso) == iso->length))
+			if (sizeof(*iso) != iso->length)
 			{
 				return -ERROR_INVALID;
 			}
@@ -136,24 +135,6 @@ size_t iso_count = 0;
 
 	return ERROR_SUCCESS;
 }
-
-// size_t acpi::get_ioapic_count(void)
-// {
-//     return ioapic_count;
-// }
-
-// void acpi::get_ioapics(madt_ioapic res[], size_t bufsz)
-// {
-//     for (size_t i = 0; i < bufsz; i++)
-//     {
-//         res[i] = madt_ioapic{ioapics[i]};
-//     }
-// }
-
-// madt_ioapic acpi::get_first_ioapic(void)
-// {
-//     return ioapics[0];
-// }
 
 size_t acpi::get_ioapic_descriptors(size_t bufsz, OUT madt_ioapic** buf)
 {
@@ -186,16 +167,3 @@ size_t get_intr_src_override_descriptors(size_t bufsz, OUT madt_iso** buf)
 
 	return cpy_count;
 }
-
-// size_t acpi::get_iso_count(void)
-// {
-//     return iso_count;
-// }
-
-// void acpi::get_isos(madt_iso res[], size_t bufsz)
-// {
-//     for (size_t i = 0; i < bufsz; i++)
-//     {
-//         res[i] = madt_iso{intr_src_overrides[i]};
-//     }
-// }
