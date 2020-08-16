@@ -97,6 +97,8 @@ extern "C" [[noreturn]] void kmain()
 	run("/ipctest");
 	run("/hello");
 
+	KDEBUG_ASSERT(false);
+
 	// start kernel servers in user space
 	init_servers();
 

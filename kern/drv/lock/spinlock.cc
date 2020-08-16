@@ -26,7 +26,7 @@ void lock::spinlock_acquire(spinlock* lock)
 
 	lock->cpu = cpu();
 
-	kdebug::kdebug_getcallerpcs(16, lock->pcs);
+	kdebug::kdebug_get_caller_pcs(16, lock->pcs);
 }
 
 void lock::spinlock_release(spinlock* lock)
