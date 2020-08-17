@@ -10,6 +10,8 @@
 #include "drivers/debug/kdebug.h"
 #include "drivers/debug/kerror.h"
 #include "drivers/monitor/monitor.hpp"
+#include "drivers/simd/simd.hpp"
+#include "drivers/pci/pci.hpp"
 
 #include "system/kmalloc.h"
 #include "system/memlayout.h"
@@ -20,7 +22,6 @@
 #include "system/scheduler.h"
 #include "system/syscall.h"
 #include "system/vmm.h"
-#include "drivers/simd/simd.hpp"
 
 #include "libkernel/console/builtin_text_io.hpp"
 
@@ -86,6 +87,9 @@ extern "C" [[noreturn]] void kmain()
 	// initialize SIMD like AVX and sse
 	simd::enable_simd();
 
+	// initialize PCI and PCIe
+	pci::pci_init();
+
 	// initialize user process manager
 	process::process_init();
 
@@ -96,8 +100,6 @@ extern "C" [[noreturn]] void kmain()
 
 	run("/ipctest");
 	run("/hello");
-
-	KDEBUG_ASSERT(false);
 
 	// start kernel servers in user space
 	init_servers();

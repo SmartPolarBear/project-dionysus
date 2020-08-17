@@ -18,12 +18,21 @@
 
 using namespace acpi;
 
-[[nodiscard]] error_code acpi_mcfg_init(const acpi::acpi_mcfg* mcfg)
+acpi_mcfg* mcfg = nullptr;
+
+[[nodiscard]] error_code acpi_mcfg_init(const acpi::acpi_mcfg* _mcfg)
 {
-	if(!acpi_header_valid(&mcfg->header))
+	mcfg = const_cast<decltype(mcfg)>(_mcfg);
+
+	if (!acpi_header_valid(&mcfg->header))
 	{
 		return -ERROR_INVALID;
 	}
 
 	return ERROR_SUCCESS;
+}
+
+acpi_mcfg* acpi::get_mcfg()
+{
+	return mcfg;
 }

@@ -1,6 +1,10 @@
 #pragma once
 #include "system/types.h"
 
+#include "drivers/acpi/acpi.h"
+
+#include "data/List.h"
+
 namespace pci
 {
 	namespace legacy
@@ -14,6 +18,19 @@ namespace pci
 
 	namespace express
 	{
-		
+		error_code pcie_init(acpi::acpi_mcfg* mcfg);
+
+		struct pcie_device
+		{
+			uint8_t bus, dev, func;
+
+			uint16_t segment_group;
+			uint8_t* config;
+
+			list_head list;
+		};
 	}
+
+	// initialize PCI and PCIe
+	void pci_init();
 }

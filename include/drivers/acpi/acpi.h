@@ -130,9 +130,13 @@ namespace acpi
 		uint16_t flags;
 	} __attribute__((__packed__));
 
-	struct mcfg_config_space_base_addr
+	struct mcfg_entry
 	{
-
+		uint64_t base_address;
+		uint16_t pci_segment_group;
+		uint8_t start_pci_bus;
+		uint8_t end_pci_bus;
+		uint32_t reserved;
 	} __attribute__((__packed__));
 
 	constexpr const char* SIGNATURE_MCFG = "MCFG";
@@ -142,7 +146,7 @@ namespace acpi
 
 		uint8_t reserved[8];
 
-		mcfg_config_space_base_addr config_spaces[0];
+		mcfg_entry config_spaces[0];
 	} __attribute__((__packed__));
 
 
@@ -169,10 +173,9 @@ namespace acpi
 		return buf[0];
 	}
 
-// size_t get_iso_count(void);
-// void get_isos(madt_iso res[], size_t bufsz);
-
 	size_t get_intr_src_override_descriptors(size_t bufsz, OUT madt_iso** buf);
+
+	acpi_mcfg* get_mcfg();
 
 // instead of copy madt_lapic to cpus array, directly provide interface to get them
 
