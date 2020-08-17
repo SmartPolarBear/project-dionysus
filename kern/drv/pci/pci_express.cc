@@ -8,8 +8,52 @@
 using namespace pci::express;
 using namespace libkernel;
 
-list_head supported_dev_head{};
-list_head unsupported_dev_head{};
+struct dev_list
+{
+	list_head dev_head;
+	size_t count;
+
+	void add(pcie_device* dev)
+	{
+		list_add(&dev->list, &dev_head);
+		count++;
+	}
+
+	dev_list() : dev_head(list_head{}),
+				 count(0)
+	{
+		list_init(&this->dev_head);
+	}
+};
+
+enum DEV_SUPPORT
+{
+	DS_UNSUPPORTED, DS_SUPPORTED
+};
+
+dev_list supported{};
+dev_list unsupported{};
+size_t dev_total = 0;
+
+static inline DEV_SUPPORT pcie_device_init(pcie_device* dev)
+{
+	DEV_SUPPORT ret = DS_UNSUPPORTED;
+	auto cmd_stat_reg_val = dev->read_dword(PCIE_HEADER_OFFSET_STATUS_COMMAND);
+	auto cmd_stat_reg = *((pci_command_status_reg*)(&cmd_stat_reg_val));
+
+	if (cmd_stat_reg.status.capabilities_list == 0x1)
+	{
+		ret = DS_SUPPORTED;
+
+
+	}
+	else
+	{
+		ret = DS_UNSUPPORTED;
+	}
+
+	return ret;
+}
 
 static inline void pcie_enumerate_device(uintptr_t base_address,
 	uint16_t seg,
@@ -24,19 +68,30 @@ static inline void pcie_enumerate_device(uintptr_t base_address,
 		uint8_t* config = (uint8_t*)P2V(base_address + d);
 		uint32_t id = *(uint32_t*)config;
 
-		if ((id & 0xFFFFu) != 0xFFFF)
+		if ((id & 0xFFFFu) == 0xFFFF)
 		{
-			pcie_device* dev = new pcie_device;
+			continue;
+		}
 
-			KDEBUG_ASSERT(dev != nullptr);
+		pcie_device* dev = new pcie_device;
 
-			dev->bus = bus;
-			dev->dev = dev_no;
-			dev->func = func;
-			dev->segment_group = seg;
-			dev->config = config;
+		KDEBUG_ASSERT(dev != nullptr);
 
-			list_add(&dev->list, &supported_dev_head);
+		dev->bus = bus;
+		dev->dev = dev_no;
+		dev->func = func;
+		dev->segment_group = seg;
+		dev->config = config;
+
+		auto sup = pcie_device_init(dev);
+
+		if (sup == DS_SUPPORTED)
+		{
+			supported.add(dev);
+		}
+		else if (sup == DS_UNSUPPORTED)
+		{
+			unsupported.add(dev);
 		}
 	}
 }
@@ -70,10 +125,18 @@ static inline void pcie_enumerate_entry(acpi::mcfg_entry entry)
 	}
 }
 
+uint32_t pcie_device::read_dword(size_t off)
+{
+	return (*(uint32_t*)(this->config + (off)));
+}
+
+void pcie_device::write_dword(size_t off, uint32_t value)
+{
+	(*(uint32_t*)(this->config + (off))) = (value);
+}
+
 error_code pci::express::pcie_init(acpi::acpi_mcfg* mcfg)
 {
-	list_init(&supported_dev_head);
-	list_init(&unsupported_dev_head);
 
 	size_t entry_count =
 		(mcfg->header.length - sizeof(acpi::acpi_desc_header) - sizeof(mcfg->reserved)) / sizeof(acpi::mcfg_entry);
@@ -82,6 +145,8 @@ error_code pci::express::pcie_init(acpi::acpi_mcfg* mcfg)
 	{
 		pcie_enumerate_entry(mcfg->config_spaces[i]);
 	}
+
+	dev_total = supported.count + unsupported.count;
 
 	return ERROR_SUCCESS;
 }

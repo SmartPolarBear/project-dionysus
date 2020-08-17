@@ -2,6 +2,10 @@
 #include "system/types.h"
 
 #include "drivers/acpi/acpi.h"
+#include "drivers/pci/pci_header_common.hpp"
+#include "drivers/pci/pci_header_t0.hpp"
+#include "drivers/pci/pci_header_t1.hpp"
+#include "drivers/pci/pci_header_t2.hpp"
 
 #include "data/List.h"
 
@@ -19,7 +23,6 @@ namespace pci
 
 	namespace express
 	{
-		error_code pcie_init(acpi::acpi_mcfg* mcfg);
 
 		struct pcie_device
 		{
@@ -29,7 +32,12 @@ namespace pci
 			uint8_t* config;
 
 			list_head list;
+
+			uint32_t read_dword(size_t off);
+			void write_dword(size_t off, uint32_t value);
 		};
+
+		error_code pcie_init(acpi::acpi_mcfg* mcfg);
 	}
 
 	// initialize PCI and PCIe
