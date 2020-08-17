@@ -5,6 +5,8 @@
 
 #include "drivers/pci/pci.hpp"
 
+#include "libkernel/console/builtin_text_io.hpp"
+
 using namespace pci::express;
 using namespace libkernel;
 
@@ -35,17 +37,72 @@ dev_list supported{};
 dev_list unsupported{};
 size_t dev_total = 0;
 
+static inline const pcie_capability_reg* find_first_capability(uint8_t id, const pcie_device* dev)
+{
+	for (auto capa = (pcie_capability_reg*)(dev->capability_list);
+		 capa->reg0.next_ptr != 0x00;
+		 capa = (pcie_capability_reg*)(dev->config + capa->reg0.next_ptr))
+	{
+		if (capa->reg0.capability_id == id)
+		{
+			return capa;
+		}
+	}
+
+	return nullptr;
+}
+
+static inline bool check_msi_capability(const pcie_device* dev)
+{
+	auto msi_capability = find_first_capability(0x05, dev);
+	return msi_capability != nullptr;
+}
+
 static inline DEV_SUPPORT pcie_device_init(pcie_device* dev)
 {
 	DEV_SUPPORT ret = DS_UNSUPPORTED;
+
 	auto cmd_stat_reg_val = dev->read_dword(PCIE_HEADER_OFFSET_STATUS_COMMAND);
 	auto cmd_stat_reg = *((pci_command_status_reg*)(&cmd_stat_reg_val));
 
 	if (cmd_stat_reg.status.capabilities_list == 0x1)
 	{
-		ret = DS_SUPPORTED;
+		auto info_reg_val = dev->read_dword(PCIE_HEADER_OFFSET_OTHER_INFO);
+		auto info_reg = *((pci_info_reg*)(&info_reg_val));
 
+		switch (info_reg.header_type)
+		{
+		default:
+		{
+			ret = DS_UNSUPPORTED;
+			break;
+		}
+		case 0x0:
+		{
+			auto capa_reg_val = dev->read_dword(PCIE_T0_HEADER_OFFSET_CAPABILITIES_PTR);
+			auto capa_reg = *((pcie_t0_capability_ptr_reg*)(&capa_reg_val));
 
+			// update capability_list for the device !!!
+			dev->capability_list = dev->config + capa_reg.capability_ptr;
+
+			if (check_msi_capability(dev))
+			{
+				ret = DS_SUPPORTED;
+			}
+
+			break;
+		}
+		case 0x1:
+		{
+			ret = DS_UNSUPPORTED;
+			break;
+		}
+		case 0x2:
+		{
+			ret = DS_UNSUPPORTED;
+			break;
+		}
+		}
 	}
 	else
 	{
@@ -125,7 +182,7 @@ static inline void pcie_enumerate_entry(acpi::mcfg_entry entry)
 	}
 }
 
-uint32_t pcie_device::read_dword(size_t off)
+[[nodiscard]]uint32_t pcie_device::read_dword(size_t off) const
 {
 	return (*(uint32_t*)(this->config + (off)));
 }
@@ -147,6 +204,8 @@ error_code pci::express::pcie_init(acpi::acpi_mcfg* mcfg)
 	}
 
 	dev_total = supported.count + unsupported.count;
+
+	write_format("PCIe: %d supported devices, %d unsupported device\n", supported.count, unsupported.count);
 
 	return ERROR_SUCCESS;
 }
