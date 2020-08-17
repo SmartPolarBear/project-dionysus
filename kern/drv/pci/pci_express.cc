@@ -8,7 +8,8 @@
 using namespace pci::express;
 using namespace libkernel;
 
-list_head device_head;
+list_head supported_dev_head{};
+list_head unsupported_dev_head{};
 
 static inline void pcie_enumerate_device(uintptr_t base_address,
 	uint16_t seg,
@@ -35,7 +36,7 @@ static inline void pcie_enumerate_device(uintptr_t base_address,
 			dev->segment_group = seg;
 			dev->config = config;
 
-			list_add(&dev->list, &device_head);
+			list_add(&dev->list, &supported_dev_head);
 		}
 	}
 }
@@ -71,7 +72,8 @@ static inline void pcie_enumerate_entry(acpi::mcfg_entry entry)
 
 error_code pci::express::pcie_init(acpi::acpi_mcfg* mcfg)
 {
-	list_init(&device_head);
+	list_init(&supported_dev_head);
+	list_init(&unsupported_dev_head);
 
 	size_t entry_count =
 		(mcfg->header.length - sizeof(acpi::acpi_desc_header) - sizeof(mcfg->reserved)) / sizeof(acpi::mcfg_entry);

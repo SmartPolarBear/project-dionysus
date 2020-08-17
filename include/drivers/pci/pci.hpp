@@ -13,6 +13,7 @@ namespace pci
 		constexpr uint16_t PCI_CONFIG_DATA = 0xCFC;
 
 		// legacy mechanism of configuration space access
+		[[deprecated("Legacy PCI is not planned to be supported."), maybe_unused]]
 		uint32_t pci_config_read_dword_legacy(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset);
 	}
 
