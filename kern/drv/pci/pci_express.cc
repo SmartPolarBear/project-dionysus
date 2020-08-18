@@ -15,7 +15,7 @@ struct dev_list
 	list_head dev_head;
 	size_t count;
 
-	void add(pcie_device* dev)
+	void add(pci_device* dev)
 	{
 		list_add(&dev->list, &dev_head);
 		count++;
@@ -37,11 +37,11 @@ dev_list supported{};
 dev_list unsupported{};
 size_t dev_total = 0;
 
-static inline const pcie_capability_reg* find_first_capability(uint8_t id, const pcie_device* dev)
+static inline const pci_capability_reg* find_first_capability(uint8_t id, const pci_device* dev)
 {
-	for (auto capa = (pcie_capability_reg*)(dev->capability_list);
+	for (auto capa = (pci_capability_reg*)(dev->capability_list);
 		 capa->reg0.next_ptr != 0x00;
-		 capa = (pcie_capability_reg*)(dev->config + capa->reg0.next_ptr))
+		 capa = (pci_capability_reg*)(dev->config + capa->reg0.next_ptr))
 	{
 		if (capa->reg0.capability_id == id)
 		{
@@ -52,13 +52,13 @@ static inline const pcie_capability_reg* find_first_capability(uint8_t id, const
 	return nullptr;
 }
 
-static inline bool check_msi_capability(const pcie_device* dev)
+static inline bool check_msi_capability(const pci_device* dev)
 {
 	auto msi_capability = find_first_capability(0x05, dev);
 	return msi_capability != nullptr;
 }
 
-static inline DEV_SUPPORT pcie_device_init(pcie_device* dev)
+static inline DEV_SUPPORT pcie_device_init(pci_device* dev)
 {
 	DEV_SUPPORT ret = DS_UNSUPPORTED;
 
@@ -80,7 +80,7 @@ static inline DEV_SUPPORT pcie_device_init(pcie_device* dev)
 		case 0x0:
 		{
 			auto capa_reg_val = dev->read_dword(PCIE_T0_HEADER_OFFSET_CAPABILITIES_PTR);
-			auto capa_reg = *((pcie_t0_capability_ptr_reg*)(&capa_reg_val));
+			auto capa_reg = *((pcie_t_capability_ptr_reg*)(&capa_reg_val));
 
 			// update capability_list for the device !!!
 			dev->capability_list = dev->config + capa_reg.capability_ptr;
@@ -130,7 +130,7 @@ static inline void pcie_enumerate_device(uintptr_t base_address,
 			continue;
 		}
 
-		pcie_device* dev = new pcie_device;
+		pci_device* dev = new pci_device;
 
 		KDEBUG_ASSERT(dev != nullptr);
 
@@ -182,16 +182,6 @@ static inline void pcie_enumerate_entry(acpi::mcfg_entry entry)
 	}
 }
 
-[[nodiscard]]uint32_t pcie_device::read_dword(size_t off) const
-{
-	return (*(uint32_t*)(this->config + (off)));
-}
-
-void pcie_device::write_dword(size_t off, uint32_t value)
-{
-	(*(uint32_t*)(this->config + (off))) = (value);
-}
-
 error_code pci::express::pcie_init(acpi::acpi_mcfg* mcfg)
 {
 
@@ -205,7 +195,31 @@ error_code pci::express::pcie_init(acpi::acpi_mcfg* mcfg)
 
 	dev_total = supported.count + unsupported.count;
 
-	write_format("PCIe: %d supported devices, %d unsupported device\n", supported.count, unsupported.count);
+	write_format("PCIe bus has %d supported device(s), %d unsupported device(s):\n",
+		supported.count,
+		unsupported.count);
+
+	list_for_each(&supported.dev_head, [](list_head* head)
+	{
+	  auto entry = list_entry(head, pci_device, list);
+	  auto class_reg_val = entry->read_dword(PCIE_HEADER_OFFSET_CLASS);
+	  auto class_reg = (pci_class_reg*)(&class_reg_val);
+	  write_format("  Supported device : class 0x%x, subclass 0x%x, prog IF 0x%x\n",
+		  class_reg->class_code,
+		  class_reg->subclass,
+		  class_reg->prog_if);
+	});
+
+	list_for_each(&unsupported.dev_head, [](list_head* head)
+	{
+	  auto entry = list_entry(head, pci_device, list);
+	  auto class_reg_val = entry->read_dword(PCIE_HEADER_OFFSET_CLASS);
+	  auto class_reg = (pci_class_reg*)(&class_reg_val);
+	  write_format("  Unsupported device : class 0x%x, subclass 0x%x, prog IF 0x%x\n",
+		  class_reg->class_code,
+		  class_reg->subclass,
+		  class_reg->prog_if);
+	});
 
 	return ERROR_SUCCESS;
 }

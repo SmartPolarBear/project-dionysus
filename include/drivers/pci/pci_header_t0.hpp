@@ -21,12 +21,12 @@ namespace pci
 		constexpr size_t PCIE_T0_HEADER_OFFSET_CAPABILITIES_PTR = 0x34;
 		constexpr size_t PCIE_T0_HEADER_OFFSET_INTR = 0x3C;
 
-		struct pcie_t0_capability_ptr_reg
+		struct pcie_t_capability_ptr_reg
 		{
 			uint8_t capability_ptr;
 			uint64_t reserved: 24;
 		}__attribute__((__packed__));
-		static_assert(sizeof(pcie_t0_capability_ptr_reg) == sizeof(uint32_t));
+		static_assert(sizeof(pcie_t_capability_ptr_reg) == sizeof(uint32_t));
 
 	}
 }
