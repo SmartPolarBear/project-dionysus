@@ -182,18 +182,8 @@ static inline void pcie_enumerate_entry(acpi::mcfg_entry entry)
 	}
 }
 
-error_code pci::express::pcie_init(acpi::acpi_mcfg* mcfg)
+static inline void print_devices_debug_info()
 {
-
-	size_t entry_count =
-		(mcfg->header.length - sizeof(acpi::acpi_desc_header) - sizeof(mcfg->reserved)) / sizeof(acpi::mcfg_entry);
-
-	for (size_t i = 0; i < entry_count; i++)
-	{
-		pcie_enumerate_entry(mcfg->config_spaces[i]);
-	}
-
-	dev_total = supported.count + unsupported.count;
 
 	write_format("PCIe bus has %d supported device(s), %d unsupported device(s):\n",
 		supported.count,
@@ -220,6 +210,22 @@ error_code pci::express::pcie_init(acpi::acpi_mcfg* mcfg)
 		  class_reg->subclass,
 		  class_reg->prog_if);
 	});
+}
+
+error_code pci::express::pcie_init(acpi::acpi_mcfg* mcfg)
+{
+
+	size_t entry_count =
+		(mcfg->header.length - sizeof(acpi::acpi_desc_header) - sizeof(mcfg->reserved)) / sizeof(acpi::mcfg_entry);
+
+	for (size_t i = 0; i < entry_count; i++)
+	{
+		pcie_enumerate_entry(mcfg->config_spaces[i]);
+	}
+
+	dev_total = supported.count + unsupported.count;
+
+	print_devices_debug_info();
 
 	return ERROR_SUCCESS;
 }
