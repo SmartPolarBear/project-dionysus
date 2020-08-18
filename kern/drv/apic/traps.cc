@@ -166,7 +166,7 @@ extern "C" void trap_body(trap::trap_frame info)
 			info.trap_num);
 	}
 
-	// it should be assigned with the defualt handle when initialized
+	// it should be assigned with the default handle when initialized
 	KDEBUG_ASSERT(handle_table.trap_handles[info.trap_num].handle != nullptr);
 
 	error_code error = ERROR_SUCCESS;
