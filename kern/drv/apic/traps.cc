@@ -44,6 +44,11 @@ struct handle_table_struct
 				.handle = default_trap_handle,
 				.enable = true
 			},
+
+			[trap::TRAP_MSI_BASE]=trap::trap_handle{
+				.handle = msi_base_trap_handle,
+				.enable = true
+			},
 		};
 } handle_table;
 
@@ -111,6 +116,7 @@ PANIC void trap::init_trap()
 	// fill the idt table
 	for (size_t i = 0; i < 256; i++)
 	{
+		// we process MSI interrupts on boot CPU core.
 		make_idt_entry(&idt[i], IT_INTERRUPT, SEGMENTSEL_KCODE, (uintptr_t)vectors[i], DPL_KERNEL);
 	}
 

@@ -7,7 +7,9 @@
 
 #include "libkernel/console/builtin_text_io.hpp"
 
+using namespace pci;
 using namespace pci::express;
+
 using namespace libkernel;
 
 struct dev_list
@@ -54,7 +56,7 @@ static inline const pci_capability_reg* find_first_capability(uint8_t id, const 
 
 static inline bool check_msi_capability(const pci_device* dev)
 {
-	auto msi_capability = find_first_capability(0x05, dev);
+	auto msi_capability = find_first_capability(PCI_CAPABILITY_ID_MSI, dev);
 	return msi_capability != nullptr;
 }
 
@@ -80,7 +82,7 @@ static inline DEV_SUPPORT pcie_device_init(pci_device* dev)
 		case 0x0:
 		{
 			auto capa_reg_val = dev->read_dword(PCIE_T0_HEADER_OFFSET_CAPABILITIES_PTR);
-			auto capa_reg = *((pcie_t_capability_ptr_reg*)(&capa_reg_val));
+			auto capa_reg = *((pci_t_capability_ptr_reg*)(&capa_reg_val));
 
 			// update capability_list for the device !!!
 			dev->capability_list = dev->config + capa_reg.capability_ptr;
@@ -226,6 +228,37 @@ error_code pci::express::pcie_init(acpi::acpi_mcfg* mcfg)
 	dev_total = supported.count + unsupported.count;
 
 	print_devices_debug_info();
+
+	return ERROR_SUCCESS;
+}
+
+error_code pcie_device_initialize_msi(IN pci_device* dev, trap::trap_handle int_handle)
+{
+	// check msi capability
+	if (!check_msi_capability(dev))
+	{
+		return -ERROR_INVALID;
+	}
+
+	// We process MSI interrupt on the boot CPU
+
+	auto msi_capability = const_cast<pci_capability_reg*>(find_first_capability(PCI_CAPABILITY_ID_MSI, dev));
+
+	constexpr uintptr_t addr = 0xFEE00000;
+
+	if (msi_capability->reg0.msg_control.bit64)
+	{
+		msi_capability->reg1to3.regs64bit.reg1.msg_addr_low = addr & 0xFFFFFFFF;
+		msi_capability->reg1to3.regs64bit.reg2.msg_addr_high = addr >> 32;
+		msi_capability->reg1to3.regs64bit.reg3.msg_data = trap::TRAP_MSI_BASE;
+	}
+	else
+	{
+		msi_capability->reg1to3.regs32bit.reg1.msg_addr_low = addr & 0xFFFFFFFF;
+		msi_capability->reg1to3.regs32bit.reg3.msg_data = trap::TRAP_MSI_BASE;
+	}
+
+	msi_capability->reg0.msg_control.multiple_msg_ena = 1;
 
 	return ERROR_SUCCESS;
 }

@@ -7,8 +7,5 @@
 
 namespace pci
 {
-	namespace express
-	{
 
-	}
 }

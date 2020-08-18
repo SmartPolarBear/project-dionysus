@@ -11,6 +11,8 @@ extern "C" void trap_entry();
 namespace trap
 {
 	constexpr size_t TRAP_NUMBERMAX = 256;
+	constexpr uint16_t TRAP_MSI_BASE = 0x80;
+
 // Processor-defined:
 	enum processor_defined_traps
 	{
