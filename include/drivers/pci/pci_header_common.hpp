@@ -19,7 +19,7 @@ namespace pci
 	constexpr size_t PCIE_HEADER_OFFSET_ID = 0x0;
 	constexpr size_t PCIE_HEADER_OFFSET_STATUS_COMMAND = 0x4;
 	constexpr size_t PCIE_HEADER_OFFSET_CLASS = 0x8;
-	constexpr size_t PCIE_HEADER_OFFSET_OTHER_INFO = 0x0C;
+	constexpr size_t PCIE_HEADER_OFFSET_INFO = 0x0C;
 
 	static_assert(__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__);
 

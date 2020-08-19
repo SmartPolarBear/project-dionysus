@@ -1,7 +1,7 @@
 # Project
 
 *~
-_*
+pcie_nonmsi_msi_devices*
 *.o
 *.d
 *.asm

@@ -1,5 +1,6 @@
 #pragma once
 #include "system/types.h"
+#include "system/concepts.hpp"
 
 #include "drivers/acpi/acpi.h"
 #include "drivers/pci/pci_header_common.hpp"
@@ -85,20 +86,29 @@ namespace pci
 
 	struct pci_device
 	{
-		uint8_t bus, dev, func;
+		uint8_t bus;
+		uint8_t dev;
+		uint8_t func;
+		uint16_t seg;
 
-		uint16_t segment_group;
 		uint8_t* config;
-
-		uint8_t* capability_list;
 
 		list_head list;
 
-		[[nodiscard]] uint32_t read_dword(size_t off) const
+		[[nodiscard, maybe_unused]]
+		uint32_t read_dword(size_t off) const
 		{
 			return (*(uint32_t*)(this->config + (off)));
 		}
 
+		template<typename TRegPtr>
+		requires Pointer<TRegPtr>
+		[[nodiscard]] TRegPtr read_dword_as(size_t off) const
+		{
+			return (TRegPtr)(this->config + (off));
+		}
+
+		[[maybe_unused]]
 		void write_dword(size_t off, uint32_t value)
 		{
 			(*(uint32_t*)(this->config + (off))) = (value);
@@ -109,7 +119,7 @@ namespace pci
 			return bus == rhs.bus &&
 				dev == rhs.dev &&
 				func == rhs.func &&
-				segment_group == rhs.segment_group;
+				seg == rhs.seg;
 		}
 
 		bool operator!=(const pci_device& rhs) const
