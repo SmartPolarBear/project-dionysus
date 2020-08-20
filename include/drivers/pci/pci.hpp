@@ -26,7 +26,7 @@ namespace pci
 	{
 		error_code pcie_init(acpi::acpi_mcfg* mcfg);
 
-		error_code pcie_device_config_msi(IN pci_device* dev, trap::trap_handle int_handle);
+		error_code pcie_device_enable_msi(IN pci_device* dev);
 	}
 
 	// initialize PCI and PCIe

@@ -19,6 +19,7 @@ struct pci_device
 	uint8_t* config;
 
 	bool msi_support;
+	bool msix_support;
 	bool is_pcie;
 
 	list_head list;

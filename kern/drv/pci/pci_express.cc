@@ -33,8 +33,6 @@ struct dev_list
 	}
 };
 
-
-
 dev_list pci_devices{};
 list_head pci_msi_handle_head;
 
@@ -64,18 +62,17 @@ static inline void pcie_config_device(pci_device* dev)
 	dev->is_pcie = cmd_stat_reg->status.capabilities_list != 0;
 	if (dev->is_pcie)
 	{
-		auto cap_reg = dev->read_dword_as<pci_t_capability_ptr_reg*>(PCIE_T0_HEADER_OFFSET_CAPABILITIES_PTR);
 		auto info_reg = dev->read_dword_as<pci_info_reg*>(PCIE_HEADER_OFFSET_INFO);
 
+		// ignore the multi-function bit
 		auto pure_header_type = info_reg->header_type & 0b01111111;
 
 		if (pure_header_type == 0x0)
 		{
-			if (find_first_capability(0x5, cap_reg->capability_ptr, dev->config) ||
-				find_first_capability(0x10, cap_reg->capability_ptr, dev->config))
-			{
-				dev->msi_support = true;
-			}
+			auto cap_reg = dev->read_dword_as<pci_t_capability_ptr_reg*>(PCIE_T0_HEADER_OFFSET_CAPABILITIES_PTR);
+
+			dev->msi_support = find_first_capability(0x5, cap_reg->capability_ptr, dev->config) != nullptr;
+			dev->msix_support = find_first_capability(0x10, cap_reg->capability_ptr, dev->config) != nullptr;
 		}
 	}
 }
@@ -169,7 +166,7 @@ error_code pci::express::pcie_init(acpi::acpi_mcfg* mcfg)
 	return ERROR_SUCCESS;
 }
 
-error_code pci::express::pcie_device_config_msi(IN pci_device* dev, trap::trap_handle int_handle)
+error_code pci::express::pcie_device_enable_msi(IN pci_device* dev)
 {
 	auto cap_reg = dev->read_dword_as<pci_t_capability_ptr_reg*>(PCIE_T0_HEADER_OFFSET_CAPABILITIES_PTR);
 	pci_capability_reg* msi_capability = find_first_capability(0x05, cap_reg->capability_ptr, dev->config);
