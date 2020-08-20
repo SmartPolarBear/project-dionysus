@@ -4,6 +4,9 @@
 #include "system/memlayout.h"
 
 #include "drivers/pci/pci.hpp"
+#include "drivers/pci/pci_device.hpp"
+#include "drivers/pci/pci_header.hpp"
+#include "drivers/pci/pci_capability.hpp"
 
 #include "libkernel/console/builtin_text_io.hpp"
 
@@ -30,7 +33,10 @@ struct dev_list
 	}
 };
 
+
+
 dev_list pci_devices{};
+list_head pci_msi_handle_head;
 
 static inline pci_capability_reg* find_first_capability(uint8_t id,
 	uintptr_t capability_ptr,
@@ -163,43 +169,32 @@ error_code pci::express::pcie_init(acpi::acpi_mcfg* mcfg)
 	return ERROR_SUCCESS;
 }
 
-// FIXME: this can't be any right
-error_code pcie_device_initialize_msi(IN pci_device* dev, trap::trap_handle int_handle)
+error_code pci::express::pcie_device_config_msi(IN pci_device* dev, trap::trap_handle int_handle)
 {
-//// check msi capability
-//	if (!
-//		check_msi_capability(dev)
-//		)
-//	{
-//		return -
-//			ERROR_INVALID;
-//	}
-//
-//// We process MSI interrupt on the boot CPU
-//
-//	auto msi_capability = const_cast<pci_capability_reg*>(find_first_capability(PCI_CAPABILITY_ID_MSI, dev));
-//
-//	constexpr uintptr_t addr = 0xFEE00000;
-//
-//	if (msi_capability->reg0.msg_control.bit64)
-//	{
-//		msi_capability->reg1to3.regs64bit.reg1.
-//			msg_addr_low = addr & 0xFFFFFFFF;
-//		msi_capability->reg1to3.regs64bit.reg2.
-//			msg_addr_high = addr >> 32;
-//		msi_capability->reg1to3.regs64bit.reg3.
-//			msg_data = trap::TRAP_MSI_BASE;
-//	}
-//	else
-//	{
-//		msi_capability->reg1to3.regs32bit.reg1.
-//			msg_addr_low = addr & 0xFFFFFFFF;
-//		msi_capability->reg1to3.regs32bit.reg3.
-//			msg_data = trap::TRAP_MSI_BASE;
-//	}
-//
-//	msi_capability->reg0.msg_control.
-//		multiple_msg_ena = 1;
-//
+	auto cap_reg = dev->read_dword_as<pci_t_capability_ptr_reg*>(PCIE_T0_HEADER_OFFSET_CAPABILITIES_PTR);
+	pci_capability_reg* msi_capability = find_first_capability(0x05, cap_reg->capability_ptr, dev->config);
+	// check msi capability
+	if (msi_capability == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	// We process MSI interrupt on the boot CPU
+	constexpr uintptr_t addr = 0xFEE00000;
+
+	if (msi_capability->reg0.msg_control.bit64)
+	{
+		msi_capability->reg1to3.regs64bit.reg1.msg_addr_low = addr & 0xFFFFFFFF;
+		msi_capability->reg1to3.regs64bit.reg2.msg_addr_high = addr >> 32;
+		msi_capability->reg1to3.regs64bit.reg3.msg_data = trap::TRAP_MSI_BASE;
+	}
+	else
+	{
+		msi_capability->reg1to3.regs32bit.reg1.msg_addr_low = addr & 0xFFFFFFFF;
+		msi_capability->reg1to3.regs32bit.reg3.msg_data = trap::TRAP_MSI_BASE;
+	}
+
+	msi_capability->reg0.msg_control.multiple_msg_ena = 1;
+
 	return ERROR_SUCCESS;
 }
