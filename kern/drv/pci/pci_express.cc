@@ -30,11 +30,7 @@ struct dev_list
 	}
 };
 
-dev_list pcie_msi_devices{};
-dev_list pcie_nonmsi_msi_devices{};
 dev_list pci_devices{};
-
-size_t dev_total = 0;
 
 static inline pci_capability_reg* find_first_capability(uint8_t id,
 	uintptr_t capability_ptr,
@@ -55,30 +51,27 @@ static inline pci_capability_reg* find_first_capability(uint8_t id,
 
 static inline void pcie_config_device(pci_device* dev)
 {
+	pci_devices.add(dev);
+
 	auto cmd_stat_reg = dev->read_dword_as<pci_command_status_reg*>(PCIE_HEADER_OFFSET_STATUS_COMMAND);
 
-	if (cmd_stat_reg->status.capabilities_list == 0)
+	dev->is_pcie = cmd_stat_reg->status.capabilities_list != 0;
+	if (dev->is_pcie)
 	{
-		pci_devices.add(dev);
-		return;
-	}
+		auto cap_reg = dev->read_dword_as<pci_t_capability_ptr_reg*>(PCIE_T0_HEADER_OFFSET_CAPABILITIES_PTR);
+		auto info_reg = dev->read_dword_as<pci_info_reg*>(PCIE_HEADER_OFFSET_INFO);
 
-	auto cap_reg = dev->read_dword_as<pci_t_capability_ptr_reg*>(PCIE_T0_HEADER_OFFSET_CAPABILITIES_PTR);
-	auto info_reg = dev->read_dword_as<pci_info_reg*>(PCIE_HEADER_OFFSET_INFO);
+		auto pure_header_type = info_reg->header_type & 0b01111111;
 
-	auto pure_header_type = info_reg->header_type & 0b01111111;
-
-	if (pure_header_type == 0x0)
-	{
-		if (find_first_capability(0x5, cap_reg->capability_ptr, dev->config)||
-			find_first_capability(0x10, cap_reg->capability_ptr, dev->config))
+		if (pure_header_type == 0x0)
 		{
-			pcie_msi_devices.add(dev);
-			return;
+			if (find_first_capability(0x5, cap_reg->capability_ptr, dev->config) ||
+				find_first_capability(0x10, cap_reg->capability_ptr, dev->config))
+			{
+				dev->msi_support = true;
+			}
 		}
 	}
-
-	pcie_nonmsi_msi_devices.add(dev);
 }
 
 static inline void pcie_enumerate_device(uintptr_t base_address,
@@ -129,42 +122,28 @@ static inline void pcie_enumerate_entry(acpi::mcfg_entry entry)
 
 static inline void print_devices_debug_info()
 {
-
-	write_format("PCIe bus has %d supported device(s), %d unsupported device(s):\n",
-		pcie_msi_devices.count,
-		pcie_nonmsi_msi_devices.count);
-
-	list_for_each(&pcie_msi_devices.dev_head, [](list_head* head)
-	{
-	  auto entry = list_entry(head, pci_device, list);
-
-	  auto class_reg = entry->read_dword_as<pci_class_reg*>(PCIE_HEADER_OFFSET_CLASS);
-	  write_format("  MSI-supported device : class 0x%x, subclass 0x%x, prog IF 0x%x\n",
-		  class_reg->class_code,
-		  class_reg->subclass,
-		  class_reg->prog_if);
-	});
-
-	list_for_each(&pcie_nonmsi_msi_devices.dev_head, [](list_head* head)
-	{
-	  auto entry = list_entry(head, pci_device, list);
-
-	  auto class_reg = entry->read_dword_as<pci_class_reg*>(PCIE_HEADER_OFFSET_CLASS);
-	  write_format("  MSI-unsupported device : class 0x%x, subclass 0x%x, prog IF 0x%x\n",
-		  class_reg->class_code,
-		  class_reg->subclass,
-		  class_reg->prog_if);
-	});
-
 	list_for_each(&pci_devices.dev_head, [](list_head* head)
 	{
 	  auto entry = list_entry(head, pci_device, list);
 
 	  auto class_reg = entry->read_dword_as<pci_class_reg*>(PCIE_HEADER_OFFSET_CLASS);
-	  write_format("  PCIe-unsupported device : class 0x%x, subclass 0x%x, prog IF 0x%x\n",
-		  class_reg->class_code,
-		  class_reg->subclass,
-		  class_reg->prog_if);
+
+	  if (entry->is_pcie)
+	  {
+		  write_format("  PCIe device %s MSI support : class 0x%x, subclass 0x%x, prog IF 0x%x\n",
+			  entry->msi_support ? "with" : "without",
+			  class_reg->class_code,
+			  class_reg->subclass,
+			  class_reg->prog_if);
+	  }
+	  else
+	  {
+
+		  write_format("  PCI device : class 0x%x, subclass 0x%x, prog IF 0x%x\n",
+			  class_reg->class_code,
+			  class_reg->subclass,
+			  class_reg->prog_if);
+	  }
 	});
 }
 
@@ -178,8 +157,6 @@ error_code pci::express::pcie_init(acpi::acpi_mcfg* mcfg)
 	{
 		pcie_enumerate_entry(mcfg->config_spaces[i]);
 	}
-
-	dev_total = pcie_msi_devices.count + pcie_nonmsi_msi_devices.count + pci_devices.count;
 
 	print_devices_debug_info();
 
