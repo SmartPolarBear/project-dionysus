@@ -80,7 +80,7 @@ namespace pci
 	struct pci_class_reg
 	{
 		uint8_t rev_id;
-		uint8_t prog_if;
+		uint8_t programming_interface;
 		uint8_t subclass;
 		uint8_t class_code;
 	}__attribute__((__packed__));

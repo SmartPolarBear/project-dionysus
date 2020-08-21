@@ -77,6 +77,7 @@ target_link_libraries(kernel executable arch_amd64 c g m c++abi c++ c++experimen
 set_target_properties(kernel PROPERTIES LINK_DEPENS "${CMAKE_SOURCE_DIR}/config/build/kernel.ld")
 set_target_properties(kernel PROPERTIES LINK_FLAGS "-Wl,-T ${CMAKE_SOURCE_DIR}/config/build/kernel.ld")
 
+add_subdirectory(fs)
 add_subdirectory(init)
 add_subdirectory(libs)
 add_subdirectory(mm)

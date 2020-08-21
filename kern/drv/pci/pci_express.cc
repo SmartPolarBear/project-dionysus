@@ -53,7 +53,7 @@ static inline pci_capability_reg* find_first_capability(uint8_t id,
 	return nullptr;
 }
 
-static inline void pcie_config_device(pci_device* dev)
+void pcie_config_device(pci_device* dev)
 {
 	pci_devices.add(dev);
 
@@ -65,7 +65,7 @@ static inline void pcie_config_device(pci_device* dev)
 		auto info_reg = dev->read_dword_as<pci_info_reg*>(PCIE_HEADER_OFFSET_INFO);
 
 		// ignore the multi-function bit
-		auto pure_header_type = info_reg->header_type & 0b01111111;
+		auto pure_header_type = info_reg->header_type & 0b01111111u;
 
 		if (pure_header_type == 0x0)
 		{
@@ -87,12 +87,12 @@ static inline void pcie_enumerate_device(uintptr_t base_address,
 	for (uint8_t func = 0; func < 8; func++)
 	{
 		uintptr_t off = ((uint32_t)(bus - start_bus) << 20u) | ((uint32_t)dev_no << 15u) | ((uint32_t)func << 12u);
-		uint8_t* config = (uint8_t*)P2V(base_address + off);
+		auto config = (uint8_t*)P2V(base_address + off);
 		uint32_t id = *(uint32_t*)config;
 
 		if ((id & 0xFFFFu) != 0xFFFF)
 		{
-			pci_device* dev = new pci_device
+			auto dev = new pci_device
 				{
 					.bus=bus,
 					.dev=dev_no,
@@ -113,7 +113,7 @@ static inline void pcie_enumerate_entry(acpi::mcfg_entry entry)
 		for (uint8_t dev = 0; dev < 32; dev++)
 		{
 			uintptr_t offset = ((bus - entry.start_pci_bus) << 20u) | (dev << 15u);
-			uint8_t* config = (uint8_t*)P2V(entry.base_address + offset);
+			auto config = (uint8_t*)P2V(entry.base_address + offset);
 
 			if (((*(uint32_t*)config) & 0xFFFFu) != 0xFFFFu)
 			{
@@ -131,22 +131,13 @@ static inline void print_devices_debug_info()
 
 	  auto class_reg = entry->read_dword_as<pci_class_reg*>(PCIE_HEADER_OFFSET_CLASS);
 
-	  if (entry->is_pcie)
-	  {
-		  write_format("  PCIe device %s MSI support : class 0x%x, subclass 0x%x, prog IF 0x%x\n",
-			  entry->msi_support ? "with" : "without",
-			  class_reg->class_code,
-			  class_reg->subclass,
-			  class_reg->prog_if);
-	  }
-	  else
-	  {
+	  write_format("Found %s device %s MSI(-X) support : class 0x%x, subclass 0x%x, prog IF 0x%x\n",
+		  entry->is_pcie ? "PCIe" : "PCI",
+		  (entry->msi_support || entry->msix_support) ? "with" : "without",
+		  class_reg->class_code,
+		  class_reg->subclass,
+		  class_reg->programming_interface);
 
-		  write_format("  PCI device : class 0x%x, subclass 0x%x, prog IF 0x%x\n",
-			  class_reg->class_code,
-			  class_reg->subclass,
-			  class_reg->prog_if);
-	  }
 	});
 }
 

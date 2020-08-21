@@ -49,11 +49,13 @@ struct pci_device
 		return bus == rhs.bus &&
 			dev == rhs.dev &&
 			func == rhs.func &&
-			seg == rhs.seg;
+			seg == rhs.seg &&
+			config == rhs.config;
 	}
 
 	bool operator!=(const pci_device& rhs) const
 	{
 		return !(rhs == *this);
 	}
+
 };

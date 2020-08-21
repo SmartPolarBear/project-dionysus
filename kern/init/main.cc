@@ -23,6 +23,8 @@
 #include "system/syscall.h"
 #include "system/vmm.h"
 
+#include "fs/fs.hpp"
+
 #include "libkernel/console/builtin_text_io.hpp"
 
 #include <cstring>
@@ -90,19 +92,22 @@ extern "C" [[noreturn]] void kmain()
 	// initialize PCI and PCIe
 	pci::pci_init();
 
-	// initialize user process manager
-	process::process_init();
-
 	// boot other CPU cores
 	ap::init_ap();
 
-	write_format("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
+	// initialize the file system
+	file_system::fs_init();
 
-	run("/ipctest");
-	run("/hello");
+	// initialize user process manager
+	process::process_init();
+
+	write_format("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
 
 	// start kernel servers in user space
 	init_servers();
+
+	run("/ipctest");
+	run("/hello");
 
 	ap::all_processor_main();
 
