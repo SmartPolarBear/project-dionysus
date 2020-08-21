@@ -57,7 +57,9 @@ namespace pci
 
 	enum capability_ids : uint8_t
 	{
-		PCI_CAPABILITY_ID_MSI = 0x5
+		PCI_CAPABILITY_ID_MSI = 0x5,
+		PCI_CAPABILITY_ID_MSIX = 0x11
+
 	};
 
 	struct pci_capability_reg

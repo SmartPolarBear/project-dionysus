@@ -92,22 +92,22 @@ extern "C" [[noreturn]] void kmain()
 	// initialize PCI and PCIe
 	pci::pci_init();
 
-	// boot other CPU cores
-	ap::init_ap();
-
 	// initialize the file system
 	file_system::fs_init();
 
 	// initialize user process manager
 	process::process_init();
 
-	write_format("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
+	// boot other CPU cores
+	ap::init_ap();
 
-	// start kernel servers in user space
-	init_servers();
+	write_format("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
 
 	run("/ipctest");
 	run("/hello");
+
+	// start kernel servers in user space
+	init_servers();
 
 	ap::all_processor_main();
 

@@ -13,5 +13,7 @@
 
 error_code ahci::ahci_init()
 {
+
+
 	return ERROR_SUCCESS;
 }

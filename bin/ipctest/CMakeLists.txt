@@ -36,6 +36,7 @@ target_compile_options(ipctest BEFORE
         PRIVATE -D_GNU_SOURCE
         PRIVATE -D_POSIX_TIMERS)
 
+target_link_libraries(ipctest user)
 
 target_link_options(ipctest
         PRIVATE -no-pie
@@ -43,4 +44,3 @@ target_link_options(ipctest
         PRIVATE -nostartfiles
         PRIVATE -Wl,--build-id=none)
 
-target_link_libraries(ipctest user)

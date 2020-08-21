@@ -10,6 +10,11 @@
 
 #include "libkernel/console/builtin_text_io.hpp"
 
+#include <utility>
+
+using std::pair;
+using std::make_pair;
+
 using namespace pci;
 using namespace pci::express;
 
@@ -36,17 +41,30 @@ struct dev_list
 dev_list pci_devices{};
 list_head pci_msi_handle_head;
 
-static inline pci_capability_reg* find_first_capability(uint8_t id,
-	uintptr_t capability_ptr,
-	IN const uint8_t* config)
+static inline constexpr pair<uint64_t, uintptr_t> get_msi_data(size_t target_apic_id, size_t vector)
 {
-	for (auto cap = (pci_capability_reg*)(config + capability_ptr);
-		 cap->reg0.next_ptr != 0x00;
-		 cap = (pci_capability_reg*)(config + cap->reg0.next_ptr))
+	return make_pair(vector & 0xFF, (0xFEE00000 | (target_apic_id << 12)));
+}
+
+static inline pci_capability_reg
+*
+find_first_capability(uint8_t
+id,
+	uintptr_t capability_ptr,
+	IN
+	const uint8_t* config
+)
+{
+	for (
+		auto cap = (pci_capability_reg*)(config + capability_ptr);
+		cap->reg0.next_ptr != 0x00;
+		cap = (pci_capability_reg*)(config + cap->reg0.next_ptr)
+		)
 	{
 		if (cap->reg0.capability_id == id)
 		{
-			return cap;
+			return
+				cap;
 		}
 	}
 
@@ -71,8 +89,10 @@ void pcie_config_device(pci_device* dev)
 		{
 			auto cap_reg = dev->read_dword_as<pci_t_capability_ptr_reg*>(PCIE_T0_HEADER_OFFSET_CAPABILITIES_PTR);
 
-			dev->msi_support = find_first_capability(0x5, cap_reg->capability_ptr, dev->config) != nullptr;
-			dev->msix_support = find_first_capability(0x10, cap_reg->capability_ptr, dev->config) != nullptr;
+			dev->msi_support =
+				find_first_capability(PCI_CAPABILITY_ID_MSI, cap_reg->capability_ptr, dev->config) != nullptr;
+			dev->msix_support =
+				find_first_capability(PCI_CAPABILITY_ID_MSIX, cap_reg->capability_ptr, dev->config) != nullptr;
 		}
 	}
 }
@@ -157,32 +177,38 @@ error_code pci::express::pcie_init(acpi::acpi_mcfg* mcfg)
 	return ERROR_SUCCESS;
 }
 
-error_code pci::express::pcie_device_enable_msi(IN pci_device* dev)
+error_code pci::express::pcie_device_config_msi(IN pci_device* dev, size_t apic_id, size_t vector)
 {
+	if (vector < trap::TRAP_MSI_BASE)
+	{
+		return -ERROR_INVALID;
+	}
+
 	auto cap_reg = dev->read_dword_as<pci_t_capability_ptr_reg*>(PCIE_T0_HEADER_OFFSET_CAPABILITIES_PTR);
-	pci_capability_reg* msi_capability = find_first_capability(0x05, cap_reg->capability_ptr, dev->config);
+	pci_capability_reg
+		* msi_capability = find_first_capability(PCI_CAPABILITY_ID_MSI, cap_reg->capability_ptr, dev->config);
+	
 	// check msi capability
 	if (msi_capability == nullptr)
 	{
 		return -ERROR_INVALID;
 	}
 
-	// We process MSI interrupt on the boot CPU
-	constexpr uintptr_t addr = 0xFEE00000;
+	auto msi_data = get_msi_data(apic_id, vector);
 
 	if (msi_capability->reg0.msg_control.bit64)
 	{
-		msi_capability->reg1to3.regs64bit.reg1.msg_addr_low = addr & 0xFFFFFFFF;
-		msi_capability->reg1to3.regs64bit.reg2.msg_addr_high = addr >> 32;
-		msi_capability->reg1to3.regs64bit.reg3.msg_data = trap::TRAP_MSI_BASE;
+		msi_capability->reg1to3.regs64bit.reg1.msg_addr_low = msi_data.second & 0xFFFFFFFF;
+		msi_capability->reg1to3.regs64bit.reg2.msg_addr_high = msi_data.second >> 32;
+		msi_capability->reg1to3.regs64bit.reg3.msg_data = msi_data.first;
 	}
 	else
 	{
-		msi_capability->reg1to3.regs32bit.reg1.msg_addr_low = addr & 0xFFFFFFFF;
-		msi_capability->reg1to3.regs32bit.reg3.msg_data = trap::TRAP_MSI_BASE;
+		msi_capability->reg1to3.regs32bit.reg1.msg_addr_low = msi_data.second & 0xFFFFFFFF;
+		msi_capability->reg1to3.regs32bit.reg3.msg_data = msi_data.first;
 	}
 
-	msi_capability->reg0.msg_control.multiple_msg_ena = 1;
+	msi_capability->reg0.msg_control.multiple_msg_ena = true;
 
 	return ERROR_SUCCESS;
 }

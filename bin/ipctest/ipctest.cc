@@ -6,8 +6,8 @@ uint8_t buf[4_MB] __attribute__((aligned(2_MB)));
 #pragma ide diagnostic ignored "EndlessLoop"
 int main()
 {
+	put_str("iPCTEST\n");
 	while (true);
-
 	while (true)
 	{
 		process_id pid = 0;
