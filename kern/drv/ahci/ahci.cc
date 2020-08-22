@@ -2,6 +2,7 @@
 
 #include "system/types.h"
 #include "system/memlayout.h"
+#include "system/pmm.h"
 
 #include "drivers/pci/pci.hpp"
 #include "drivers/pci/pci_device.hpp"
@@ -10,6 +11,8 @@
 #include "drivers/ahci/ahci.hpp"
 
 #include "libkernel/console/builtin_text_io.hpp"
+
+#include <cstring>
 
 using namespace pci;
 using namespace pci::express;
@@ -35,8 +38,96 @@ struct pci_achi_devices_struct
 	}
 } ahci_devs;
 
+__attribute__((always_inline))
+static inline void ahci_port_start(ahci_port* port)
+{
+	while (port->cmd.cr)
+	{
+		asm("pause");
+	}
+
+	port->cmd.fre = true;
+	port->cmd.st = true;
+}
+
+__attribute__((always_inline))
+static inline void ahci_port_stop(ahci_port* port)
+{
+	port->cmd.fre = false;
+	port->cmd.st = false;
+
+	while (port->cmd.cr || port->cmd.fr)
+	{
+		asm("pause");
+	}
+}
+
+static inline error_code ahci_port_allocate(ahci_port* port)
+{
+	ahci_port_stop(port);
+
+	// 2MB-sized page
+	auto page = pmm::alloc_page();
+	if (page == nullptr)
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
+
+	memset(reinterpret_cast<void*>(pmm::page_to_va(page)), 0, PAGE_SIZE);
+
+	// command list , FIS buffer, command table should be 4K aligned
+	uint8_t* page_start = reinterpret_cast<uint8_t*>(pmm::page_to_va(page));
+
+	uintptr_t cl_paddr = V2P((uintptr_t)page_start);
+	if ((cl_paddr % 1_KB))
+	{
+		return -ERROR_INVALID;
+	}
+
+	uintptr_t fb_paddr = V2P((uintptr_t)(page_start + 4_KB));
+	if ((fb_paddr % 4_KB))
+	{
+		return -ERROR_INVALID;
+	}
+
+	port->clb = cl_paddr & 0xFFFFFFFF;
+	port->clbu = cl_paddr >> 32;
+
+	port->fb = fb_paddr & 0xFFFFFFFF;
+	port->fbu = fb_paddr >> 32;
+
+	uint8_t* command_table_base = page_start + 8_KB;
+	while (V2P((uintptr_t)command_table_base) % 128)command_table_base++;
+
+	ahci_command_list* cmd_list = (ahci_command_list*)P2V(cl_paddr);
+	for (size_t i = 0; i < AHCI_COMMAND_LIST_MAX; i++)
+	{
+		cmd_list->dw0.prdtl = 8;
+
+		uintptr_t ctba_paddr = V2P((uintptr_t)(command_table_base + i * 256));
+
+		if (ctba_paddr % 128)
+		{
+			return -ERROR_INVALID;
+		}
+
+		cmd_list->ctba = ctba_paddr & 0xFFFFFFFF;
+		cmd_list->ctba_u0 = ctba_paddr >> 32;
+	}
+
+	ahci_port_start(port);
+
+	return ERROR_SUCCESS;
+}
+
 static inline error_code ahci_config_port(ahci_controller* ctl, ahci_port* port, size_t no)
 {
+	error_code ret = ahci_port_allocate(port);
+	if (ret != ERROR_SUCCESS)
+	{
+		return ret;
+	}
+
 	return ERROR_SUCCESS;
 }
 
@@ -61,11 +152,11 @@ static inline error_code ahci_enumerate_all_ports(ahci_controller* ctl, ahci_gen
 		error_code ret = ERROR_SUCCESS;
 
 		if (port->sig.sec_count_reg == 1 &&
-			port->sig.lba_low == 1&&
+			port->sig.lba_low == 1 &&
 			port->sig.lba_mid == 0x0 &&
 			port->sig.lba_high == 0x0)    // SATA
 		{
-			kdebug::kdebug_log("Configure SATA speed generation %d\n", port->ssts.spd);
+			kdebug::kdebug_log("Configuring SATA at generation %d's speed.\n", port->ssts.spd);
 			ret = ahci_config_port(ctl, port, i);
 		}
 		else if (port->sig.sec_count_reg == 0x01 &&
@@ -73,7 +164,7 @@ static inline error_code ahci_enumerate_all_ports(ahci_controller* ctl, ahci_gen
 			port->sig.lba_mid == 0x14 &&
 			port->sig.lba_high == 0xEB)   // SATAPI
 		{
-			kdebug::kdebug_log("Configure SATAPI speed generation %d\n", port->ssts.spd);
+			kdebug::kdebug_log("Configure SATAPI at generation %d's speed.\n", port->ssts.spd);
 			ret = ahci_config_port(ctl, port, i);
 		}
 
@@ -103,7 +194,7 @@ static inline error_code ahci_initialize_controller(ahci_controller* ctl)
 		return -ERROR_INVALID;
 	}
 
-	kdebug::kdebug_log("Initialize AHCI %d.%d\n", ghc->vs.major_ver, ghc->vs.minor_ver);
+	kdebug::kdebug_log("Initialize AHCI controller (ver %d.%d)\n", ghc->vs.major_ver, ghc->vs.minor_ver);
 
 	auto ret = ahci_enumerate_all_ports(ctl, ghc);
 

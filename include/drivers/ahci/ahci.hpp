@@ -73,6 +73,33 @@ namespace ahci
 		0x4 //Phy in offline mode as a result of the interface being disabled or running in a BIST loopback mode
 	};
 
+	struct ahci_port_pxcmd
+	{
+		uint64_t st: 1;
+		uint64_t sud: 1;
+		uint64_t pod: 1;
+		uint64_t clo: 1;
+		uint64_t fre: 1;
+		uint64_t ccs: 5;
+		uint64_t mpss: 1;
+		uint64_t fr: 1;
+		uint64_t cr: 1;
+		uint64_t cps: 1;
+		uint64_t pma: 1;
+		uint64_t hpcp: 1;
+		uint64_t mpsp: 1;
+		uint64_t cpd: 1;
+		uint64_t esp: 1;
+		uint64_t fbscp: 1;
+		uint64_t apste: 1;
+		uint64_t atapi: 1;
+		uint64_t dlae: 1;
+		uint64_t alpe: 1;
+		uint64_t asp: 1;
+		uint64_t icc: 4;
+	}__attribute__((__packed__));
+	static_assert(sizeof(ahci_port_pxcmd) == sizeof(uint32_t));
+
 	struct ahci_port_pxssts
 	{
 		uint64_t det: 4;
@@ -99,7 +126,7 @@ namespace ahci
 		uint32_t fbu;                    // 0x0C
 		uint32_t is;                        // 0x10
 		uint32_t ie;                        // 0x14
-		uint32_t cmd;                    // 0x18
+		ahci_port_pxcmd cmd;                    // 0x18
 		uint32_t reserved0;                    // 0x1C
 		uint32_t tfd;                    // 0x20
 		ahci_port_pxsig sig;                    // 0x24
@@ -112,6 +139,32 @@ namespace ahci
 		uint32_t vs[4];
 	}__attribute__((__packed__));
 	static_assert(sizeof(ahci_port) == 0x7F + 1);
+
+	struct ahci_command_dw0
+	{
+		uint64_t cfl: 5;
+		uint64_t atapi: 1;
+		uint64_t write: 1;
+		uint64_t prefetchable: 1;
+		uint64_t reset: 1;
+		uint64_t bist: 1;
+		uint64_t c: 1;
+		uint64_t reserved0: 1;
+		uint64_t pmp: 4;
+		uint64_t prdtl: 16;
+	}__attribute__((__packed__));
+	static_assert(sizeof(ahci_command_dw0) == sizeof(uint32_t));
+
+	constexpr size_t AHCI_COMMAND_LIST_MAX = 32;
+	struct ahci_command_list
+	{
+		ahci_command_dw0 dw0;
+		uint32_t prdbc;
+		uint32_t ctba;
+		uint32_t ctba_u0;
+		uint32_t reserved[4];
+	}__attribute__((__packed__));
+	static_assert(sizeof(ahci_command_list) == sizeof(uint32_t) * 8);
 
 	struct ahci_controller
 	{
