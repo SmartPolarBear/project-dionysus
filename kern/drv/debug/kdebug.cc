@@ -104,6 +104,19 @@ void kdebug::kdebug_warning(const char* fmt, ...)
 	va_end(ap);
 }
 
+void kdebug::kdebug_log(const char* fmt, ...)
+{
+#ifdef DEBUG
+	va_list ap;
+
+	va_start(ap, fmt);
+
+	valist_write_format(fmt, ap);
+
+	va_end(ap);
+#endif
+}
+
 void kdebug::kdebug_dump_lock_panic(lock::spinlock* lock)
 {
 	// disable the lock of console

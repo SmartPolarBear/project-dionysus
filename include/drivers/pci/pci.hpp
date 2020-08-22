@@ -24,11 +24,14 @@ namespace pci
 
 	namespace express
 	{
+		using find_device_predicate = bool (*)(const pci_device* dev);
+
 		error_code pcie_init(acpi::acpi_mcfg* mcfg);
 
 		error_code pcie_device_config_msi(IN pci_device* dev, size_t apic_id, size_t vector = trap::TRAP_MSI_BASE);
 
-		size_t pcie_get_devices(OUT pci_device *out_dev);
+		size_t pcie_find_devices(find_device_predicate pred, size_t out_size, OUT pci_device* out_dev);
+
 	}
 
 	// initialize PCI and PCIe

@@ -78,7 +78,8 @@ void pcie_config_device(pci_device* dev)
 	auto cmd_stat_reg = dev->read_dword_as<pci_command_status_reg*>(PCIE_HEADER_OFFSET_STATUS_COMMAND);
 
 	dev->is_pcie = cmd_stat_reg->status.capabilities_list != 0;
-	if (dev->is_pcie)
+
+	if (cmd_stat_reg->status.capabilities_list != 0)
 	{
 		auto info_reg = dev->read_dword_as<pci_info_reg*>(PCIE_HEADER_OFFSET_INFO);
 
@@ -88,6 +89,9 @@ void pcie_config_device(pci_device* dev)
 		if (pure_header_type == 0x0)
 		{
 			auto cap_reg = dev->read_dword_as<pci_t_capability_ptr_reg*>(PCIE_T0_HEADER_OFFSET_CAPABILITIES_PTR);
+
+			dev->is_pcie =
+				find_first_capability(PCI_CAPABILITY_ID_PCIE, cap_reg->capability_ptr, dev->config) != nullptr;
 
 			dev->msi_support =
 				find_first_capability(PCI_CAPABILITY_ID_MSI, cap_reg->capability_ptr, dev->config) != nullptr;
@@ -151,7 +155,7 @@ static inline void print_devices_debug_info()
 
 	  auto class_reg = entry->read_dword_as<pci_class_reg*>(PCIE_HEADER_OFFSET_CLASS);
 
-	  write_format("Found %s device %s MSI(-X) support : class 0x%x, subclass 0x%x, prog IF 0x%x\n",
+	  kdebug::kdebug_log("Found %s device %s MSI(-X) support : class 0x%x, subclass 0x%x, prog IF 0x%x\n",
 		  entry->is_pcie ? "PCIe" : "PCI",
 		  (entry->msi_support || entry->msix_support) ? "with" : "without",
 		  class_reg->class_code,
@@ -187,7 +191,7 @@ error_code pci::express::pcie_device_config_msi(IN pci_device* dev, size_t apic_
 	auto cap_reg = dev->read_dword_as<pci_t_capability_ptr_reg*>(PCIE_T0_HEADER_OFFSET_CAPABILITIES_PTR);
 	pci_capability_reg
 		* msi_capability = find_first_capability(PCI_CAPABILITY_ID_MSI, cap_reg->capability_ptr, dev->config);
-	
+
 	// check msi capability
 	if (msi_capability == nullptr)
 	{
@@ -212,3 +216,35 @@ error_code pci::express::pcie_device_config_msi(IN pci_device* dev, size_t apic_
 
 	return ERROR_SUCCESS;
 }
+
+size_t pci::express::pcie_find_devices(find_device_predicate pred, size_t out_size, OUT pci_device* out_dev)
+{
+	size_t count = 0;
+
+	list_head* iter = nullptr;
+	list_for(iter, &pci_devices.dev_head)
+	{
+		auto entry = list_entry(iter, pci_device, list);
+
+		if (pred(entry))
+		{
+			if (out_dev != nullptr)
+			{
+				memcpy(&out_dev[count++], entry, sizeof(pci_device));
+				memset(&out_dev[count - 1].list, 0, sizeof(out_dev[count - 1].list));
+			}
+			else
+			{
+				count++;
+			}
+		}
+
+		if (out_size != 0 && count >= out_size)
+		{
+			break;
+		}
+	}
+
+	return count;
+}
+

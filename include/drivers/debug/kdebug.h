@@ -8,6 +8,9 @@
 
 #include "drivers/acpi/cpu.h"
 
+#define DEBUG
+//#define RELEASE
+
 namespace kdebug
 {
 	extern bool panicked;
@@ -20,6 +23,8 @@ namespace kdebug
 	[[noreturn]] void kdebug_dump_lock_panic(lock::spinlock* lock);
 
 	void kdebug_warning(const char* fmt, ...);
+
+	void kdebug_log(const char *fmt,...);
 
 // panic with line number and file name
 // to make __FILE__ and __LINE__ macros works right, this must be a macro as well.
