@@ -47,6 +47,8 @@ namespace ahci
 	}__attribute__((__packed__));
 	static_assert(sizeof(ahci_generic_host_control) == 44);
 
+
+
 	enum pxssts_ipm
 	{
 		IPM_NOT_PRESENT = 0x0,
@@ -118,17 +120,53 @@ namespace ahci
 	}__attribute__((__packed__));
 	static_assert(sizeof(ahci_port_pxssts) == sizeof(uint32_t));
 
+	struct ahci_port_pxtfd
+	{
+		uint64_t sts_err: 1;
+		uint64_t sts_cs0: 2;
+		uint64_t sts_drq: 1;
+		uint64_t sts_cs1: 3;
+		uint64_t sts_bsy: 1;
+		uint64_t err: 8;
+		uint64_t reserved: 16;
+	}__attribute__((__packed__));
+	static_assert(sizeof(ahci_port_pxssts) == sizeof(uint32_t));
+
+	struct ahci_port_pxis
+	{
+		uint64_t dhrs: 1;
+		uint64_t pss: 1;
+		uint64_t dss: 1;
+		uint64_t sdbs: 1;
+		uint64_t ufs: 1;
+		uint64_t dps: 1;
+		uint64_t pcs: 1;
+		uint64_t dmps: 1;
+		uint64_t reserved0: 14;
+		uint64_t prcs: 1;
+		uint64_t imps: 1;
+		uint64_t ofs: 1;
+		uint64_t reserved1: 1;
+		uint64_t infs: 1;
+		uint64_t ifs: 1;
+		uint64_t hbds: 1;
+		uint64_t hbfs: 1;
+		uint64_t tfes: 1;
+		uint64_t cpds: 1;
+	}__attribute__((__packed__));
+	static_assert(sizeof(ahci_port_pxis) == sizeof(uint32_t));
+
 	struct ahci_port
 	{
 		uint32_t clb;                    // 0x00
 		uint32_t clbu;                    // 0x04
 		uint32_t fb;                        // 0x08
 		uint32_t fbu;                    // 0x0C
-		uint32_t is;                        // 0x10
+		ahci_port_pxis is;                        // 0x10
 		uint32_t ie;                        // 0x14
 		ahci_port_pxcmd cmd;                    // 0x18
 		uint32_t reserved0;                    // 0x1C
-		uint32_t tfd;                    // 0x20
+		ahci_port_pxtfd tfd;                    // 0x20
 		ahci_port_pxsig sig;                    // 0x24
 		ahci_port_pxssts ssts;            // 0x28
 		uint32_t sctl;                    // 0x2C
@@ -139,6 +177,20 @@ namespace ahci
 		uint32_t vs[4];
 	}__attribute__((__packed__));
 	static_assert(sizeof(ahci_port) == 0x7F + 1);
+
+	struct ahci_hba_mem
+	{
+		ahci_generic_host_control ghc;
+
+		// 0x2C - 0x9F, Reserved
+		uint8_t reserved[116];
+
+		// 0xA0 - 0xFF, Vendor specific registers
+		uint8_t vendor_specified[96];
+
+		// 0x100 - 0x10FF, Port control registers
+		ahci_port ports[0];    // 1 ~ 32
+	}__attribute__((__packed__));
 
 	struct ahci_command_dw0
 	{
@@ -156,7 +208,7 @@ namespace ahci
 	static_assert(sizeof(ahci_command_dw0) == sizeof(uint32_t));
 
 	constexpr size_t AHCI_COMMAND_LIST_MAX = 32;
-	struct ahci_command_list
+	struct ahci_command_list_entry
 	{
 		ahci_command_dw0 dw0;
 		uint32_t prdbc;
@@ -164,12 +216,124 @@ namespace ahci
 		uint32_t ctba_u0;
 		uint32_t reserved[4];
 	}__attribute__((__packed__));
-	static_assert(sizeof(ahci_command_list) == sizeof(uint32_t) * 8);
+	static_assert(sizeof(ahci_command_list_entry) == sizeof(uint32_t) * 8);
+
+	constexpr size_t AHCI_FIS_TYPE_REG_H2D = 0x27;
+	constexpr size_t AHCI_ATA_CMD_IDENTIFY = 0xEC;
+	constexpr size_t AHCI_ATA_CMD_PACKET_IDENTIFY = 0xA1;
+
+	constexpr uint8_t AHCI_FIS_REG_H2D_COMMAND = 1 << 7;
+
+	struct ahci_fis_reg_h2d
+	{
+		// DWORD 0
+		uint8_t fis_type;    // FIS_TYPE_REG_H2D
+
+		uint8_t pmport: 4;    // Port multiplier
+		uint8_t rsv0: 3;        // Reserved
+		uint8_t c: 1;        // 1: Command, 0: Control
+
+		uint8_t command;    // Command register
+		uint8_t featurel;    // Feature register, 7:0
+
+		// DWORD 1
+		uint8_t lba0;        // LBA low register, 7:0
+		uint8_t lba1;        // LBA mid register, 15:8
+		uint8_t lba2;        // LBA high register, 23:16
+		uint8_t device;        // Device register
+
+		// DWORD 2
+		uint8_t lba3;        // LBA register, 31:24
+		uint8_t lba4;        // LBA register, 39:32
+		uint8_t lba5;        // LBA register, 47:40
+		uint8_t featureh;    // Feature register, 15:8
+
+		// DWORD 3
+		uint8_t countl;        // Count register, 7:0
+		uint8_t counth;        // Count register, 15:8
+		uint8_t icc;        // Isochronous command completion
+		uint8_t control;    // Control register
+
+		// DWORD 4
+		uint8_t rsv1[4];    // Reserved
+	}__attribute__((__packed__));
+
+	struct ahci_fis_reg_d2h
+	{
+		// DWORD 0
+		uint8_t fis_type;    // FIS_TYPE_REG_D2H
+
+		uint8_t pmport: 4;    // Port multiplier
+		uint8_t rsv0: 2;      // Reserved
+		uint8_t i: 1;         // Interrupt bit
+		uint8_t rsv1: 1;      // Reserved
+
+		uint8_t status;      // Status register
+		uint8_t error;       // Error register
+
+		// DWORD 1
+		uint8_t lba0;        // LBA low register, 7:0
+		uint8_t lba1;        // LBA mid register, 15:8
+		uint8_t lba2;        // LBA high register, 23:16
+		uint8_t device;      // Device register
+
+		// DWORD 2
+		uint8_t lba3;        // LBA register, 31:24
+		uint8_t lba4;        // LBA register, 39:32
+		uint8_t lba5;        // LBA register, 47:40
+		uint8_t rsv2;        // Reserved
+
+		// DWORD 3
+		uint8_t countl;      // Count register, 7:0
+		uint8_t counth;      // Count register, 15:8
+		uint8_t rsv3[2];     // Reserved
+
+		// DWORD 4
+		uint8_t rsv4[4];     // Reserved
+	}__attribute__((__packed__));
+
+	struct ahci_prd_dw3
+	{
+		uint64_t dbc: 22;
+		uint64_t reserved0: 9;
+		uint64_t interrupt_on_completion: 1;
+	}__attribute__((__packed__));
+	static_assert(sizeof(ahci_prd_dw3) == sizeof(uint32_t));
+
+	struct ahci_prd
+	{
+		uint32_t dba;
+		uint32_t dbau;
+		uint32_t reserved0;
+		ahci_prd_dw3 dw3;
+	}__attribute__((__packed__));
+	static_assert(sizeof(ahci_prd) == sizeof(uint32_t) * 4);
+
+	constexpr size_t AHCI_PRD_MAX_SIZE = 8192;
+	struct ahci_command_table
+	{
+		ahci_fis_reg_h2d fis_h2d;
+		uint8_t acmd[16];
+		uint8_t reserved0[48];
+		// Any number of entries can follow
+		ahci_prd prdt[0];
+	}__attribute__((__packed__));
+	static_assert(sizeof(ahci_command_list_entry) == sizeof(uint32_t) * 8);
+
+	enum ahci_device_type
+	{
+		DEVICE_SATA,
+		DEVICE_SATAPI
+	};
+
+	constexpr size_t AHCI_SPIN_WAIT_MAX = 0xBCAFFE;
 
 	struct ahci_controller
 	{
 		pci_device* pci_dev;
 		uint8_t* regs;
+
+		ahci_device_type type;
 
 		list_head list;
 	};

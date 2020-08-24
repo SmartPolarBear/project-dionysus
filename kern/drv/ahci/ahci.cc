@@ -13,6 +13,8 @@
 #include "libkernel/console/builtin_text_io.hpp"
 
 #include <cstring>
+#include <cmath>
+#include <algorithm>
 
 using namespace pci;
 using namespace pci::express;
@@ -20,6 +22,9 @@ using namespace pci::express;
 using namespace ahci;
 
 using namespace libkernel;
+
+using std::min;
+using std::max;
 
 struct pci_achi_devices_struct
 {
@@ -62,6 +67,18 @@ static inline void ahci_port_stop(ahci_port* port)
 	}
 }
 
+__attribute__((always_inline))
+static inline ahci_command_list_entry* ahci_port_cmd_list(const ahci_port* port)
+{
+	return (ahci_command_list_entry*)P2V((((uintptr_t)port->clbu) << 32ull) | ((uintptr_t)port->clb));
+}
+
+__attribute__((always_inline))
+static inline ahci_command_table* ahci_cmd_entry_table(const ahci_command_list_entry* entry)
+{
+	return (ahci_command_table*)P2V((((uintptr_t)entry->ctba_u0) << 32ull) | ((uintptr_t)entry->ctba));
+}
+
 static inline error_code ahci_port_allocate(ahci_port* port)
 {
 	ahci_port_stop(port);
@@ -99,7 +116,7 @@ static inline error_code ahci_port_allocate(ahci_port* port)
 	uint8_t* command_table_base = page_start + 8_KB;
 	while (V2P((uintptr_t)command_table_base) % 128)command_table_base++;
 
-	ahci_command_list* cmd_list = (ahci_command_list*)P2V(cl_paddr);
+	ahci_command_list_entry* cmd_list = (ahci_command_list_entry*)P2V(cl_paddr);
 	for (size_t i = 0; i < AHCI_COMMAND_LIST_MAX; i++)
 	{
 		cmd_list->dw0.prdtl = 8;
@@ -120,9 +137,143 @@ static inline error_code ahci_port_allocate(ahci_port* port)
 	return ERROR_SUCCESS;
 }
 
-static inline error_code ahci_config_port(ahci_controller* ctl, ahci_port* port, size_t no)
+static inline size_t ahci_port_find_free_cmd_slot(ahci_port* port)
+{
+	uint32_t slots = port->sact | port->ci;
+	for (size_t i = 0; i < 32; i++)
+	{
+		if (!(slots | (i << 1)))
+		{
+			return i;
+		}
+	}
+
+	return (size_t)-1;
+}
+
+static inline error_code ahci_port_send_command(ahci_controller* ctl,
+	ahci_port* port,
+	uintptr_t lba,
+	uint8_t* data,
+	size_t sz)
+{
+	auto slot = ahci_port_find_free_cmd_slot(port);
+
+	if (slot > 31)
+	{
+		return -ERROR_DEV_BUSY;
+	}
+
+	auto cl_entry = &ahci_port_cmd_list(port)[slot];
+	auto cmd_table = ahci_cmd_entry_table(cl_entry);
+
+	size_t nsect = ceil(sz / 512);
+	if ((nsect % ~0xFFFFu) != 0)
+	{
+		return -ERROR_INVALID;
+	}
+
+	size_t prd_count = (sz + ahci::AHCI_PRD_MAX_SIZE - 1) / ahci::AHCI_PRD_MAX_SIZE;
+	memset(cmd_table, 0, sizeof(ahci_command_table) + sizeof(ahci_prd) * prd_count);
+
+	for (size_t i = 0, bytes_left = sz; i < prd_count; i++)
+	{
+		size_t prd_size = min(AHCI_PRD_MAX_SIZE, sz);
+		if (prd_size <= 0)
+		{
+			return -ERROR_SUCCESS;
+		}
+
+		uintptr_t prd_buf_paddr = V2P((uintptr_t)data) + i * AHCI_PRD_MAX_SIZE;
+		cmd_table->prdt[i].dba = prd_buf_paddr;
+		cmd_table->prdt[i].dw3.dbc = ((prd_size - 1u) << 1u) | 1u;
+
+		if (i == prd_count - 1)
+		{
+			cmd_table->prdt[i].dw3.dbc |= 1u << 31u;
+		}
+
+		bytes_left -= prd_size;
+	}
+
+	cl_entry->dw0.cfl = sizeof(ahci_fis_reg_h2d) / sizeof(uint32_t);
+	cl_entry->dw0.prdtl = prd_count;
+	cl_entry->prdbc = 0;
+
+	ahci_fis_reg_h2d* fis = &cmd_table->fis_h2d;
+	memset(fis, 0, sizeof(ahci_fis_reg_h2d));
+
+	fis->fis_type = AHCI_FIS_TYPE_REG_H2D;
+	fis->command = ctl->type == DEVICE_SATA ? AHCI_ATA_CMD_IDENTIFY : AHCI_ATA_CMD_PACKET_IDENTIFY;
+	fis->pmport = AHCI_FIS_REG_H2D_COMMAND;
+
+	if (ctl->type != DEVICE_SATA)
+	{
+		fis->device = 1u << 6u; //LBA mode
+		fis->lba0 = lba & 0xFFu;
+		fis->lba1 = (lba >> 8u) & 0xFFu;
+		fis->lba2 = (lba >> 16u) & 0xFFu;
+		fis->lba3 = (lba >> 24u) & 0xFFu;
+		fis->lba4 = (lba >> 32u) & 0xFFu;
+		fis->lba5 = (lba >> 40u) & 0xFFu;
+		fis->countl = nsect & 0xFFFFu;
+	}
+
+	// Wait for port to be free for commands
+	size_t spin = 0;
+	while ((port->tfd.sts_bsy || port->tfd.sts_drq) && spin < AHCI_SPIN_WAIT_MAX)
+	{
+		asm volatile ("pause");
+		++spin;
+	}
+
+	if (spin == AHCI_SPIN_WAIT_MAX)
+	{
+		kdebug::kdebug_log("AHCI: Device hang.\n");
+		return -ERROR_DEV_TIMEOUT;
+	}
+
+	port->ci |= 1 << slot;
+
+	while (true)
+	{
+		asm volatile("nop");
+
+		if (!(port->ci & (1 << slot)))
+		{
+			break;
+		}
+
+		if (port->is.tfes)
+		{
+			kdebug::kdebug_log("AHCI: Task file error signalled.\n");
+			return -ERROR_IO;
+		}
+	}
+
+	if (port->is.tfes)
+	{
+		kdebug::kdebug_log("AHCI: Task file error signalled.\n");
+		return -ERROR_IO;
+	}
+
+	return ERROR_SUCCESS;
+}
+
+static inline error_code ahci_port_identify([[maybe_unused]]ahci_controller* ctl, ahci_port* port)
+{
+	return ERROR_SUCCESS;
+}
+
+static inline error_code ahci_config_port([[maybe_unused]]ahci_controller* ctl, ahci_port* port)
 {
 	error_code ret = ahci_port_allocate(port);
+	if (ret != ERROR_SUCCESS)
+	{
+		return ret;
+	}
+
+	ret = ahci_port_identify(ahci_controller * ctl, port);
 	if (ret != ERROR_SUCCESS)
 	{
 		return ret;
@@ -131,41 +282,40 @@ static inline error_code ahci_config_port(ahci_controller* ctl, ahci_port* port,
 	return ERROR_SUCCESS;
 }
 
-static inline error_code ahci_enumerate_all_ports(ahci_controller* ctl, ahci_generic_host_control* ghc)
+static inline error_code ahci_enumerate_all_ports(ahci_controller* ctl, ahci_hba_mem* hba)
 {
 	for (size_t i = 0; i < 32; i++)
 	{
 		// test the bit, if set, the port is implemented
-		if ((ghc->pi.bits & (1 << i)) == 0)
+		if ((hba->ghc.pi.bits & (1 << i)) == 0)
 		{
 			continue;
 		}
 
-		uintptr_t offset = 0x100 + (i * 0x80);
-		ahci_port* port = (ahci_port*)(ctl->regs + offset);
-
-		if (port->ssts.ipm != IPM_ACTIVE || port->ssts.det != DET_DEV_AND_COMM)
+		if (hba->ports[i].ssts.ipm != IPM_ACTIVE || hba->ports[i].ssts.det != DET_DEV_AND_COMM)
 		{
 			continue;
 		}
 
 		error_code ret = ERROR_SUCCESS;
 
-		if (port->sig.sec_count_reg == 1 &&
-			port->sig.lba_low == 1 &&
-			port->sig.lba_mid == 0x0 &&
-			port->sig.lba_high == 0x0)    // SATA
+		if (hba->ports[i].sig.sec_count_reg == 1 &&
+			hba->ports[i].sig.lba_low == 1 &&
+			hba->ports[i].sig.lba_mid == 0x0 &&
+			hba->ports[i].sig.lba_high == 0x0)    // SATA
 		{
-			kdebug::kdebug_log("Configuring SATA at generation %d's speed.\n", port->ssts.spd);
-			ret = ahci_config_port(ctl, port, i);
+			kdebug::kdebug_log("Configuring SATA at generation %d's speed.\n", hba->ports[i].ssts.spd);
+			ctl->type = DEVICE_SATA;
+			ret = ahci_config_port(ctl, &hba->ports[i]);
 		}
-		else if (port->sig.sec_count_reg == 0x01 &&
-			port->sig.lba_low == 0x01 &&
-			port->sig.lba_mid == 0x14 &&
-			port->sig.lba_high == 0xEB)   // SATAPI
+		else if (hba->ports[i].sig.sec_count_reg == 0x01 &&
+			hba->ports[i].sig.lba_low == 0x01 &&
+			hba->ports[i].sig.lba_mid == 0x14 &&
+			hba->ports[i].sig.lba_high == 0xEB)   // SATAPI
 		{
-			kdebug::kdebug_log("Configure SATAPI at generation %d's speed.\n", port->ssts.spd);
-			ret = ahci_config_port(ctl, port, i);
+			kdebug::kdebug_log("Configure SATAPI at generation %d's speed.\n", hba->ports[i].ssts.spd);
+			ctl->type = DEVICE_SATAPI;
+			ret = ahci_config_port(ctl, &hba->ports[i]);
 		}
 
 		if (ret != ERROR_SUCCESS)
@@ -178,25 +328,25 @@ static inline error_code ahci_enumerate_all_ports(ahci_controller* ctl, ahci_gen
 
 static inline error_code ahci_initialize_controller(ahci_controller* ctl)
 {
-	ahci_generic_host_control* ghc = (ahci_generic_host_control*)ctl->regs;
+	ahci_hba_mem* hba = (ahci_hba_mem*)ctl->regs;
 
-	bool valid_major = ghc->vs.major_ver == 0 || ghc->vs.major_ver == 1;
+	bool valid_major = hba->ghc.vs.major_ver == 0 || hba->ghc.vs.major_ver == 1;
 
-	bool valid_minor = ghc->vs.minor_ver == 0 ||
-		ghc->vs.minor_ver == 10 ||
-		ghc->vs.minor_ver == 20 ||
-		ghc->vs.minor_ver == 30 ||
-		ghc->vs.minor_ver == 31 ||
-		ghc->vs.minor_ver == 95;
+	bool valid_minor = hba->ghc.vs.minor_ver == 0 ||
+		hba->ghc.vs.minor_ver == 10 ||
+		hba->ghc.vs.minor_ver == 20 ||
+		hba->ghc.vs.minor_ver == 30 ||
+		hba->ghc.vs.minor_ver == 31 ||
+		hba->ghc.vs.minor_ver == 95;
 
 	if ((!valid_minor) || (!valid_major))
 	{
 		return -ERROR_INVALID;
 	}
 
-	kdebug::kdebug_log("Initialize AHCI controller (ver %d.%d)\n", ghc->vs.major_ver, ghc->vs.minor_ver);
+	kdebug::kdebug_log("Initialize AHCI controller (ver %d.%d)\n", hba->ghc.vs.major_ver, hba->ghc.vs.minor_ver);
 
-	auto ret = ahci_enumerate_all_ports(ctl, ghc);
+	auto ret = ahci_enumerate_all_ports(ctl, hba);
 
 	return ret;
 }

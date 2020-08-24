@@ -73,7 +73,7 @@ namespace pmm
 
     error_code page_insert(pde_ptr_t pgdir, bool allow_rewrite, page_info *page, uintptr_t va, size_t perm);
 
-// insert a free page to pgdir
+	// insert a free page to pgdir
     error_code
     pgdir_alloc_page(IN pde_ptr_t pgdir, bool rewrite_if_exist, uintptr_t va, size_t perm, OUT page_info **page);
 
