@@ -153,8 +153,9 @@ static inline size_t ahci_port_find_free_cmd_slot(ahci_port* port)
 
 static inline error_code ahci_port_send_command(ahci_controller* ctl,
 	ahci_port* port,
+	uint8_t cmd_id,
 	uintptr_t lba,
-	uint8_t* data,
+	void* data,
 	size_t sz)
 {
 	auto slot = ahci_port_find_free_cmd_slot(port);
@@ -167,7 +168,8 @@ static inline error_code ahci_port_send_command(ahci_controller* ctl,
 	auto cl_entry = &ahci_port_cmd_list(port)[slot];
 	auto cmd_table = ahci_cmd_entry_table(cl_entry);
 
-	size_t nsect = ceil(sz / 512);
+	size_t nsect = (sz + 511) / 512;
+
 	if ((nsect % ~0xFFFFu) != 0)
 	{
 		return -ERROR_INVALID;
@@ -204,8 +206,8 @@ static inline error_code ahci_port_send_command(ahci_controller* ctl,
 	memset(fis, 0, sizeof(ahci_fis_reg_h2d));
 
 	fis->fis_type = AHCI_FIS_TYPE_REG_H2D;
-	fis->command = ctl->type == DEVICE_SATA ? AHCI_ATA_CMD_IDENTIFY : AHCI_ATA_CMD_PACKET_IDENTIFY;
-	fis->pmport = AHCI_FIS_REG_H2D_COMMAND;
+	fis->command = cmd_id;
+	fis->c = true;
 
 	if (ctl->type != DEVICE_SATA)
 	{
@@ -262,7 +264,35 @@ static inline error_code ahci_port_send_command(ahci_controller* ctl,
 
 static inline error_code ahci_port_identify([[maybe_unused]]ahci_controller* ctl, ahci_port* port)
 {
-	return ERROR_SUCCESS;
+	uint8_t cmd_id = 0;
+	if (ctl->type == DEVICE_SATA)
+	{
+		cmd_id = ATA_CMD_IDENTIFY;
+	}
+	else if (ctl->type == DEVICE_SATAPI)
+	{
+		cmd_id = DEVICE_SATAPI;
+	}
+	else
+	{
+		return -ERROR_INVALID;
+	}
+
+	uint32_t* buf = new uint32_t[256];
+
+	error_code ret = ERROR_SUCCESS;
+
+	do
+	{
+		if ((ret = ahci_port_send_command(ctl, port, cmd_id, 0, buf, sizeof(buf))) != ERROR_SUCCESS)
+		{
+			break;
+		}
+
+	} while (0);
+
+	delete[] buf;
+	return ret;
 }
 
 static inline error_code ahci_config_port([[maybe_unused]]ahci_controller* ctl, ahci_port* port)
@@ -273,7 +303,7 @@ static inline error_code ahci_config_port([[maybe_unused]]ahci_controller* ctl, 
 		return ret;
 	}
 
-	ret = ahci_port_identify(ahci_controller * ctl, port);
+	ret = ahci_port_identify(ctl, port);
 	if (ret != ERROR_SUCCESS)
 	{
 		return ret;

@@ -156,6 +156,27 @@ namespace ahci
 	}__attribute__((__packed__));
 	static_assert(sizeof(ahci_port_pxis) == sizeof(uint32_t));
 
+	enum ahci_ata_cmd
+	{
+		ATA_CMD_IDENTIFY = 0xEC,
+		ATA_CMD_PACKET = 0xA0,
+		ATA_CMD_READ_DMA_EX = 0x25,
+		ATA_CMD_WRITE_DMA_EX = 0x35,
+		ATA_CMD_PACKET_IDENTIFY = 0xA1,
+		ATAPI_CMD_READ_SECTORS = 0xA8,
+	};
+
+	enum ahci_ata_identity
+	{
+		ATA_IDENT_DEVICE_TYPE = 0x00,
+		ATA_IDENT_SERIAL = 0x14,
+		ATA_IDENT_MODEL = 0x36,
+		ATA_IDENT_CAPS = 0x62,
+		ATA_IDENT_MAX_LBA = 0x78,
+		ATA_IDENT_CMD_SETS = 0xA4,
+		ATA_IDENT_MAX_LBAEXT = 0xC8,
+	};
+
 	struct ahci_port
 	{
 		uint32_t clb;                    // 0x00
@@ -222,7 +243,6 @@ namespace ahci
 	constexpr size_t AHCI_ATA_CMD_IDENTIFY = 0xEC;
 	constexpr size_t AHCI_ATA_CMD_PACKET_IDENTIFY = 0xA1;
 
-	constexpr uint8_t AHCI_FIS_REG_H2D_COMMAND = 1 << 7;
 
 	struct ahci_fis_reg_h2d
 	{
