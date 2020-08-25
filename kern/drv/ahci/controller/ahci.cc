@@ -9,6 +9,8 @@
 #include "drivers/pci/pci_header.hpp"
 #include "drivers/pci/pci_capability.hpp"
 #include "drivers/ahci/ahci.hpp"
+#include "drivers/ahci/ata.hpp"
+
 
 #include "libkernel/console/builtin_text_io.hpp"
 
@@ -151,117 +153,6 @@ static inline size_t ahci_port_find_free_cmd_slot(ahci_port* port)
 	return (size_t)-1;
 }
 
-static inline error_code ahci_port_send_command(ahci_controller* ctl,
-	ahci_port* port,
-	uint8_t cmd_id,
-	uintptr_t lba,
-	void* data,
-	size_t sz)
-{
-	auto slot = ahci_port_find_free_cmd_slot(port);
-
-	if (slot > 31)
-	{
-		return -ERROR_DEV_BUSY;
-	}
-
-	auto cl_entry = &ahci_port_cmd_list(port)[slot];
-	auto cmd_table = ahci_cmd_entry_table(cl_entry);
-
-	size_t nsect = (sz + 511) / 512;
-
-	if ((nsect % ~0xFFFFu) != 0)
-	{
-		return -ERROR_INVALID;
-	}
-
-	size_t prd_count = (sz + ahci::AHCI_PRD_MAX_SIZE - 1) / ahci::AHCI_PRD_MAX_SIZE;
-	memset(cmd_table, 0, sizeof(ahci_command_table) + sizeof(ahci_prd) * prd_count);
-
-	for (size_t i = 0, bytes_left = sz; i < prd_count; i++)
-	{
-		size_t prd_size = min(AHCI_PRD_MAX_SIZE, sz);
-		if (prd_size <= 0)
-		{
-			return -ERROR_SUCCESS;
-		}
-
-		uintptr_t prd_buf_paddr = V2P((uintptr_t)data) + i * AHCI_PRD_MAX_SIZE;
-		cmd_table->prdt[i].dba = prd_buf_paddr;
-		cmd_table->prdt[i].dw3.dbc = ((prd_size - 1u) << 1u) | 1u;
-
-		if (i == prd_count - 1)
-		{
-			cmd_table->prdt[i].dw3.dbc |= 1u << 31u;
-		}
-
-		bytes_left -= prd_size;
-	}
-
-	cl_entry->dw0.cfl = sizeof(ahci_fis_reg_h2d) / sizeof(uint32_t);
-	cl_entry->dw0.prdtl = prd_count;
-	cl_entry->prdbc = 0;
-
-	ahci_fis_reg_h2d* fis = &cmd_table->fis_h2d;
-	memset(fis, 0, sizeof(ahci_fis_reg_h2d));
-
-	fis->fis_type = AHCI_FIS_TYPE_REG_H2D;
-	fis->command = cmd_id;
-	fis->c = true;
-
-	if (ctl->type != DEVICE_SATA)
-	{
-		fis->device = 1u << 6u; //LBA mode
-		fis->lba0 = lba & 0xFFu;
-		fis->lba1 = (lba >> 8u) & 0xFFu;
-		fis->lba2 = (lba >> 16u) & 0xFFu;
-		fis->lba3 = (lba >> 24u) & 0xFFu;
-		fis->lba4 = (lba >> 32u) & 0xFFu;
-		fis->lba5 = (lba >> 40u) & 0xFFu;
-		fis->countl = nsect & 0xFFFFu;
-	}
-
-	// Wait for port to be free for commands
-	size_t spin = 0;
-	while ((port->tfd.sts_bsy || port->tfd.sts_drq) && spin < AHCI_SPIN_WAIT_MAX)
-	{
-		asm volatile ("pause");
-		++spin;
-	}
-
-	if (spin == AHCI_SPIN_WAIT_MAX)
-	{
-		kdebug::kdebug_log("AHCI: Device hang.\n");
-		return -ERROR_DEV_TIMEOUT;
-	}
-
-	port->ci |= 1 << slot;
-
-	while (true)
-	{
-		asm volatile("nop");
-
-		if (!(port->ci & (1 << slot)))
-		{
-			break;
-		}
-
-		if (port->is.tfes)
-		{
-			kdebug::kdebug_log("AHCI: Task file error signalled.\n");
-			return -ERROR_IO;
-		}
-	}
-
-	if (port->is.tfes)
-	{
-		kdebug::kdebug_log("AHCI: Task file error signalled.\n");
-		return -ERROR_IO;
-	}
-
-	return ERROR_SUCCESS;
-}
-
 static inline error_code ahci_port_identify([[maybe_unused]]ahci_controller* ctl, ahci_port* port)
 {
 	uint8_t cmd_id = 0;
@@ -278,7 +169,7 @@ static inline error_code ahci_port_identify([[maybe_unused]]ahci_controller* ctl
 		return -ERROR_INVALID;
 	}
 
-	uint32_t* buf = new uint32_t[256];
+	uint16_t* buf = new uint16_t[256];
 
 	error_code ret = ERROR_SUCCESS;
 
@@ -286,12 +177,14 @@ static inline error_code ahci_port_identify([[maybe_unused]]ahci_controller* ctl
 	{
 		if ((ret = ahci_port_send_command(ctl, port, cmd_id, 0, buf, sizeof(buf))) != ERROR_SUCCESS)
 		{
+			kdebug::kdebug_log(kdebug::error_message(ret));
 			break;
 		}
 
 	} while (0);
 
 	delete[] buf;
+
 	return ret;
 }
 
@@ -421,6 +314,117 @@ error_code ahci::ahci_init()
 				delete ahci;
 			}
 		}
+	}
+
+	return ERROR_SUCCESS;
+}
+
+error_code ahci::ahci_port_send_command(ahci_controller* ctl,
+	ahci_port* port,
+	uint8_t cmd_id,
+	uintptr_t lba,
+	void* data,
+	size_t sz)
+{
+	auto slot = ahci_port_find_free_cmd_slot(port);
+
+	if (slot > 31)
+	{
+		return -ERROR_DEV_BUSY;
+	}
+
+	auto cl_entry = &ahci_port_cmd_list(port)[slot];
+	auto cmd_table = ahci_cmd_entry_table(cl_entry);
+
+	size_t nsect = (sz + 511) / 512;
+
+	if ((nsect % ~0xFFFFu) != 0)
+	{
+		return -ERROR_INVALID;
+	}
+
+	size_t prd_count = (sz + ahci::AHCI_PRD_MAX_SIZE - 1) / ahci::AHCI_PRD_MAX_SIZE;
+	memset(cmd_table, 0, sizeof(ahci_command_table) + sizeof(ahci_prd) * prd_count);
+
+	for (size_t i = 0, bytes_left = sz; i < prd_count; i++)
+	{
+		size_t prd_size = min(AHCI_PRD_MAX_SIZE, sz);
+		if (prd_size <= 0)
+		{
+			return -ERROR_SUCCESS;
+		}
+
+		uintptr_t prd_buf_paddr = V2P((uintptr_t)data) + i * AHCI_PRD_MAX_SIZE;
+		cmd_table->prdt[i].dba = prd_buf_paddr;
+		cmd_table->prdt[i].dw3.dbc = ((prd_size - 1u) << 1u) | 1u;
+
+		if (i == prd_count - 1)
+		{
+			cmd_table->prdt[i].dw3.dbc |= 1u << 31u;
+		}
+
+		bytes_left -= prd_size;
+	}
+
+	cl_entry->dw0.cfl = sizeof(ahci_fis_reg_h2d) / sizeof(uint32_t);
+	cl_entry->dw0.prdtl = prd_count;
+	cl_entry->prdbc = 0;
+
+	ahci_fis_reg_h2d* fis = &cmd_table->fis_h2d;
+	memset(fis, 0, sizeof(ahci_fis_reg_h2d));
+
+	fis->fis_type = AHCI_FIS_TYPE_REG_H2D;
+	fis->command = cmd_id;
+	fis->c = true;
+
+	if (ctl->type != DEVICE_SATA)
+	{
+		fis->device = 1u << 6u; //LBA mode
+		fis->lba0 = lba & 0xFFu;
+		fis->lba1 = (lba >> 8u) & 0xFFu;
+		fis->lba2 = (lba >> 16u) & 0xFFu;
+		fis->lba3 = (lba >> 24u) & 0xFFu;
+		fis->lba4 = (lba >> 32u) & 0xFFu;
+		fis->lba5 = (lba >> 40u) & 0xFFu;
+		fis->countl = nsect & 0xFFFFu;
+	}
+
+	// Wait for port to be free for commands
+	size_t spin = 0;
+	while ((port->tfd.sts_bsy || port->tfd.sts_drq) && spin < AHCI_SPIN_WAIT_MAX)
+	{
+		asm volatile ("pause");
+		++spin;
+	}
+
+	if (spin == AHCI_SPIN_WAIT_MAX)
+	{
+		kdebug::kdebug_log("AHCI: Device hang.\n");
+		return -ERROR_DEV_TIMEOUT;
+	}
+
+	port->ci |= 1 << slot;
+
+	while (true)
+	{
+		asm volatile("nop");
+
+		if (!(port->ci & (1 << slot)))
+		{
+			break;
+		}
+
+		if (port->is.tfes)
+		{
+			kdebug::kdebug_log("AHCI: Task file error signalled.\n");
+			return -ERROR_IO;
+		}
+	}
+
+	if (port->is.tfes)
+	{
+		kdebug::kdebug_log("AHCI: Task file error signalled.\n");
+		return -ERROR_IO;
 	}
 
 	return ERROR_SUCCESS;

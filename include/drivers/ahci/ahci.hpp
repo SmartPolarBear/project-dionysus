@@ -8,6 +8,20 @@ namespace ahci
 	constexpr size_t AHCI_PCI_SUBCLASS = 0x6;
 	constexpr size_t AHCI_PCI_PROGIF = 0x1;
 
+	enum ahci_ata_cmd
+	{
+		ATA_CMD_IDENTIFY = 0xEC,
+		ATA_CMD_PACKET = 0xA0,
+		ATA_CMD_READ_DMA_EX = 0x25,
+		ATA_CMD_WRITE_DMA_EX = 0x35,
+		ATA_CMD_PACKET_IDENTIFY = 0xA1,
+	};
+
+	enum ahci_atapi_cmd
+	{
+		ATAPI_CMD_READ_SECTORS = 0xA8,
+	};
+
 	struct ahci_abar
 	{
 		uint64_t res_type_indicator: 1;
@@ -46,8 +60,6 @@ namespace ahci
 		uint32_t bohc;
 	}__attribute__((__packed__));
 	static_assert(sizeof(ahci_generic_host_control) == 44);
-
-
 
 	enum pxssts_ipm
 	{
@@ -156,26 +168,6 @@ namespace ahci
 	}__attribute__((__packed__));
 	static_assert(sizeof(ahci_port_pxis) == sizeof(uint32_t));
 
-	enum ahci_ata_cmd
-	{
-		ATA_CMD_IDENTIFY = 0xEC,
-		ATA_CMD_PACKET = 0xA0,
-		ATA_CMD_READ_DMA_EX = 0x25,
-		ATA_CMD_WRITE_DMA_EX = 0x35,
-		ATA_CMD_PACKET_IDENTIFY = 0xA1,
-		ATAPI_CMD_READ_SECTORS = 0xA8,
-	};
-
-	enum ahci_ata_identity
-	{
-		ATA_IDENT_DEVICE_TYPE = 0x00,
-		ATA_IDENT_SERIAL = 0x14,
-		ATA_IDENT_MODEL = 0x36,
-		ATA_IDENT_CAPS = 0x62,
-		ATA_IDENT_MAX_LBA = 0x78,
-		ATA_IDENT_CMD_SETS = 0xA4,
-		ATA_IDENT_MAX_LBAEXT = 0xC8,
-	};
 
 	struct ahci_port
 	{
@@ -242,7 +234,6 @@ namespace ahci
 	constexpr size_t AHCI_FIS_TYPE_REG_H2D = 0x27;
 	constexpr size_t AHCI_ATA_CMD_IDENTIFY = 0xEC;
 	constexpr size_t AHCI_ATA_CMD_PACKET_IDENTIFY = 0xA1;
-
 
 	struct ahci_fis_reg_h2d
 	{
@@ -340,6 +331,7 @@ namespace ahci
 	}__attribute__((__packed__));
 	static_assert(sizeof(ahci_command_list_entry) == sizeof(uint32_t) * 8);
 
+
 	enum ahci_device_type
 	{
 		DEVICE_SATA,
@@ -359,4 +351,11 @@ namespace ahci
 	};
 
 	error_code ahci_init();
+
+	error_code ahci_port_send_command(ahci_controller* ctl,
+		ahci_port* port,
+		uint8_t cmd_id,
+		uintptr_t lba,
+		void* data,
+		size_t sz);
 }
