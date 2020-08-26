@@ -4,18 +4,18 @@
 #include  <utility>
 namespace ahci
 {
-	class ATAString
+	class ATAStrWord
 	{
 
 	 private:
 		using char_pair = std::pair<uint8_t, uint8_t>;
 		word_type data;
 	 public:
-		ATAString() : data(0)
+		ATAStrWord() : data(0)
 		{
 		}
 
-		explicit ATAString(word_type _data) : data(_data)
+		explicit ATAStrWord(word_type _data) : data(_data)
 		{
 		}
 

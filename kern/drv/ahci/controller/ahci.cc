@@ -10,7 +10,7 @@
 #include "drivers/pci/pci_capability.hpp"
 #include "drivers/ahci/ahci.hpp"
 #include "drivers/ahci/ata.hpp"
-
+#include "drivers/ahci/ata_string.hpp"
 
 #include "libkernel/console/builtin_text_io.hpp"
 
@@ -156,6 +156,7 @@ static inline size_t ahci_port_find_free_cmd_slot(ahci_port* port)
 static inline error_code ahci_port_identify([[maybe_unused]]ahci_controller* ctl, ahci_port* port)
 {
 	uint8_t cmd_id = 0;
+
 	if (ctl->type == DEVICE_SATA)
 	{
 		cmd_id = ATA_CMD_IDENTIFY;
@@ -170,6 +171,10 @@ static inline error_code ahci_port_identify([[maybe_unused]]ahci_controller* ctl
 	}
 
 	uint16_t* buf = new uint16_t[256];
+	if (buf == nullptr)
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
 
 	error_code ret = ERROR_SUCCESS;
 
@@ -180,6 +185,63 @@ static inline error_code ahci_port_identify([[maybe_unused]]ahci_controller* ctl
 			kdebug::kdebug_log(kdebug::error_message(ret));
 			break;
 		}
+
+		char* model_num = new char[40], * serial_num = new char[20];
+		if (model_num == nullptr || serial_num == nullptr)
+		{
+			ret = -ERROR_MEMORY_ALLOC;
+			break;
+		}
+
+		char* s_iter = serial_num;
+		for (auto serial = &buf[ATA_IDENT_SERIAL_OFFSET];
+			 serial != &buf[ATA_IDENT_SERIAL_OFFSET + ATA_IDENT_SERIAL_LEN_WORD];
+			 serial++)
+		{
+			ahci::ATAStrWord word{ *serial };
+			auto char_pair = word.get_char_pair();
+			*(s_iter++) = char_pair.first;
+			*(s_iter++) = char_pair.second;
+		}
+		*(s_iter++) = '\0'; // make the string null-terminated
+
+		char* m_iter = model_num;
+		for (auto model = &buf[ATA_IDENT_MODEL_OFFSET];
+			 model != &buf[ATA_IDENT_MODEL_OFFSET + ATA_IDENT_MODEL_LEN_WORD];
+			 model++)
+		{
+			ahci::ATAStrWord word{ *model };
+			auto char_pair = word.get_char_pair();
+			*(m_iter++) = char_pair.first;
+			*(m_iter++) = char_pair.second;
+		}
+		*(m_iter++) = '\0'; // make the string null-terminated
+
+		ata_ident_cmd_fea_supported* cmd_sets =
+			reinterpret_cast<ata_ident_cmd_fea_supported*>(&buf[ATA_IDENT_CMD_SUP_OFFSET]);
+
+		uint32_t lsec_size =
+			*((uint32_t*)&buf[ATA_IDENT_LOGICAL_SECTOR_SIZE_OFFSET]);
+
+		size_t disk_size = 0;
+		if (cmd_sets->lba48)
+		{
+			uint64_t lba48_sectors = *((uint64_t*)&buf[ATA_IDENT_LBA48_TOTAL_SECTORS_OFFSET]);
+			disk_size = lba48_sectors * lsec_size;
+		}
+		else
+		{
+			uint64_t lba28_sectors = *((uint64_t*)&buf[ATA_IDENT_LBA28_TOTAL_SECTORS_OFFSET]);
+			disk_size = lba28_sectors * lsec_size;
+		}
+
+		// report disk information
+
+		kdebug::kdebug_log("%s Disk: capacity %lld bytes, serial %s, model %s.",
+			ctl->type == DEVICE_SATA ? "ATA" : "ATAPI",
+			disk_size,
+			serial_num,
+			model_num);
 
 	} while (0);
 
@@ -336,7 +398,7 @@ error_code ahci::ahci_port_send_command(ahci_controller* ctl,
 	auto cl_entry = &ahci_port_cmd_list(port)[slot];
 	auto cmd_table = ahci_cmd_entry_table(cl_entry);
 
-	size_t nsect = (sz + 511) / 512;
+	size_t nsect = (sz + (ATA_DEFAULT_SECTOR_SIZE - 1)) / ATA_DEFAULT_SECTOR_SIZE;
 
 	if ((nsect % ~0xFFFFu) != 0)
 	{
