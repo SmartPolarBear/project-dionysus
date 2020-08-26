@@ -19,7 +19,7 @@
 const char* err_msg[] = {
 	[ERROR_SUCCESS]=     "the action is completed successfully",
 	[ERROR_UNKOWN]=      "failedbut reason can't be figured out",
-	[ERROR_INVALID]=       "invalid data",
+	[ERROR_INVALID]=  "invalid data",
 	[ERROR_NOT_IMPL]=    "not implemented",
 	[ERROR_LOCK_STATUS]= "lock is not at a right status",
 	[ERROR_UNSUPPORTED]= "unsupported features",
@@ -37,7 +37,8 @@ const char* err_msg[] = {
 	[ERROR_IO]=              "IO error"
 };
 
-const char* err_title[] = { [ERROR_SUCCESS]="ERROR_SUCCESS",
+const char* err_title[] = {
+	[ERROR_SUCCESS]="ERROR_SUCCESS",
 	[ERROR_UNKOWN]="ERROR_UNKOWN",
 	[ERROR_INVALID]="ERROR_INVALID",
 	[ERROR_NOT_IMPL]="ERROR_NOT_IMPL",
@@ -58,11 +59,13 @@ const char* err_title[] = { [ERROR_SUCCESS]="ERROR_SUCCESS",
 
 const char* kdebug::error_message(error_code code)
 {
+	if (code < 0)code = -code;
 	return err_msg[static_cast<size_t>(code)];
 }
 
 const char* kdebug::error_title(error_code code)
 {
+	if (code < 0)code = -code;
 	return err_title[static_cast<size_t>(code)];
 }
 

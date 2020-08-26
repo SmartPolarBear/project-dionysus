@@ -163,7 +163,7 @@ static inline error_code ahci_port_identify([[maybe_unused]]ahci_controller* ctl
 	}
 	else if (ctl->type == DEVICE_SATAPI)
 	{
-		cmd_id = DEVICE_SATAPI;
+		cmd_id = ATA_CMD_PACKET_IDENTIFY;
 	}
 	else
 	{
@@ -180,7 +180,7 @@ static inline error_code ahci_port_identify([[maybe_unused]]ahci_controller* ctl
 
 	do
 	{
-		if ((ret = ahci_port_send_command(ctl, port, cmd_id, 0, buf, sizeof(buf))) != ERROR_SUCCESS)
+		if ((ret = ahci_port_send_command(port, cmd_id, 0, buf, sizeof(uint16_t[256]))) != ERROR_SUCCESS)
 		{
 			kdebug::kdebug_log(kdebug::error_message(ret));
 			break;
@@ -237,11 +237,14 @@ static inline error_code ahci_port_identify([[maybe_unused]]ahci_controller* ctl
 
 		// report disk information
 
-		kdebug::kdebug_log("%s Disk: capacity %lld bytes, serial %s, model %s.",
+		kdebug::kdebug_log("%s Disk: capacity %lld bytes, serial %s, model %s\n",
 			ctl->type == DEVICE_SATA ? "ATA" : "ATAPI",
 			disk_size,
 			serial_num,
 			model_num);
+
+		delete[] serial_num;
+		delete[] model_num;
 
 	} while (0);
 
@@ -381,8 +384,7 @@ error_code ahci::ahci_init()
 	return ERROR_SUCCESS;
 }
 
-error_code ahci::ahci_port_send_command(ahci_controller* ctl,
-	ahci_port* port,
+error_code ahci::ahci_port_send_command(ahci_port* port,
 	uint8_t cmd_id,
 	uintptr_t lba,
 	void* data,
@@ -400,13 +402,21 @@ error_code ahci::ahci_port_send_command(ahci_controller* ctl,
 
 	size_t nsect = (sz + (ATA_DEFAULT_SECTOR_SIZE - 1)) / ATA_DEFAULT_SECTOR_SIZE;
 
-	if ((nsect % ~0xFFFFu) != 0)
+	if ((nsect & ~0xFFFFu) != 0)
 	{
 		return -ERROR_INVALID;
 	}
 
 	size_t prd_count = (sz + ahci::AHCI_PRD_MAX_SIZE - 1) / ahci::AHCI_PRD_MAX_SIZE;
 	memset(cmd_table, 0, sizeof(ahci_command_table) + sizeof(ahci_prd) * prd_count);
+
+	ahci_fis_reg_h2d* fis = &cmd_table->fis_h2d;
+	memset(fis, 0, sizeof(ahci_fis_reg_h2d));
+
+	fis->fis_type = AHCI_FIS_TYPE_REG_H2D;
+	fis->command = cmd_id;
+	fis->device = 0;
+	fis->c = 1;
 
 	for (size_t i = 0, bytes_left = sz; i < prd_count; i++)
 	{
@@ -417,12 +427,13 @@ error_code ahci::ahci_port_send_command(ahci_controller* ctl,
 		}
 
 		uintptr_t prd_buf_paddr = V2P((uintptr_t)data) + i * AHCI_PRD_MAX_SIZE;
-		cmd_table->prdt[i].dba = prd_buf_paddr;
-		cmd_table->prdt[i].dw3.dbc = ((prd_size - 1u) << 1u) | 1u;
+		cmd_table->prdt[i].dba = prd_buf_paddr & 0xFFFFFFFF;
+		cmd_table->prdt[i].dbau = prd_buf_paddr >> 32;
+		cmd_table->prdt[i].dw3.dbc = prd_size - 1u;
 
 		if (i == prd_count - 1)
 		{
-			cmd_table->prdt[i].dw3.dbc |= 1u << 31u;
+			cmd_table->prdt[i].dw3.interrupt_on_completion = true;
 		}
 
 		bytes_left -= prd_size;
@@ -432,14 +443,7 @@ error_code ahci::ahci_port_send_command(ahci_controller* ctl,
 	cl_entry->dw0.prdtl = prd_count;
 	cl_entry->prdbc = 0;
 
-	ahci_fis_reg_h2d* fis = &cmd_table->fis_h2d;
-	memset(fis, 0, sizeof(ahci_fis_reg_h2d));
-
-	fis->fis_type = AHCI_FIS_TYPE_REG_H2D;
-	fis->command = cmd_id;
-	fis->c = true;
-
-	if (ctl->type != DEVICE_SATA)
+	if (cmd_id != AHCI_ATA_CMD_IDENTIFY)
 	{
 		fis->device = 1u << 6u; //LBA mode
 		fis->lba0 = lba & 0xFFu;
@@ -465,13 +469,13 @@ error_code ahci::ahci_port_send_command(ahci_controller* ctl,
 		return -ERROR_DEV_TIMEOUT;
 	}
 
-	port->ci |= 1 << slot;
+	port->ci = (1u << slot);
 
 	while (true)
 	{
 		asm volatile("nop");
 
-		if (!(port->ci & (1 << slot)))
+		if (!(port->ci & (1u << slot)))
 		{
 			break;
 		}

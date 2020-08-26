@@ -314,7 +314,12 @@ namespace ahci
 	struct ahci_prd
 	{
 		uint32_t dba;
+
+		/*This is the upper 32-bits of the data block physical
+		address. It is only valid if the HBA indicated that it can support 64-bit addressing through the
+		S64A bit in the capabilities register, and is ignored otherwise.*/
 		uint32_t dbau;
+
 		uint32_t reserved0;
 		ahci_prd_dw3 dw3;
 	}__attribute__((__packed__));
@@ -352,8 +357,7 @@ namespace ahci
 
 	error_code ahci_init();
 
-	error_code ahci_port_send_command(ahci_controller* ctl,
-		ahci_port* port,
+	error_code ahci_port_send_command(ahci_port* port,
 		uint8_t cmd_id,
 		uintptr_t lba,
 		void* data,
