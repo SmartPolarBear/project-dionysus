@@ -171,8 +171,7 @@ namespace ahci
 
 	struct ahci_port
 	{
-		uint32_t clb;                    // 0x00
-		uint32_t clbu;                    // 0x04
+		uint64_t clb;                    // 0x00
 		uint32_t fb;                        // 0x08
 		uint32_t fbu;                    // 0x0C
 		ahci_port_pxis is;                        // 0x10
@@ -225,8 +224,7 @@ namespace ahci
 	{
 		ahci_command_dw0 dw0;
 		uint32_t prdbc;
-		uint32_t ctba;
-		uint32_t ctba_u0;
+		uint64_t ctba;
 		uint32_t reserved[4];
 	}__attribute__((__packed__));
 	static_assert(sizeof(ahci_command_list_entry) == sizeof(uint32_t) * 8);

@@ -53,15 +53,15 @@ static inline void ahci_port_start(ahci_port* port)
 		asm("pause");
 	}
 
-	port->cmd.fre = true;
-	port->cmd.st = true;
+	port->cmd.fre = 1;
+	port->cmd.st = 1;
 }
 
 __attribute__((always_inline))
 static inline void ahci_port_stop(ahci_port* port)
 {
-	port->cmd.fre = false;
-	port->cmd.st = false;
+	port->cmd.fre = 0;
+	port->cmd.st = 0;
 
 	while (port->cmd.cr || port->cmd.fr)
 	{
@@ -72,13 +72,13 @@ static inline void ahci_port_stop(ahci_port* port)
 __attribute__((always_inline))
 static inline ahci_command_list_entry* ahci_port_cmd_list(const ahci_port* port)
 {
-	return (ahci_command_list_entry*)P2V((((uintptr_t)port->clbu) << 32ull) | ((uintptr_t)port->clb));
+	return (ahci_command_list_entry*)P2V(port->clb);
 }
 
 __attribute__((always_inline))
 static inline ahci_command_table* ahci_cmd_entry_table(const ahci_command_list_entry* entry)
 {
-	return (ahci_command_table*)P2V((((uintptr_t)entry->ctba_u0) << 32ull) | ((uintptr_t)entry->ctba));
+	return (ahci_command_table*)P2V(entry->ctba);
 }
 
 static inline error_code ahci_port_allocate(ahci_port* port)
@@ -87,10 +87,16 @@ static inline error_code ahci_port_allocate(ahci_port* port)
 
 	// 2MB-sized page
 	auto page = pmm::alloc_page();
+
 	if (page == nullptr)
 	{
 		return -ERROR_MEMORY_ALLOC;
 	}
+
+	auto vmm_pg = vmm::walk_pgdir(vmm::g_kpml4t, pmm::page_to_va(page), false);
+	*vmm_pg |= PG_PWT;
+	*vmm_pg |= PG_PCD;
+	pmm::tlb_invalidate(vmm::g_kpml4t, pmm::page_to_va(page));
 
 	memset(reinterpret_cast<void*>(pmm::page_to_va(page)), 0, PAGE_SIZE);
 
@@ -103,20 +109,20 @@ static inline error_code ahci_port_allocate(ahci_port* port)
 		return -ERROR_INVALID;
 	}
 
-	uintptr_t fb_paddr = V2P((uintptr_t)(page_start + 4_KB));
+	uintptr_t fb_paddr = V2P((uintptr_t)(page_start + 8_KB));
 	if ((fb_paddr % 4_KB))
 	{
 		return -ERROR_INVALID;
 	}
 
-	port->clb = cl_paddr & 0xFFFFFFFF;
-	port->clbu = cl_paddr >> 32;
+	port->clb = cl_paddr;
 
-	port->fb = fb_paddr & 0xFFFFFFFF;
-	port->fbu = fb_paddr >> 32;
+	port->fb = fb_paddr;
 
-	uint8_t* command_table_base = page_start + 8_KB;
-	while (V2P((uintptr_t)command_table_base) % 128)command_table_base++;
+	uint8_t* command_table_base = page_start + 16_KB;
+
+	while (V2P((uintptr_t)command_table_base) % 128)
+		command_table_base++;
 
 	ahci_command_list_entry* cmd_list = (ahci_command_list_entry*)P2V(cl_paddr);
 	for (size_t i = 0; i < AHCI_COMMAND_LIST_MAX; i++)
@@ -130,8 +136,7 @@ static inline error_code ahci_port_allocate(ahci_port* port)
 			return -ERROR_INVALID;
 		}
 
-		cmd_list->ctba = ctba_paddr & 0xFFFFFFFF;
-		cmd_list->ctba_u0 = ctba_paddr >> 32;
+		cmd_list->ctba = ctba_paddr;
 	}
 
 	ahci_port_start(port);
@@ -415,7 +420,6 @@ error_code ahci::ahci_port_send_command(ahci_port* port,
 
 	fis->fis_type = AHCI_FIS_TYPE_REG_H2D;
 	fis->command = cmd_id;
-	fis->device = 0;
 	fis->c = 1;
 
 	for (size_t i = 0, bytes_left = sz; i < prd_count; i++)
@@ -433,7 +437,7 @@ error_code ahci::ahci_port_send_command(ahci_port* port,
 
 		if (i == prd_count - 1)
 		{
-			cmd_table->prdt[i].dw3.interrupt_on_completion = true;
+			cmd_table->prdt[i].dw3.interrupt_on_completion = 0;
 		}
 
 		bytes_left -= prd_size;
@@ -469,7 +473,7 @@ error_code ahci::ahci_port_send_command(ahci_port* port,
 		return -ERROR_DEV_TIMEOUT;
 	}
 
-	port->ci = (1u << slot);
+	port->ci |= (1u << slot);
 
 	while (true)
 	{
