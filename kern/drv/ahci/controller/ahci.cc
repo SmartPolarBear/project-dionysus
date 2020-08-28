@@ -140,6 +140,7 @@ static inline error_code ahci_port_allocate(ahci_port* port)
 	return ERROR_SUCCESS;
 }
 
+__attribute__((always_inline))
 static inline size_t ahci_port_find_free_cmd_slot(ahci_port* port)
 {
 	uint32_t slots = port->sact | port->ci;
@@ -154,6 +155,7 @@ static inline size_t ahci_port_find_free_cmd_slot(ahci_port* port)
 	return (size_t)-1;
 }
 
+__attribute__((always_inline))
 static inline error_code make_prd(ahci_prd* prd, uintptr_t addr, size_t sz)
 {
 	if (sz > 4 * 1024 * 1024)
@@ -164,7 +166,7 @@ static inline error_code make_prd(ahci_prd* prd, uintptr_t addr, size_t sz)
 	prd->dba = addr & 0xFFFFFFFF;
 	prd->dbau = (addr >> 32) & 0xFFFFFFFF;
 
-	prd->dw3.dbc = sz - 1;
+	prd->dw3.dbc = ((sz - 1u) << 1u)|1u;
 
 	return ERROR_SUCCESS;
 }
@@ -172,6 +174,7 @@ static inline error_code make_prd(ahci_prd* prd, uintptr_t addr, size_t sz)
 uint16_t identify_buf[256] = { 0 };
 char model_num[40] = { 0 };
 char serial_num[20] = { 0 };
+
 static inline error_code ahci_port_identify([[maybe_unused]]ahci_controller* ctl, ahci_port* port)
 {
 	uint8_t cmd_id = 0;
@@ -206,9 +209,16 @@ static inline error_code ahci_port_identify([[maybe_unused]]ahci_controller* ctl
 		{
 			ahci::ATAStrWord word{ *serial };
 			auto char_pair = word.get_char_pair();
-			*(s_iter++) = char_pair.first;
-			*(s_iter++) = char_pair.second;
+			if (char_pair.first != ' ')
+			{
+				*(s_iter++) = char_pair.first;
+			}
+			if (char_pair.first != ' ')
+			{
+				*(s_iter++) = char_pair.second;
+			}
 		}
+
 		*(s_iter++) = '\0'; // make the string null-terminated
 
 		char* m_iter = model_num;
@@ -218,9 +228,16 @@ static inline error_code ahci_port_identify([[maybe_unused]]ahci_controller* ctl
 		{
 			ahci::ATAStrWord word{ *model };
 			auto char_pair = word.get_char_pair();
-			*(m_iter++) = char_pair.first;
-			*(m_iter++) = char_pair.second;
+			if (char_pair.first != ' ')
+			{
+				*(m_iter++) = char_pair.first;
+			}
+			if (char_pair.first != ' ')
+			{
+				*(m_iter++) = char_pair.second;
+			}
 		}
+
 		*(m_iter++) = '\0'; // make the string null-terminated
 
 		ata_ident_cmd_fea_supported* cmd_sets =
@@ -472,7 +489,6 @@ error_code ahci::ahci_port_send_command(ahci_port* port,
 	while (true)
 	{
 		asm volatile("nop");
-
 
 		if (((port->sact | port->ci) & (1u << slot)) == 0 && port->is.dps == 0)
 		{
