@@ -9,8 +9,8 @@
 #include "drivers/pci/pci_header.hpp"
 #include "drivers/pci/pci_capability.hpp"
 #include "drivers/ahci/ahci.hpp"
-#include "drivers/ahci/ata.hpp"
-#include "drivers/ahci/ata_string.hpp"
+#include "drivers/ahci/ata/ata.hpp"
+#include "drivers/ahci/ata/ata_string.hpp"
 
 #include "libkernel/console/builtin_text_io.hpp"
 
@@ -109,34 +109,30 @@ static inline error_code ahci_port_allocate(ahci_port* port)
 		return -ERROR_INVALID;
 	}
 
-	uintptr_t fb_paddr = V2P((uintptr_t)(page_start + 8_KB));
+	port->clb = cl_paddr;
+
+	uintptr_t fb_paddr = V2P((uintptr_t)(page_start + 4_KB));
 	if ((fb_paddr % 4_KB))
 	{
 		return -ERROR_INVALID;
 	}
 
-	port->clb = cl_paddr;
-
 	port->fb = fb_paddr;
 
-	uint8_t* command_table_base = page_start + 16_KB;
-
-	while (V2P((uintptr_t)command_table_base) % 128)
-		command_table_base++;
-
+	uint8_t* command_table_base = page_start + 8_KB;
 	ahci_command_list_entry* cmd_list = (ahci_command_list_entry*)P2V(cl_paddr);
 	for (size_t i = 0; i < AHCI_COMMAND_LIST_MAX; i++)
 	{
-		cmd_list->dw0.prdtl = 8;
+		cmd_list[i].dw0.prdtl = 8;
 
-		uintptr_t ctba_paddr = V2P((uintptr_t)(command_table_base + i * 256));
+		uintptr_t ctba_paddr = V2P((uintptr_t)(command_table_base)) + i * 256;
 
 		if (ctba_paddr % 128)
 		{
 			return -ERROR_INVALID;
 		}
 
-		cmd_list->ctba = ctba_paddr;
+		cmd_list[i].ctba = ctba_paddr;
 	}
 
 	ahci_port_start(port);
@@ -149,7 +145,7 @@ static inline size_t ahci_port_find_free_cmd_slot(ahci_port* port)
 	uint32_t slots = port->sact | port->ci;
 	for (size_t i = 0; i < 32; i++)
 	{
-		if (!(slots | (i << 1)))
+		if ((slots & (1U << i)) == 0)
 		{
 			return i;
 		}
@@ -158,6 +154,24 @@ static inline size_t ahci_port_find_free_cmd_slot(ahci_port* port)
 	return (size_t)-1;
 }
 
+static inline error_code make_prd(ahci_prd* prd, uintptr_t addr, size_t sz)
+{
+	if (sz > 4 * 1024 * 1024)
+	{
+		return -ERROR_INVALID;
+	}
+
+	prd->dba = addr & 0xFFFFFFFF;
+	prd->dbau = (addr >> 32) & 0xFFFFFFFF;
+
+	prd->dw3.dbc = sz - 1;
+
+	return ERROR_SUCCESS;
+}
+
+uint16_t identify_buf[256] = { 0 };
+char model_num[40] = { 0 };
+char serial_num[20] = { 0 };
 static inline error_code ahci_port_identify([[maybe_unused]]ahci_controller* ctl, ahci_port* port)
 {
 	uint8_t cmd_id = 0;
@@ -175,32 +189,19 @@ static inline error_code ahci_port_identify([[maybe_unused]]ahci_controller* ctl
 		return -ERROR_INVALID;
 	}
 
-	uint16_t* buf = new uint16_t[256];
-	if (buf == nullptr)
-	{
-		return -ERROR_MEMORY_ALLOC;
-	}
-
 	error_code ret = ERROR_SUCCESS;
 
 	do
 	{
-		if ((ret = ahci_port_send_command(port, cmd_id, 0, buf, sizeof(uint16_t[256]))) != ERROR_SUCCESS)
+		if ((ret = ahci_port_send_command(port, cmd_id, 0, identify_buf, sizeof(uint16_t[256]))) != ERROR_SUCCESS)
 		{
 			kdebug::kdebug_log(kdebug::error_message(ret));
 			break;
 		}
 
-		char* model_num = new char[40], * serial_num = new char[20];
-		if (model_num == nullptr || serial_num == nullptr)
-		{
-			ret = -ERROR_MEMORY_ALLOC;
-			break;
-		}
-
 		char* s_iter = serial_num;
-		for (auto serial = &buf[ATA_IDENT_SERIAL_OFFSET];
-			 serial != &buf[ATA_IDENT_SERIAL_OFFSET + ATA_IDENT_SERIAL_LEN_WORD];
+		for (auto serial = &identify_buf[ATA_IDENT_SERIAL_OFFSET];
+			 serial != &identify_buf[ATA_IDENT_SERIAL_OFFSET + ATA_IDENT_SERIAL_LEN_WORD];
 			 serial++)
 		{
 			ahci::ATAStrWord word{ *serial };
@@ -211,8 +212,8 @@ static inline error_code ahci_port_identify([[maybe_unused]]ahci_controller* ctl
 		*(s_iter++) = '\0'; // make the string null-terminated
 
 		char* m_iter = model_num;
-		for (auto model = &buf[ATA_IDENT_MODEL_OFFSET];
-			 model != &buf[ATA_IDENT_MODEL_OFFSET + ATA_IDENT_MODEL_LEN_WORD];
+		for (auto model = &identify_buf[ATA_IDENT_MODEL_OFFSET];
+			 model != &identify_buf[ATA_IDENT_MODEL_OFFSET + ATA_IDENT_MODEL_LEN_WORD];
 			 model++)
 		{
 			ahci::ATAStrWord word{ *model };
@@ -223,20 +224,20 @@ static inline error_code ahci_port_identify([[maybe_unused]]ahci_controller* ctl
 		*(m_iter++) = '\0'; // make the string null-terminated
 
 		ata_ident_cmd_fea_supported* cmd_sets =
-			reinterpret_cast<ata_ident_cmd_fea_supported*>(&buf[ATA_IDENT_CMD_SUP_OFFSET]);
+			reinterpret_cast<ata_ident_cmd_fea_supported*>(&identify_buf[ATA_IDENT_CMD_SUP_OFFSET]);
 
 		uint32_t lsec_size =
-			*((uint32_t*)&buf[ATA_IDENT_LOGICAL_SECTOR_SIZE_OFFSET]);
+			*((uint32_t*)&identify_buf[ATA_IDENT_LOGICAL_SECTOR_SIZE_OFFSET]);
 
 		size_t disk_size = 0;
 		if (cmd_sets->lba48)
 		{
-			uint64_t lba48_sectors = *((uint64_t*)&buf[ATA_IDENT_LBA48_TOTAL_SECTORS_OFFSET]);
+			uint64_t lba48_sectors = *((uint64_t*)&identify_buf[ATA_IDENT_LBA48_TOTAL_SECTORS_OFFSET]);
 			disk_size = lba48_sectors * lsec_size;
 		}
 		else
 		{
-			uint64_t lba28_sectors = *((uint64_t*)&buf[ATA_IDENT_LBA28_TOTAL_SECTORS_OFFSET]);
+			uint64_t lba28_sectors = *((uint64_t*)&identify_buf[ATA_IDENT_LBA28_TOTAL_SECTORS_OFFSET]);
 			disk_size = lba28_sectors * lsec_size;
 		}
 
@@ -248,12 +249,7 @@ static inline error_code ahci_port_identify([[maybe_unused]]ahci_controller* ctl
 			serial_num,
 			model_num);
 
-		delete[] serial_num;
-		delete[] model_num;
-
 	} while (0);
-
-	delete[] buf;
 
 	return ret;
 }
@@ -413,34 +409,30 @@ error_code ahci::ahci_port_send_command(ahci_port* port,
 	}
 
 	size_t prd_count = (sz + ahci::AHCI_PRD_MAX_SIZE - 1) / ahci::AHCI_PRD_MAX_SIZE;
-	memset(cmd_table, 0, sizeof(ahci_command_table) + sizeof(ahci_prd) * prd_count);
 
-	ahci_fis_reg_h2d* fis = &cmd_table->fis_h2d;
+	ahci_fis_reg_h2d* fis = &cmd_table->fis_reg_h2d;
 	memset(fis, 0, sizeof(ahci_fis_reg_h2d));
 
 	fis->fis_type = AHCI_FIS_TYPE_REG_H2D;
 	fis->command = cmd_id;
 	fis->c = 1;
 
-	for (size_t i = 0, bytes_left = sz; i < prd_count; i++)
+	for (size_t i = 0, bytes_left = sz, prd_size = min(AHCI_PRD_MAX_SIZE, bytes_left);
+		 i < prd_count;
+		 i++, bytes_left -= prd_size)
 	{
-		size_t prd_size = min(AHCI_PRD_MAX_SIZE, sz);
 		if (prd_size <= 0)
 		{
 			return -ERROR_SUCCESS;
 		}
-
 		uintptr_t prd_buf_paddr = V2P((uintptr_t)data) + i * AHCI_PRD_MAX_SIZE;
-		cmd_table->prdt[i].dba = prd_buf_paddr & 0xFFFFFFFF;
-		cmd_table->prdt[i].dbau = prd_buf_paddr >> 32;
-		cmd_table->prdt[i].dw3.dbc = prd_size - 1u;
+
+		make_prd(&cmd_table->prdt[i], prd_buf_paddr, prd_size);
 
 		if (i == prd_count - 1)
 		{
-			cmd_table->prdt[i].dw3.interrupt_on_completion = 0;
+			cmd_table->prdt[i].dw3.interrupt_on_completion = 1;
 		}
-
-		bytes_left -= prd_size;
 	}
 
 	cl_entry->dw0.cfl = sizeof(ahci_fis_reg_h2d) / sizeof(uint32_t);
@@ -450,12 +442,14 @@ error_code ahci::ahci_port_send_command(ahci_port* port,
 	if (cmd_id != AHCI_ATA_CMD_IDENTIFY)
 	{
 		fis->device = 1u << 6u; //LBA mode
+
 		fis->lba0 = lba & 0xFFu;
 		fis->lba1 = (lba >> 8u) & 0xFFu;
 		fis->lba2 = (lba >> 16u) & 0xFFu;
 		fis->lba3 = (lba >> 24u) & 0xFFu;
 		fis->lba4 = (lba >> 32u) & 0xFFu;
 		fis->lba5 = (lba >> 40u) & 0xFFu;
+
 		fis->countl = nsect & 0xFFFFu;
 	}
 
@@ -479,7 +473,8 @@ error_code ahci::ahci_port_send_command(ahci_port* port,
 	{
 		asm volatile("nop");
 
-		if (!(port->ci & (1u << slot)))
+
+		if (((port->sact | port->ci) & (1u << slot)) == 0 && port->is.dps == 0)
 		{
 			break;
 		}

@@ -326,9 +326,13 @@ namespace ahci
 	constexpr size_t AHCI_PRD_MAX_SIZE = 8192;
 	struct ahci_command_table
 	{
-		ahci_fis_reg_h2d fis_h2d;
-		uint8_t acmd[16];
-		uint8_t reserved0[48];
+		union
+		{
+			struct ahci_fis_reg_h2d fis_reg_h2d;
+			uint8_t _cmd_fis[64];
+		};
+		uint8_t cmd[16];
+		uint8_t reserved[48];
 		// Any number of entries can follow
 		ahci_prd prdt[0];
 	}__attribute__((__packed__));

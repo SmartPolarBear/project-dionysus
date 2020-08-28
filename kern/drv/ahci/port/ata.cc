@@ -9,8 +9,8 @@
 #include "drivers/pci/pci_header.hpp"
 #include "drivers/pci/pci_capability.hpp"
 #include "drivers/ahci/ahci.hpp"
-#include "drivers/ahci/ata.hpp"
-#include "drivers/ahci/ata_string.hpp"
+#include "drivers/ahci/ata/ata.hpp"
+#include "drivers/ahci/ata/ata_string.hpp"
 
 
 #include "libkernel/console/builtin_text_io.hpp"

@@ -1,4 +1,4 @@
-#include "drivers/ahci/ata_string.hpp"
+#include "drivers/ahci/ata/ata_string.hpp"
 
 using std::make_pair;
 
