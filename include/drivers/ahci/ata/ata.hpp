@@ -92,4 +92,7 @@ namespace ahci
 
 	}__attribute__((__packed__));
 	static_assert(sizeof(ata_ident_cmd_fea_supported) == sizeof(uint16_t) * 3);
+
+	error_code ata_identify_device(ahci_port *port);
+	error_code atapi_identify_device(ahci_port *port);
 }
