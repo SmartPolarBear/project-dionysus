@@ -8,8 +8,10 @@
 #include "drivers/pci/pci_device.hpp"
 #include "drivers/pci/pci_header.hpp"
 #include "drivers/pci/pci_capability.hpp"
+
 #include "drivers/ahci/ahci.hpp"
 #include "drivers/ahci/ata/ata.hpp"
+#include "drivers/ahci/atapi/atapi.hpp"
 #include "drivers/ahci/ata/ata_string.hpp"
 
 #include "libkernel/console/builtin_text_io.hpp"
@@ -320,6 +322,7 @@ error_code ahci::ahci_init()
 
 error_code ahci::ahci_port_send_command(ahci_port* port,
 	uint8_t cmd_id,
+	bool atapi,
 	uintptr_t lba,
 	void* data,
 	size_t sz)
@@ -371,6 +374,7 @@ error_code ahci::ahci_port_send_command(ahci_port* port,
 	cl_entry->dw0.cfl = sizeof(ahci_fis_reg_h2d) / sizeof(uint32_t);
 	cl_entry->dw0.prdtl = prd_count;
 	cl_entry->prdbc = 0;
+	cl_entry->dw0.atapi = atapi;
 
 	if (cmd_id != AHCI_ATA_CMD_IDENTIFY)
 	{

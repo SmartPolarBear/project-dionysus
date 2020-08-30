@@ -361,7 +361,10 @@ namespace ahci
 
 	error_code ahci_port_send_command(ahci_port* port,
 		uint8_t cmd_id,
+		bool atapi,
 		uintptr_t lba,
 		void* data,
 		size_t sz);
+
+
 }
