@@ -27,6 +27,7 @@ error_code ahci::ata_identify_device(ahci_port* port)
 
 error_code ahci::ata_read(ahci_port* port, logical_block_address lba, void* buf, size_t sz)
 {
-
+	auto ret = ahci_port_send_command(port, ATA_CMD_READ_DMA_EX, false, lba, buf, sz);
+	return ret;
 }
 

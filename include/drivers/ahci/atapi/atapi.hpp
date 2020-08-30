@@ -8,4 +8,6 @@
 namespace ahci
 {
 	error_code atapi_identify_device(ahci_port* port);
+
+	error_code atapi_read(ahci_port* port, logical_block_address lba, void* buf, size_t sz);
 }

@@ -25,3 +25,9 @@ error_code ahci::atapi_identify_device(ahci_port* port)
 	return common_identify_device(port, true);
 }
 
+error_code ahci::atapi_read(ahci_port* port, logical_block_address lba, void* buf, size_t sz)
+{
+	auto ret = ahci_port_send_command(port, ATA_CMD_PACKET, true, lba, buf, sz);
+	return ret;
+}
+
