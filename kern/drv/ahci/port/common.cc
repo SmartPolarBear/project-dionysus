@@ -23,6 +23,53 @@
 
 using namespace ahci;
 
+using std::min;
+
+__attribute__((always_inline))
+static inline ahci_command_list_entry* ahci_port_cmd_list(const ahci_port* port)
+{
+	return (ahci_command_list_entry*)P2V(port->clb);
+}
+
+__attribute__((always_inline))
+static inline ahci_command_table* ahci_cmd_entry_table(const ahci_command_list_entry* entry)
+{
+	return (ahci_command_table*)P2V(entry->ctba);
+}
+
+__attribute__((always_inline))
+static inline size_t ahci_port_find_free_cmd_slot(ahci_port* port)
+{
+	uint32_t slots = port->sact | port->ci;
+	for (size_t i = 0; i < 32; i++)
+	{
+		if ((slots & (1U << i)) == 0)
+		{
+			return i;
+		}
+	}
+
+	return (size_t)-1;
+}
+
+__attribute__((always_inline))
+static inline error_code make_prd(ahci_prd* prd, uintptr_t addr, size_t sz)
+{
+	if (sz > 4 * 1024 * 1024)
+	{
+		return -ERROR_INVALID;
+	}
+
+	prd->dba = addr & 0xFFFFFFFF;
+	prd->dbau = (addr >> 32) & 0xFFFFFFFF;
+
+	prd->dw3.dbc = ((sz - 1u) << 1u) | 1u;
+
+	return ERROR_SUCCESS;
+}
+
+
+
 error_code common_identify_device(ahci_port* port, bool atapi)
 {
 	uint16_t* identify_buf = new uint16_t[256];
@@ -108,6 +155,117 @@ error_code common_identify_device(ahci_port* port, bool atapi)
 	} while (0);
 
 	delete[] identify_buf;
+
+	return ERROR_SUCCESS;
+}
+
+error_code ahci::ahci_port_send_command(ahci_port* port,
+	uint8_t cmd_id,
+	bool atapi,
+	uintptr_t lba,
+	void* data,
+	size_t sz)
+{
+	auto slot = ahci_port_find_free_cmd_slot(port);
+
+	if (slot > 31)
+	{
+		return -ERROR_DEV_BUSY;
+	}
+
+	auto cl_entry = &ahci_port_cmd_list(port)[slot];
+	auto cmd_table = ahci_cmd_entry_table(cl_entry);
+
+	size_t nsect = (sz + (ATA_DEFAULT_SECTOR_SIZE - 1)) / ATA_DEFAULT_SECTOR_SIZE;
+
+	if ((nsect & ~0xFFFFu) != 0)
+	{
+		return -ERROR_INVALID;
+	}
+
+	size_t prd_count = (sz + ahci::AHCI_PRD_MAX_SIZE - 1) / ahci::AHCI_PRD_MAX_SIZE;
+
+	ahci_fis_reg_h2d* fis = &cmd_table->fis_reg_h2d;
+	memset(fis, 0, sizeof(ahci_fis_reg_h2d));
+
+	fis->fis_type = AHCI_FIS_TYPE_REG_H2D;
+	fis->command = cmd_id;
+	fis->c = 1;
+
+	for (size_t i = 0, bytes_left = sz, prd_size = min(AHCI_PRD_MAX_SIZE, bytes_left);
+		 i < prd_count;
+		 i++, bytes_left -= prd_size)
+	{
+		if (prd_size <= 0)
+		{
+			return -ERROR_SUCCESS;
+		}
+		uintptr_t prd_buf_paddr = V2P((uintptr_t)data) + i * AHCI_PRD_MAX_SIZE;
+
+		make_prd(&cmd_table->prdt[i], prd_buf_paddr, prd_size);
+
+		if (i == prd_count - 1)
+		{
+			cmd_table->prdt[i].dw3.interrupt_on_completion = 1;
+		}
+	}
+
+	cl_entry->dw0.cfl = sizeof(ahci_fis_reg_h2d) / sizeof(uint32_t);
+	cl_entry->dw0.prdtl = prd_count;
+	cl_entry->prdbc = 0;
+	cl_entry->dw0.atapi = atapi;
+
+	if (cmd_id != AHCI_ATA_CMD_IDENTIFY)
+	{
+		fis->device = 1u << 6u; //LBA mode
+
+		fis->lba0 = lba & 0xFFu;
+		fis->lba1 = (lba >> 8u) & 0xFFu;
+		fis->lba2 = (lba >> 16u) & 0xFFu;
+		fis->lba3 = (lba >> 24u) & 0xFFu;
+		fis->lba4 = (lba >> 32u) & 0xFFu;
+		fis->lba5 = (lba >> 40u) & 0xFFu;
+
+		fis->countl = nsect & 0xFFFFu;
+	}
+
+	// Wait for port to be free for commands
+	size_t spin = 0;
+	while ((port->tfd.sts_bsy || port->tfd.sts_drq) && spin < AHCI_SPIN_WAIT_MAX)
+	{
+		asm volatile ("pause");
+		++spin;
+	}
+
+	if (spin == AHCI_SPIN_WAIT_MAX)
+	{
+		kdebug::kdebug_log("AHCI: Device hang.\n");
+		return -ERROR_DEV_TIMEOUT;
+	}
+
+	port->ci |= (1u << slot);
+
+	while (true)
+	{
+		asm volatile("nop");
+
+		if (((port->sact | port->ci) & (1u << slot)) == 0 && port->is.dps == 0)
+		{
+			break;
+		}
+
+		if (port->is.tfes)
+		{
+			kdebug::kdebug_log("AHCI: Task file error signalled.\n");
+			return -ERROR_IO;
+		}
+	}
+
+	if (port->is.tfes)
+	{
+		kdebug::kdebug_log("AHCI: Task file error signalled.\n");
+		return -ERROR_IO;
+	}
 
 	return ERROR_SUCCESS;
 }

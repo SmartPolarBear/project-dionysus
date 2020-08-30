@@ -22,8 +22,11 @@
 
 error_code ahci::ata_identify_device(ahci_port* port)
 {
-	return common_identify_device(port,false);
+	return common_identify_device(port, false);
 }
 
+error_code ahci::ata_read(ahci_port* port, logical_block_address lba, void* buf, size_t sz)
+{
 
+}
 

@@ -9,5 +9,5 @@ namespace ahci
 {
 	error_code ata_identify_device(ahci_port* port);
 
-	error_code ata_read(ahci_port* port);
+	error_code ata_read(ahci_port* port, logical_block_address lba, void* buf, size_t sz);
 }
