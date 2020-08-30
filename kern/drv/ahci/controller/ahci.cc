@@ -75,11 +75,11 @@ static inline error_code ahci_port_identify([[maybe_unused]]ahci_controller* ctl
 {
 	if (ctl->type == DEVICE_SATA)
 	{
-		return ata_identify_device(port);
+		return ata_port_identify_device(port);
 	}
 	else if (ctl->type == DEVICE_SATAPI)
 	{
-		return atapi_identify_device(port);
+		return atapi_port_identify_device(port);
 	}
 	else
 	{
