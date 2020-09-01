@@ -1,5 +1,5 @@
 ## Project "Dionysus"
-The project "Dionysus" aims at apply theories and practices concerning operation systems on a hybrid microkernel in modern C++.
+The project "Dionysus" aims at apply theories and practices concerning operation systems on a hybrid kernel in modern C++. In the long run, It aims at creating a effective microkernel with acceptable performence overhead.
 
 ## Motivation
 
