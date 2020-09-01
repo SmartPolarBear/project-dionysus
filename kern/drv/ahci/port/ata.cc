@@ -25,17 +25,12 @@ error_code ahci::ata_port_identify_device(ahci_port* port)
 	return common_identify_device(port, false);
 }
 
-error_code ahci::ata_block_device::mmap(uintptr_t base, size_t page_count, int prot, size_t flags)
+error_code ahci::ATABlockDevice::ioctl([[maybe_unused]]size_t req, [[maybe_unused]]void* args)
 {
 	return -ERROR_UNSUPPORTED;
 }
 
-error_code ahci::ata_block_device::ioctl(size_t req, void* args)
-{
-	return -ERROR_UNSUPPORTED;
-}
-
-size_t ahci::ata_block_device::write(const void* buf, uintptr_t offset, size_t sz)
+size_t ahci::ATABlockDevice::write(const void* buf, uintptr_t offset, size_t sz)
 {
 	if (offset % this->block_size)
 	{
@@ -61,7 +56,7 @@ size_t ahci::ata_block_device::write(const void* buf, uintptr_t offset, size_t s
 	return ret;
 }
 
-size_t ahci::ata_block_device::read(void* buf, uintptr_t offset, size_t sz)
+size_t ahci::ATABlockDevice::read(void* buf, uintptr_t offset, size_t sz)
 {
 	if (offset % this->block_size)
 	{
@@ -87,14 +82,18 @@ size_t ahci::ata_block_device::read(void* buf, uintptr_t offset, size_t sz)
 	return ret;
 }
 
-ahci::ata_block_device::~ata_block_device()
-{
+ahci::ATABlockDevice::~ATABlockDevice() = default;
 
-}
-
-ahci::ata_block_device::ata_block_device(ahci::ahci_port* port)
+ahci::ATABlockDevice::ATABlockDevice(ahci::ahci_port* port)
 {
 	this->dev_data = port;
 	this->flags = 0;
 	this->block_size = ATA_DEFAULT_SECTOR_SIZE;
+}
+error_code ahci::ATABlockDevice::mmap([[maybe_unused]]uintptr_t base,
+	[[maybe_unused]]size_t page_count,
+	[[maybe_unused]]int prot,
+	[[maybe_unused]]size_t flags)
+{
+	return -ERROR_UNSUPPORTED;
 }

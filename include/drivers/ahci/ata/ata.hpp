@@ -12,13 +12,14 @@ namespace ahci
 {
 	error_code ata_port_identify_device(ahci_port* port);
 
-	class ata_block_device :
-		public file_system::block_device
+	class ATABlockDevice :
+		public file_system::IDevice,
+		public file_system::IMemmap
 	{
 	 public:
-		ata_block_device(ahci_port* port);
+		explicit ATABlockDevice(ahci_port* port);
 
-		~ata_block_device() override;
+		~ATABlockDevice() override;
 
 		size_t read(void* buf, uintptr_t offset, size_t count) override;
 		size_t write(const void* buf, uintptr_t offset, size_t count) override;
