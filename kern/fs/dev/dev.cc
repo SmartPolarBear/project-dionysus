@@ -89,20 +89,32 @@ error_code file_system::device_add(dev_class cls, size_t subcls, IDevice& dev, c
 		name = node_name;
 	}
 
-	IVNode* node = nullptr;
+	VNodeBase* node = nullptr;
 	if (cls == DEV_CLASS_BLOCK)
 	{
-		node = new DEVFSVNode(VNT_BLK, name);
+		node = new DevFSVNode(VNT_BLK, name);
 	}
 	else if (cls == DEV_CLASS_CHAR)
 	{
-		node = new DEVFSVNode(VNT_CHR, name);
+		node = new DevFSVNode(VNT_CHR, name);
 	}
 	else
 	{
 		delete[] node_name;
 		return -ERROR_INVALID;
 	}
+
+	node->dev = &dev;
+
+	// Use inode number to store full device class:subclass
+	node->ino = ((uint32_t)cls) | ((uint64_t)subcls << 32u);
+
+	node->flags |= VNF_MEMORY;
+
+	// Default permissions for devices
+	node->mode = 0600;
+	node->uid = 0;
+	node->gid = 0;
 
 	delete[] node_name;
 	return ERROR_SUCCESS;

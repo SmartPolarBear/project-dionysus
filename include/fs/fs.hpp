@@ -40,7 +40,6 @@ namespace file_system
 		size_t ctime;
 	};
 
-
 	enum vnode_type
 	{
 		VNT_REG,
@@ -54,7 +53,17 @@ namespace file_system
 		VNT_MNT,
 	};
 
-
+	enum mode_values : mode_type
+	{
+		S_IFMT = 0170000,
+		S_IFSOCK = 0140000,
+		S_IFLNK = 0120000,
+		S_IFREG = 0100000,
+		S_IFBLK = 0060000,
+		S_IFDIR = 0040000,
+		S_IFCHR = 0020000,
+		S_IFIFO = 0010000,
+	};
 
 	PANIC void fs_init();
 }

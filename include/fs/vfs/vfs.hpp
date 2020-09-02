@@ -4,15 +4,99 @@
 
 namespace file_system
 {
-	class VNodeBase
+	constexpr size_t VFS_MODE_MASK = 0xFFF;
+
+	static inline constexpr mode_type vnode_type_to_mode_type(enum vnode_type type)
+	{
+		switch (type)
+		{
+		case VNT_MNT:
+		case VNT_DIR:
+			return S_IFDIR;
+		case VNT_LNK:
+			return S_IFLNK;
+		case VNT_BLK:
+			return S_IFBLK;
+		case VNT_CHR:
+			return S_IFCHR;
+		default:
+		case VNT_REG:
+			return S_IFREG;
+		}
+
+		// shouldn't reach here
+		return S_IFREG;
+	}
+
+	struct FileSystemInstance;
+	class VNodeBase;
+
+	class FileSystemClassBase
 	{
 	 private:
-		using vnode_link_getter_type = VNodeBase* (*)(struct thread*, struct vnode*);
+		static constexpr size_t FILE_SYSTEM_CLASS_NAME_MAX = 64;
 
 	 private:
+		char name[FILE_SYSTEM_CLASS_NAME_MAX]{};
+		size_t opt{};
+
+	 public:
+		list_head link{};
+
+		FileSystemClassBase(FileSystemInstance& fs, const char* opt)
+		{
+		}
+
+		~FileSystemClassBase() = default;
+
+		virtual VNodeBase* get_root(FileSystemInstance& fs) = 0;
+	};
+
+	struct FileSystemInstance
+	{
+		IDevice* dev;
+		FileSystemClassBase* fs_class;
+
+		size_t flags;
+		void* private_data;
+
+		list_head link;
+	};
+
+	enum vnode_flags
+	{
+		// Means the node has no physical storage and resides only in memory
+		VNF_MEMORY = (1 << 0),
+
+		// Means the link has different meanings depending on resolving process ID - use target_func instead
+		VNF_PER_PROCESS = (1 << 1)
+	};
+
+	class VNodeBase
+	{
+	 protected:
+		using vnode_link_getter_type = VNodeBase* (*)(struct thread*, struct vnode*);
+
+	 protected:
 		static constexpr size_t VNODE_NAME_MAX = 64;
 
 		vnode_type type;
+
+		size_t flags{};
+
+	 protected:
+
+		size_t open_count{};
+		size_t ino{};
+
+		mode_type mode{};
+
+		gid_type gid{};
+		uid_type uid{};
+
+		FileSystemInstance* fs{};
+		IDevice* dev{};
+		void* private_data{};
 
 		char name_buf[VNODE_NAME_MAX]{};
 
@@ -20,9 +104,10 @@ namespace file_system
 
 		union
 		{
-			VNodeBase* node{};
+			VNodeBase* node;
 			vnode_link_getter_type link_getter;
 		};
+
 	 public:
 		virtual ~VNodeBase() = default;
 
@@ -49,6 +134,16 @@ namespace file_system
 			VNodeBase::type = type;
 		}
 
+		size_t GetFlags() const
+		{
+			return flags;
+		}
+
+		void SetFlags(size_t flags)
+		{
+			VNodeBase::flags = flags;
+		}
+
 	 public:
 		virtual error_code find(const char* name, VNodeBase& ret) = 0;
 		virtual size_t read_dir(const file_object& fd, directory_entry& entry) = 0;
@@ -72,41 +167,6 @@ namespace file_system
 		virtual size_t read(const file_object& fd, void* buf, size_t count) = 0;
 		virtual size_t write(const file_object& fd, const void* buf, size_t count) = 0;
 
-	};
-
-	struct FileSystemInstance;
-
-	class FileSystemClassBase
-	{
-	 private:
-		static constexpr size_t FILE_SYSTEM_CLASS_NAME_MAX = 64;
-
-	 private:
-		char name[FILE_SYSTEM_CLASS_NAME_MAX];
-		size_t opt;
-
-	 public:
-		list_head link;
-
-		FileSystemClassBase(FileSystemInstance& fs, const char* opt)
-		{
-		}
-
-		~FileSystemClassBase()
-		{
-		}
-
-		virtual VNodeBase* get_root(FileSystemInstance& fs) = 0;
-	};
-
-	struct FileSystemInstance
-	{
-		IDevice* dev;
-		FileSystemClassBase* fs_class;
-
-		size_t flags;
-		void* private_data;
-
-		list_head link;
+		friend error_code file_system::device_add(dev_class cls, size_t subcls, IDevice& dev, const char* name);
 	};
 }
