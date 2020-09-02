@@ -31,6 +31,7 @@
 #define OUT
 #define IN
 #define OPTIONAL
+#define NULLABLE
 
 constexpr size_t log2(size_t n)
 {

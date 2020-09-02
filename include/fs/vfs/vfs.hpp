@@ -74,7 +74,7 @@ namespace file_system
 
 	};
 
-	struct  FileSystemInstance;
+	struct FileSystemInstance;
 
 	class FileSystemClassBase
 	{

@@ -9,6 +9,8 @@
 
 #include "data/List.h"
 
+class maybe_unused;
+class nodiscard;
 struct pci_device
 {
 	uint8_t bus;
