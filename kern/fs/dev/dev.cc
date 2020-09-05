@@ -22,14 +22,14 @@
 
 using namespace file_system;
 
-constexpr uintptr_t MBR_BOOTLOADER_OFFSET = 0x000;
-constexpr uintptr_t MBR_UNIQUE_ID_OFFSET = 0x1B8;
-constexpr uintptr_t MBR_RESERVED_OFFSET = 0x1BC;
-constexpr uintptr_t MBR_FIRST_PARTITION_ENTRY_OFFSET = 0x1BE;
-constexpr uintptr_t MBR_SECOND_PARTITION_ENTRY_OFFSET = 0x1CE;
-constexpr uintptr_t MBR_THIRD_PARTITION_ENTRY_OFFSET = 0x1DE;
-constexpr uintptr_t MBR_FOURTH_PARTITION_ENTRY_OFFSET = 0x1EE;
-constexpr uintptr_t MBR_VALID_SIGNATURE_OFFSET = 0x1FE;
+[[maybe_unused]]constexpr uintptr_t MBR_BOOTLOADER_OFFSET = 0x000;
+[[maybe_unused]]constexpr uintptr_t MBR_UNIQUE_ID_OFFSET = 0x1B8;
+[[maybe_unused]]constexpr uintptr_t MBR_RESERVED_OFFSET = 0x1BC;
+[[maybe_unused]]constexpr uintptr_t MBR_FIRST_PARTITION_ENTRY_OFFSET = 0x1BE;
+[[maybe_unused]]constexpr uintptr_t MBR_SECOND_PARTITION_ENTRY_OFFSET = 0x1CE;
+[[maybe_unused]]constexpr uintptr_t MBR_THIRD_PARTITION_ENTRY_OFFSET = 0x1DE;
+[[maybe_unused]]constexpr uintptr_t MBR_FOURTH_PARTITION_ENTRY_OFFSET = 0x1EE;
+[[maybe_unused]]constexpr uintptr_t MBR_VALID_SIGNATURE_OFFSET = 0x1FE;
 
 struct chs_struct
 {
@@ -119,7 +119,7 @@ static inline error_code device_new_name(dev_class cls, size_t sbcls, OUT char* 
 	return -ERROR_INVALID;
 }
 
-error_code file_system::device_enumerate_partitions(IDevice& device, VNodeBase* vnode)
+error_code file_system::device_enumerate_partitions(IDevice& device, [[maybe_unused]] VNodeBase* vnode)
 {
 	if (device.block_size == 2048)
 	{

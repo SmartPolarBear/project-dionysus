@@ -57,6 +57,10 @@ namespace file_system
 		return S_IFREG;
 	}
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-private-field"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 	class FileSystemClassBase
 	{
 	 private:
@@ -88,6 +92,8 @@ namespace file_system
 
 		list_head link;
 	};
+
+#pragma GCC diagnostic pop
 
 	enum vnode_flags
 	{
