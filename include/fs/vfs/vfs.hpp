@@ -23,7 +23,7 @@ namespace file_system
 		DBT_HDx = 2,
 		DBT_RAM = 3,
 		DBT_CDx = 4,
-		DBT_PART = 127,
+		DBT_PARTITION = 127,
 		DBT_PSEUDO = 128,
 		DBT_OTHER = 255,
 	};
@@ -213,5 +213,10 @@ namespace file_system
 	 public:
 		friend error_code devfs_create_root_if_not_exist();
 		friend error_code device_add(dev_class cls, size_t subcls, IDevice& dev, const char* name);
+		friend error_code partition_add_device(file_system::VNodeBase& parent,
+			logical_block_address lba,
+			size_t size,
+			size_t part_id,
+			[[maybe_unused]]uint32_t sys_id);
 	};
 }

@@ -15,7 +15,7 @@
 #include "drivers/ahci/ata/ata_string.hpp"
 
 #include "fs/device/dev.hpp"
-#include "fs/device/ATABlockDevice.hpp"
+#include "fs/device/ata_devices.hpp"
 #include "fs/vfs/vfs.hpp"
 #include "fs/vfs/vnode.hpp"
 

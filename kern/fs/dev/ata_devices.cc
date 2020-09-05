@@ -12,7 +12,7 @@
 #include "drivers/ahci/ata/ata.hpp"
 #include "drivers/ahci/ata/ata_string.hpp"
 
-#include "fs/device/ATABlockDevice.hpp"
+#include "fs/device/ata_devices.hpp"
 
 #include "libkernel/console/builtin_text_io.hpp"
 
@@ -22,11 +22,25 @@
 
 using namespace ahci;
 
-static inline error_code partition_add_device(file_system::VNodeBase& parent,
+error_code file_system::partition_add_device(file_system::VNodeBase& parent,
 	logical_block_address lba,
 	size_t size,
-	uint32_t sys_id)
+	size_t disk_id,
+	[[maybe_unused]]uint32_t sys_id)
 {
+	constexpr size_t PARTITION_NAME_LEN = 32;
+	char namebuf[PARTITION_NAME_LEN] = { 0 };
+
+	auto parent_name = parent.GetName();
+	auto parent_name_len = strnlen(parent_name, PARTITION_NAME_LEN);
+
+	strncpy(namebuf, parent_name, parent_name_len);
+	namebuf[parent_name_len++] = '0' + disk_id;
+	namebuf[parent_name_len++] = '\0';
+
+	auto* dev = new file_system::ATAPartitionDevice(reinterpret_cast<ATABlockDevice&>(parent.dev), lba, size);
+
+	device_add(DC_BLOCK, DBT_PARTITION, *dev, namebuf);
 
 	return ERROR_SUCCESS;
 }
@@ -60,18 +74,21 @@ error_code file_system::ATABlockDevice::enumerate_partitions(file_system::VNodeB
 
 		write_format("Unique disk ID: 0x%x, reserved field: 0x%x\n", signature, reserved);
 
+		size_t partition_count = 0;
+
 		for (uintptr_t offset : { MBR_FIRST_PARTITION_ENTRY_OFFSET,
 								  MBR_SECOND_PARTITION_ENTRY_OFFSET,
 								  MBR_THIRD_PARTITION_ENTRY_OFFSET,
 								  MBR_FOURTH_PARTITION_ENTRY_OFFSET })
 		{
-			mbr_partition_table_entry* entry =
-				reinterpret_cast<mbr_partition_table_entry*>(head_data + offset);
+			auto entry = reinterpret_cast<mbr_partition_table_entry*>(head_data + offset);
 
 			if (entry->sys_id == 0) // unused entry
 			{
 				continue;
 			}
+
+			partition_count++;
 
 			write_format("Partition %s, system ID : 0x%x, start LBA: 0x%x, sectors %d\n",
 				entry->bootable == 0x80 ? "active" : "inactive",
@@ -80,7 +97,8 @@ error_code file_system::ATABlockDevice::enumerate_partitions(file_system::VNodeB
 				entry->sector_count
 			);
 
-			ret = partition_add_device(parent, entry->start_lba, entry->sector_count * 512, entry->sys_id);
+			ret =
+				partition_add_device(parent, entry->start_lba, entry->sector_count * 512, partition_count, entry->sys_id);
 
 			if (ret != ERROR_SUCCESS)
 			{
@@ -168,4 +186,77 @@ error_code file_system::ATABlockDevice::mmap([[maybe_unused]]uintptr_t base,
 	[[maybe_unused]]size_t flags)
 {
 	return -ERROR_UNSUPPORTED;
+}
+
+size_t file_system::ATAPartitionDevice::read(void* buf, uintptr_t offset, size_t count)
+{
+	partition_data* part = (partition_data*)this->dev_data;
+	size_t part_size_bytes = part->size * 512;
+	size_t part_off_bytes = part->lba_start * 512;
+
+	if (offset >= part_size_bytes)
+	{
+		return -1;
+	}
+
+	size_t len = std::min(part_size_bytes - offset, count);
+
+	auto ret = part->parent_dev->read(buf, offset + part_off_bytes, len);
+
+	return ret;
+}
+
+size_t file_system::ATAPartitionDevice::write(const void* buf, uintptr_t offset, size_t count)
+{
+	partition_data* part = (partition_data*)this->dev_data;
+	size_t part_size_bytes = part->size * 512;
+	size_t part_off_bytes = part->lba_start * 512;
+
+	if (offset >= part_size_bytes)
+	{
+		return -1;
+	}
+
+	size_t len = std::min(part_size_bytes - offset, count);
+
+	auto ret = part->parent_dev->write(buf, offset + part_off_bytes, len);
+
+	return ret;
+}
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
+error_code file_system::ATAPartitionDevice::ioctl(size_t req, void* args)
+{
+	return -ERROR_UNSUPPORTED;
+}
+
+error_code file_system::ATAPartitionDevice::mmap(uintptr_t base, size_t page_count, int prot, size_t flags)
+{
+	return -ERROR_UNSUPPORTED;
+}
+
+error_code file_system::ATAPartitionDevice::enumerate_partitions(file_system::VNodeBase& parent)
+{
+	return -ERROR_UNSUPPORTED;
+}
+
+#pragma GCC diagnostic pop
+
+file_system::ATAPartitionDevice::ATAPartitionDevice(file_system::ATABlockDevice& parent,
+	logical_block_address lba,
+	size_t sz)
+{
+	partition_data* data = new partition_data;
+
+	data->parent_dev = &parent;
+	data->lba_start = lba;
+	data->size = sz;
+
+	this->dev_data = data;
+	this->flags = 0;
+	this->block_size = ATA_DEFAULT_SECTOR_SIZE;
+
+	this->features = 0;
 }
