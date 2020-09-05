@@ -147,7 +147,10 @@ namespace file_system
 		VNodeBase(vnode_type t, const char* n)
 			: type(t)
 		{
-			strncpy(name_buf, n, strnlen(n, VNODE_NAME_MAX));
+			if (n != nullptr)
+			{
+				strncpy(name_buf, n, strnlen(n, VNODE_NAME_MAX));
+			}
 			libkernel::list_init(&child_head);
 		}
 

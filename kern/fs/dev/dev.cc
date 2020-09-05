@@ -149,14 +149,13 @@ error_code file_system::device_enumerate_partitions(IDevice& device, [[maybe_unu
 	{
 		// Parse the master boot record
 		// print the *optional* disk signature and reserved field
-		char signature[5], reserved[3];
-		memset(signature, '\0', sizeof(signature));
-		memset(reserved, '\0', sizeof(reserved)); // ensure they are null-terminated
+		uint64_t signature = 0;
+		uint32_t reserved = 0;
 
-		memmove(signature, head_data + MBR_UNIQUE_ID_OFFSET, sizeof(char[4]));
-		memmove(reserved, head_data + MBR_RESERVED_OFFSET, sizeof(char[2]));
+		memmove(&signature, head_data + MBR_UNIQUE_ID_OFFSET, sizeof(signature));
+		memmove(&reserved, head_data + MBR_RESERVED_OFFSET, sizeof(reserved));
 
-		write_format("Unique disk ID: %s, reserved field: %s\n", signature, reserved);
+		write_format("Unique disk ID: 0x%x, reserved field: 0x%x\n", signature, reserved);
 
 		for (uintptr_t offset : { MBR_FIRST_PARTITION_ENTRY_OFFSET,
 								  MBR_SECOND_PARTITION_ENTRY_OFFSET,
@@ -191,7 +190,7 @@ error_code file_system::device_add(dev_class cls, size_t subcls, IDevice& dev, c
 
 	if (!name)
 	{
-		if ((ret == device_new_name(cls, subcls, node_name)) != ERROR_SUCCESS)
+		if ((ret = device_new_name(cls, subcls, node_name)) != ERROR_SUCCESS)
 		{
 			delete[] node_name;
 			return ret;
