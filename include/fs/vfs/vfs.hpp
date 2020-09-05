@@ -1,9 +1,38 @@
 #pragma once
 #include "fs/fs.hpp"
-#include "fs/device/dev.hpp"
+
+#include "data/List.h"
 
 namespace file_system
 {
+
+	struct FileSystemInstance;
+	class VNodeBase;
+	class IDevice;
+
+	enum dev_class
+	{
+		DEV_CLASS_BLOCK = 1,
+		DEV_CLASS_CHAR = 2,
+		DEV_CLASS_ANY = 255
+	};
+
+	enum block_device_type
+	{
+		DEV_BLOCK_SDx = 1,
+		DEV_BLOCK_HDx = 2,
+		DEV_BLOCK_RAM = 3,
+		DEV_BLOCK_CDx = 4,
+		DEV_BLOCK_PART = 127,
+		DEV_BLOCK_PSEUDO = 128,
+		DEV_BLOCK_OTHER = 255,
+	};
+
+	enum char_device_type
+	{
+		DEV_CHAR_TTY = 1
+	};
+
 	constexpr size_t VFS_MODE_MASK = 0xFFF;
 
 	static inline constexpr mode_type vnode_type_to_mode_type(enum vnode_type type)
@@ -27,9 +56,6 @@ namespace file_system
 		// shouldn't reach here
 		return S_IFREG;
 	}
-
-	struct FileSystemInstance;
-	class VNodeBase;
 
 	class FileSystemClassBase
 	{
@@ -101,6 +127,7 @@ namespace file_system
 		char name_buf[VNODE_NAME_MAX]{};
 
 		list_head child_head{};
+		list_head link{};
 
 		union
 		{
@@ -115,6 +142,7 @@ namespace file_system
 			: type(t)
 		{
 			strncpy(name_buf, n, strnlen(n, VNODE_NAME_MAX));
+			libkernel::list_init(&child_head);
 		}
 
 	 public:
@@ -167,6 +195,8 @@ namespace file_system
 		virtual size_t read(const file_object& fd, void* buf, size_t count) = 0;
 		virtual size_t write(const file_object& fd, const void* buf, size_t count) = 0;
 
-		friend error_code file_system::device_add(dev_class cls, size_t subcls, IDevice& dev, const char* name);
+	 public:
+		friend error_code devfs_create_root_if_not_exist();
+		friend error_code device_add(dev_class cls, size_t subcls, IDevice& dev, const char* name);
 	};
 }

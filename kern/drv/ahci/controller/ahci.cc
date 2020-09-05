@@ -14,6 +14,11 @@
 #include "drivers/ahci/atapi/atapi.hpp"
 #include "drivers/ahci/ata/ata_string.hpp"
 
+#include "fs/device/dev.hpp"
+#include "fs/device/ATABlockDevice.hpp"
+#include "fs/vfs/vfs.hpp"
+#include "fs/vfs/vnode.hpp"
+
 #include "libkernel/console/builtin_text_io.hpp"
 
 #include <cstring>
@@ -21,11 +26,14 @@
 #include <algorithm>
 
 using namespace pci;
+
 using namespace pci::express;
 
 using namespace ahci;
 
 using namespace libkernel;
+
+using namespace file_system;
 
 using std::min;
 using std::max;
@@ -146,6 +154,35 @@ static inline error_code ahci_port_allocate(ahci_port* port)
 	return ERROR_SUCCESS;
 }
 
+static inline error_code ahci_port_add([[maybe_unused]]ahci_controller* ctl, ahci_port* port)
+{
+	size_t subclass = 0;
+	IDevice* blk_dev = nullptr;
+
+	switch (ctl->type)
+	{
+	case ahci::DEVICE_SATA:
+		subclass = DEV_BLOCK_SDx;
+		blk_dev = new ATABlockDevice(port);
+		break;
+	case ahci::DEVICE_SATAPI:
+		subclass = DEV_BLOCK_CDx;
+		// TODO: support ATAPI
+		KDEBUG_NOT_IMPLEMENTED;
+		break;
+	default:
+		return -ERROR_INVALID;
+	}
+
+	auto ret = file_system::device_add(DEV_CLASS_BLOCK, subclass, *blk_dev, nullptr);
+	if (ret != ERROR_SUCCESS)
+	{
+		return ret;
+	}
+
+	return ERROR_SUCCESS;
+}
+
 static inline error_code ahci_config_port([[maybe_unused]]ahci_controller* ctl, ahci_port* port)
 {
 	error_code ret = ahci_port_allocate(port);
@@ -155,6 +192,12 @@ static inline error_code ahci_config_port([[maybe_unused]]ahci_controller* ctl, 
 	}
 
 	ret = ahci_port_identify(ctl, port);
+	if (ret != ERROR_SUCCESS)
+	{
+		return ret;
+	}
+
+	ret = ahci_port_add(ctl, port);
 	if (ret != ERROR_SUCCESS)
 	{
 		return ret;
