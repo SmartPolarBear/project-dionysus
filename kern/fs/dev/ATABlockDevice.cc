@@ -22,6 +22,77 @@
 
 using namespace ahci;
 
+static inline error_code partition_add_device(file_system::VNodeBase& parent,
+	logical_block_address lba,
+	size_t size,
+	uint32_t sys_id)
+{
+
+	return ERROR_SUCCESS;
+}
+
+error_code file_system::ATABlockDevice::enumerate_partitions(file_system::VNodeBase& parent)
+{
+	constexpr size_t HEAD_DATA_SIZE = sizeof(uint8_t[1024]);
+	constexpr uint8_t MBR_SIG[] = { 0x55, 0xAA };
+
+	uint8_t* head_data = new uint8_t[1024];
+	memset(head_data, 0, HEAD_DATA_SIZE);
+
+	error_code ret = ERROR_SUCCESS;
+	if ((ret = this->read(head_data, 0, HEAD_DATA_SIZE)) != ERROR_SUCCESS)
+	{
+		delete[] head_data;
+		return ERROR_SUCCESS;
+	}
+
+	// Compare last two bytes to identify valid MBR disk
+	// TODO: GPT support
+	if (memcmp(head_data + 510, MBR_SIG, sizeof(uint8_t[2])) == 0)
+	{
+		// Parse the master boot record
+		// print the *optional* disk signature and reserved field
+		uint64_t signature = 0;
+		uint32_t reserved = 0;
+
+		memmove(&signature, head_data + MBR_UNIQUE_ID_OFFSET, sizeof(uint8_t[4]));
+		memmove(&reserved, head_data + MBR_RESERVED_OFFSET, sizeof(uint8_t[2]));
+
+		write_format("Unique disk ID: 0x%x, reserved field: 0x%x\n", signature, reserved);
+
+		for (uintptr_t offset : { MBR_FIRST_PARTITION_ENTRY_OFFSET,
+								  MBR_SECOND_PARTITION_ENTRY_OFFSET,
+								  MBR_THIRD_PARTITION_ENTRY_OFFSET,
+								  MBR_FOURTH_PARTITION_ENTRY_OFFSET })
+		{
+			mbr_partition_table_entry* entry =
+				reinterpret_cast<mbr_partition_table_entry*>(head_data + offset);
+
+			if (entry->sys_id == 0) // unused entry
+			{
+				continue;
+			}
+
+			write_format("Partition %s, system ID : 0x%x, start LBA: 0x%x, sectors %d\n",
+				entry->bootable == 0x80 ? "active" : "inactive",
+				entry->sys_id,
+				entry->start_lba,
+				entry->sector_count
+			);
+
+			ret = partition_add_device(parent, entry->start_lba, entry->sector_count * 512, entry->sys_id);
+
+			if (ret != ERROR_SUCCESS)
+			{
+				delete[] head_data;
+				return ret;
+			}
+		}
+	}
+
+	delete[] head_data;
+	return ERROR_SUCCESS;
+}
 
 error_code file_system::ATABlockDevice::ioctl([[maybe_unused]]size_t req, [[maybe_unused]]void* args)
 {
@@ -87,6 +158,8 @@ file_system::ATABlockDevice::ATABlockDevice(ahci::ahci_port* port)
 	this->dev_data = port;
 	this->flags = 0;
 	this->block_size = ATA_DEFAULT_SECTOR_SIZE;
+
+	this->features = DFE_HAS_PARTITIONS;
 }
 
 error_code file_system::ATABlockDevice::mmap([[maybe_unused]]uintptr_t base,

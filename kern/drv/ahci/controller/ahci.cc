@@ -162,11 +162,11 @@ static inline error_code ahci_port_add([[maybe_unused]]ahci_controller* ctl, ahc
 	switch (ctl->type)
 	{
 	case ahci::DEVICE_SATA:
-		subclass = DEV_BLOCK_SDx;
+		subclass = DBT_SDx;
 		blk_dev = new ATABlockDevice(port);
 		break;
 	case ahci::DEVICE_SATAPI:
-		subclass = DEV_BLOCK_CDx;
+		subclass = DBT_CDx;
 		// TODO: support ATAPI
 		KDEBUG_NOT_IMPLEMENTED;
 		break;
@@ -174,7 +174,7 @@ static inline error_code ahci_port_add([[maybe_unused]]ahci_controller* ctl, ahc
 		return -ERROR_INVALID;
 	}
 
-	auto ret = file_system::device_add(DEV_CLASS_BLOCK, subclass, *blk_dev, nullptr);
+	auto ret = file_system::device_add(DC_BLOCK, subclass, *blk_dev, nullptr);
 	if (ret != ERROR_SUCCESS)
 	{
 		return ret;

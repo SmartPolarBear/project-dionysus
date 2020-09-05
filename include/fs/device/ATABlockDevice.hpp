@@ -12,8 +12,7 @@
 namespace file_system
 {
 	class ATABlockDevice :
-		public file_system::IDevice,
-		public file_system::IMemmap
+		public file_system::IDevice
 	{
 	 public:
 		explicit ATABlockDevice(ahci::ahci_port* port);
@@ -24,5 +23,6 @@ namespace file_system
 		size_t write(const void* buf, uintptr_t offset, size_t count) override;
 		error_code ioctl(size_t req, void* args) override;
 		error_code mmap(uintptr_t base, size_t page_count, int prot, size_t flags) override;
+		error_code enumerate_partitions(VNodeBase& parent) override;
 	};
 }

@@ -22,32 +22,6 @@
 
 using namespace file_system;
 
-[[maybe_unused]]constexpr uintptr_t MBR_BOOTLOADER_OFFSET = 0x000;
-[[maybe_unused]]constexpr uintptr_t MBR_UNIQUE_ID_OFFSET = 0x1B8;
-[[maybe_unused]]constexpr uintptr_t MBR_RESERVED_OFFSET = 0x1BC;
-[[maybe_unused]]constexpr uintptr_t MBR_FIRST_PARTITION_ENTRY_OFFSET = 0x1BE;
-[[maybe_unused]]constexpr uintptr_t MBR_SECOND_PARTITION_ENTRY_OFFSET = 0x1CE;
-[[maybe_unused]]constexpr uintptr_t MBR_THIRD_PARTITION_ENTRY_OFFSET = 0x1DE;
-[[maybe_unused]]constexpr uintptr_t MBR_FOURTH_PARTITION_ENTRY_OFFSET = 0x1EE;
-[[maybe_unused]]constexpr uintptr_t MBR_VALID_SIGNATURE_OFFSET = 0x1FE;
-
-struct chs_struct
-{
-	uint32_t head: 8;
-	uint32_t sector: 6;
-	uint32_t cylinder: 10;
-}__attribute__((__packed__));
-
-struct mbr_partition_table_entry
-{
-	uint8_t bootable;
-	chs_struct start_chs;
-	uint8_t sys_id;
-	chs_struct end_chs;
-	uint32_t start_lba;
-	uint32_t sector_count;
-}__attribute__((__packed__));
-
 [[maybe_unused]] char block_dev_sd_idx_char = 'a';
 [[maybe_unused]] char block_dev_cd_idx_char = 'a';
 [[maybe_unused]] char block_dev_hd_idx_char = 'a';
@@ -83,11 +57,11 @@ static inline error_code device_new_name(dev_class cls, size_t sbcls, OUT char* 
 		return -ERROR_INVALID;
 	}
 
-	if (cls == DEV_CLASS_BLOCK)
+	if (cls == DC_BLOCK)
 	{
 		switch (sbcls)
 		{
-		case DEV_BLOCK_CDx:
+		case DBT_CDx:
 			if (block_dev_cd_idx_char > 'z')
 			{
 				return -ERROR_UNSUPPORTED;
@@ -99,7 +73,7 @@ static inline error_code device_new_name(dev_class cls, size_t sbcls, OUT char* 
 
 			break;
 
-		case DEV_BLOCK_SDx:
+		case DBT_SDx:
 			if (block_dev_sd_idx_char > 'z')
 			{
 				return -ERROR_UNSUPPORTED;
@@ -119,70 +93,6 @@ static inline error_code device_new_name(dev_class cls, size_t sbcls, OUT char* 
 	return -ERROR_INVALID;
 }
 
-error_code file_system::device_enumerate_partitions(IDevice& device, [[maybe_unused]] VNodeBase* vnode)
-{
-	if (device.block_size == 2048)
-	{
-		// This should be a CD-ROM, it can't have partitions
-		return ERROR_SUCCESS;
-	}
-
-	uint8_t* head_data = new uint8_t[1024];
-	constexpr size_t HEAD_DATA_SIZE = sizeof(uint8_t[1024]);
-	constexpr uint8_t mbr_sig[] = { 0x55, 0xAA };
-
-	memset(head_data, 0, HEAD_DATA_SIZE);
-
-	error_code ret = ERROR_SUCCESS;
-	if ((ret = device.read(head_data, 0, HEAD_DATA_SIZE)) != ERROR_SUCCESS)
-	{
-		delete[] head_data;
-		return ERROR_SUCCESS;
-	}
-
-	if (strncmp(reinterpret_cast<const char*>(head_data + 512), "EFI PART", 8) == 0)
-	{
-		//TODO: support GPT
-		return -ERROR_UNSUPPORTED;
-	}
-	else if (memcmp(head_data + 510, mbr_sig, sizeof(uint8_t[2])) == 0)
-	{
-		// Parse the master boot record
-		// print the *optional* disk signature and reserved field
-		uint64_t signature = 0;
-		uint32_t reserved = 0;
-
-		memmove(&signature, head_data + MBR_UNIQUE_ID_OFFSET, sizeof(signature));
-		memmove(&reserved, head_data + MBR_RESERVED_OFFSET, sizeof(reserved));
-
-		write_format("Unique disk ID: 0x%x, reserved field: 0x%x\n", signature, reserved);
-
-		for (uintptr_t offset : { MBR_FIRST_PARTITION_ENTRY_OFFSET,
-								  MBR_SECOND_PARTITION_ENTRY_OFFSET,
-								  MBR_THIRD_PARTITION_ENTRY_OFFSET,
-								  MBR_FIRST_PARTITION_ENTRY_OFFSET })
-		{
-			mbr_partition_table_entry* entry =
-				reinterpret_cast<mbr_partition_table_entry*>(head_data + offset);
-
-			if (entry->sys_id == 0) // unused entry
-			{
-				continue;
-			}
-
-			write_format("Partition %s, system ID : %d, start LBA: %d, sectors %d\n",
-				entry->bootable == 0x80 ? "active" : "inactive",
-				entry->sys_id,
-				entry->start_lba,
-				entry->sector_count
-			);
-		}
-	}
-
-	delete[] head_data;
-	return ERROR_SUCCESS;
-}
-
 error_code file_system::device_add(dev_class cls, size_t subcls, IDevice& dev, const char* name)
 {
 	char* node_name = new char[64];
@@ -200,11 +110,11 @@ error_code file_system::device_add(dev_class cls, size_t subcls, IDevice& dev, c
 	}
 
 	VNodeBase* node = nullptr;
-	if (cls == DEV_CLASS_BLOCK)
+	if (cls == DC_BLOCK)
 	{
 		node = new DevFSVNode(VNT_BLK, name);
 	}
-	else if (cls == DEV_CLASS_CHAR)
+	else if (cls == DC_CHAR)
 	{
 		node = new DevFSVNode(VNT_CHR, name);
 	}
@@ -233,7 +143,10 @@ error_code file_system::device_add(dev_class cls, size_t subcls, IDevice& dev, c
 
 	libkernel::list_add(&node->link, &devfs_root->child_head);
 
-	ret = device_enumerate_partitions(dev, node);
+	if (dev.features & DFE_HAS_PARTITIONS)
+	{
+		dev.enumerate_partitions(*node);
+	}
 
 	return ret;
 }

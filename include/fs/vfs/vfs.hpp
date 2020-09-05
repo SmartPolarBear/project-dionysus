@@ -12,25 +12,31 @@ namespace file_system
 
 	enum dev_class
 	{
-		DEV_CLASS_BLOCK = 1,
-		DEV_CLASS_CHAR = 2,
-		DEV_CLASS_ANY = 255
+		DC_BLOCK = 1,
+		DC_CHAR = 2,
+		DC_ANY = 255
 	};
 
 	enum block_device_type
 	{
-		DEV_BLOCK_SDx = 1,
-		DEV_BLOCK_HDx = 2,
-		DEV_BLOCK_RAM = 3,
-		DEV_BLOCK_CDx = 4,
-		DEV_BLOCK_PART = 127,
-		DEV_BLOCK_PSEUDO = 128,
-		DEV_BLOCK_OTHER = 255,
+		DBT_SDx = 1,
+		DBT_HDx = 2,
+		DBT_RAM = 3,
+		DBT_CDx = 4,
+		DBT_PART = 127,
+		DBT_PSEUDO = 128,
+		DBT_OTHER = 255,
 	};
 
 	enum char_device_type
 	{
-		DEV_CHAR_TTY = 1
+		CDT_TTY = 1
+	};
+
+	enum device_features
+	{
+		DFE_HAS_PARTITIONS = 1u << 1u,
+		DFE_HAS_MEMMAP = 1u << 2u
 	};
 
 	constexpr size_t VFS_MODE_MASK = 0xFFF;

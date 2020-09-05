@@ -1,5 +1,6 @@
 #pragma once
 #include "system/types.h"
+#include "fs/mbr.hpp"
 #include <cstring>
 
 namespace file_system
