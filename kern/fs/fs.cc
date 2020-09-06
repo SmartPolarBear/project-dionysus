@@ -4,6 +4,8 @@
 #include "system/memlayout.h"
 
 #include "fs/fs.hpp"
+#include "fs/vfs/vfs.hpp"
+
 
 #include "drivers/pci/pci.hpp"
 #include "drivers/pci/pci_device.hpp"
@@ -15,13 +17,20 @@
 
 PANIC void file_system::fs_init()
 {
-	// firstly, initialize the fs hardware
-	auto ret = ahci::ahci_init();
+
+	// Initialize devfs root to load real hardware
+	auto ret = file_system::init_devfs_root();
 	if (ret != ERROR_SUCCESS)
 	{
 		KDEBUG_RICHPANIC_CODE(ret, false, "");
 	}
 
+	// Initialize the fs hardware
+	ret = ahci::ahci_init();
+	if (ret != ERROR_SUCCESS)
+	{
+		KDEBUG_RICHPANIC_CODE(ret, false, "");
+	}
 
 }
 

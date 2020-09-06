@@ -32,25 +32,26 @@ using namespace file_system;
 
 VNodeBase* devfs_root = nullptr;
 
-constexpr mode_type DEVICE_DEFAULT_MODE = 0600;
 
-error_code file_system::devfs_create_root_if_not_exist()
+error_code file_system::init_devfs_root()
 {
 	devfs_root = static_cast<VNodeBase*>(new DevFSVNode(VNT_BLK, nullptr));
+
 	if (!devfs_root)
 	{
 		return -ERROR_MEMORY_ALLOC;
 	}
 
 	devfs_root->flags |= VNF_MEMORY;
-	devfs_root->mode = 0555;
+	devfs_root->mode = ROOT_DEFAULT_MODE;
+
 	devfs_root->uid = 0;
 	devfs_root->gid = 0;
 
 	return ERROR_SUCCESS;
 }
 
-static inline error_code device_new_name(dev_class cls, size_t sbcls, OUT char* namebuf)
+static inline error_code device_generate_name(dev_class cls, size_t sbcls, OUT char* namebuf)
 {
 	if (namebuf == nullptr)
 	{
@@ -100,7 +101,7 @@ error_code file_system::device_add(dev_class cls, size_t subcls, IDevice& dev, c
 
 	if (!name)
 	{
-		if ((ret = device_new_name(cls, subcls, node_name)) != ERROR_SUCCESS)
+		if ((ret = device_generate_name(cls, subcls, node_name)) != ERROR_SUCCESS)
 		{
 			delete[] node_name;
 			return ret;
@@ -130,7 +131,7 @@ error_code file_system::device_add(dev_class cls, size_t subcls, IDevice& dev, c
 	node->dev = &dev;
 
 	// Use inode number to store full device class:subclass
-	node->ino = ((uint32_t)cls) | ((uint64_t)subcls << 32u);
+	node->inode_id = ((uint32_t)cls) | ((uint64_t)subcls << 32u);
 
 	node->flags |= VNF_MEMORY;
 
@@ -138,8 +139,6 @@ error_code file_system::device_add(dev_class cls, size_t subcls, IDevice& dev, c
 	node->mode = DEVICE_DEFAULT_MODE;
 	node->uid = 0;
 	node->gid = 0;
-
-	devfs_create_root_if_not_exist();
 
 	libkernel::list_add(&node->link, &devfs_root->child_head);
 

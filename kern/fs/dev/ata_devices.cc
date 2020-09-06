@@ -25,7 +25,7 @@ using namespace ahci;
 error_code file_system::partition_add_device(file_system::VNodeBase& parent,
 	logical_block_address lba,
 	size_t size,
-	size_t disk_id,
+	size_t disk_idx,
 	[[maybe_unused]]uint32_t sys_id)
 {
 	constexpr size_t PARTITION_NAME_LEN = 32;
@@ -35,7 +35,7 @@ error_code file_system::partition_add_device(file_system::VNodeBase& parent,
 	auto parent_name_len = strnlen(parent_name, PARTITION_NAME_LEN);
 
 	strncpy(namebuf, parent_name, parent_name_len);
-	namebuf[parent_name_len++] = '0' + disk_id;
+	namebuf[parent_name_len++] = '0' + static_cast<uint8_t>(disk_idx);
 	namebuf[parent_name_len++] = '\0';
 
 	auto* dev = new file_system::ATAPartitionDevice(reinterpret_cast<ATABlockDevice&>(parent.dev), lba, size);

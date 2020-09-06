@@ -6,6 +6,8 @@
 
 namespace file_system
 {
+	constexpr mode_type DEVICE_DEFAULT_MODE = 0600;
+	constexpr mode_type ROOT_DEFAULT_MODE = 0555;
 
 	class IDevice
 	{

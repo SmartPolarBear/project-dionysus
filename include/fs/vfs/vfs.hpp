@@ -33,10 +33,11 @@ namespace file_system
 		CDT_TTY = 1
 	};
 
-	enum device_features
+	enum device_features : size_t
 	{
 		DFE_HAS_PARTITIONS = 1u << 1u,
-		DFE_HAS_MEMMAP = 1u << 2u
+		DFE_HAS_MEMMAP = 1u << 2u,
+		DEF_HAS_CHILD_DEVICES = 1u << 3u
 	};
 
 	constexpr size_t VFS_MODE_MASK = 0xFFF;
@@ -125,7 +126,7 @@ namespace file_system
 	 protected:
 
 		size_t open_count{};
-		size_t ino{};
+		size_t inode_id{};
 
 		mode_type mode{};
 
@@ -211,12 +212,14 @@ namespace file_system
 		virtual size_t write(const file_object& fd, const void* buf, size_t count) = 0;
 
 	 public:
-		friend error_code devfs_create_root_if_not_exist();
+		friend error_code init_devfs_root();
 		friend error_code device_add(dev_class cls, size_t subcls, IDevice& dev, const char* name);
 		friend error_code partition_add_device(file_system::VNodeBase& parent,
 			logical_block_address lba,
 			size_t size,
-			size_t part_id,
+			size_t disk_idx,
 			[[maybe_unused]]uint32_t sys_id);
 	};
+
+	error_code init_devfs_root();
 }
