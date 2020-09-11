@@ -17,7 +17,6 @@
 #include "fs/device/dev.hpp"
 #include "fs/device/ata_devices.hpp"
 #include "fs/vfs/vfs.hpp"
-#include "fs/vfs/vnode.hpp"
 
 #include "libkernel/console/builtin_text_io.hpp"
 
@@ -157,7 +156,7 @@ static inline error_code ahci_port_allocate(ahci_port* port)
 static inline error_code ahci_port_add([[maybe_unused]]ahci_controller* ctl, ahci_port* port)
 {
 	size_t subclass = 0;
-	DeviceBase* blk_dev = nullptr;
+	device_class* blk_dev = nullptr;
 
 	switch (ctl->type)
 	{

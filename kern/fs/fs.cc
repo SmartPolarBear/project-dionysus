@@ -33,5 +33,7 @@ PANIC void file_system::fs_init()
 
 }
 
-
-
+error_code file_system::fs_create(fs_class_base* fs_class, device_class* dev, size_t flags, void* data)
+{
+	return ERROR_SUCCESS;
+}

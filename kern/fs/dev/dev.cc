@@ -12,7 +12,6 @@
 
 #include "fs/device/ata_devices.hpp"
 #include "fs/device/dev.hpp"
-#include "fs/vfs/vnode.hpp"
 
 #include "libkernel/console/builtin_text_io.hpp"
 
@@ -30,12 +29,12 @@ using namespace file_system;
 [[maybe_unused]]const char* block_dev_cd_name = "cd ";
 [[maybe_unused]]const char* block_dev_hd_name = "hd ";
 
-VNodeBase* devfs_root = nullptr;
+vnode_base* devfs_root = nullptr;
 
 
 error_code file_system::init_devfs_root()
 {
-	devfs_root = static_cast<VNodeBase*>(new DevFSVNode(VNT_BLK, nullptr));
+	devfs_root = static_cast<vnode_base*>(new dev_fs_node(VNT_BLK, nullptr));
 
 	if (!devfs_root)
 	{
@@ -51,7 +50,7 @@ error_code file_system::init_devfs_root()
 	return ERROR_SUCCESS;
 }
 
-static inline error_code device_generate_name(dev_class cls, size_t sbcls, OUT char* namebuf)
+static inline error_code device_generate_name(device_class_id cls, size_t sbcls, OUT char* namebuf)
 {
 	if (namebuf == nullptr)
 	{
@@ -94,7 +93,7 @@ static inline error_code device_generate_name(dev_class cls, size_t sbcls, OUT c
 	return -ERROR_INVALID;
 }
 
-error_code file_system::device_add(dev_class cls, size_t subcls, DeviceBase& dev, const char* name)
+error_code file_system::device_add(device_class_id cls, size_t subcls, device_class& dev, const char* name)
 {
 	char* node_name = new char[64];
 	error_code ret = ERROR_SUCCESS;
@@ -110,14 +109,14 @@ error_code file_system::device_add(dev_class cls, size_t subcls, DeviceBase& dev
 		name = node_name;
 	}
 
-	VNodeBase* node = nullptr;
+	vnode_base* node = nullptr;
 	if (cls == DC_BLOCK)
 	{
-		node = new DevFSVNode(VNT_BLK, name);
+		node = new dev_fs_node(VNT_BLK, name);
 	}
 	else if (cls == DC_CHAR)
 	{
-		node = new DevFSVNode(VNT_CHR, name);
+		node = new dev_fs_node(VNT_CHR, name);
 	}
 	else
 	{

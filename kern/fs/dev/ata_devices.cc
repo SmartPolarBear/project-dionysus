@@ -22,7 +22,7 @@
 
 using namespace ahci;
 
-error_code file_system::partition_add_device(file_system::VNodeBase& parent,
+error_code file_system::partition_add_device(file_system::vnode_base& parent,
 	logical_block_address lba,
 	size_t size,
 	size_t disk_idx,
@@ -45,7 +45,7 @@ error_code file_system::partition_add_device(file_system::VNodeBase& parent,
 	return ERROR_SUCCESS;
 }
 
-error_code file_system::ATABlockDevice::enumerate_partitions(file_system::VNodeBase& parent)
+error_code file_system::ATABlockDevice::enumerate_partitions(file_system::vnode_base& parent)
 {
 	constexpr size_t HEAD_DATA_SIZE = sizeof(uint8_t[1024]);
 	constexpr uint8_t MBR_SIG[] = { 0x55, 0xAA };
@@ -237,7 +237,7 @@ error_code file_system::ATAPartitionDevice::mmap(uintptr_t base, size_t page_cou
 	return -ERROR_UNSUPPORTED;
 }
 
-error_code file_system::ATAPartitionDevice::enumerate_partitions(file_system::VNodeBase& parent)
+error_code file_system::ATAPartitionDevice::enumerate_partitions(file_system::vnode_base& parent)
 {
 	return -ERROR_UNSUPPORTED;
 }
