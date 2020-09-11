@@ -131,10 +131,6 @@ namespace file_system
 		{
 			return id;
 		}
-
-	 public:
-		friend fs_class_base* fs_find(bool (* pred)(const fs_class_base*));
-
 	 public:
 		list_head link{};
 

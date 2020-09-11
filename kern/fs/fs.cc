@@ -57,20 +57,6 @@ error_code file_system::fs_register(fs_class_base* fs_class)
 	return ERROR_SUCCESS;
 }
 
-file_system::fs_class_base* file_system::fs_find(fs_find_pred pred)
-{
-	list_head* iter = nullptr;
-	list_for(iter, &fs_class_head)
-	{
-		// FIXME
-		auto entry = list_entry(iter, fs_class_base, link);
-		if (pred(entry))
-		{
-			return entry;
-		}
-	}
-	return nullptr;
-}
 
 file_system::fs_class_base* file_system::fs_find(fs_class_id id)
 {

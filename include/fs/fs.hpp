@@ -16,8 +16,7 @@ namespace file_system
 	error_code fs_create(fs_class_base* fs_class, device_class* dev, size_t flags, void* data);
 	error_code fs_register(fs_class_base* fs_class);
 
-	fs_class_base* fs_find(fs_find_pred pred);
-	fs_class_base* fs_find(fs_class_id id);
-	fs_class_base* fs_find(const char* name);
+	[[maybe_unused]]fs_class_base* fs_find(fs_class_id id);
+	[[maybe_unused]]fs_class_base* fs_find(const char* name);
 
 }
