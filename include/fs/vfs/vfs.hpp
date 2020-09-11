@@ -100,6 +100,11 @@ namespace file_system
 
 	constexpr size_t VFS_MODE_MASK = 0xFFF;
 
+	enum fs_class_id
+	{
+		FSC_EXT2,
+	};
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-private-field"
 #pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -115,6 +120,20 @@ namespace file_system
 	 private:
 		char name[FILE_SYSTEM_CLASS_NAME_MAX]{};
 		size_t opt{};
+		fs_class_id id{};
+
+	 public:
+		const char* get_name() const
+		{
+			return name;
+		}
+		fs_class_id get_id() const
+		{
+			return id;
+		}
+
+	 public:
+		friend fs_class_base* fs_find(bool (* pred)(const fs_class_base*));
 
 	 public:
 		list_head link{};
@@ -160,6 +179,7 @@ namespace file_system
 		}
 
 		// shouldn't reach here
+
 		return S_IFREG;
 	}
 

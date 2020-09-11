@@ -14,8 +14,16 @@
 
 #include "libkernel/console/builtin_text_io.hpp"
 
+using namespace libkernel;
+
+list_head fs_class_head;
+list_head fs_mount_head;
+
 PANIC void file_system::fs_init()
 {
+	// Initialize list heads
+	list_init(&fs_class_head);
+	list_init(&fs_mount_head);
 
 	// Initialize devfs root to load real hardware
 	auto ret = file_system::init_devfs_root();
@@ -37,3 +45,60 @@ error_code file_system::fs_create(fs_class_base* fs_class, device_class* dev, si
 {
 	return ERROR_SUCCESS;
 }
+
+error_code file_system::fs_register(fs_class_base* fs_class)
+{
+	if (fs_find(fs_class->get_id()) != nullptr)
+	{
+		return -ERROR_REWRITE;
+	}
+
+	list_add(&fs_class->link, &fs_class_head);
+	return ERROR_SUCCESS;
+}
+
+file_system::fs_class_base* file_system::fs_find(fs_find_pred pred)
+{
+	list_head* iter = nullptr;
+	list_for(iter, &fs_class_head)
+	{
+		// FIXME
+		auto entry = list_entry(iter, fs_class_base, link);
+		if (pred(entry))
+		{
+			return entry;
+		}
+	}
+	return nullptr;
+}
+
+file_system::fs_class_base* file_system::fs_find(fs_class_id id)
+{
+	list_head* iter = nullptr;
+	list_for(iter, &fs_class_head)
+	{
+		// FIXME
+		auto entry = list_entry(iter, fs_class_base, link);
+		if (entry->get_id() == id)
+		{
+			return entry;
+		}
+	}
+	return nullptr;
+}
+
+file_system::fs_class_base* file_system::fs_find(const char* name)
+{
+	list_head* iter = nullptr;
+	list_for(iter, &fs_class_head)
+	{
+		// FIXME
+		auto entry = list_entry(iter, fs_class_base, link);
+		if (strcmp(entry->get_name(), name) == 0)
+		{
+			return entry;
+		}
+	}
+	return nullptr;
+}
+
