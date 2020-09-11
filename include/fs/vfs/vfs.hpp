@@ -102,6 +102,8 @@ namespace file_system
 
 #pragma GCC diagnostic pop
 
+
+
 	enum vnode_flags
 	{
 		// Means the node has no physical storage and resides only in memory
@@ -163,29 +165,9 @@ namespace file_system
 
 	 public:
 
-		const char* GetName() const
+		[[nodiscard]] const char* get_name() const
 		{
 			return name_buf;
-		}
-
-		vnode_type GetType() const
-		{
-			return type;
-		}
-
-		void SetType(vnode_type type)
-		{
-			VNodeBase::type = type;
-		}
-
-		size_t GetFlags() const
-		{
-			return flags;
-		}
-
-		void SetFlags(size_t flags)
-		{
-			VNodeBase::flags = flags;
 		}
 
 	 public:

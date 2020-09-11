@@ -9,7 +9,7 @@ namespace file_system
 	constexpr mode_type DEVICE_DEFAULT_MODE = 0600;
 	constexpr mode_type ROOT_DEFAULT_MODE = 0555;
 
-	class IDevice
+	class DeviceBase
 	{
 	 protected:
 		void* dev_data;
@@ -17,7 +17,7 @@ namespace file_system
 		size_t flags;
 		size_t features;
 	 public:
-		virtual ~IDevice() = default;
+		virtual ~DeviceBase() = default;
 
 		virtual size_t read(void* buf, uintptr_t offset, size_t count) = 0;
 		virtual size_t write(const void* buf, uintptr_t offset, size_t count) = 0;
@@ -26,9 +26,9 @@ namespace file_system
 		virtual error_code enumerate_partitions(VNodeBase& parent) = 0;
 
 	 public:
-		friend error_code device_add(dev_class cls, size_t subcls, IDevice& dev, const char* name);
+		friend error_code device_add(dev_class cls, size_t subcls, DeviceBase& dev, const char* name);
 	};
 
-	error_code device_add(dev_class cls, size_t subcls, IN IDevice& dev, NULLABLE const char* name);
+	error_code device_add(dev_class cls, size_t subcls, IN DeviceBase& dev, NULLABLE const char* name);
 
 }

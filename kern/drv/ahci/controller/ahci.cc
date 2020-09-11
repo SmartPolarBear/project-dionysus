@@ -157,7 +157,7 @@ static inline error_code ahci_port_allocate(ahci_port* port)
 static inline error_code ahci_port_add([[maybe_unused]]ahci_controller* ctl, ahci_port* port)
 {
 	size_t subclass = 0;
-	IDevice* blk_dev = nullptr;
+	DeviceBase* blk_dev = nullptr;
 
 	switch (ctl->type)
 	{

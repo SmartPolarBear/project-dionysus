@@ -94,7 +94,7 @@ static inline error_code device_generate_name(dev_class cls, size_t sbcls, OUT c
 	return -ERROR_INVALID;
 }
 
-error_code file_system::device_add(dev_class cls, size_t subcls, IDevice& dev, const char* name)
+error_code file_system::device_add(dev_class cls, size_t subcls, DeviceBase& dev, const char* name)
 {
 	char* node_name = new char[64];
 	error_code ret = ERROR_SUCCESS;

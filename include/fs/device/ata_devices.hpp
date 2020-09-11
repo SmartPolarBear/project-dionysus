@@ -13,13 +13,13 @@ namespace file_system
 {
 	struct partition_data
 	{
-		IDevice* parent_dev;
+		DeviceBase* parent_dev;
 		uint64_t lba_start;
 		uint64_t size;
 	};
 
 	class ATABlockDevice :
-		public file_system::IDevice
+		public file_system::DeviceBase
 	{
 	 public:
 		explicit ATABlockDevice(ahci::ahci_port* port);
@@ -34,7 +34,7 @@ namespace file_system
 	};
 
 	class ATAPartitionDevice :
-		public file_system::IDevice
+		public file_system::DeviceBase
 	{
 	 public:
 		explicit ATAPartitionDevice(ATABlockDevice& parent, logical_block_address lba, size_t sz);

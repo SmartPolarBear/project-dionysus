@@ -6,7 +6,6 @@
 #include "fs/fs.hpp"
 #include "fs/vfs/vfs.hpp"
 
-
 #include "drivers/pci/pci.hpp"
 #include "drivers/pci/pci_device.hpp"
 #include "drivers/pci/pci_header.hpp"
@@ -33,4 +32,6 @@ PANIC void file_system::fs_init()
 	}
 
 }
+
+
 

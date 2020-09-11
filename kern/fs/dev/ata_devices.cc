@@ -31,7 +31,7 @@ error_code file_system::partition_add_device(file_system::VNodeBase& parent,
 	constexpr size_t PARTITION_NAME_LEN = 32;
 	char namebuf[PARTITION_NAME_LEN] = { 0 };
 
-	auto parent_name = parent.GetName();
+	auto parent_name = parent.get_name();
 	auto parent_name_len = strnlen(parent_name, PARTITION_NAME_LEN);
 
 	strncpy(namebuf, parent_name, parent_name_len);
