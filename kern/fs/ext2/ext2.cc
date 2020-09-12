@@ -21,7 +21,7 @@ void file_system::ext2_fs_class::destroy(fs_instance* fs)
 
 }
 
-error_code file_system::ext2_fs_class::statvfs(fs_instance* fs, vfs_status* ret)
+error_code file_system::ext2_fs_class::get_vfs_status(fs_instance* fs, vfs_status* ret)
 {
 	return 0;
 }

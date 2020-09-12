@@ -12,7 +12,7 @@ namespace file_system
 		vnode_base* get_root(fs_instance* fs) override;
 		error_code initialize(fs_instance* fs, const char* data) override;
 		void destroy(fs_instance* fs) override;
-		error_code statvfs(fs_instance* fs, vfs_status* ret) override;
+		error_code get_vfs_status(fs_instance* fs, vfs_status* ret) override;
 	};
 
 	extern ext2_fs_class g_ext2fs;

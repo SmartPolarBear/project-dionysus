@@ -138,14 +138,19 @@ namespace file_system
 		fs_class_id id{};
 
 	 public:
-		const char* get_name() const
+
+		virtual error_code register_this();
+
+		[[nodiscard]] virtual const char* get_name() const
 		{
 			return name;
 		}
-		fs_class_id get_id() const
+
+		[[nodiscard]] virtual fs_class_id get_id() const
 		{
 			return id;
 		}
+
 	 public:
 		list_head link{};
 
@@ -154,9 +159,8 @@ namespace file_system
 		virtual vnode_base* get_root(fs_instance* fs) = 0;
 		virtual error_code initialize(fs_instance* fs, const char* data) = 0;
 		virtual void destroy(fs_instance* fs) = 0;
-		virtual error_code statvfs(fs_instance* fs, OUT vfs_status* ret) = 0;
+		virtual error_code get_vfs_status(fs_instance* fs, OUT vfs_status* ret) = 0;
 
-		virtual error_code register_this();
 	};
 
 	struct fs_instance
