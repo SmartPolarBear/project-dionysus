@@ -18,6 +18,7 @@
 #include <cstring>
 #include <cmath>
 #include <algorithm>
+#include <fs/vfs/vfs.hpp>
 
 using namespace file_system;
 

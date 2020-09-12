@@ -98,6 +98,21 @@ namespace file_system
 		size_t ctime;
 	};
 
+	struct vfs_status
+	{
+		uint64_t bsize;
+		uint64_t frsize;
+		size_t blocks;
+		size_t bfree;
+		size_t bavail;
+		size_t files;
+		size_t ffree;
+		size_t favail;
+		uint64_t fsid;
+		uint64_t flag;
+		uint64_t namemax;
+	};
+
 	constexpr size_t VFS_MODE_MASK = 0xFFF;
 
 	enum fs_class_id
@@ -134,13 +149,14 @@ namespace file_system
 	 public:
 		list_head link{};
 
-		fs_class_base(fs_instance& fs, const char* opt)
-		{
-		}
-
 		~fs_class_base() = default;
 
-		virtual vnode_base* get_root(fs_instance& fs) = 0;
+		virtual vnode_base* get_root(fs_instance* fs) = 0;
+		virtual error_code initialize(fs_instance* fs, const char* data) = 0;
+		virtual void destroy(fs_instance* fs) = 0;
+		virtual error_code statvfs(fs_instance* fs, OUT vfs_status* ret) = 0;
+
+		virtual error_code register_this();
 	};
 
 	struct fs_instance

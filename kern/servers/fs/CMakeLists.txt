@@ -16,7 +16,6 @@ target_include_directories(fs PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 target_link_libraries(fs server c g m c++ c++abi c++experimental)
 
-add_subdirectory(ext2)
 add_subdirectory(vfs)
 
 target_include_directories(fs PRIVATE include)

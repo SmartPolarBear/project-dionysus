@@ -5,6 +5,7 @@
 
 #include "fs/fs.hpp"
 #include "fs/vfs/vfs.hpp"
+#include "fs/ext2/ext2.hpp"
 
 #include "drivers/pci/pci.hpp"
 #include "drivers/pci/pci_device.hpp"
@@ -25,6 +26,9 @@ PANIC void file_system::fs_init()
 	list_init(&fs_class_head);
 	list_init(&fs_mount_head);
 
+	// register file system classes
+	g_ext2fs.register_this();
+
 	// Initialize devfs root to load real hardware
 	auto ret = file_system::init_devfs_root();
 	if (ret != ERROR_SUCCESS)
@@ -43,6 +47,7 @@ PANIC void file_system::fs_init()
 
 error_code file_system::fs_create(fs_class_base* fs_class, device_class* dev, size_t flags, void* data)
 {
+	KDEBUG_NOT_IMPLEMENTED;
 	return ERROR_SUCCESS;
 }
 
@@ -56,7 +61,6 @@ error_code file_system::fs_register(fs_class_base* fs_class)
 	list_add(&fs_class->link, &fs_class_head);
 	return ERROR_SUCCESS;
 }
-
 
 file_system::fs_class_base* file_system::fs_find(fs_class_id id)
 {
