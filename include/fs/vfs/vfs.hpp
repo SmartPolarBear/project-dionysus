@@ -152,7 +152,6 @@ namespace file_system
 		}
 
 	 public:
-		list_head link{};
 
 		~fs_class_base() = default;
 

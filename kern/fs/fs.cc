@@ -20,6 +20,16 @@ using namespace libkernel;
 list_head fs_class_head;
 list_head fs_mount_head;
 
+// workaround the problem that it's impossible to use current
+// implementation of intrusive linked list with non-pod types
+
+struct fs_class_wrapper_node
+{
+	file_system::fs_class_base* fs_class;
+
+	list_head link;
+};
+
 PANIC void file_system::fs_init()
 {
 	// Initialize list heads
@@ -45,20 +55,43 @@ PANIC void file_system::fs_init()
 
 }
 
-error_code file_system::fs_create(fs_class_base* fs_class, device_class* dev, size_t flags, void* data)
+error_code file_system::fs_create(fs_class_base* fs_class, device_class* dev, size_t flags, const char* data)
 {
-	KDEBUG_NOT_IMPLEMENTED;
+	fs_instance* fs_ins = new fs_instance;
+	if (fs_ins == nullptr)
+	{
+		return ERROR_MEMORY_ALLOC;
+	}
+
+	fs_ins->fs_class = fs_class;
+	fs_ins->dev = dev;
+	fs_ins->flags = flags;
+
+	error_code ret = ERROR_SUCCESS;
+	if ((ret = fs_class->initialize(fs_ins, data)) != ERROR_SUCCESS)
+	{
+		delete fs_ins;
+		return ret;
+	}
+
+	list_add(&fs_ins->link, &fs_mount_head);
+
 	return ERROR_SUCCESS;
 }
 
-error_code file_system::fs_register(fs_class_base* fs_class)
+error_code file_system::fs_register(fs_class_base* fscls)
 {
-	if (fs_find(fs_class->get_id()) != nullptr)
+	if (fs_find(fscls->get_id()) != nullptr)
 	{
 		return -ERROR_REWRITE;
 	}
 
-	list_add(&fs_class->link, &fs_class_head);
+	fs_class_wrapper_node* node = new fs_class_wrapper_node
+		{
+			.fs_class=fscls,
+		};
+
+	list_add(&node->link, &fs_class_head);
 	return ERROR_SUCCESS;
 }
 
@@ -67,11 +100,10 @@ file_system::fs_class_base* file_system::fs_find(fs_class_id id)
 	list_head* iter = nullptr;
 	list_for(iter, &fs_class_head)
 	{
-		// FIXME
-		auto entry = list_entry(iter, fs_class_base, link);
-		if (entry->get_id() == id)
+		auto entry = list_entry(iter, fs_class_wrapper_node, link);
+		if (entry->fs_class->get_id() == id)
 		{
-			return entry;
+			return entry->fs_class;
 		}
 	}
 	return nullptr;
@@ -82,11 +114,10 @@ file_system::fs_class_base* file_system::fs_find(const char* name)
 	list_head* iter = nullptr;
 	list_for(iter, &fs_class_head)
 	{
-		// FIXME
-		auto entry = list_entry(iter, fs_class_base, link);
-		if (strcmp(entry->get_name(), name) == 0)
+		auto entry = list_entry(iter, fs_class_wrapper_node, link);
+		if (strcmp(entry->fs_class->get_name(), name) == 0)
 		{
-			return entry;
+			return entry->fs_class;
 		}
 	}
 	return nullptr;

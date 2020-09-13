@@ -13,7 +13,7 @@ namespace file_system
 
 
 	PANIC void fs_init();
-	error_code fs_create(fs_class_base* fs_class, device_class* dev, size_t flags, void* data);
+	error_code fs_create(fs_class_base* fs_class, device_class* dev, size_t flags, const char* data);
 	error_code fs_register(fs_class_base* fs_class);
 
 	[[maybe_unused]]fs_class_base* fs_find(fs_class_id id);
