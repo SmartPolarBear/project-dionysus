@@ -6,6 +6,8 @@
 
 namespace file_system
 {
+	constexpr uint16_t EXT2_SIGNATURE = 0xEF53;
+
 	struct ext2_superblock
 	{
 		// Base superblock
