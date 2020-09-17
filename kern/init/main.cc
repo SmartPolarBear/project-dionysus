@@ -56,6 +56,11 @@ static inline void init_servers()
 	monitor::monitor_init();
 }
 
+static inline void test_filesystem()
+{
+
+}
+
 // global entry of the kernel
 extern "C" [[noreturn]] void kmain()
 {
@@ -94,6 +99,8 @@ extern "C" [[noreturn]] void kmain()
 
 	// initialize the file system
 	file_system::fs_init();
+	// test it
+	test_filesystem();
 
 	// initialize user process manager
 	process::process_init();
