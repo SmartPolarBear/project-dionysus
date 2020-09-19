@@ -38,7 +38,7 @@ error_code file_system::partition_add_device(file_system::vnode_base& parent,
 	namebuf[parent_name_len++] = '0' + static_cast<uint8_t>(disk_idx);
 	namebuf[parent_name_len++] = '\0';
 
-	auto* dev = new file_system::ATAPartitionDevice(reinterpret_cast<ATABlockDevice&>(parent.dev), lba, size);
+	auto* dev = new file_system::ATAPartitionDevice((ATABlockDevice*)(parent.dev), lba, size);
 
 	device_add(DC_BLOCK, DBT_PARTITION, *dev, namebuf);
 
@@ -98,7 +98,11 @@ error_code file_system::ATABlockDevice::enumerate_partitions(file_system::vnode_
 			);
 
 			ret =
-				partition_add_device(parent, entry->start_lba, entry->sector_count * 512, partition_count, entry->sys_id);
+				partition_add_device(parent,
+					entry->start_lba,
+					entry->sector_count * 512,
+					partition_count,
+					entry->sys_id);
 
 			if (ret != ERROR_SUCCESS)
 			{
@@ -244,15 +248,18 @@ error_code file_system::ATAPartitionDevice::enumerate_partitions(file_system::vn
 
 #pragma GCC diagnostic pop
 
-file_system::ATAPartitionDevice::ATAPartitionDevice(file_system::ATABlockDevice& parent,
+file_system::ATAPartitionDevice::ATAPartitionDevice(file_system::ATABlockDevice* parent,
 	logical_block_address lba,
 	size_t sz)
 {
 	partition_data* data = new partition_data;
 
-	data->parent_dev = &parent;
+	data->parent_dev = parent;
 	data->lba_start = lba;
 	data->size = sz;
+
+	char testbuf[1024] = { 0 };
+	auto readsize = data->parent_dev->read(testbuf, 1049600, 1024);
 
 	this->dev_data = data;
 	this->flags = 0;

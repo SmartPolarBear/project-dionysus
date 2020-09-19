@@ -37,7 +37,7 @@ namespace file_system
 		public file_system::device_class
 	{
 	 public:
-		explicit ATAPartitionDevice(ATABlockDevice& parent, logical_block_address lba, size_t sz);
+		explicit ATAPartitionDevice(ATABlockDevice* parent, logical_block_address lba, size_t sz);
 
 		~ATAPartitionDevice() override = default;
 		size_t read(void* buf, uintptr_t offset, size_t count) override;

@@ -12,6 +12,7 @@
 
 #include "fs/device/ata_devices.hpp"
 #include "fs/device/dev.hpp"
+#include "fs/ext2/ext2.hpp"
 
 #include "libkernel/console/builtin_text_io.hpp"
 
@@ -31,7 +32,6 @@ using namespace file_system;
 [[maybe_unused]]const char* block_dev_hd_name = "hd ";
 
 vnode_base* devfs_root = nullptr;
-
 
 error_code file_system::init_devfs_root()
 {
@@ -94,8 +94,19 @@ static inline error_code device_generate_name(device_class_id cls, size_t sbcls,
 	return -ERROR_INVALID;
 }
 
+fs_instance ext2_instance;
+
+
+static inline void test_filesystem()
+{
+	g_ext2fs.initialize(&ext2_instance, nullptr);
+}
+
+
 error_code file_system::device_add(device_class_id cls, size_t subcls, device_class& dev, const char* name)
 {
+	ext2_instance.dev = &dev;
+
 	char* node_name = new char[64];
 	error_code ret = ERROR_SUCCESS;
 
@@ -146,6 +157,9 @@ error_code file_system::device_add(device_class_id cls, size_t subcls, device_cl
 	{
 		dev.enumerate_partitions(*node);
 	}
+
+	// test it
+	test_filesystem();
 
 	return ret;
 }

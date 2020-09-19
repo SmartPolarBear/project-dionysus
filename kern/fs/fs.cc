@@ -16,6 +16,7 @@
 #include "libkernel/console/builtin_text_io.hpp"
 
 using namespace libkernel;
+using namespace file_system;
 
 list_head fs_class_head;
 list_head fs_mount_head;
@@ -29,6 +30,8 @@ struct fs_class_wrapper_node
 
 	list_head link;
 };
+
+
 
 PANIC void file_system::fs_init()
 {
@@ -52,6 +55,7 @@ PANIC void file_system::fs_init()
 	{
 		KDEBUG_RICHPANIC_CODE(ret, false, "");
 	}
+
 
 }
 
