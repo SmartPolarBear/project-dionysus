@@ -16,7 +16,7 @@ static inline error_code ext2_read_superblock(fs_instance* fs)
 
 	ext2_data* data = reinterpret_cast<ext2_data*>(fs->private_data);
 
-	size_t read_size = fs->dev->read(reinterpret_cast<void*>(data->block_data), 1024, 1024);
+	size_t read_size = fs->dev->read(reinterpret_cast<void*>(&data->block_data), 1024, 1024);
 	if (read_size != 1024)
 	{
 		return -ERROR_IO;

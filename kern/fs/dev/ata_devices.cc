@@ -258,9 +258,6 @@ file_system::ATAPartitionDevice::ATAPartitionDevice(file_system::ATABlockDevice*
 	data->lba_start = lba;
 	data->size = sz;
 
-	char testbuf[1024] = { 0 };
-	auto readsize = data->parent_dev->read(testbuf, 1049600, 1024);
-
 	this->dev_data = data;
 	this->flags = 0;
 	this->block_size = ATA_DEFAULT_SECTOR_SIZE;
