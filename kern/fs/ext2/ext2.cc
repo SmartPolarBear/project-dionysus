@@ -54,7 +54,7 @@ file_system::vnode_base* file_system::ext2_fs_class::get_root(fs_instance* fs)
 error_code file_system::ext2_fs_class::initialize(fs_instance* fs, const char* data)
 {
 	ext2_data* ext2data = nullptr;
-	fs->private_data = ext2data = new ext2_data{};
+	fs->private_data = this->data = ext2data = new ext2_data{};
 
 	if (fs->private_data == nullptr)
 	{
@@ -64,7 +64,7 @@ error_code file_system::ext2_fs_class::initialize(fs_instance* fs, const char* d
 	error_code ret = ext2_read_superblock(fs);
 	if (ret != ERROR_SUCCESS)
 	{
-		delete fs->private_data;
+		delete ext2data;
 		fs->private_data = nullptr;
 		return ret;
 	}
@@ -72,7 +72,7 @@ error_code file_system::ext2_fs_class::initialize(fs_instance* fs, const char* d
 	// check the signature
 	if (ext2data->block.ext2_signature != EXT2_SIGNATURE)
 	{
-		delete fs->private_data;
+		delete ext2data;
 		fs->private_data = nullptr;
 		return -ERROR_INVALID;
 	}

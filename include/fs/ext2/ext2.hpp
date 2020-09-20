@@ -97,6 +97,8 @@ namespace file_system
 	class ext2_fs_class
 		: public fs_class_base
 	{
+	 private:
+		ext2_data *data;
 	 public:
 		vnode_base* get_root(fs_instance* fs) override;
 		error_code initialize(fs_instance* fs, const char* data) override;
