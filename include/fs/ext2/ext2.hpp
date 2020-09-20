@@ -13,6 +13,28 @@ namespace file_system
 		return 1024u << logged_size;
 	}
 
+	enum ext2_superblock_states
+	{
+		EXT2_STATE_CLEAN,
+		EXT2_STATE_HAS_ERROR,
+	};
+
+	enum ext2_superblock_error_handling
+	{
+		EXT2_ERR_HANDLE_IGNORE,
+		EXT2_ERR_HANDLE_REMOUNT_READONLY,
+		EXT2_ERR_HANDLE_PANIC,
+	};
+
+	enum ext2_superblock_operation_system_id
+	{
+		EXT2_SYSID_LINUX = 0,
+		EXT2_SYSID_GNU_HURD = 1,
+		EXT2_SYSID_MASIX = 2,
+		EXT2_SYSID_FREEBSD = 3,
+		EXT2_SYSID_LITES = 4,
+	};
+
 	struct ext2_superblock
 	{
 		// Base superblock
@@ -59,6 +81,8 @@ namespace file_system
 		uint32_t journal_inode;
 		uint32_t journal_device;
 		uint32_t orphan_inode_list_head;
+
+		// Unused bytes here
 	} __attribute__((packed));
 
 	struct ext2_data

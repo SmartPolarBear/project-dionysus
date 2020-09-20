@@ -4,6 +4,7 @@
 #include "drivers/debug/kdebug.h"
 
 using namespace file_system;
+using namespace kdebug;
 
 ext2_fs_class file_system::g_ext2fs;
 
@@ -25,15 +26,24 @@ static inline error_code ext2_read_superblock(fs_instance* fs)
 	return ERROR_SUCCESS;
 }
 
-static inline void ext2_print_debug_message(const ext2_data* ext2data )
+static inline void ext2_print_debug_message(const ext2_data* ext2data)
 {
-	kdebug::kdebug_log("Initializing EXT2 file system\n");
-	kdebug::kdebug_log("%d blocks, %d inodes, %d reserved for superuser, block size %lld, fragment size %lld.\n",
+	kdebug_log("Initializing EXT2 file system version %d.%d on volume %s\n",
+		ext2data->block.version_major,
+		ext2data->block.version_minor,
+
+		strnlen(reinterpret_cast<const char*>(ext2data->block.volume_name), 256) == 0 ?
+		"[no name]" :
+		(char*)ext2data->block.volume_name);
+
+	kdebug_log(
+		"%d blocks, %d inodes, %d reserved for superuser, block size %lld, fragment size %lld, %lld bytes in size.\n",
 		ext2data->block.block_count,
 		ext2data->block.inode_count,
 		ext2data->block.reserved_blocks,
 		EXT2_CALC_SIZE(ext2data->block.log2_block_size),
-		EXT2_CALC_SIZE(ext2data->block.log2_frag_size));
+		EXT2_CALC_SIZE(ext2data->block.log2_frag_size),
+		EXT2_CALC_SIZE(ext2data->block.log2_block_size) * ext2data->block.block_count);
 }
 
 file_system::vnode_base* file_system::ext2_fs_class::get_root(fs_instance* fs)
@@ -69,7 +79,6 @@ error_code file_system::ext2_fs_class::initialize(fs_instance* fs, const char* d
 
 	// valid ext2 filesystem, print debug message
 	ext2_print_debug_message(ext2data);
-
 
 	return 0;
 }
