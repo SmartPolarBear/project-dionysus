@@ -29,6 +29,12 @@
 
 #include <cstring>
 
+// std::optional is usable
+#include <optional>
+
+// std::any is not usable
+#include <any>
+
 static inline void run(char* name)
 {
 	uint8_t* bin = nullptr;
@@ -105,6 +111,7 @@ extern "C" [[noreturn]] void kmain()
 
 	run("/ipctest");
 	run("/hello");
+
 
 	// start kernel servers in user space
 	init_servers();

@@ -46,12 +46,17 @@ static inline void ext2_print_debug_message(const ext2_data* ext2data)
 		EXT2_CALC_SIZE(ext2data->block.log2_block_size) * ext2data->block.block_count);
 }
 
-file_system::vnode_base* file_system::ext2_fs_class::get_root(fs_instance* fs)
+file_system::vnode_base* file_system::ext2_fs_class::get_root()
 {
-	return nullptr;
+	if (this->data == nullptr || this->data->root == nullptr)
+	{
+		return nullptr;
+	}
+
+	return data->root;
 }
 
-error_code file_system::ext2_fs_class::initialize(fs_instance* fs, const char* data)
+error_code file_system::ext2_fs_class::initialize(fs_instance* fs, const char* optional_data)
 {
 	ext2_data* ext2data = nullptr;
 	fs->private_data = this->data = ext2data = new ext2_data{};
@@ -62,6 +67,7 @@ error_code file_system::ext2_fs_class::initialize(fs_instance* fs, const char* d
 	}
 
 	error_code ret = ext2_read_superblock(fs);
+
 	if (ret != ERROR_SUCCESS)
 	{
 		delete ext2data;

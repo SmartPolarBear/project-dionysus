@@ -92,6 +92,8 @@ namespace file_system
 			ext2_superblock block;
 			uint8_t block_data;
 		};
+
+		vnode_base *root;
 	};
 
 	class ext2_fs_class
@@ -100,7 +102,7 @@ namespace file_system
 	 private:
 		ext2_data *data;
 	 public:
-		vnode_base* get_root(fs_instance* fs) override;
+		vnode_base* get_root() override;
 		error_code initialize(fs_instance* fs, const char* data) override;
 		void destroy(fs_instance* fs) override;
 		error_code get_vfs_status(fs_instance* fs, vfs_status* ret) override;
