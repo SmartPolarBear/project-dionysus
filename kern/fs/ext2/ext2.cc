@@ -16,13 +16,24 @@ static inline error_code ext2_read_superblock(fs_instance* fs)
 
 	ext2_data* data = reinterpret_cast<ext2_data*>(fs->private_data);
 
-	size_t read_size = fs->dev->read(reinterpret_cast<void*>(&data->block_data), 1024, 1024);
-	if (read_size != 1024)
+	auto ret = fs->dev->read(reinterpret_cast<void*>(&data->block_data), 1024, 1024);
+	if (ret != ERROR_SUCCESS)
 	{
 		return -ERROR_IO;
 	}
 
 	return ERROR_SUCCESS;
+}
+
+static inline void ext2_print_debug_message(const ext2_data* ext2data )
+{
+	kdebug::kdebug_log("Initializing EXT2 file system\n");
+	kdebug::kdebug_log("%d blocks, %d inodes, %d reserved for superuser, block size %lld, fragment size %lld.\n",
+		ext2data->block.block_count,
+		ext2data->block.inode_count,
+		ext2data->block.reserved_blocks,
+		EXT2_CALC_SIZE(ext2data->block.log2_block_size),
+		EXT2_CALC_SIZE(ext2data->block.log2_frag_size));
 }
 
 file_system::vnode_base* file_system::ext2_fs_class::get_root(fs_instance* fs)
@@ -55,6 +66,10 @@ error_code file_system::ext2_fs_class::initialize(fs_instance* fs, const char* d
 		fs->private_data = nullptr;
 		return -ERROR_INVALID;
 	}
+
+	// valid ext2 filesystem, print debug message
+	ext2_print_debug_message(ext2data);
+
 
 	return 0;
 }

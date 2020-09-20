@@ -8,6 +8,11 @@ namespace file_system
 {
 	constexpr uint16_t EXT2_SIGNATURE = 0xEF53;
 
+	static inline size_t EXT2_CALC_SIZE(size_t logged_size)
+	{
+		return 1024u << logged_size;
+	}
+
 	struct ext2_superblock
 	{
 		// Base superblock
