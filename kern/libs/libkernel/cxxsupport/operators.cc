@@ -28,25 +28,5 @@ void *operator new[](size_t len)
     return ::operator new(len);
 }
 
-void *operator new(size_t, void *p) noexcept
-{
-    return p;
-}
+// We use default placement new in the std library
 
-void *operator new[](size_t, void *p) noexcept
-{
-    return p;
-}
-
-#pragma clang diagnostic ignored "-Wunused-parameter"
-#pragma clang diagnostic ignored "-Wnew-returns-null"
-
-void operator delete(void *, void *) noexcept
-{
-    //Do nothing
-}
-
-void operator delete[](void *, void *) noexcept
-{
-    //Do nothing
-}

@@ -1,5 +1,10 @@
 #include "server_syscalls.hpp"
 
+// external functions.
+void heap_free(void* ap);
+void* heap_alloc(size_t size, [[maybe_unused]]uint64_t flags);
+
+
 // definitions
 void* operator new(size_t, void* p) noexcept;
 void* operator new[](size_t, void* p) noexcept;
@@ -27,25 +32,4 @@ void* operator new[](size_t len)
 	return ::operator new(len);
 }
 
-void* operator new(size_t, void* p) noexcept
-{
-	return p;
-}
-
-void* operator new[](size_t, void* p) noexcept
-{
-	return p;
-}
-
-#pragma clang diagnostic ignored "-Wunused-parameter"
-#pragma clang diagnostic ignored "-Wnew-returns-null"
-
-void operator delete(void*, void*) noexcept
-{
-	//Do nothing
-}
-
-void operator delete[](void*, void*) noexcept
-{
-	//Do nothing
-}
+// We use default placement new in the std library

@@ -1,5 +1,7 @@
 #include "server_syscalls.hpp"
 
+#include "system/error.h"
+
 // Memory allocator by Kernighan and Ritchie,
 // The C programming Language, 2nd ed.  Section 8.7.
 
