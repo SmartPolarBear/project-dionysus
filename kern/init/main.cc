@@ -29,11 +29,14 @@
 
 #include <cstring>
 
-// std::optional is usable
+// std::optional is usable unconditionally
 #include <optional>
 
-// std::any is not usable
+// std::any is usable with the pseudo-syscalls
 #include <any>
+
+// std::variant is usable with the pseudo-syscalls
+#include <variant>
 
 static inline void run(char* name)
 {
@@ -111,7 +114,6 @@ extern "C" [[noreturn]] void kmain()
 
 	run("/ipctest");
 	run("/hello");
-
 
 	// start kernel servers in user space
 	init_servers();
