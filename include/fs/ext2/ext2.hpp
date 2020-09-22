@@ -104,7 +104,7 @@ namespace file_system
 	 public:
 		vnode_base* get_root() override;
 		error_code initialize(fs_instance* fs, const char* data) override;
-		void destroy(fs_instance* fs) override;
+		error_code destroy(fs_instance* fs) override;
 		error_code get_vfs_status(fs_instance* fs, vfs_status* ret) override;
 	};
 

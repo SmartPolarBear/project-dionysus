@@ -1,7 +1,7 @@
 #include "syscall_client.hpp"
 
 #include "system/syscall.h"
-#include "system/error.h"
+#include "system/error.hpp"
 
 #include <cstring>
 

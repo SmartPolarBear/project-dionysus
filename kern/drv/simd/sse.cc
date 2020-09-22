@@ -4,7 +4,7 @@
 
 #include "drivers/simd/simd.hpp"
 
-#include "system/error.h"
+#include "system/error.hpp"
 
 #include "libkernel/console/builtin_text_io.hpp"
 

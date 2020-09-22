@@ -2,7 +2,6 @@
 
 #include "system/types.h"
 
-
 #include <variant>
 
 // use negative value to indicate errors
@@ -36,9 +35,15 @@ template<typename T>
 using error_code_with_result = std::variant<error_code, T>;
 
 template<typename T>
-static inline bool get_error_code(error_code_with_result<T> ret)
+static inline bool get_error_code(error_code_with_result<T> ret) noexcept
 {
 	return std::holds_alternative<error_code>(ret)
 		   ? std::get<error_code>(ret)
 		   : ERROR_SUCCESS;
+}
+
+template<typename T>
+static inline T get_result(error_code_with_result<T> res) noexcept
+{
+	return std::get<T>(res);
 }

@@ -1,7 +1,7 @@
 #if !defined(__INCLUDE_SYS_ALLOCATORS_SLAB_ALLOC_H)
 #define __INCLUDE_SYS_ALLOCATORS_SLAB_ALLOC_H
 
-#include "system/error.h"
+#include "system/error.hpp"
 #include "system/types.h"
 
 #include "data/List.h"

@@ -24,7 +24,7 @@
 
 #include "arch/amd64/x86.h"
 
-#include "system/error.h"
+#include "system/error.hpp"
 #include "system/kmem.h"
 #include "system/memlayout.h"
 #include "system/mmu.h"

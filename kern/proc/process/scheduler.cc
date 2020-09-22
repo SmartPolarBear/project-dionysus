@@ -4,7 +4,7 @@
 #include "arch/amd64/atomic.h"
 #include "arch/amd64/cpu.h"
 
-#include "system/error.h"
+#include "system/error.hpp"
 #include "system/memlayout.h"
 #include "system/process.h"
 #include "system/scheduler.h"

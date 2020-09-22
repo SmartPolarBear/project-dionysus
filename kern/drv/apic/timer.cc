@@ -1,6 +1,6 @@
 #include "arch/amd64/regs.h"
 
-#include "system/error.h"
+#include "system/error.hpp"
 #include "system/scheduler.h"
 #include "system/process.h"
 #include "system/types.h"

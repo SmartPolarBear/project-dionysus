@@ -7,7 +7,7 @@
 
 #else
 
-#include "system/error.h"
+#include "system/error.hpp"
 #include "system/types.h"
 
 #include "system/syscall.h"

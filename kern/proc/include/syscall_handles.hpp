@@ -5,7 +5,7 @@
 #pragma once
 
 #include "system/types.h"
-#include "system/error.h"
+#include "system/error.hpp"
 
 #include "system/syscall.h"
 

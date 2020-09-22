@@ -89,9 +89,19 @@ error_code file_system::ext2_fs_class::initialize(fs_instance* fs, const char* o
 	return 0;
 }
 
-void file_system::ext2_fs_class::destroy(fs_instance* fs)
+error_code file_system::ext2_fs_class::destroy(fs_instance* fs)
 {
+	ext2_data* extdata = reinterpret_cast<ext2_data*>(fs->private_data);
 
+	if (extdata == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	delete extdata->root;
+	delete extdata;
+
+	return ERROR_SUCCESS;
 }
 
 error_code file_system::ext2_fs_class::get_vfs_status(fs_instance* fs, vfs_status* ret)

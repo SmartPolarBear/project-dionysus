@@ -6,7 +6,7 @@
 #include "drivers/debug/kdebug.h"
 #include "drivers/lock/spinlock.h"
 
-#include "system/error.h"
+#include "system/error.hpp"
 #include "system/mmu.h"
 #include "system/pmm.h"
 #include "system/segmentation.hpp"

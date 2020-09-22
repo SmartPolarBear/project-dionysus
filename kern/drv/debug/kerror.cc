@@ -5,7 +5,7 @@
 #include "drivers/debug/kdebug.h"
 #include "drivers/debug/kerror.h"
 
-#include "system/error.h"
+#include "system/error.hpp"
 #include "system/memlayout.h"
 #include "system/types.h"
 

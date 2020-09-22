@@ -2,7 +2,7 @@
 
 #include "arch/amd64/x86.h"
 
-#include "system/error.h"
+#include "system/error.hpp"
 #include "system/vmm.h"
 
 #include "drivers/apic/traps.h"

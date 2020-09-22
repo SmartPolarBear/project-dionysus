@@ -20,7 +20,7 @@
  * ----------	---	----------------------------------------------------------
  */
 
-#include "system/error.h"
+#include "system/error.hpp"
 #include "system/kmalloc.h"
 #include "system/memlayout.h"
 #include "system/mmu.h"

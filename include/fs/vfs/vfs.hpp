@@ -157,7 +157,7 @@ namespace file_system
 
 		virtual vnode_base* get_root() = 0;
 		virtual error_code initialize(fs_instance* fs, const char* data) = 0;
-		virtual void destroy(fs_instance* fs) = 0;
+		virtual error_code destroy(fs_instance* fs) = 0;
 		virtual error_code get_vfs_status(fs_instance* fs, OUT vfs_status* ret) = 0;
 
 	};

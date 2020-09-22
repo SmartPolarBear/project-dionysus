@@ -5,7 +5,7 @@
 #pragma once
 
 #include "system/syscall.h"
-#include "system/error.h"
+#include "system/error.hpp"
 
 
 // syscall without out parameters

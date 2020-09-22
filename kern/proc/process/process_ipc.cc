@@ -5,7 +5,7 @@
 #include "arch/amd64/cpu.h"
 #include "arch/amd64/msr.h"
 
-#include "system/error.h"
+#include "system/error.hpp"
 #include "system/kmalloc.h"
 #include "system/memlayout.h"
 #include "system/pmm.h"

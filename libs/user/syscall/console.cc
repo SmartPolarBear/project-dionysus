@@ -5,7 +5,7 @@
 #include "syscall_client.hpp"
 
 #include "system/syscall.h"
-#include "system/error.h"
+#include "system/error.hpp"
 
 extern "C" size_t put_str(const char* str)
 {

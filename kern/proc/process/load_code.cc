@@ -1,6 +1,6 @@
 #include "load_code.hpp"
 
-#include "system/error.h"
+#include "system/error.hpp"
 #include "system/kmalloc.h"
 #include "system/memlayout.h"
 #include "system/pmm.h"

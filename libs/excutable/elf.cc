@@ -1,5 +1,5 @@
 #include "elf/elf.hpp"
-#include "system/error.h"
+#include "system/error.hpp"
 
 #include <cstring>
 

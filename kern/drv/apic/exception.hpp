@@ -1,7 +1,7 @@
 #pragma once
 
 #include "drivers/apic/traps.h"
-#include "system/error.h"
+#include "system/error.hpp"
 
 error_code exception_divided_by_0([[maybe_unused]] trap::trap_frame info);
 
