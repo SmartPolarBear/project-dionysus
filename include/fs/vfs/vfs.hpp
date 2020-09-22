@@ -1,4 +1,7 @@
 #pragma once
+
+#include "system/error.hpp"
+
 #include "data/List.h"
 #include "fs/device/dev.hpp"
 
@@ -155,11 +158,11 @@ namespace file_system
 
 		~fs_class_base() = default;
 
-		virtual vnode_base* get_root() = 0;
-		virtual error_code initialize(fs_instance* fs, const char* data) = 0;
-		virtual error_code destroy(fs_instance* fs) = 0;
-		virtual error_code get_vfs_status(fs_instance* fs, OUT vfs_status* ret) = 0;
+		virtual error_code_with_result<vnode_base*> get_root() = 0;
+		virtual error_code_with_result<vfs_status> get_vfs_status(fs_instance* fs) = 0;
 
+		virtual error_code initialize(fs_instance* fs, OPTIONAL const char* data) = 0;
+		virtual error_code destroy(fs_instance* fs) = 0;
 	};
 
 	struct fs_instance

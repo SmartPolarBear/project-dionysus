@@ -1,6 +1,7 @@
 #pragma once
 
 #include "system/types.h"
+#include "system/error.hpp"
 
 #include "fs/vfs/vfs.hpp"
 
@@ -93,19 +94,21 @@ namespace file_system
 			uint8_t block_data;
 		};
 
-		vnode_base *root;
+		vnode_base* root;
 	};
 
 	class ext2_fs_class
 		: public fs_class_base
 	{
 	 private:
-		ext2_data *data;
+		ext2_data* data;
 	 public:
-		vnode_base* get_root() override;
+		error_code_with_result<vnode_base*> get_root() override;
+		error_code_with_result<vfs_status> get_vfs_status(fs_instance* fs) override;
+
 		error_code initialize(fs_instance* fs, const char* data) override;
 		error_code destroy(fs_instance* fs) override;
-		error_code get_vfs_status(fs_instance* fs, vfs_status* ret) override;
+
 	};
 
 	extern ext2_fs_class g_ext2fs;

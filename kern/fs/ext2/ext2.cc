@@ -46,17 +46,17 @@ static inline void ext2_print_debug_message(const ext2_data* ext2data)
 		EXT2_CALC_SIZE(ext2data->block.log2_block_size) * ext2data->block.block_count);
 }
 
-file_system::vnode_base* file_system::ext2_fs_class::get_root()
+error_code_with_result<file_system::vnode_base*> file_system::ext2_fs_class::get_root()
 {
 	if (this->data == nullptr || this->data->root == nullptr)
 	{
-		return nullptr;
+		return -ERROR_INVALID;
 	}
 
 	return data->root;
 }
 
-error_code file_system::ext2_fs_class::initialize(fs_instance* fs, const char* optional_data)
+error_code file_system::ext2_fs_class::initialize(fs_instance* fs, [[maybe_unused]] const char* optional_data)
 {
 	ext2_data* ext2data = nullptr;
 	fs->private_data = this->data = ext2data = new ext2_data{};
@@ -86,7 +86,7 @@ error_code file_system::ext2_fs_class::initialize(fs_instance* fs, const char* o
 	// valid ext2 filesystem, print debug message
 	ext2_print_debug_message(ext2data);
 
-	return 0;
+	return ERROR_SUCCESS;
 }
 
 error_code file_system::ext2_fs_class::destroy(fs_instance* fs)
@@ -104,8 +104,9 @@ error_code file_system::ext2_fs_class::destroy(fs_instance* fs)
 	return ERROR_SUCCESS;
 }
 
-error_code file_system::ext2_fs_class::get_vfs_status(fs_instance* fs, vfs_status* ret)
+error_code_with_result<vfs_status> file_system::ext2_fs_class::get_vfs_status([[maybe_unused]]fs_instance* fs)
 {
+	// TODO: return vfs_status
 	return 0;
 }
 
