@@ -28,9 +28,6 @@ enum error_code_values : error_code
 };
 
 
-// this should be in the global namespace
-using error_code = int64_t;
-
 template<typename T>
 using error_code_with_result = std::variant<error_code, T>;
 
