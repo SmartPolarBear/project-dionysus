@@ -1,3 +1,5 @@
+#include "include/block.hpp"
+
 #include "fs/ext2/ext2.hpp"
 #include "fs/vfs/vfs.hpp"
 
@@ -54,7 +56,7 @@ error_code ext2_data::initialize(fs_instance* fs)
 	// starting from block 2, we read all bgds
 	for (size_t i = 0; i < bgdt_size_blocks; i++)
 	{
-		if ((ret = ext2_read_block(ext2, ((void*)data->bgdt) + i * data->block_size, i + 2)) != 0)
+		if ((ret = ext2_block_read(fs, ((uint8_t*)this->bgdt) + i * this->block_size, i + 2)) != ERROR_SUCCESS)
 		{
 			kfree(this->bgdt);
 			return ret;
@@ -114,6 +116,7 @@ error_code file_system::ext2_fs_class::initialize(fs_instance* fs, [[maybe_unuse
 	}
 
 	error_code ret = ext2data->initialize(fs);
+
 	if (ret != ERROR_SUCCESS)
 	{
 		delete ext2data;

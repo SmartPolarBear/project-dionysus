@@ -170,9 +170,14 @@ namespace file_system
 			return superblock.inode_size;
 		}
 
-		vnode_base* get_root() const
+		[[nodiscard]] vnode_base* get_root() const
 		{
 			return root;
+		}
+
+		[[nodiscard]] size_t get_block_size() const
+		{
+			return block_size;
 		}
 
 	 public:
