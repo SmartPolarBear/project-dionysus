@@ -228,7 +228,7 @@ spin:
   jmp spin
 
 entry64mp:
-// obtain kstack from data block before entryother
+// obtain kstack from data superblock before entryother
     mov $0x7000, %rax
     mov -16(%rax), %rsp
     jmp ap_enter

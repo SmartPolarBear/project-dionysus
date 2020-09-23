@@ -42,7 +42,7 @@ namespace pmm
         char name[PMM_MANAGER_NAME_MAXLEN];
 
         void (*init)(void);                             // initialize internal description&management data structure
-        // (free block list, number of free block) of XXX_pmm_manager
+        // (free superblock list, number of free superblock) of XXX_pmm_manager
         void (*init_memmap)(page_info *base, size_t n); // setup description&management data structcure according to
         // the initial free physical memory space
         page_info *(*alloc_pages)(size_t n);            // allocate >=n pages, depend on the allocation algorithm

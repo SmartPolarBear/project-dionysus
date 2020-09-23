@@ -30,7 +30,7 @@
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 
-#include "system/kmalloc.h"
+#include "system/kmalloc.hpp"
 #include "system/memlayout.h"
 #include "system/multiboot.h"
 #include "system/pmm.h"

@@ -7,3 +7,4 @@ error_code fs_class_base::register_this()
 {
 	return fs_register(this);
 }
+

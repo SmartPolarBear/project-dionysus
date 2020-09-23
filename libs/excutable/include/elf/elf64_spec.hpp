@@ -147,7 +147,7 @@ namespace executable
 		SHN_HIOS = 0xFF3F,
 		SHN_ABS = 0xFFF1,// Indicates that the corresponding reference is an absolute value
 		SHN_COMMON = 0xFFF2, // Indicates a symbol that has been
-		// declared as a common block
+		// declared as a common superblock
 		// (Fortran COMMON or C tentative declaration)
 	};
 

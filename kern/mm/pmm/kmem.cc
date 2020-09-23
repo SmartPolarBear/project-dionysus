@@ -20,7 +20,7 @@
  * ----------	---	----------------------------------------------------------
  */
 
-#include "system/kmem.h"
+#include "system/kmem.hpp"
 #include "system/pmm.h"
 
 #include "drivers/console/console.h"

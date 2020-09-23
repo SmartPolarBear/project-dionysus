@@ -1,64 +1,111 @@
 #include "fs/ext2/ext2.hpp"
 #include "fs/vfs/vfs.hpp"
 
+#include "system/kmalloc.hpp"
+
 #include "drivers/debug/kdebug.h"
 
 using namespace file_system;
 using namespace kdebug;
+using namespace memory;
+using namespace memory::kmem;
 
 ext2_fs_class file_system::g_ext2fs;
 
-static inline error_code ext2_read_superblock(fs_instance* fs)
+ext2_data::ext2_data()
 {
-	if (fs->private_data == nullptr)
-	{
-		return -ERROR_INVALID;
-	}
+	memset(reinterpret_cast<void*>(this->superblock_data), 0, sizeof(this->superblock_data));
+}
 
-	ext2_data* data = reinterpret_cast<ext2_data*>(fs->private_data);
-
-	auto ret = fs->dev->read(reinterpret_cast<void*>(&data->block_data), 1024, 1024);
+error_code ext2_data::initialize(fs_instance* fs)
+{
+	auto ret = fs->dev->read(reinterpret_cast<void*>(&this->superblock_data), 1024, 1024);
 	if (ret != ERROR_SUCCESS)
 	{
 		return -ERROR_IO;
 	}
 
-	return ERROR_SUCCESS;
-}
-
-static inline void ext2_print_debug_message(const ext2_data* ext2data)
-{
-	kdebug_log("Initializing EXT2 file system version %d.%d on volume %s\n",
-		ext2data->block.version_major,
-		ext2data->block.version_minor,
-
-		strnlen(reinterpret_cast<const char*>(ext2data->block.volume_name), 256) == 0 ?
-		"[no name]" :
-		(char*)ext2data->block.volume_name);
-
-	kdebug_log(
-		"%d blocks, %d inodes, %d reserved for superuser, block size %lld, fragment size %lld, %lld bytes in size.\n",
-		ext2data->block.block_count,
-		ext2data->block.inode_count,
-		ext2data->block.reserved_blocks,
-		EXT2_CALC_SIZE(ext2data->block.log2_block_size),
-		EXT2_CALC_SIZE(ext2data->block.log2_frag_size),
-		EXT2_CALC_SIZE(ext2data->block.log2_block_size) * ext2data->block.block_count);
-}
-
-error_code_with_result<file_system::vnode_base*> file_system::ext2_fs_class::get_root()
-{
-	if (this->data == nullptr || this->data->root == nullptr)
+	// check the signature
+	if (this->superblock.ext2_signature != EXT2_SIGNATURE)
 	{
 		return -ERROR_INVALID;
 	}
 
-	return data->root;
+	block_size = EXT2_CALC_SIZE(this->superblock.log2_block_size);
+	fragment_size = EXT2_CALC_SIZE(this->superblock.log2_frag_size);
+
+	this->inode_cache = kmem_cache_create("inode_cache", this->get_inode_size());
+
+	this->inodes_per_block = block_size / get_inode_size();
+	this->blkgrp_inode_blocks = superblock.block_group_inodes / inodes_per_block;
+	this->bgdt_entry_count =
+		(superblock.block_count + superblock.block_group_blocks - 1) / superblock.block_group_blocks;
+
+	size_t bgdt_size = bgdt_entry_count * sizeof(ext2_blkgrp_desc);
+
+	this->bgdt_size_blocks = (bgdt_size + block_size - 1) / block_size;
+
+	this->bgdt = reinterpret_cast<ext2_blkgrp_desc*>(kmalloc(bgdt_size_blocks * block_size, 0));
+	if (bgdt == nullptr)
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
+
+	// starting from block 2, we read all bgds
+	for (size_t i = 0; i < bgdt_size_blocks; i++)
+	{
+		if ((ret = ext2_read_block(ext2, ((void*)data->bgdt) + i * data->block_size, i + 2)) != 0)
+		{
+			kfree(this->bgdt);
+			return ret;
+		}
+	}
+
+	this->print_debug_message();
+	return ERROR_SUCCESS;
+}
+
+void ext2_data::print_debug_message()
+{
+	kdebug_log("Initializing EXT2 file system version %d.%d on volume %s\n",
+		this->superblock.version_major,
+		this->superblock.version_minor,
+
+		strnlen(reinterpret_cast<const char*>(this->superblock.volume_name), 256) == 0 ?
+		"[no name]" :
+		(char*)this->superblock.volume_name);
+
+	kdebug_log(
+		"%d blocks, %d inodes, %d reserved for superuser, superblock size %lld, fragment size %lld, %lld bytes in size.\n",
+		this->superblock.block_count,
+		this->superblock.inode_count,
+		this->superblock.reserved_blocks,
+		block_size,
+		fragment_size,
+		block_size * this->superblock.block_count);
+
+	kdebug_log("%lld block groups, %lld for BGDT.\n", bgdt_entry_count, bgdt_size_blocks);
+}
+
+ext2_data::~ext2_data()
+{
+
+}
+
+error_code_with_result<file_system::vnode_base*> file_system::ext2_fs_class::get_root()
+{
+	if (this->data == nullptr || this->data->get_root() == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	return data->get_root();
 }
 
 error_code file_system::ext2_fs_class::initialize(fs_instance* fs, [[maybe_unused]] const char* optional_data)
 {
 	ext2_data* ext2data = nullptr;
+
 	fs->private_data = this->data = ext2data = new ext2_data{};
 
 	if (fs->private_data == nullptr)
@@ -66,30 +113,19 @@ error_code file_system::ext2_fs_class::initialize(fs_instance* fs, [[maybe_unuse
 		return -ERROR_MEMORY_ALLOC;
 	}
 
-	error_code ret = ext2_read_superblock(fs);
-
+	error_code ret = ext2data->initialize(fs);
 	if (ret != ERROR_SUCCESS)
 	{
 		delete ext2data;
 		fs->private_data = nullptr;
+		this->data = nullptr;
 		return ret;
 	}
-
-	// check the signature
-	if (ext2data->block.ext2_signature != EXT2_SIGNATURE)
-	{
-		delete ext2data;
-		fs->private_data = nullptr;
-		return -ERROR_INVALID;
-	}
-
-	// valid ext2 filesystem, print debug message
-	ext2_print_debug_message(ext2data);
 
 	return ERROR_SUCCESS;
 }
 
-error_code file_system::ext2_fs_class::destroy(fs_instance* fs)
+error_code file_system::ext2_fs_class::dispose(fs_instance* fs)
 {
 	ext2_data* extdata = reinterpret_cast<ext2_data*>(fs->private_data);
 
@@ -98,7 +134,6 @@ error_code file_system::ext2_fs_class::destroy(fs_instance* fs)
 		return -ERROR_INVALID;
 	}
 
-	delete extdata->root;
 	delete extdata;
 
 	return ERROR_SUCCESS;
@@ -109,4 +144,3 @@ error_code_with_result<vfs_status> file_system::ext2_fs_class::get_vfs_status([[
 	// TODO: return vfs_status
 	return 0;
 }
-

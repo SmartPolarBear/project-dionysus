@@ -8,13 +8,13 @@
 namespace file_system
 {
 
-	enum vnode_flags
+	enum vnode_flags : uint64_t
 	{
 		// Means the node has no physical storage and resides only in memory
-		VNF_MEMORY = (1 << 0),
+		VNF_MEMORY = (1u << 0u),
 
 		// Means the link has different meanings depending on resolving process ID - use target_func instead
-		VNF_PER_PROCESS = (1 << 1)
+		VNF_PER_PROCESS = (1u << 1u)
 	};
 
 	enum vnode_type
@@ -140,6 +140,8 @@ namespace file_system
 		size_t opt{};
 		fs_class_id id{};
 
+		bool is_initialized = false;
+
 	 public:
 
 		virtual error_code register_this();
@@ -154,6 +156,11 @@ namespace file_system
 			return id;
 		}
 
+		[[nodiscard]] virtual bool is_initialized1() const
+		{
+			return is_initialized;
+		}
+
 	 public:
 
 		~fs_class_base() = default;
@@ -162,7 +169,7 @@ namespace file_system
 		virtual error_code_with_result<vfs_status> get_vfs_status(fs_instance* fs) = 0;
 
 		virtual error_code initialize(fs_instance* fs, OPTIONAL const char* data) = 0;
-		virtual error_code destroy(fs_instance* fs) = 0;
+		virtual error_code dispose(fs_instance* fs) = 0;
 	};
 
 	struct fs_instance

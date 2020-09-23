@@ -2,12 +2,16 @@
 
 #include "system/types.h"
 #include "system/error.hpp"
+#include "system/kmem.hpp"
 
 #include "fs/vfs/vfs.hpp"
+
+#include <optional>
 
 namespace file_system
 {
 	constexpr uint16_t EXT2_SIGNATURE = 0xEF53;
+	constexpr size_t EXT2_DIRECT_BLOCK_COUNT = 12;
 
 	static inline size_t EXT2_CALC_SIZE(size_t logged_size)
 	{
@@ -77,7 +81,7 @@ namespace file_system
 		uint32_t compression;
 		uint8_t prealloc_file_blocks;
 		uint8_t prealloc_dir_blocks;
-		uint16_t __res0;
+		uint16_t reserved0;
 		uint8_t journal_id[16];
 		uint32_t journal_inode;
 		uint32_t journal_device;
@@ -86,15 +90,97 @@ namespace file_system
 		// Unused bytes here
 	} __attribute__((packed));
 
-	struct ext2_data
+	struct ext2_blkgrp_desc
 	{
+		uint32_t block_bitmap_no;
+		uint32_t inode_bitmap_no;
+		uint32_t inode_table_no;
+		uint16_t free_blocks;
+		uint16_t free_inodes;
+		uint16_t directory_count;
+		char padding0[14];
+	} __attribute__((packed));
+
+	struct ext2_inode
+	{
+		uint16_t mode;
+		uint16_t uid;
+		uint32_t size_lower;
+		uint32_t atime;
+		uint32_t ctime;
+		uint32_t mtime;
+		uint32_t dtime;
+		uint16_t gid;
+		uint16_t hard_links;
+		uint32_t sector_count;
+		uint32_t flags;
+		uint32_t os_val1;
+		uint32_t direct_blocks[EXT2_DIRECT_BLOCK_COUNT];
+		uint32_t indirect_block_l1;
+		uint32_t indirect_block_l2;
+		uint32_t indirect_block_l3;
+		uint32_t generation;
+		uint32_t facl;
 		union
 		{
-			ext2_superblock block;
-			uint8_t block_data;
+			uint32_t size_upper;
+			uint32_t dir_acl;
 		};
+		uint32_t frag_block_no;
+		uint32_t os_val2;
+	} __attribute__((packed));
+
+	class ext2_data
+	{
+	 private:
+		using optional_size_t = std::optional<size_t>;
+	 private:
+		static constexpr size_t EXT2_VERSION0_INODE_SIZE = 128;
+	 private:
+		union
+		{
+			ext2_superblock superblock;
+			uint8_t superblock_data;
+		};
+		void print_debug_message();
+
+		size_t block_size;
+		size_t fragment_size;
+		size_t inodes_per_block;
+		size_t blkgrp_inode_blocks;
+
+		size_t bgdt_entry_count;
+		size_t bgdt_size_blocks;
+
+		ext2_blkgrp_desc* bgdt;
 
 		vnode_base* root;
+
+		ext2_inode* root_inode;
+		memory::kmem::kmem_cache* inode_cache;
+
+	 public:
+		[[nodiscard]]  size_t get_inode_size() const
+		{
+			if (superblock.version_major == 0)
+			{
+				return EXT2_VERSION0_INODE_SIZE;
+			}
+
+			return superblock.inode_size;
+		}
+
+		vnode_base* get_root() const
+		{
+			return root;
+		}
+
+	 public:
+		ext2_data();
+		~ext2_data();
+
+		error_code initialize(fs_instance* fs);
+
 	};
 
 	class ext2_fs_class
@@ -107,7 +193,7 @@ namespace file_system
 		error_code_with_result<vfs_status> get_vfs_status(fs_instance* fs) override;
 
 		error_code initialize(fs_instance* fs, const char* data) override;
-		error_code destroy(fs_instance* fs) override;
+		error_code dispose(fs_instance* fs) override;
 
 	};
 

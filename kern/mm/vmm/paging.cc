@@ -23,7 +23,7 @@
 #include "vmm.h"
 
 #include "system/error.hpp"
-#include "system/kmalloc.h"
+#include "system/kmalloc.hpp"
 #include "system/memlayout.h"
 #include "system/mmu.h"
 #include "system/pmm.h"

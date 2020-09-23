@@ -20,8 +20,8 @@
  * ----------	---	----------------------------------------------------------
  */
 
-#include "system/kmalloc.h"
-#include "system/kmem.h"
+#include "system/kmalloc.hpp"
+#include "system/kmem.hpp"
 #include "system/pmm.h"
 
 // slab

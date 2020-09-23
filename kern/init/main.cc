@@ -13,7 +13,7 @@
 #include "drivers/simd/simd.hpp"
 #include "drivers/pci/pci.hpp"
 
-#include "system/kmalloc.h"
+#include "system/kmalloc.hpp"
 #include "system/memlayout.h"
 #include "system/multiboot.h"
 #include "system/param.h"

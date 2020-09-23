@@ -1,4 +1,4 @@
-#include "system/kmalloc.h"
+#include "system/kmalloc.hpp"
 #include "system/types.h"
 
 // definitions

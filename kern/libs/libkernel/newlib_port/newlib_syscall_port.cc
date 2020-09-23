@@ -1,5 +1,5 @@
 #include "system/types.h"
-#include "system/kmalloc.h"
+#include "system/kmalloc.hpp"
 
 #include "drivers/debug/kdebug.h"
 

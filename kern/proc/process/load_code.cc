@@ -1,7 +1,7 @@
 #include "load_code.hpp"
 
 #include "system/error.hpp"
-#include "system/kmalloc.h"
+#include "system/kmalloc.hpp"
 #include "system/memlayout.h"
 #include "system/pmm.h"
 #include "system/process.h"

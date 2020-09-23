@@ -2,7 +2,7 @@
 
 #include "data/List.h"
 #include "drivers/lock/spinlock.h"
-#include "system/kmalloc.h"
+#include "system/kmalloc.hpp"
 
 namespace libkernel
 {

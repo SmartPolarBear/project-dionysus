@@ -24,7 +24,7 @@
 
 #include "system/types.h"
 
-#include "system/kmem.h"
+#include "system/kmem.hpp"
 
 #include "system/memlayout.h"
 #include "system/mmu.h"

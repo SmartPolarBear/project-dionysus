@@ -1,5 +1,4 @@
-#if !defined(__INCLUDE_SYS_ALLOCATORS_SLAB_ALLOC_H)
-#define __INCLUDE_SYS_ALLOCATORS_SLAB_ALLOC_H
+#pragma once
 
 #include "system/error.hpp"
 #include "system/types.h"
@@ -60,4 +59,3 @@ size_t kmem_cache_reap();
 
 } // namespace memory
 
-#endif // __INCLUDE_SYS_ALLOCATORS_SLAB_ALLOC_H

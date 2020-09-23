@@ -313,7 +313,7 @@ namespace ahci
 	{
 		uint32_t dba;
 
-		/*This is the upper 32-bits of the data block physical
+		/*This is the upper 32-bits of the data superblock physical
 		address. It is only valid if the HBA indicated that it can support 64-bit addressing through the
 		S64A bit in the capabilities register, and is ignored otherwise.*/
 		uint32_t dbau;
