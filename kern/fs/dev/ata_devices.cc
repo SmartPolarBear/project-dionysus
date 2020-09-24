@@ -53,8 +53,8 @@ error_code file_system::ATABlockDevice::enumerate_partitions(file_system::vnode_
 	uint8_t* head_data = new uint8_t[1024];
 	memset(head_data, 0, HEAD_DATA_SIZE);
 
-	error_code ret = ERROR_SUCCESS;
-	if ((ret = this->read(head_data, 0, HEAD_DATA_SIZE)) != ERROR_SUCCESS)
+	auto ret = this->read(head_data, 0, HEAD_DATA_SIZE);
+	if (get_error_code(ret) != ERROR_SUCCESS)
 	{
 		delete[] head_data;
 		return ERROR_SUCCESS;
@@ -104,10 +104,10 @@ error_code file_system::ATABlockDevice::enumerate_partitions(file_system::vnode_
 					partition_count,
 					entry->sys_id);
 
-			if (ret != ERROR_SUCCESS)
+			if (get_error_code(ret) != ERROR_SUCCESS)
 			{
 				delete[] head_data;
-				return ret;
+				return get_error_code(ret);
 			}
 		}
 	}
@@ -121,7 +121,7 @@ error_code file_system::ATABlockDevice::ioctl([[maybe_unused]]size_t req, [[mayb
 	return -ERROR_UNSUPPORTED;
 }
 
-size_t file_system::ATABlockDevice::write(const void* buf, uintptr_t offset, size_t sz)
+error_code_with_result<size_t> file_system::ATABlockDevice::write(const void* buf, uintptr_t offset, size_t sz)
 {
 	if (offset % this->block_size)
 	{
@@ -144,10 +144,15 @@ size_t file_system::ATABlockDevice::write(const void* buf, uintptr_t offset, siz
 
 	auto ret = ahci_port_send_command(port, ATA_CMD_WRITE_DMA_EX, false, lba, const_cast<void*>(buf), sz);
 
-	return ret;
+	if (ret != ERROR_SUCCESS)
+	{
+		return ret;
+	}
+
+	return sz;
 }
 
-size_t file_system::ATABlockDevice::read(void* buf, uintptr_t offset, size_t sz)
+error_code_with_result<size_t> file_system::ATABlockDevice::read(void* buf, uintptr_t offset, size_t sz)
 {
 	if (offset % this->block_size)
 	{
@@ -170,7 +175,12 @@ size_t file_system::ATABlockDevice::read(void* buf, uintptr_t offset, size_t sz)
 
 	auto ret = ahci_port_send_command(port, ATA_CMD_READ_DMA_EX, false, lba, buf, sz);
 
-	return ret;
+	if (ret != ERROR_SUCCESS)
+	{
+		return ret;
+	}
+
+	return sz;
 }
 
 file_system::ATABlockDevice::~ATABlockDevice() = default;
@@ -192,7 +202,7 @@ error_code file_system::ATABlockDevice::mmap([[maybe_unused]]uintptr_t base,
 	return -ERROR_UNSUPPORTED;
 }
 
-size_t file_system::ATAPartitionDevice::read(void* buf, uintptr_t offset, size_t count)
+error_code_with_result<size_t> file_system::ATAPartitionDevice::read(void* buf, uintptr_t offset, size_t size)
 {
 	partition_data* part = (partition_data*)this->dev_data;
 	size_t part_size_bytes = part->size * 512;
@@ -203,14 +213,14 @@ size_t file_system::ATAPartitionDevice::read(void* buf, uintptr_t offset, size_t
 		return -1;
 	}
 
-	size_t len = std::min(part_size_bytes - offset, count);
+	size_t len = std::min(part_size_bytes - offset, size);
 
 	auto ret = part->parent_dev->read(buf, offset + part_off_bytes, len);
 
 	return ret;
 }
 
-size_t file_system::ATAPartitionDevice::write(const void* buf, uintptr_t offset, size_t count)
+error_code_with_result<size_t> file_system::ATAPartitionDevice::write(const void* buf, uintptr_t offset, size_t size)
 {
 	partition_data* part = (partition_data*)this->dev_data;
 	size_t part_size_bytes = part->size * 512;
@@ -221,7 +231,7 @@ size_t file_system::ATAPartitionDevice::write(const void* buf, uintptr_t offset,
 		return -1;
 	}
 
-	size_t len = std::min(part_size_bytes - offset, count);
+	size_t len = std::min(part_size_bytes - offset, size);
 
 	auto ret = part->parent_dev->write(buf, offset + part_off_bytes, len);
 

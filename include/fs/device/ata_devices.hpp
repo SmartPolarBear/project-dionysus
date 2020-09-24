@@ -26,8 +26,8 @@ namespace file_system
 
 		~ATABlockDevice() override;
 
-		size_t read(void* buf, uintptr_t offset, size_t count) override;
-		size_t write(const void* buf, uintptr_t offset, size_t count) override;
+		error_code_with_result<size_t>  read(void* buf, uintptr_t offset, size_t count) override;
+		error_code_with_result<size_t>  write(const void* buf, uintptr_t offset, size_t count) override;
 		error_code ioctl(size_t req, void* args) override;
 		error_code mmap(uintptr_t base, size_t page_count, int prot, size_t flags) override;
 		error_code enumerate_partitions(vnode_base& parent) override;
@@ -40,8 +40,8 @@ namespace file_system
 		explicit ATAPartitionDevice(ATABlockDevice* parent, logical_block_address lba, size_t sz);
 
 		~ATAPartitionDevice() override = default;
-		size_t read(void* buf, uintptr_t offset, size_t count) override;
-		size_t write(const void* buf, uintptr_t offset, size_t count) override;
+		error_code_with_result<size_t>  read(void* buf, uintptr_t offset, size_t size) override;
+		error_code_with_result<size_t>  write(const void* buf, uintptr_t offset, size_t size) override;
 		error_code ioctl(size_t req, void* args) override;
 		error_code mmap(uintptr_t base, size_t page_count, int prot, size_t flags) override;
 		error_code enumerate_partitions(vnode_base& parent) override;
