@@ -56,6 +56,7 @@ error_code ext2_data::initialize(fs_instance* fs)
 	// starting from block 2, we read all bgds
 	for (size_t i = 0; i < bgdt_size_blocks; i++)
 	{
+		//FIXME
 		if ((ret = ext2_block_read(fs, ((uint8_t*)this->bgdt) + i * this->block_size, i + 2)) != ERROR_SUCCESS)
 		{
 			kfree(this->bgdt);

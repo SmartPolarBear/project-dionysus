@@ -140,7 +140,7 @@ namespace file_system
 		union
 		{
 			ext2_superblock superblock;
-			uint8_t superblock_data;
+			uint8_t superblock_data[1024];
 		};
 		void print_debug_message();
 
