@@ -13,9 +13,19 @@ namespace file_system
 	constexpr uint16_t EXT2_SIGNATURE = 0xEF53;
 	constexpr size_t EXT2_DIRECT_BLOCK_COUNT = 12;
 
-	static inline size_t EXT2_CALC_SIZE(size_t logged_size)
+	using ext2_ino_type = uint32_t;
+
+	constexpr ext2_ino_type EXT2_FIRST_INODE_NUMBER = 1;
+	constexpr ext2_ino_type EXT2_ROOT_DIR_INODE_NUMBER = 2;
+
+	static inline constexpr size_t EXT2_CALC_SIZE(size_t logged_size)
 	{
 		return 1024u << logged_size;
+	}
+
+	static inline  size_t EXT2_INODE_GET_BLOCK_GROUP(ext2_ino_type ino)
+	{
+		return 0;
 	}
 
 	enum ext2_superblock_states
@@ -139,27 +149,32 @@ namespace file_system
 	 private:
 		union
 		{
-			ext2_superblock superblock;
+			ext2_superblock superblock{};
 			uint8_t superblock_data[1024];
 		};
 		void print_debug_message();
 
-		size_t block_size;
-		size_t fragment_size;
-		size_t inodes_per_block;
-		size_t blkgrp_inode_blocks;
+		size_t block_size{};
+		size_t fragment_size{};
+		size_t inodes_per_block{};
+		size_t blkgrp_inode_blocks{};
 
-		size_t bgdt_entry_count;
-		size_t bgdt_size_blocks;
+		size_t bgdt_entry_count{};
+		size_t bgdt_size_blocks{};
 
-		ext2_blkgrp_desc* bgdt;
+		ext2_blkgrp_desc* bgdt{};
 
-		vnode_base* root;
+		vnode_base* root{};
 
-		ext2_inode* root_inode;
-		memory::kmem::kmem_cache* inode_cache;
+		ext2_inode* root_inode{};
+		memory::kmem::kmem_cache* inode_cache{};
 
 	 public:
+		[[nodiscard]] const ext2_superblock&& get_superblock() const
+		{
+			return std::move(superblock);
+		}
+
 		[[nodiscard]]  size_t get_inode_size() const
 		{
 			if (superblock.version_major == 0)

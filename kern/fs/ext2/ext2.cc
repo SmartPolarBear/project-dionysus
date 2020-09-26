@@ -2,6 +2,7 @@
 
 #include "fs/ext2/ext2.hpp"
 #include "fs/vfs/vfs.hpp"
+#include "fs/ext2/vnode.hpp"
 
 #include "system/kmalloc.hpp"
 
@@ -31,6 +32,12 @@ error_code ext2_data::initialize(fs_instance* fs)
 	if (this->superblock.ext2_signature != EXT2_SIGNATURE)
 	{
 		return -ERROR_INVALID;
+	}
+
+	// we do not support too old version of ext2 file system
+	if(this->superblock.version_major<1)
+	{
+		return -ERROR_OBSOLETE;
 	}
 
 	block_size = EXT2_CALC_SIZE(this->superblock.log2_block_size);
@@ -64,6 +71,18 @@ error_code ext2_data::initialize(fs_instance* fs)
 		}
 	}
 
+	// allocate root inode
+	root_inode = reinterpret_cast<ext2_inode*>(kmem_cache_alloc(this->inode_cache));
+
+
+
+	// allocate root
+	root = new ext2_vnode{ VNT_DIR, nullptr };
+	if (root == nullptr)
+	{
+		return -ERROR_IO;
+	}
+
 	this->print_debug_message();
 	return ERROR_SUCCESS;
 }
@@ -92,7 +111,7 @@ void ext2_data::print_debug_message()
 
 ext2_data::~ext2_data()
 {
-
+	;
 }
 
 error_code_with_result<file_system::vnode_base*> file_system::ext2_fs_class::get_root()

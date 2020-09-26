@@ -9,6 +9,11 @@ namespace file_system
 		: public vnode_base
 	{
 	 public:
+		ext2_vnode(vnode_type t, const char* n)
+			: vnode_base(t, n)
+		{
+		}
+
 		~ext2_vnode() override = default;
 		error_code find(const char* name, vnode_base& ret) override;
 		size_t read_dir(const file_object& fd, directory_entry& entry) override;

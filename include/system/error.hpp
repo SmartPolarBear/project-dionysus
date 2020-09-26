@@ -25,6 +25,7 @@ enum error_code_values : error_code
 	ERROR_DEV_BUSY,                    // device is busy
 	ERROR_DEV_TIMEOUT,                // device operation time out
 	ERROR_IO,                        // IO error
+	ERROR_OBSOLETE                // Out of date
 };
 
 
