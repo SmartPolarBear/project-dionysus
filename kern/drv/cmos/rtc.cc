@@ -129,6 +129,12 @@ cmos::cmos_date_time_struct&& cmos::cmos_read_rtc()
 PANIC void cmos::cmos_rtc_init()
 {
 	auto fadt = acpi::get_fadt();
+
+	if (fadt == nullptr)
+	{
+		KDEBUG_GENERALPANIC("FADT isn't exist.");
+	}
+
 	if (fadt->century != 0)
 	{
 		century_reg = fadt->century;

@@ -64,7 +64,7 @@ error_code init_rsdt(const acpi::acpi_rsdp* rsdp)
 		return ret;
 	}
 
-	ret = acpi_madt_init(madt);
+	ret = acpi_fadt_init(fadt);
 
 	if (ret != ERROR_SUCCESS)
 	{
