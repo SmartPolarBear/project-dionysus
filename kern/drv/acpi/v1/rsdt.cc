@@ -29,6 +29,8 @@ error_code init_rsdt(const acpi::acpi_rsdp* rsdp)
 
 	acpi_madt* madt = nullptr;
 	acpi_mcfg* mcfg = nullptr;
+	acpi_fadt* fadt = nullptr;
+
 	for (size_t i = 0;
 		 i < (rsdt->header.length - sizeof(acpi_desc_header)) / sizeof(uint32_t);
 		 i++)
@@ -42,9 +44,14 @@ error_code init_rsdt(const acpi::acpi_rsdp* rsdp)
 		{
 			mcfg = reinterpret_cast<decltype(mcfg)>(header);
 		}
+		else if (strncmp((char*)header->signature, acpi::SIGNATURE_FADT, strlen(acpi::SIGNATURE_FADT)) == 0)
+		{
+			fadt = reinterpret_cast<decltype(fadt)>(header);
+		}
 	}
 
 	auto ret = acpi_madt_init(madt);
+
 	if (ret != ERROR_SUCCESS)
 	{
 		return ret;
@@ -52,5 +59,17 @@ error_code init_rsdt(const acpi::acpi_rsdp* rsdp)
 
 	ret = acpi_mcfg_init(mcfg);
 
-	return ret;
+	if (ret != ERROR_SUCCESS)
+	{
+		return ret;
+	}
+
+	ret = acpi_madt_init(madt);
+
+	if (ret != ERROR_SUCCESS)
+	{
+		return ret;
+	}
+
+	return ERROR_SUCCESS;
 }

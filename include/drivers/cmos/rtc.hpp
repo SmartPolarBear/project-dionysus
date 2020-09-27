@@ -22,5 +22,6 @@ namespace cmos
 		auto operator<=>(const cmos_date_time_struct&) const = default;
 	};
 
+	PANIC void cmos_rtc_init();
 	cmos_date_time_struct&& cmos_read_rtc();
 }

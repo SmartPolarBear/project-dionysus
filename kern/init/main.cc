@@ -12,6 +12,7 @@
 #include "drivers/monitor/monitor.hpp"
 #include "drivers/simd/simd.hpp"
 #include "drivers/pci/pci.hpp"
+#include "drivers/cmos/rtc.hpp"
 
 #include "system/kmalloc.hpp"
 #include "system/memlayout.h"
@@ -88,6 +89,9 @@ extern "C" [[noreturn]] void kmain()
 
 	// initialize apic timer
 	timer::init_apic_timer();
+
+	// initialize rtc to acquire date and time
+	cmos::cmos_rtc_init();
 
 	// initialize I/O APIC
 	io_apic::init_ioapic();

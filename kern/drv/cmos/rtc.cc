@@ -1,11 +1,7 @@
 #include "arch/amd64/x86.h"
 
 #include "drivers/cmos/rtc.hpp"
-#include "drivers/apic/apic.h"
-#include "drivers/apic/traps.h"
-#include "drivers/console/console.h"
-#include "drivers/debug/kdebug.h"
-#include "drivers/lock/spinlock.h"
+#include "drivers/acpi/acpi.h"
 
 #include "system/error.hpp"
 #include "system/mmu.h"
@@ -27,6 +23,8 @@ constexpr uint16_t bcd_to_binary(uint16_t bcd)
 }
 
 using rtc_reg_type = uint8_t;
+
+rtc_reg_type century_reg = UINT8_MAX;
 
 enum rtc_regs : rtc_reg_type
 {
@@ -71,7 +69,12 @@ static inline void fill_date_time_struct(OUT cmos_date_time_struct& date_time)
 	date_time.day = rtc_register_read(RTC_REG_DAY);
 	date_time.month = rtc_register_read(RTC_REG_MONTH);
 	date_time.year = rtc_register_read(RTC_REG_YEAR);
-	date_time.century = 21; // TODO : support real century with the help of ACPI tables
+
+	if (century_reg != UINT8_MAX)
+	{
+		date_time.century = rtc_register_read(century_reg);
+	}
+
 }
 
 static inline void parse_bcd_values(OUT cmos_date_time_struct& date_time)
@@ -82,7 +85,12 @@ static inline void parse_bcd_values(OUT cmos_date_time_struct& date_time)
 	date_time.day = bcd_to_binary(date_time.day);
 	date_time.month = bcd_to_binary(date_time.month);
 	date_time.year = bcd_to_binary(date_time.year);
-	date_time.century = bcd_to_binary(date_time.century);
+
+	if (century_reg != UINT8_MAX)
+	{
+		date_time.century = bcd_to_binary(date_time.century);
+	}
+
 }
 
 cmos::cmos_date_time_struct&& cmos::cmos_read_rtc()
@@ -116,4 +124,13 @@ cmos::cmos_date_time_struct&& cmos::cmos_read_rtc()
 	}
 
 	return std::move(now);
+}
+
+PANIC void cmos::cmos_rtc_init()
+{
+	auto fadt = acpi::get_fadt();
+	if (fadt->century != 0)
+	{
+		century_reg = fadt->century;
+	}
 }
