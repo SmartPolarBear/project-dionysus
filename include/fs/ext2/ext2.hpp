@@ -23,9 +23,14 @@ namespace file_system
 		return 1024u << logged_size;
 	}
 
-	static inline  size_t EXT2_INODE_GET_BLOCK_GROUP(ext2_ino_type ino)
+	static inline constexpr size_t EXT2_INODE_GET_BLOCK_GROUP(ext2_ino_type ino, size_t block_group_inode_count)
 	{
-		return 0;
+		return (ino - 1) / block_group_inode_count;
+	}
+
+	static inline constexpr size_t EXT2_INODE_INDEX_IN_BLOCK_GROUP(ext2_ino_type ino, size_t block_group_inode_count)
+	{
+		return (ino - 1) % block_group_inode_count;
 	}
 
 	enum ext2_superblock_states
@@ -157,6 +162,7 @@ namespace file_system
 		size_t block_size{};
 		size_t fragment_size{};
 		size_t inodes_per_block{};
+
 		size_t blkgrp_inode_blocks{};
 
 		size_t bgdt_entry_count{};
@@ -170,9 +176,19 @@ namespace file_system
 		memory::kmem::kmem_cache* inode_cache{};
 
 	 public:
+		[[nodiscard]] const ext2_blkgrp_desc&& get_bgd_by_index(size_t index)
+		{
+			return std::move(bgdt[index]);
+		}
+
 		[[nodiscard]] const ext2_superblock&& get_superblock() const
 		{
 			return std::move(superblock);
+		}
+
+		[[nodiscard]] size_t get_inodes_per_block() const
+		{
+			return inodes_per_block;
 		}
 
 		[[nodiscard]]  size_t get_inode_size() const

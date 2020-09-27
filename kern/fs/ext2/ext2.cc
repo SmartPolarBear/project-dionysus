@@ -1,4 +1,5 @@
 #include "include/block.hpp"
+#include "include/inode.hpp"
 
 #include "fs/ext2/ext2.hpp"
 #include "fs/vfs/vfs.hpp"
@@ -35,7 +36,7 @@ error_code ext2_data::initialize(fs_instance* fs)
 	}
 
 	// we do not support too old version of ext2 file system
-	if(this->superblock.version_major<1)
+	if (this->superblock.version_major < 1)
 	{
 		return -ERROR_OBSOLETE;
 	}
@@ -74,12 +75,18 @@ error_code ext2_data::initialize(fs_instance* fs)
 	// allocate root inode
 	root_inode = reinterpret_cast<ext2_inode*>(kmem_cache_alloc(this->inode_cache));
 
-
+	auto err = ext2_inode_read(fs, EXT2_ROOT_DIR_INODE_NUMBER, root_inode);
+	if (err != ERROR_SUCCESS)
+	{
+		kfree(this->bgdt);
+		return err;
+	}
 
 	// allocate root
 	root = new ext2_vnode{ VNT_DIR, nullptr };
 	if (root == nullptr)
 	{
+		kfree(this->bgdt);
 		return -ERROR_IO;
 	}
 

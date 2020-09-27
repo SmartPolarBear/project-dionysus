@@ -8,6 +8,8 @@
 
 #include "drivers/debug/kdebug.h"
 
+#include <cstring>
+
 using namespace file_system;
 
 error_code ext2_inode_read(file_system::fs_instance* fs, ext2_ino_type inum, OUT ext2_inode* inode)
@@ -21,7 +23,30 @@ error_code ext2_inode_read(file_system::fs_instance* fs, ext2_ino_type inum, OUT
 		return -ERROR_INVALID;
 	}
 
+	auto inode_group = EXT2_INODE_GET_BLOCK_GROUP(inum, superblock.block_group_inodes);
+	auto inode_group_index = EXT2_INODE_INDEX_IN_BLOCK_GROUP(inum, superblock.block_group_inodes);
 
+	auto inode_block =
+		data->get_bgd_by_index(inode_group).inode_table_no + inode_group_index / data->get_inodes_per_block();
+
+	auto offset_in_block = (inode_group_index % data->get_inodes_per_block()) * data->get_inode_size();
+
+	if (offset_in_block >= data->get_block_size())
+	{
+		return -ERROR_INVALID;
+	}
+
+	uint8_t* block_buf = new uint8_t[data->get_block_size()];
+
+	auto ret = ext2_block_read(fs, block_buf, inode_block);
+
+	if (ret != ERROR_SUCCESS)
+	{
+		delete[] block_buf;
+		return ret;
+	}
+
+	memmove(inode, block_buf + offset_in_block, data->get_inode_size());
 
 	return ERROR_SUCCESS;
 }

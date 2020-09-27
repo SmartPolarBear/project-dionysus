@@ -9,7 +9,7 @@
 
 using namespace file_system;
 
-error_code ext2_block_read(file_system::fs_instance* fs, uint8_t* buf, size_t count)
+error_code ext2_block_read(file_system::fs_instance* fs, uint8_t* buf, size_t block_num)
 {
 	ext2_data* ext2data = reinterpret_cast<ext2_data*>(fs->private_data);
 
@@ -18,7 +18,7 @@ error_code ext2_block_read(file_system::fs_instance* fs, uint8_t* buf, size_t co
 		return -ERROR_INVALID;
 	}
 
-	auto ret = fs->dev->read(buf, count * ext2data->get_block_size(), ext2data->get_block_size());
+	auto ret = fs->dev->read(buf, block_num * ext2data->get_block_size(), ext2data->get_block_size());
 	if (get_error_code(ret) != ERROR_SUCCESS)
 	{
 		return get_error_code(ret);
@@ -28,6 +28,7 @@ error_code ext2_block_read(file_system::fs_instance* fs, uint8_t* buf, size_t co
 	{
 		return -ERROR_IO;
 	}
+
 
 	return ERROR_SUCCESS;
 }
