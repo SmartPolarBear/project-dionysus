@@ -80,3 +80,33 @@ size_t file_system::ext2_vnode::write(const file_system::file_object& fd, const 
 {
 	return ERROR_SUCCESS;
 }
+
+error_code file_system::ext2_vnode::initialize_from_inode(file_system::ext2_ino_type ino,
+	const file_system::ext2_inode* src)
+{
+	this->inode_id = ino;
+	this->uid = src->uid;
+	this->gid = src->gid;
+	this->mode = src->perm;
+	this->private_data = const_cast<ext2_inode*>(src);
+
+	switch (src->type)
+	{
+	case EXT2_IFDIR:
+	{
+		this->type = VNT_DIR;
+		break;
+	}
+	case EXT2_IFREG:
+	{
+		this->type = VNT_REG;
+		break;
+	}
+	default:
+	{
+		return ERROR_INVALID;
+	}
+	}
+
+	return ERROR_SUCCESS;
+}

@@ -83,15 +83,28 @@ error_code ext2_data::initialize(fs_instance* fs)
 	}
 
 	// allocate root
-	root = new ext2_vnode{ VNT_DIR, nullptr };
+	auto root_vnode = new ext2_vnode{ VNT_DIR, nullptr };
+	root = root_vnode;
 	if (root == nullptr)
 	{
 		kfree(this->bgdt);
 		return -ERROR_IO;
 	}
 
+	root_vnode->initialize_from_inode(EXT2_ROOT_DIR_INODE_NUMBER, root_inode);
+
 	this->print_debug_message();
 	return ERROR_SUCCESS;
+}
+
+ext2_data::~ext2_data()
+{
+	kfree(bgdt); // Allocated by kmalloc
+
+	kmem_cache_free(inode_cache, root_inode); // Allocate by the slab allocator
+
+	delete root; // Allocated by new operator
+
 }
 
 void ext2_data::print_debug_message()
@@ -114,11 +127,6 @@ void ext2_data::print_debug_message()
 		block_size * this->superblock.block_count);
 
 	kdebug_log("%lld block groups, %lld for BGDT.\n", bgdt_entry_count, bgdt_size_blocks);
-}
-
-ext2_data::~ext2_data()
-{
-	;
 }
 
 error_code_with_result<file_system::vnode_base*> file_system::ext2_fs_class::get_root()
@@ -171,6 +179,6 @@ error_code file_system::ext2_fs_class::dispose(fs_instance* fs)
 
 error_code_with_result<vfs_status> file_system::ext2_fs_class::get_vfs_status([[maybe_unused]]fs_instance* fs)
 {
-	// TODO: return vfs_status
-	return 0;
+	// TODO: refresh the structure
+	return this->current_status;
 }

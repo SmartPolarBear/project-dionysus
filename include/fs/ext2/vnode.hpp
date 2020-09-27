@@ -1,5 +1,7 @@
 #pragma once
 
+#include "fs/ext2/ext2.hpp"
+
 #include "system/types.h"
 #include "system/error.hpp"
 
@@ -15,6 +17,9 @@ namespace file_system
 		}
 
 		~ext2_vnode() override = default;
+
+		error_code initialize_from_inode(ext2_ino_type ino, const ext2_inode* src);
+
 		error_code find(const char* name, vnode_base& ret) override;
 		size_t read_dir(const file_object& fd, directory_entry& entry) override;
 		error_code open_dir(const file_object& fd) override;

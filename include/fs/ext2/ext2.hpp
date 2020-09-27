@@ -13,6 +13,17 @@ namespace file_system
 	constexpr uint16_t EXT2_SIGNATURE = 0xEF53;
 	constexpr size_t EXT2_DIRECT_BLOCK_COUNT = 12;
 
+	enum ext2_inode_type
+	{
+		EXT2_IFIFO = 0x1000,
+		EXT2_IFCHR = 0x2000,
+		EXT2_IFDIR = 0x4000,
+		EXT2_IFBLK = 0x6000,
+		EXT2_IFREG = 0x8000,
+		EXT2_IFLNK = 0xA000,
+		EXT2_IFSOCK = 0xC000,
+	};
+
 	using ext2_ino_type = uint32_t;
 
 	constexpr ext2_ino_type EXT2_FIRST_INODE_NUMBER = 1;
@@ -118,7 +129,8 @@ namespace file_system
 
 	struct ext2_inode
 	{
-		uint16_t mode;
+		uint64_t perm: 12;
+		uint64_t type: 4;
 		uint16_t uid;
 		uint32_t size_lower;
 		uint32_t atime;
@@ -224,6 +236,8 @@ namespace file_system
 	{
 	 private:
 		ext2_data* data;
+
+		vfs_status current_status{};
 	 public:
 		error_code_with_result<vnode_base*> get_root() override;
 		error_code_with_result<vfs_status> get_vfs_status(fs_instance* fs) override;

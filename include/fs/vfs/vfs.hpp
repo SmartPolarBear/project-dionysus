@@ -231,6 +231,7 @@ namespace file_system
 		uid_type uid{};
 
 		fs_instance* fs{};
+
 		device_class* dev{};
 		void* private_data{};
 
@@ -263,6 +264,16 @@ namespace file_system
 		[[nodiscard]] const char* get_name() const
 		{
 			return name_buf;
+		}
+
+		[[nodiscard]] fs_instance* get_fs() const
+		{
+			return fs;
+		}
+
+		void set_fs(fs_instance* the_fs)
+		{
+			vnode_base::fs = the_fs;
 		}
 
 	 public:
