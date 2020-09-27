@@ -9,3 +9,7 @@
 error_code ext2_inode_read(file_system::fs_instance* fs,
 	file_system::ext2_ino_type number,
 	OUT file_system::ext2_inode* inode);
+
+error_code ext2_inode_write(file_system::fs_instance* fs,
+	file_system::ext2_ino_type number,
+	IN const file_system::ext2_inode* inode);
