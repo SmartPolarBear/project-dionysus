@@ -4,10 +4,12 @@
 
 namespace timer
 {
-	PANIC void setup_apic_timer(void);
+	PANIC void setup_apic_timer();
 
-	PANIC void init_apic_timer(void);
+	PANIC void init_apic_timer();
 
-	void set_enable_on_cpu(size_t cpuid,bool enable);
+	uint64_t get_ticks();
+
+	void set_enable_on_cpu(size_t cpuid, bool enable);
 } // namespace timer
 

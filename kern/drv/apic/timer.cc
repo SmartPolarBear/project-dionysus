@@ -99,3 +99,7 @@ void timer::set_enable_on_cpu(size_t cpuid, bool enable)
 {
 	enable_irq[cpuid] = enable;
 }
+uint64_t timer::get_ticks()
+{
+	return ticks[cpu()->id];
+}
