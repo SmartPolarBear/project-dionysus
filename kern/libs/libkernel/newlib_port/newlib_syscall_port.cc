@@ -13,11 +13,12 @@
 //char **environ; /* pointer to array of char * strings that define the current environment variables */
 //int gettimeofday(struct timeval *p, struct timezone *z);
 //clock_t times(struct tms *buf);
+//int fork();
+//int wait(int *status);
 
 // To be finished
 //int close(int file);
 //int execve(char *name, char **argv, char **env);
-//int fork();
 //int fstat(int file, struct stat *st);
 //int isatty(int file);
 //int link(char *old, char *new);
@@ -26,7 +27,6 @@
 //int read(int file, char *ptr, int len);
 //int stat(const char *file, struct stat *st);
 //int unlink(char *name);
-//int wait(int *status);
 //int write(int file, char *ptr, int len);
 
 
@@ -96,3 +96,13 @@ extern "C" [[maybe_unused]] clock_t times(tms* buf)
 	return timer::get_ticks();
 }
 
+// TODO: after the implementation of kernel threads, they may have things to do.
+extern "C" [[maybe_unused]] int wait(int* status)
+{
+	return -1;
+}
+
+extern "C" [[maybe_unused]]  int fork()
+{
+	return -1;
+}
