@@ -44,6 +44,16 @@ namespace file_system
 		return (ino - 1) % block_group_inode_count;
 	}
 
+	static inline constexpr size_t EXT2_BLOCK_GET_BLOCK_GROUP(uint64_t blk, size_t block_group_blocks)
+	{
+		return (blk - 1) / block_group_blocks;
+	}
+
+	static inline constexpr size_t EXT2_BLOCK_INDEX_IN_BLOCK_GROUP(uint64_t blk, size_t block_group_blocks)
+	{
+		return (blk - 1) % block_group_blocks;
+	}
+
 	enum ext2_superblock_states
 	{
 		EXT2_STATE_CLEAN,

@@ -58,9 +58,9 @@ error_code ext2_block_write(file_system::fs_instance* fs, const uint8_t* buf, si
 error_code_with_result<uint64_t> ext2_block_alloc(file_system::fs_instance* fs)
 {
 	ext2_data* ext2data = reinterpret_cast<ext2_data*>(fs->private_data);
+	auto superblock = ext2data->get_superblock();
 
 	uint64_t* bitmap_buf = new uint64_t[ext2data->get_block_size() / sizeof(uint64_t)];
-	auto superblock = ext2data->get_superblock();
 
 	error_code ret = ERROR_SUCCESS;
 
@@ -95,7 +95,7 @@ error_code_with_result<uint64_t> ext2_block_alloc(file_system::fs_instance* fs)
 
 				if ((ret = ext2_block_write(fs,
 					reinterpret_cast<uint8_t*>(ext2data->get_bgdt()) + bdg_block_count * ext2data->get_block_size(),
-					bgd.block_bitmap_no))
+					bgd.block_bitmap_no + 2))
 					!= ERROR_SUCCESS)
 				{
 					break;
@@ -118,7 +118,67 @@ error_code_with_result<uint64_t> ext2_block_alloc(file_system::fs_instance* fs)
 
 error_code ext2_block_free(file_system::fs_instance* fs, uint32_t block)
 {
-	return 0;
+	if (block == 0)
+	{
+		return -ERROR_INVALID;
+	}
+
+	if (fs == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	ext2_data* ext2data = reinterpret_cast<ext2_data*>(fs->private_data);
+	auto superblock = ext2data->get_superblock();
+
+	uint64_t* bitmap_buf = new uint64_t[ext2data->get_block_size() / sizeof(uint64_t)];
+
+	auto index = EXT2_BLOCK_INDEX_IN_BLOCK_GROUP(block, superblock.block_group_blocks);
+	auto group = EXT2_BLOCK_GET_BLOCK_GROUP(block, superblock.block_group_blocks);
+
+	auto bgd = ext2data->get_bgdt() + group;
+
+	// read the bitmap
+	auto ret = ext2_block_read(fs, reinterpret_cast<uint8_t*>(bitmap_buf), bgd->block_bitmap_no);
+	if (ret != ERROR_SUCCESS)
+	{
+		delete[] bitmap_buf;
+		return ret;
+	}
+
+	bitmap_buf[index / 64] &= ~(1ULL << (index % 64ull)); // unset the bit
+
+	// write back the bitmap
+	ret = ext2_block_write(fs, reinterpret_cast<uint8_t*>(bitmap_buf), bgd->block_bitmap_no);
+	if (ret != ERROR_SUCCESS)
+	{
+		delete[] bitmap_buf;
+		return ret;
+	}
+
+	bgd->free_blocks++;
+	auto bdg_block_count = (group * sizeof(ext2_blkgrp_desc)) / ext2data->get_block_size();
+	ret = ext2_block_write(fs,
+		reinterpret_cast<uint8_t*>(ext2data->get_bgdt()) + bdg_block_count * ext2data->get_block_size(),
+		bgd->block_bitmap_no + 2);
+
+	if (ret != ERROR_SUCCESS)
+	{
+		delete[] bitmap_buf;
+		return ret;
+	}
+
+	superblock.free_inodes++;
+	ret = ext2data->superblock_write_back(fs);
+
+	if (ret != ERROR_SUCCESS)
+	{
+		delete[] bitmap_buf;
+		return ret;
+	}
+
+	delete[] bitmap_buf;
+	return ERROR_SUCCESS;
 }
 
 
