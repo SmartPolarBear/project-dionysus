@@ -57,6 +57,7 @@ error_code ext2_inode_write(file_system::fs_instance* fs,
 	file_system::ext2_ino_type inum,
 	IN  file_system::ext2_inode* inode)
 {
+
 	inode->atime = cmos::cmos_read_rtc_timestamp();
 
 	ext2_data* data = reinterpret_cast<ext2_data*>(fs->private_data);
@@ -109,6 +110,7 @@ error_code ext2_inode_set_index(file_system::fs_instance* fs,
 {
 	return 0;
 }
+
 error_code_with_result<uint32_t> ext2_inode_alloc(file_system::fs_instance* fs, bool is_dir)
 {
 	return ERROR_SUCCESS;

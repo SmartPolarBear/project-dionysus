@@ -129,6 +129,17 @@ void ext2_data::print_debug_message()
 	kdebug_log("%lld block groups, %lld for BGDT.\n", bgdt_entry_count, bgdt_size_blocks);
 }
 
+error_code ext2_data::superblock_write_back(fs_instance* fs)
+{
+	auto ret = fs->dev->write(superblock_data, 1024, 1024);
+	if (get_error_code(ret) != ERROR_SUCCESS)
+	{
+		return get_error_code(ret);
+	}
+
+	return get_result(ret) == 1024 ? ERROR_SUCCESS : ERROR_IO;
+}
+
 error_code_with_result<file_system::vnode_base*> file_system::ext2_fs_class::get_root()
 {
 	if (this->data == nullptr || this->data->get_root() == nullptr)

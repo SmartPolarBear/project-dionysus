@@ -178,6 +178,7 @@ namespace file_system
 		size_t blkgrp_inode_blocks{};
 
 		size_t bgdt_entry_count{};
+
 		size_t bgdt_size_blocks{};
 
 		ext2_blkgrp_desc* bgdt{};
@@ -188,14 +189,14 @@ namespace file_system
 		memory::kmem::kmem_cache* inode_cache{};
 
 	 public:
-		[[nodiscard]] const ext2_blkgrp_desc&& get_bgd_by_index(size_t index)
+		[[nodiscard]]  ext2_blkgrp_desc& get_bgd_by_index(size_t index)
 		{
-			return std::move(bgdt[index]);
+			return bgdt[index];
 		}
 
-		[[nodiscard]] const ext2_superblock&& get_superblock() const
+		[[nodiscard]]  ext2_superblock& get_superblock()
 		{
-			return std::move(superblock);
+			return superblock;
 		}
 
 		[[nodiscard]] size_t get_inodes_per_block() const
@@ -223,11 +224,21 @@ namespace file_system
 			return block_size;
 		}
 
+		[[nodiscard]] size_t get_bgdt_entry_count() const
+		{
+			return bgdt_entry_count;
+		}
+
+		[[nodiscard]] ext2_blkgrp_desc* get_bgdt() const
+		{
+			return bgdt;
+		}
 	 public:
 		ext2_data();
 		~ext2_data();
 
 		error_code initialize(fs_instance* fs);
+		error_code superblock_write_back(fs_instance* fs);
 
 	};
 
