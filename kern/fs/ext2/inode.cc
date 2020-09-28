@@ -94,3 +94,27 @@ error_code ext2_inode_write(file_system::fs_instance* fs,
 
 	return ext2_block_write(fs, block_buf, inode_block);
 }
+error_code_with_result<uint32_t> ext2_inode_get_index(file_system::fs_instance* fs,
+	file_system::ext2_inode* inode,
+	uint32_t index)
+{
+	return ERROR_SUCCESS;
+}
+
+error_code ext2_inode_set_index(file_system::fs_instance* fs,
+	file_system::ext2_ino_type number,
+	file_system::ext2_inode* inode,
+	uint32_t index,
+	uint32_t value)
+{
+	return 0;
+}
+error_code_with_result<uint32_t> ext2_inode_alloc(file_system::fs_instance* fs, bool is_dir)
+{
+	return ERROR_SUCCESS;
+}
+
+error_code ext2_inode_free(file_system::fs_instance* fs, file_system::ext2_ino_type ino, bool is_dir)
+{
+	return 0;
+}

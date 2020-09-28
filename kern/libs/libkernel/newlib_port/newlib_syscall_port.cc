@@ -97,7 +97,7 @@ extern "C" [[maybe_unused]] clock_t times(tms* buf)
 }
 
 // TODO: after the implementation of kernel threads, they may have things to do.
-extern "C" [[maybe_unused]] int wait(int* status)
+extern "C" [[maybe_unused]] int wait([[maybe_unused]]int* status)
 {
 	return -1;
 }
