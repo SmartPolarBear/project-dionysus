@@ -28,8 +28,8 @@ rtc_reg_type century_reg = UINT8_MAX;
 bool is_bissextile = false;
 
 // Preprocessed in the initialization method
-uint64_t bissextile_month_ps_arr[13] = { 0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-uint64_t normal_month_ps_arr[13] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+uint64_t bissextile_month_ps_arr[13] = { 0, 0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30 };
+uint64_t normal_month_ps_arr[13] = { 0, 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30 };
 
 uint64_t* current_month_ps_arr = nullptr;
 
@@ -40,7 +40,8 @@ enum rtc_regs : rtc_reg_type
 	RTC_REG_SECOND = 0x00,
 	RTC_REG_MINUTE = 0x02,
 	RTC_REG_HOUR = 0x04,
-	RTC_REG_DAY = 0x07,
+	RTC_REG_WEEKDAY = 0x06,
+	RTC_REG_DAY_OF_MONTH = 0x07,
 	RTC_REG_MONTH = 0x08,
 	RTC_REG_YEAR = 0x09,
 };
@@ -52,6 +53,11 @@ struct byte_format_value
 	uint64_t enable_bin_mode: 1;
 	uint64_t reserved1: 1;
 }__attribute__((packed));
+
+static inline uint64_t get_day_of_year(uint64_t mon, uint64_t day)
+{
+	return current_month_ps_arr[mon] + day;
+}
 
 static inline bool is_updating()
 {
@@ -80,7 +86,8 @@ static inline void fill_date_time_struct(OUT cmos_date_time_struct& date_time)
 	date_time.second = rtc_register_read(RTC_REG_SECOND);
 	date_time.minute = rtc_register_read(RTC_REG_MINUTE);
 	date_time.hour = rtc_register_read(RTC_REG_HOUR);
-	date_time.day = rtc_register_read(RTC_REG_DAY);
+	date_time.weekday = rtc_register_read(RTC_REG_WEEKDAY);
+	date_time.day_of_month = rtc_register_read(RTC_REG_DAY_OF_MONTH);
 	date_time.month = rtc_register_read(RTC_REG_MONTH);
 	date_time.year = rtc_register_read(RTC_REG_YEAR);
 
@@ -96,7 +103,8 @@ static inline void parse_bcd_values(OUT cmos_date_time_struct& date_time)
 	date_time.second = bcd_to_binary(date_time.second);
 	date_time.minute = bcd_to_binary(date_time.minute);
 	date_time.hour = bcd_to_binary(date_time.hour);
-	date_time.day = bcd_to_binary(date_time.day);
+	date_time.weekday = bcd_to_binary(date_time.weekday);
+	date_time.day_of_month = bcd_to_binary(date_time.day_of_month);
 	date_time.month = bcd_to_binary(date_time.month);
 	date_time.year = bcd_to_binary(date_time.year);
 
@@ -151,26 +159,28 @@ cmos::cmos_date_time_struct&& cmos::cmos_read_rtc()
 		now.hour = ((now.hour & 0x7F) + 12) % 24;
 	}
 
+	now.real_year = now.year;
+
 
 	// Refine the year value
 	if (century_reg == UINT8_MAX)
 	{
 		// Guess the century
-		if (now.year < 90) // We just can't have read a time of 2090s, so it's 21 century
+		if (now.real_year < 90) // We just can't have read a time of 2090s, so it's 21 century
 		{
-			now.year = 2000 + now.year;
+			now.real_year = 2000 + now.real_year;
 		}
-		else if (now.year > 90) // It is probably 1990s
+		else if (now.real_year > 90) // It is probably 1990s
 		{
-			now.year = 1900 + now.year;
+			now.real_year = 1900 + now.real_year;
 		}
 	}
 	else
 	{
-		now.year = now.century * 100 + now.year;
+		now.real_year = now.century * 100 + now.real_year;
 	}
 
-	is_bissextile = check_bissextile(now.year);
+	is_bissextile = check_bissextile(now.real_year);
 	if (is_bissextile)
 	{
 		current_month_ps_arr = bissextile_month_ps_arr;
@@ -207,18 +217,28 @@ PANIC void cmos::cmos_rtc_init()
 	boot_time = cmos_read_rtc();
 
 	kdebug::kdebug_log("Boot up time: %lld-%lld-%lld %lld:%lld:%lld, timestamp %lld\n",
-		boot_time.year, boot_time.month, boot_time.day,
+		boot_time.real_year, boot_time.month, boot_time.day_of_month,
 		boot_time.hour, boot_time.minute, boot_time.second,
 		datetime_to_timestamp(boot_time));
 }
 
 timestamp_type cmos::datetime_to_timestamp(const cmos_date_time_struct& datetime)
 {
-	timestamp_type day_of_year = current_month_ps_arr[datetime.month] + datetime.year;
+	/* POSIX says:
+	 *
+	 * A value that approximates the number of seconds that have elapsed since the Epoch. A Coordinated Universal Time name (specified in terms of seconds (tm_sec), minutes (tm_min), hours (tm_hour), days since January 1 of the year (tm_yday), and calendar year minus 1900 (tm_year)) is related to a time represented as seconds since the Epoch, according to the expression below.
+	If the year is <1970 or the value is negative, the relationship is undefined. If the year is >=1970 and the value is non-negative, the value is related to a Coordinated Universal Time name according to the C-language expression, where tm_sec, tm_min, tm_hour, tm_yday, and tm_year are all integer types:
+	tm_sec + tm_min*60 + tm_hour*3600 + tm_yday*86400 +
+    (tm_year-70)*31536000 + ((tm_year-69)/4)*86400 -
+    ((tm_year-1)/100)*86400 + ((tm_year+299)/400)*86400
+    */
 
-	return datetime.second + datetime.minute * 60ull + datetime.hour * 3600ull + day_of_year * 86400ull +
-		(datetime.year - 70ull) * 31536000ull + ((datetime.year - 69ull) / 4ull) * 86400ull -
-		((datetime.year - 1ull) / 100ull) * 86400ull + ((datetime.year + 299ull) / 400ull) * 86400ull;
+	auto year = datetime.real_year - 1900;
+
+	return datetime.second + datetime.minute * 60ull + datetime.hour * 3600ull
+		+ get_day_of_year(datetime.month, datetime.day_of_month) * 86400ull +
+		(year - 70ull) * 31536000ull + ((year - 69ull) / 4ull) * 86400ull -
+		((year - 1ull) / 100ull) * 86400ull + ((year + 299ull) / 400ull) * 86400ull;
 }
 
 timestamp_type cmos::cmos_read_rtc_timestamp()

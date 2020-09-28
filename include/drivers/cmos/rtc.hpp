@@ -11,9 +11,11 @@ namespace cmos
 		uint64_t second;
 		uint64_t minute;
 		uint64_t hour;
-		uint64_t day;
+		uint64_t weekday;
+		uint64_t day_of_month;
 		uint64_t month;
 		uint64_t year;
+		uint64_t real_year;
 		uint64_t century;
 
 		auto operator<=>(const cmos_date_time_struct&) const = default;
