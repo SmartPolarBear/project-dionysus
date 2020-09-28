@@ -8,20 +8,20 @@ namespace cmos
 {
 	struct cmos_date_time_struct
 	{
-		uint16_t second;
-		uint16_t minute;
-
-		uint16_t hour;
-		bool is_24hour;
-
-		uint16_t day;
-		uint16_t month;
-		uint16_t year;
-		uint16_t century;
+		uint64_t second;
+		uint64_t minute;
+		uint64_t hour;
+		uint64_t day;
+		uint64_t month;
+		uint64_t year;
+		uint64_t century;
 
 		auto operator<=>(const cmos_date_time_struct&) const = default;
 	};
 
 	PANIC void cmos_rtc_init();
+
 	cmos_date_time_struct&& cmos_read_rtc();
+	timestamp_type cmos_read_rtc_timestamp();
+	timestamp_type datetime_to_timestamp(const cmos_date_time_struct& datetime);
 }

@@ -1,6 +1,8 @@
 #include "include/inode.hpp"
 #include "include/block.hpp"
 
+#include "drivers/cmos/rtc.hpp"
+
 #include "fs/ext2/ext2.hpp"
 #include "fs/vfs/vfs.hpp"
 
@@ -53,9 +55,9 @@ error_code ext2_inode_read(file_system::fs_instance* fs, ext2_ino_type inum, OUT
 
 error_code ext2_inode_write(file_system::fs_instance* fs,
 	file_system::ext2_ino_type inum,
-	IN const file_system::ext2_inode* inode)
+	IN  file_system::ext2_inode* inode)
 {
-	//TODO: update the modified time of inode
+	inode->atime = cmos::cmos_read_rtc_timestamp();
 
 	ext2_data* data = reinterpret_cast<ext2_data*>(fs->private_data);
 	auto superblock = data->get_superblock();

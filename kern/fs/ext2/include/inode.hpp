@@ -12,4 +12,4 @@ error_code ext2_inode_read(file_system::fs_instance* fs,
 
 error_code ext2_inode_write(file_system::fs_instance* fs,
 	file_system::ext2_ino_type number,
-	IN const file_system::ext2_inode* inode);
+	IN file_system::ext2_inode* inode);

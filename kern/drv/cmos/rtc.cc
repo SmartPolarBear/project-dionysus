@@ -25,6 +25,15 @@ constexpr uint16_t bcd_to_binary(uint16_t bcd)
 using rtc_reg_type = uint8_t;
 
 rtc_reg_type century_reg = UINT8_MAX;
+bool is_bissextile = false;
+
+// Preprocessed in the initialization method
+uint64_t bissextile_month_ps_arr[13] = { 0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+uint64_t normal_month_ps_arr[13] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+
+uint64_t* current_month_ps_arr = nullptr;
+
+cmos_date_time_struct boot_time{};
 
 enum rtc_regs : rtc_reg_type
 {
@@ -54,6 +63,11 @@ static inline uint16_t rtc_register_read(rtc_reg_type reg)
 {
 	outb(CMOS_ADDR, reg);
 	return inb(CMOS_DATA);
+}
+
+static constexpr bool check_bissextile(uint64_t year)
+{
+	return (year % 4 == 0) && (year % 100 != 0);
 }
 
 static inline void wait_for_update()
@@ -116,11 +130,54 @@ cmos::cmos_date_time_struct&& cmos::cmos_read_rtc()
 	auto byte_format_raw = rtc_register_read(0x0B);
 	auto byte_format = *reinterpret_cast<byte_format_value*>(&byte_format_raw);
 
-	now.is_24hour = byte_format.enable_24h;
-
 	if (!byte_format.enable_bin_mode) // BCD mode
 	{
 		parse_bcd_values(now);
+	}
+
+	/* From osdev.org:
+	 *
+	 * 12 hour time is annoying to convert back to 24 hour time.
+	 * If the hour is pm, then the 0x80 bit is set on the hour byte.
+	 * So you need to mask that off. (This is true for both binary and BCD modes.)
+	 * Then, midnight is 12, 1am is 1, etc.
+	 * Note that carefully: midnight is not 0
+	 * -- it is 12 --
+	 * this needs to be handled as a special case in the calculation
+	 * from 12 hour format to 24 hour format (by setting 12 back to 0)!*/
+
+	if (!byte_format.enable_24h)
+	{
+		now.hour = ((now.hour & 0x7F) + 12) % 24;
+	}
+
+
+	// Refine the year value
+	if (century_reg == UINT8_MAX)
+	{
+		// Guess the century
+		if (now.year < 90) // We just can't have read a time of 2090s, so it's 21 century
+		{
+			now.year = 2000 + now.year;
+		}
+		else if (now.year > 90) // It is probably 1990s
+		{
+			now.year = 1900 + now.year;
+		}
+	}
+	else
+	{
+		now.year = now.century * 100 + now.year;
+	}
+
+	is_bissextile = check_bissextile(now.year);
+	if (is_bissextile)
+	{
+		current_month_ps_arr = bissextile_month_ps_arr;
+	}
+	else
+	{
+		current_month_ps_arr = normal_month_ps_arr;
 	}
 
 	return std::move(now);
@@ -139,4 +196,33 @@ PANIC void cmos::cmos_rtc_init()
 	{
 		century_reg = fadt->century;
 	}
+
+	// preprocessing the prefix sums
+	for (int i = 1; i < 12; ++i)
+	{
+		bissextile_month_ps_arr[i] = bissextile_month_ps_arr[i - 1] + bissextile_month_ps_arr[i];
+		normal_month_ps_arr[i] = normal_month_ps_arr[i - 1] + normal_month_ps_arr[i];
+	}
+
+	boot_time = cmos_read_rtc();
+
+	kdebug::kdebug_log("Boot up time: %lld-%lld-%lld %lld:%lld:%lld, timestamp %lld\n",
+		boot_time.year, boot_time.month, boot_time.day,
+		boot_time.hour, boot_time.minute, boot_time.second,
+		datetime_to_timestamp(boot_time));
+}
+
+timestamp_type cmos::datetime_to_timestamp(const cmos_date_time_struct& datetime)
+{
+	timestamp_type day_of_year = current_month_ps_arr[datetime.month] + datetime.year;
+
+	return datetime.second + datetime.minute * 60ull + datetime.hour * 3600ull + day_of_year * 86400ull +
+		(datetime.year - 70ull) * 31536000ull + ((datetime.year - 69ull) / 4ull) * 86400ull -
+		((datetime.year - 1ull) / 100ull) * 86400ull + ((datetime.year + 299ull) / 400ull) * 86400ull;
+}
+
+timestamp_type cmos::cmos_read_rtc_timestamp()
+{
+	auto datetime = cmos_read_rtc();
+	return datetime_to_timestamp(datetime);
 }
