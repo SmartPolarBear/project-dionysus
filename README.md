@@ -1,14 +1,14 @@
 ## Project "Dionysus"
-The project "Dionysus" aims at apply theories and practices concerning operation systems on a hybrid kernel in modern C++. In the long run, It aims at creating a effective microkernel with acceptable performence overhead.
+The project "Dionysus" aims at applying theories and practices concerning operation systems to a hybrid kernel in modern C++. In the long run, It aims at creating an effective microkernel with acceptable performence overhead.
 
 ## Motivation
 
-The techniques used and concepts of programming and design of operation system have changed over time. And I want to adapt the advanced ones in a single project as a good model or reference for the further researches and progress in these fields
+The techniques used and concepts of programming and design of operation system have changed over time. That's why I want to adapt the advanced and exciting ones in a project as an attempt to do further researches in this field.
 
 ## Tech/framework used
 <b>Built with</b>
 - CMake
-- LLVM/Clang toolchian
+- LLVM/Clang toolchain
 
 ## API Reference
 
@@ -21,9 +21,9 @@ The techniques used and concepts of programming and design of operation system h
 ## Credits
 The project mostly refers to, and sometimes borrows some techniques, designs and codes from the following project:  
 - [mit-pdos/xv6-public](https://github.com/mit-pdos/xv6-public)  
-xv6 inspired me to start the project to build a kernel, with which I got knowledge of operation systems. And some of its  weak points motivated me to create another kernel that refers to more advanced practice in this field. 
+xv6 inspired me to start the project to build a kernel, with which I got knowledge of operation systems. And some of its shortcomings motivated me to create this project. 
 - [Stichting-MINIX-Research-Foundation/minix](https://github.com/Stichting-MINIX-Research-Foundation/minix)
-A series of papers and books about the development of minix 3 not only let me know about what is microkernel and how does it work but also have a deep influence on the goal and development of this project
+A series of papers and books about the development of minix 3 not only let me know about what is microkernel and how it works but also have a deep influence on the goal and development of this project.
 
 ## License
 Copyright (c) 2020 SmartPolarBear
