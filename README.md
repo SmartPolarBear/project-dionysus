@@ -8,7 +8,7 @@ The techniques used and concepts of programming and design of operation system h
 ## Tech/framework used
 <b>Built with</b>
 - CMake
-- LLVM/Clang toolchain
+- Clang version 10
 
 ## API Reference
 
@@ -22,8 +22,8 @@ The techniques used and concepts of programming and design of operation system h
 The project mostly refers to, and sometimes borrows some techniques, designs and codes from the following project:  
 - [mit-pdos/xv6-public](https://github.com/mit-pdos/xv6-public)  
 xv6 inspired me to start the project to build a kernel, with which I got knowledge of operation systems. And some of its shortcomings motivated me to create this project. 
-- [Stichting-MINIX-Research-Foundation/minix](https://github.com/Stichting-MINIX-Research-Foundation/minix)
-A series of papers and books about the development of minix 3 not only let me know about what is microkernel and how it works but also have a deep influence on the goal and development of this project.
+- [Stichting-MINIX-Research-Foundation/minix](https://github.com/Stichting-MINIX-Research-Foundation/minix)    
+A series of papers and the book about the development of minix 3 not only let me know about what is microkernel and how it works but also have a deep influence on the goal and development of this project.
 
 ## License
 Copyright (c) 2020 SmartPolarBear
