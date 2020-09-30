@@ -1,4 +1,4 @@
-#include "include/block.hpp"
+#include "../include/block.hpp"
 
 #include "fs/ext2/ext2.hpp"
 #include "fs/vfs/vfs.hpp"
@@ -59,6 +59,11 @@ error_code ext2_block_write(file_system::fs_instance* fs, const uint8_t* buf, si
 error_code_with_result<uint64_t> ext2_block_alloc(file_system::fs_instance* fs)
 {
 	ext2_data* ext2data = reinterpret_cast<ext2_data*>(fs->private_data);
+	if (ext2data == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
 	auto superblock = ext2data->get_superblock();
 
 	uint64_t* bitmap_buf = new uint64_t[ext2data->get_block_size() / sizeof(uint64_t)];
@@ -130,6 +135,12 @@ error_code ext2_block_free(file_system::fs_instance* fs, uint32_t block)
 	}
 
 	ext2_data* ext2data = reinterpret_cast<ext2_data*>(fs->private_data);
+
+	if (ext2data == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
 	auto superblock = ext2data->get_superblock();
 
 	uint64_t* bitmap_buf = new uint64_t[ext2data->get_block_size() / sizeof(uint64_t)];

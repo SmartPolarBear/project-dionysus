@@ -167,6 +167,16 @@ namespace file_system
 		uint32_t os_val2;
 	} __attribute__((packed));
 
+	static inline constexpr size_t ext2_inode_get_size(const ext2_inode* inode)
+	{
+		return (((uint64_t)inode->size_upper) << 32ull) | ((uint64_t)inode->size_lower);
+	}
+
+	static inline constexpr size_t ext2_inode_get_size(const ext2_inode& inode)
+	{
+		return (((uint64_t)inode.size_upper) << 32ull) | ((uint64_t)inode.size_lower);
+	}
+
 	class ext2_data
 	{
 	 private:

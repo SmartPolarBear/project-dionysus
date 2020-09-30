@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
+add_subdirectory(inode)
+add_subdirectory(block)
+
 target_sources(kernel
         PRIVATE ext2.cc
-        PRIVATE block.cc
-        PRIVATE vnode.cc
-        PRIVATE inode.cc)
+        PRIVATE vnode.cc)

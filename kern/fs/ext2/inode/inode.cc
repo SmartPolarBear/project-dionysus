@@ -1,5 +1,5 @@
-#include "include/inode.hpp"
-#include "include/block.hpp"
+#include "../include/inode.hpp"
+#include "../include/block.hpp"
 
 #include "drivers/cmos/rtc.hpp"
 
@@ -18,6 +18,12 @@ error_code ext2_inode_read(file_system::fs_instance* fs, ext2_ino_type inum, OUT
 {
 
 	ext2_data* data = reinterpret_cast<ext2_data*>(fs->private_data);
+
+	if (data == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
 	auto superblock = data->get_superblock();
 
 	if (inum < EXT2_FIRST_INODE_NUMBER || inum >= superblock.inode_count)
@@ -61,6 +67,12 @@ error_code ext2_inode_write(file_system::fs_instance* fs,
 	inode->atime = cmos::cmos_read_rtc_timestamp();
 
 	ext2_data* data = reinterpret_cast<ext2_data*>(fs->private_data);
+
+	if (data == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
 	auto superblock = data->get_superblock();
 
 	if (inum < EXT2_FIRST_INODE_NUMBER || inum >= superblock.inode_count)
@@ -99,6 +111,12 @@ error_code ext2_inode_write(file_system::fs_instance* fs,
 error_code_with_result<uint32_t> ext2_inode_alloc(file_system::fs_instance* fs, bool is_dir)
 {
 	auto data = reinterpret_cast<ext2_data*>(fs->private_data);
+
+	if (data == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
 	uint64_t* bitmap_buf = new uint64_t[data->get_block_size() / sizeof(uint64_t)];
 
 	for (size_t i = 0; i < data->get_bgdt_entry_count(); i++)
@@ -170,6 +188,12 @@ error_code_with_result<uint32_t> ext2_inode_alloc(file_system::fs_instance* fs, 
 error_code ext2_inode_free(file_system::fs_instance* fs, file_system::ext2_ino_type ino, bool is_dir)
 {
 	auto data = reinterpret_cast<ext2_data*>(fs->private_data);
+
+	if (data == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
 	ext2_superblock& superblock = data->get_superblock();
 	uint64_t* bitmap_buf = new uint64_t[data->get_block_size() / sizeof(uint64_t)];
 
@@ -219,29 +243,5 @@ error_code ext2_inode_free(file_system::fs_instance* fs, file_system::ext2_ino_t
 
 	delete[] bitmap_buf;
 	return ERROR_SUCCESS;
-}
-
-error_code ext2_inode_resize(file_system::fs_instance* fs,
-	file_system::ext2_ino_type ino,
-	file_system::ext2_inode* inode,
-	size_t new_size)
-{
-	return ERROR_SUCCESS;
-}
-
-error_code_with_result<uint32_t> ext2_inode_get_index(file_system::fs_instance* fs,
-	file_system::ext2_inode* inode,
-	uint32_t index)
-{
-	return ERROR_SUCCESS;
-}
-
-error_code ext2_inode_set_index(file_system::fs_instance* fs,
-	file_system::ext2_ino_type number,
-	file_system::ext2_inode* inode,
-	uint32_t index,
-	uint32_t value)
-{
-	return 0;
 }
 
