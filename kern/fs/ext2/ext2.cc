@@ -47,9 +47,9 @@ error_code ext2_data::initialize(fs_instance* fs)
 	this->inode_cache = kmem_cache_create("inode_cache", this->get_inode_size());
 
 	this->inodes_per_block = block_size / get_inode_size();
-	this->blkgrp_inode_blocks = superblock.block_group_inodes / inodes_per_block;
+	this->blkgrp_inode_blocks = superblock.block_group_inode_count / inodes_per_block;
 	this->bgdt_entry_count =
-		(superblock.block_count + superblock.block_group_blocks - 1) / superblock.block_group_blocks;
+		(superblock.block_count + superblock.block_group_block_count - 1) / superblock.block_group_block_count;
 
 	size_t bgdt_size = bgdt_entry_count * sizeof(ext2_blkgrp_desc);
 
@@ -121,7 +121,7 @@ void ext2_data::print_debug_message()
 		"%d blocks, %d inodes, %d reserved for superuser, superblock size %lld, fragment size %lld, %lld bytes in size.\n",
 		this->superblock.block_count,
 		this->superblock.inode_count,
-		this->superblock.reserved_blocks,
+		this->superblock.reserved_block_count,
 		block_size,
 		fragment_size,
 		block_size * this->superblock.block_count);

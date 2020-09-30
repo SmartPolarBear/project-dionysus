@@ -81,15 +81,15 @@ namespace file_system
 		// Base superblock
 		uint32_t inode_count;
 		uint32_t block_count;
-		uint32_t reserved_blocks;
-		uint32_t free_blocks;
-		uint32_t free_inodes;
+		uint32_t reserved_block_count;
+		uint32_t free_block_count;
+		uint32_t free_inode_count;
 		uint32_t superblock_no;
 		uint32_t log2_block_size;
 		uint32_t log2_frag_size;
-		uint32_t block_group_blocks;
-		uint32_t block_group_frags;
-		uint32_t block_group_inodes;
+		uint32_t block_group_block_count;
+		uint32_t block_group_frag_count;
+		uint32_t block_group_inode_count;
 		uint32_t mount_time;
 		uint32_t write_time;
 		uint16_t mount_count;
@@ -105,18 +105,18 @@ namespace file_system
 		uint16_t reserved_uid;
 		uint16_t reserved_gid;
 		// Extended superblock
-		uint32_t first_inode;                   // == 11 in < 1.0
-		uint16_t inode_size;                    // == 128 in < 1.0
-		uint16_t superblock_block_group;        // For backup
-		uint32_t optional_features;             // Don't matter
-		uint32_t required_features;             // Cannot read without these
-		uint32_t write_required_features;       // Can read without these
+		uint32_t first_inode;
+		uint16_t inode_size;
+		uint16_t superblock_block_group;
+		uint32_t optional_features;
+		uint32_t required_features;
+		uint32_t write_required_features;
 		uint8_t filesystem_id[16];
 		uint8_t volume_name[16];
 		uint8_t last_mount_path[64];
 		uint32_t compression;
-		uint8_t prealloc_file_blocks;
-		uint8_t prealloc_dir_blocks;
+		uint8_t prealloc_file_block_count;
+		uint8_t prealloc_dir_block_count;
 		uint16_t reserved0;
 		uint8_t journal_id[16];
 		uint32_t journal_inode;
@@ -148,7 +148,7 @@ namespace file_system
 		uint32_t mtime;
 		uint32_t dtime;
 		uint16_t gid;
-		uint16_t hard_links;
+		uint16_t hard_link_count;
 		uint32_t sector_count;
 		uint32_t flags;
 		uint32_t os_val1;

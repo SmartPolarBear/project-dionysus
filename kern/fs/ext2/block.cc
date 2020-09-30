@@ -55,6 +55,7 @@ error_code ext2_block_write(file_system::fs_instance* fs, const uint8_t* buf, si
 	return ERROR_SUCCESS;
 }
 
+// TODO:Support more than single-block block bitmap
 error_code_with_result<uint64_t> ext2_block_alloc(file_system::fs_instance* fs)
 {
 	ext2_data* ext2data = reinterpret_cast<ext2_data*>(fs->private_data);
@@ -74,7 +75,7 @@ error_code_with_result<uint64_t> ext2_block_alloc(file_system::fs_instance* fs)
 
 		ext2_block_read(fs, reinterpret_cast<uint8_t*>(bitmap_buf), bgd.block_bitmap_no);
 
-		for (size_t j = 0; j < superblock.block_group_blocks; j++)
+		for (size_t j = 0; j < superblock.block_group_block_count; j++)
 		{
 			// enumerate blocks
 			if (!(bitmap_buf[j / 64ull] & (1ull << (j % 64ull))))
@@ -101,12 +102,12 @@ error_code_with_result<uint64_t> ext2_block_alloc(file_system::fs_instance* fs)
 					break;
 				}
 
-				superblock.free_blocks--;
+				superblock.free_block_count--;
 				ext2data->superblock_write_back(fs);
 
 				delete[] bitmap_buf;
 
-				return i * superblock.block_group_blocks + j + 1; // block
+				return i * superblock.block_group_block_count + j + 1; // block
 
 			}
 		}
@@ -133,8 +134,8 @@ error_code ext2_block_free(file_system::fs_instance* fs, uint32_t block)
 
 	uint64_t* bitmap_buf = new uint64_t[ext2data->get_block_size() / sizeof(uint64_t)];
 
-	auto index = EXT2_BLOCK_INDEX_IN_BLOCK_GROUP(block, superblock.block_group_blocks);
-	auto group = EXT2_BLOCK_GET_BLOCK_GROUP(block, superblock.block_group_blocks);
+	auto index = EXT2_BLOCK_INDEX_IN_BLOCK_GROUP(block, superblock.block_group_block_count);
+	auto group = EXT2_BLOCK_GET_BLOCK_GROUP(block, superblock.block_group_block_count);
 
 	auto bgd = ext2data->get_bgdt() + group;
 
@@ -168,7 +169,7 @@ error_code ext2_block_free(file_system::fs_instance* fs, uint32_t block)
 		return ret;
 	}
 
-	superblock.free_inodes++;
+	superblock.free_inode_count++;
 	ret = ext2data->superblock_write_back(fs);
 
 	if (ret != ERROR_SUCCESS)

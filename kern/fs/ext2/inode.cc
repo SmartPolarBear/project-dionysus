@@ -25,8 +25,8 @@ error_code ext2_inode_read(file_system::fs_instance* fs, ext2_ino_type inum, OUT
 		return -ERROR_INVALID;
 	}
 
-	auto inode_group = EXT2_INODE_GET_BLOCK_GROUP(inum, superblock.block_group_inodes);
-	auto inode_group_index = EXT2_INODE_INDEX_IN_BLOCK_GROUP(inum, superblock.block_group_inodes);
+	auto inode_group = EXT2_INODE_GET_BLOCK_GROUP(inum, superblock.block_group_inode_count);
+	auto inode_group_index = EXT2_INODE_INDEX_IN_BLOCK_GROUP(inum, superblock.block_group_inode_count);
 
 	auto inode_block =
 		data->get_bgd_by_index(inode_group).inode_table_no + inode_group_index / data->get_inodes_per_block();
@@ -68,8 +68,8 @@ error_code ext2_inode_write(file_system::fs_instance* fs,
 		return -ERROR_INVALID;
 	}
 
-	auto inode_group = EXT2_INODE_GET_BLOCK_GROUP(inum, superblock.block_group_inodes);
-	auto inode_group_index = EXT2_INODE_INDEX_IN_BLOCK_GROUP(inum, superblock.block_group_inodes);
+	auto inode_group = EXT2_INODE_GET_BLOCK_GROUP(inum, superblock.block_group_inode_count);
+	auto inode_group_index = EXT2_INODE_INDEX_IN_BLOCK_GROUP(inum, superblock.block_group_inode_count);
 
 	auto inode_block =
 		data->get_bgd_by_index(inode_group).inode_table_no + inode_group_index / data->get_inodes_per_block();
@@ -95,6 +95,7 @@ error_code ext2_inode_write(file_system::fs_instance* fs,
 
 	return ext2_block_write(fs, block_buf, inode_block);
 }
+
 error_code_with_result<uint32_t> ext2_inode_get_index(file_system::fs_instance* fs,
 	file_system::ext2_inode* inode,
 	uint32_t index)
@@ -113,6 +114,7 @@ error_code ext2_inode_set_index(file_system::fs_instance* fs,
 
 error_code_with_result<uint32_t> ext2_inode_alloc(file_system::fs_instance* fs, bool is_dir)
 {
+
 	return ERROR_SUCCESS;
 }
 
