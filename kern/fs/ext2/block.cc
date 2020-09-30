@@ -68,7 +68,7 @@ error_code_with_result<uint64_t> ext2_block_alloc(file_system::fs_instance* fs)
 	for (size_t i = 0; i < ext2data->get_bgdt_entry_count(); i++)
 	{
 		auto bgd = ext2data->get_bgd_by_index(i);
-		if (!bgd.free_blocks)
+		if (!bgd.free_block_count)
 		{
 			continue;
 		}
@@ -91,8 +91,8 @@ error_code_with_result<uint64_t> ext2_block_alloc(file_system::fs_instance* fs)
 					break;
 				}
 
-				bgd.free_blocks--;
-				auto bdg_block_count = (i * sizeof(ext2_blkgrp_desc)) / ext2data->get_block_size();
+				bgd.free_block_count--;
+				auto bdg_block_count = (i * sizeof(ext2_block_group_desc)) / ext2data->get_block_size();
 
 				if ((ret = ext2_block_write(fs,
 					reinterpret_cast<uint8_t*>(ext2data->get_bgdt()) + bdg_block_count * ext2data->get_block_size(),
@@ -157,8 +157,8 @@ error_code ext2_block_free(file_system::fs_instance* fs, uint32_t block)
 		return ret;
 	}
 
-	bgd->free_blocks++;
-	auto bdg_block_count = (group * sizeof(ext2_blkgrp_desc)) / ext2data->get_block_size();
+	bgd->free_block_count++;
+	auto bdg_block_count = (group * sizeof(ext2_block_group_desc)) / ext2data->get_block_size();
 	ret = ext2_block_write(fs,
 		reinterpret_cast<uint8_t*>(ext2data->get_bgdt()) + bdg_block_count * ext2data->get_block_size(),
 		bgd->block_bitmap_no + 2);

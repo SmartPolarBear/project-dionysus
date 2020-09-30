@@ -96,6 +96,139 @@ error_code ext2_inode_write(file_system::fs_instance* fs,
 	return ext2_block_write(fs, block_buf, inode_block);
 }
 
+error_code_with_result<uint32_t> ext2_inode_alloc(file_system::fs_instance* fs, bool is_dir)
+{
+	auto data = reinterpret_cast<ext2_data*>(fs->private_data);
+	uint64_t* bitmap_buf = new uint64_t[data->get_block_size() / sizeof(uint64_t)];
+
+	for (size_t i = 0; i < data->get_bgdt_entry_count(); i++)
+	{
+		auto bgd = data->get_bgdt() + i;
+		memset(bitmap_buf, 0, data->get_block_size());
+
+		if (bgd->free_inode_count != 0)
+		{
+			auto ret = ext2_block_read(fs, reinterpret_cast<uint8_t*>(bitmap_buf), bgd->block_bitmap_no);
+			if (ret != ERROR_SUCCESS)
+			{
+				delete[] bitmap_buf;
+				return ret;
+			}
+
+			ext2_superblock& superblock = data->get_superblock();
+			for (size_t j = 0; j < superblock.block_group_inode_count; j++)
+			{
+				if (0 == (bitmap_buf[j / 64] & (1u << (j % 64)))) //free
+				{
+					ext2_ino_type ino = EXT2_FIRST_INODE_NUMBER + i * superblock.block_group_inode_count + j;
+
+					bitmap_buf[j / 64] |= (1ull << (j % 64));
+
+					ret = ext2_block_write(fs, reinterpret_cast<const uint8_t*>(bitmap_buf), bgd->block_bitmap_no);
+
+					if (ret != ERROR_SUCCESS)
+					{
+						delete[] bitmap_buf;
+						return ret;
+					}
+
+					bgd->free_inode_count--;
+					bgd->directory_count += is_dir;
+
+					size_t bgd_block_num = i * sizeof(ext2_block_group_desc) / data->get_block_size();
+
+					ret = ext2_block_write(fs,
+						reinterpret_cast<const uint8_t*>(data->get_bgdt()) + bgd_block_num * data->get_block_size(),
+						bgd->block_bitmap_no);
+
+					if (ret != ERROR_SUCCESS)
+					{
+						delete[] bitmap_buf;
+						return ret;
+					}
+
+					superblock.free_inode_count--;
+					ret = data->superblock_write_back(fs);
+
+					if (ret != ERROR_SUCCESS)
+					{
+						delete[] bitmap_buf;
+						return ret;
+					}
+
+					delete[] bitmap_buf;
+					return ino;
+				}
+			}
+		}
+	}
+
+	delete[] bitmap_buf;
+	return ERROR_UNKOWN; // Shouldn't reach here
+}
+
+error_code ext2_inode_free(file_system::fs_instance* fs, file_system::ext2_ino_type ino, bool is_dir)
+{
+	auto data = reinterpret_cast<ext2_data*>(fs->private_data);
+	ext2_superblock& superblock = data->get_superblock();
+	uint64_t* bitmap_buf = new uint64_t[data->get_block_size() / sizeof(uint64_t)];
+
+	auto block = (ino - EXT2_FIRST_INODE_NUMBER) / superblock.block_group_inode_count;
+	auto index = (ino - EXT2_FIRST_INODE_NUMBER) % superblock.block_group_inode_count;
+
+	auto bgd = data->get_bgdt() + block;
+
+	auto ret = ext2_block_read(fs, reinterpret_cast<uint8_t*>(bitmap_buf), bgd->block_bitmap_no);
+	if (ret != ERROR_SUCCESS)
+	{
+		delete[] bitmap_buf;
+		return ret;
+	}
+
+	bitmap_buf[index / 64] &= ~(1ull << (index % 64));
+
+	ret = ext2_block_write(fs, reinterpret_cast<const uint8_t*>(bitmap_buf), bgd->block_bitmap_no);
+	if (ret != ERROR_SUCCESS)
+	{
+		delete[] bitmap_buf;
+		return ret;
+	}
+
+	bgd->free_inode_count++;
+	bgd->directory_count -= is_dir;
+
+	size_t bgd_block_num = block * sizeof(ext2_block_group_desc) / data->get_block_size();
+
+	ret = ext2_block_write(fs,
+		reinterpret_cast<const uint8_t*>(data->get_bgdt()) + bgd_block_num * data->get_block_size(),
+		bgd->block_bitmap_no);
+
+	if (ret != ERROR_SUCCESS)
+	{
+		delete[] bitmap_buf;
+		return ret;
+	}
+
+	superblock.free_inode_count++;
+	ret = data->superblock_write_back(fs);
+	if (ret != ERROR_SUCCESS)
+	{
+		delete[] bitmap_buf;
+		return ret;
+	}
+
+	delete[] bitmap_buf;
+	return ERROR_SUCCESS;
+}
+
+error_code ext2_inode_resize(file_system::fs_instance* fs,
+	file_system::ext2_ino_type ino,
+	file_system::ext2_inode* inode,
+	size_t new_size)
+{
+	return ERROR_SUCCESS;
+}
+
 error_code_with_result<uint32_t> ext2_inode_get_index(file_system::fs_instance* fs,
 	file_system::ext2_inode* inode,
 	uint32_t index)
@@ -112,21 +245,3 @@ error_code ext2_inode_set_index(file_system::fs_instance* fs,
 	return 0;
 }
 
-error_code_with_result<uint32_t> ext2_inode_alloc(file_system::fs_instance* fs, bool is_dir)
-{
-
-	return ERROR_SUCCESS;
-}
-
-error_code ext2_inode_free(file_system::fs_instance* fs, file_system::ext2_ino_type ino, bool is_dir)
-{
-	return ERROR_SUCCESS;
-}
-
-error_code ext2_inode_resize(file_system::fs_instance* fs,
-	file_system::ext2_ino_type ino,
-	file_system::ext2_inode* inode,
-	size_t new_size)
-{
-	return ERROR_SUCCESS;
-}

@@ -126,15 +126,15 @@ namespace file_system
 		// Unused bytes here
 	} __attribute__((packed));
 
-	struct ext2_blkgrp_desc
+	struct ext2_block_group_desc
 	{
 		uint32_t block_bitmap_no;
 		uint32_t inode_bitmap_no;
 		uint32_t inode_table_no;
-		uint16_t free_blocks;
-		uint16_t free_inodes;
+		uint16_t free_block_count;
+		uint16_t free_inode_count;
 		uint16_t directory_count;
-		char padding0[14];
+		uint8_t padding0[14];
 	} __attribute__((packed));
 
 	struct ext2_inode
@@ -191,7 +191,7 @@ namespace file_system
 
 		size_t bgdt_size_blocks{};
 
-		ext2_blkgrp_desc* bgdt{};
+		ext2_block_group_desc* bgdt{};
 
 		vnode_base* root{};
 
@@ -199,7 +199,7 @@ namespace file_system
 		memory::kmem::kmem_cache* inode_cache{};
 
 	 public:
-		[[nodiscard]]  ext2_blkgrp_desc& get_bgd_by_index(size_t index)
+		[[nodiscard]]  ext2_block_group_desc& get_bgd_by_index(size_t index)
 		{
 			return bgdt[index];
 		}
@@ -239,7 +239,7 @@ namespace file_system
 			return bgdt_entry_count;
 		}
 
-		[[nodiscard]] ext2_blkgrp_desc* get_bgdt() const
+		[[nodiscard]] ext2_block_group_desc* get_bgdt() const
 		{
 			return bgdt;
 		}

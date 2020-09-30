@@ -51,11 +51,11 @@ error_code ext2_data::initialize(fs_instance* fs)
 	this->bgdt_entry_count =
 		(superblock.block_count + superblock.block_group_block_count - 1) / superblock.block_group_block_count;
 
-	size_t bgdt_size = bgdt_entry_count * sizeof(ext2_blkgrp_desc);
+	size_t bgdt_size = bgdt_entry_count * sizeof(ext2_block_group_desc);
 
 	this->bgdt_size_blocks = (bgdt_size + block_size - 1) / block_size;
 
-	this->bgdt = reinterpret_cast<ext2_blkgrp_desc*>(kmalloc(bgdt_size_blocks * block_size, 0));
+	this->bgdt = reinterpret_cast<ext2_block_group_desc*>(kmalloc(bgdt_size_blocks * block_size, 0));
 	if (bgdt == nullptr)
 	{
 		return -ERROR_MEMORY_ALLOC;
