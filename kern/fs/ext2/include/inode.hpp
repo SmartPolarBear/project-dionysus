@@ -19,7 +19,6 @@
 	uint32_t index);
 
 [[nodiscard]] error_code ext2_inode_set_index(file_system::fs_instance* fs,
-	file_system::ext2_ino_type number,
 	IN file_system::ext2_inode* inode,
 	uint32_t index,
 	uint32_t value);
@@ -29,7 +28,6 @@
 [[nodiscard]] error_code ext2_inode_free(file_system::fs_instance* fs, file_system::ext2_ino_type ino, bool is_dir);
 
 [[nodiscard]] error_code ext2_inode_resize(file_system::fs_instance* fs,
-	file_system::ext2_ino_type ino,
 	file_system::ext2_inode* inode,
 	size_t new_size
 );

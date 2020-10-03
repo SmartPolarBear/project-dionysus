@@ -15,7 +15,6 @@
 using namespace file_system;
 
 error_code ext2_inode_resize(file_system::fs_instance* fs,
-	file_system::ext2_ino_type ino,
 	file_system::ext2_inode* inode,
 	size_t new_size)
 {
@@ -93,7 +92,7 @@ error_code ext2_inode_resize(file_system::fs_instance* fs,
 				return get_error_code(ret);
 			}
 
-			auto err = ext2_inode_set_index(fs, ino, inode, i, get_result(ret));
+			auto err = ext2_inode_set_index(fs, inode, i, get_result(ret));
 			if (err != ERROR_SUCCESS)
 			{
 				return err;
