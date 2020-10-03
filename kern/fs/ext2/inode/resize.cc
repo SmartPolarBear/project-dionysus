@@ -42,7 +42,43 @@ error_code ext2_inode_resize(file_system::fs_instance* fs,
 	// shrink
 	if (new_block_count < old_block_count)
 	{
+		for (size_t index = new_block_count; index < old_block_count; index++)
+		{
+			auto ret = ext2_inode_get_index(fs, inode, index);
 
+			if (get_error_code(ret) != ERROR_SUCCESS)
+			{
+				return get_error_code(ret);
+			}
+
+			auto block = get_result(ret);
+
+			auto err = ext2_block_free(fs, block);
+			if (err != ERROR_SUCCESS)
+			{
+				return err;
+			}
+		}
+
+		// process L1
+		if (old_block_count > EXT2_DIRECT_BLOCK_COUNT
+			&& new_block_count <= EXT2_DIRECT_BLOCK_COUNT + (block_size / sizeof(uint32_t)))
+		{
+			if (inode->indirect_block_l1 == 0)
+			{
+				return -ERROR_INVALID;
+			}
+
+			auto err = ext2_block_free(fs, inode->indirect_block_l1);
+			inode->indirect_block_l1 = 0;
+
+			if (err != ERROR_SUCCESS)
+			{
+				return err;
+			}
+
+			// TODO: l2 and l3
+		}
 	}
 	else if (new_block_count >= old_block_count) // expand
 	{
@@ -62,6 +98,12 @@ error_code ext2_inode_resize(file_system::fs_instance* fs,
 			}
 		}
 	}
+
+	ext2_inode_set_size(inode, new_size);
+
+	auto real_block_count = new_block_count + (new_block_count > EXT2_DIRECT_BLOCK_COUNT);
+
+	inode->sector_count = real_block_count;
 
 	return ERROR_SUCCESS;
 }

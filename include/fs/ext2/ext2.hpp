@@ -172,9 +172,10 @@ namespace file_system
 		return (((uint64_t)inode->size_upper) << 32ull) | ((uint64_t)inode->size_lower);
 	}
 
-	static inline constexpr size_t ext2_inode_get_size(const ext2_inode& inode)
+	static inline void ext2_inode_set_size(ext2_inode* inode, size_t sz)
 	{
-		return (((uint64_t)inode.size_upper) << 32ull) | ((uint64_t)inode.size_lower);
+		inode->size_lower = sz & 0xFFFFFFFFull;
+		inode->size_upper = sz >> 32ull;
 	}
 
 	class ext2_data
