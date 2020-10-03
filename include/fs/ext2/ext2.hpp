@@ -25,6 +25,7 @@ namespace file_system
 	};
 
 	using ext2_ino_type = uint32_t;
+	using block_address_type = uint32_t;
 
 	constexpr ext2_ino_type EXT2_FIRST_INODE_NUMBER = 1;
 	constexpr ext2_ino_type EXT2_ROOT_DIR_INODE_NUMBER = 2;
@@ -167,7 +168,7 @@ namespace file_system
 		uint32_t os_val2;
 	} __attribute__((packed));
 
-	static inline constexpr size_t ext2_inode_get_size(const ext2_inode* inode)
+	static inline constexpr size_t EXT2_INODE_SIZE(const ext2_inode* inode)
 	{
 		return (((uint64_t)inode->size_upper) << 32ull) | ((uint64_t)inode->size_lower);
 	}
@@ -176,6 +177,11 @@ namespace file_system
 	{
 		inode->size_lower = sz & 0xFFFFFFFFull;
 		inode->size_upper = sz >> 32ull;
+	}
+
+	static inline constexpr size_t ADDR_COUNT_PER_BLOCK(size_t block_size)
+	{
+		return block_size / sizeof(block_address_type);
 	}
 
 	class ext2_data

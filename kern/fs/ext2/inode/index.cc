@@ -18,7 +18,57 @@ error_code_with_result<uint32_t> ext2_inode_get_index(file_system::fs_instance* 
 	file_system::ext2_inode* inode,
 	uint32_t index)
 {
-	return ERROR_SUCCESS;
+	ext2_data* data = (ext2_data*)fs->private_data;
+
+	if (data == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	auto addr_count = ADDR_COUNT_PER_BLOCK(data->get_block_size());
+	block_address_type* addrs = new block_address_type[addr_count];
+
+	if (index < EXT2_DIRECT_BLOCK_COUNT)
+	{
+		delete[] addrs;
+		return inode->direct_blocks[index];
+	}
+	else if (index < EXT2_DIRECT_BLOCK_COUNT + addr_count)
+	{
+		if (inode->indirect_block_l1 == 0)
+		{
+			delete[] addrs;
+			return -ERROR_OUT_OF_BOUND;
+		}
+
+		auto ret = ext2_block_read(fs, reinterpret_cast<uint8_t*>(addrs), inode->indirect_block_l1);
+		if (ret != ERROR_SUCCESS)
+		{
+			delete[] addrs;
+			return ret;
+		}
+
+		delete[] addrs;
+		return addrs[index - EXT2_DIRECT_BLOCK_COUNT];
+	}
+	else if (index < EXT2_DIRECT_BLOCK_COUNT + addr_count * 2)
+	{
+		delete[] addrs;
+		return -ERROR_NOT_IMPL;// TODO:L2
+	}
+	else if (index < EXT2_DIRECT_BLOCK_COUNT + addr_count * 3)
+	{
+		delete[] addrs;
+		return -ERROR_NOT_IMPL; // TODO:L3
+	}
+	else
+	{
+		delete[] addrs;
+		return -ERROR_INVALID;
+	}
+
+	delete[] addrs;
+	return -ERROR_INVALID;
 }
 
 error_code ext2_inode_set_index(file_system::fs_instance* fs,

@@ -29,12 +29,14 @@ error_code ext2_inode_resize(file_system::fs_instance* fs,
 	auto block_size = data->get_block_size();
 
 	size_t new_block_count = roundup(new_size, block_size) / block_size;
-	size_t old_block_count = roundup(ext2_inode_get_size(inode), block_size) / block_size;
+	size_t old_block_count = roundup(EXT2_INODE_SIZE(inode), block_size) / block_size;
 
 	// TODO: support more indirect block
 
-	if (new_block_count > EXT2_DIRECT_BLOCK_COUNT + (block_size / sizeof(uint32_t)) ||
-		old_block_count > EXT2_DIRECT_BLOCK_COUNT + (block_size / sizeof(uint32_t)))
+	auto addr_count = ADDR_COUNT_PER_BLOCK(block_size);
+
+	if (new_block_count > EXT2_DIRECT_BLOCK_COUNT + addr_count ||
+		old_block_count > EXT2_DIRECT_BLOCK_COUNT + addr_count)
 	{
 		return -ERROR_INVALID;
 	}
@@ -62,7 +64,7 @@ error_code ext2_inode_resize(file_system::fs_instance* fs,
 
 		// process L1
 		if (old_block_count > EXT2_DIRECT_BLOCK_COUNT
-			&& new_block_count <= EXT2_DIRECT_BLOCK_COUNT + (block_size / sizeof(uint32_t)))
+			&& new_block_count <= EXT2_DIRECT_BLOCK_COUNT + addr_count)
 		{
 			if (inode->indirect_block_l1 == 0)
 			{
