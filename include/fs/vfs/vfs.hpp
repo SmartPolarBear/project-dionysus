@@ -341,7 +341,7 @@ namespace file_system
 	class vfs_io_context
 	{
 	 private:
-		vnode_base *cwd_vnode;
+		vnode_base* cwd_vnode;
 		uid_type uid;
 		gid_type gid;
 	 private:
@@ -350,6 +350,14 @@ namespace file_system
 			fs_class_base* cls,
 			uint32_t flags,
 			const char* opt);
+	 public:
+		vfs_io_context() = default;
+
+		vfs_io_context(vnode_base* vnode, uid_type _uid, gid_type _gid)
+			: cwd_vnode(vnode), uid(_uid), gid(_gid)
+		{
+
+		}
 	 public:
 
 		error_code setcwd(const char* rel_path);
@@ -390,6 +398,8 @@ namespace file_system
 
 		size_t lseek(file_object* fd, size_t offset, size_t whence);
 	};
+
+	extern vfs_io_context* const kernel_io_context;
 
 	error_code vfs_init();
 
