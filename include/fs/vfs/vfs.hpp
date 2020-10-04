@@ -211,7 +211,7 @@ namespace file_system
 	class vnode_base
 	{
 	 protected:
-		using vnode_link_getter_type = vnode_base* (*)(struct thread*, struct vnode*);
+		using vnode_link_getter_type = vnode_base* (*)(struct thread*, vnode_base*);
 
 	 protected:
 		static constexpr size_t VNODE_NAME_MAX = 64;
@@ -238,7 +238,6 @@ namespace file_system
 		char name_buf[VNODE_NAME_MAX]{};
 
 		list_head child_head{};
-		list_head link{};
 
 		union
 		{
@@ -339,5 +338,59 @@ namespace file_system
 
 	};
 
-	error_code init_devfs_root();
+	class vfs_io_context
+	{
+	 private:
+		vnode_base *cwd_vnode;
+		uid_type uid;
+		gid_type gid;
+	 private:
+		error_code mount_internal(vnode_base* at,
+			device_class* blk,
+			fs_class_base* cls,
+			uint32_t flags,
+			const char* opt);
+	 public:
+
+		error_code setcwd(const char* rel_path);
+		error_code vnode_path(char* path, vnode_base* node);
+
+		error_code_with_result<vnode_base*> link_resolve(vnode_base* lnk, int link_itself);
+		error_code_with_result<vnode_base*> find(vnode_base* rel, const char* path, int link_itself);
+		error_code mount(const char* at,
+			device_class* blk,
+			fs_class_id fs_id,
+			size_t flags,
+			const char* opt);
+		error_code umount(const char* dir_name);
+
+		error_code open_vnode(file_object* fd, vnode_base* node, int opt);
+		error_code openat(
+			file_object* fd,
+			vnode_base* at,
+			const char* path,
+			size_t flags, size_t mode);
+		error_code close(file_object* fd);
+		error_code readdir(file_object* fd, directory_entry* ent);
+		error_code unlinkat(vnode_base* at, const char* pathname, size_t flags);
+		error_code mkdirat(vnode_base* at, const char* path, mode_type mode);
+		error_code_with_result<vnode_base*> mknod(const char* path, mode_type mode);
+		error_code chmod(const char* path, mode_type mode);
+		error_code chown(const char* path, uid_type uid, gid_type gid);
+		error_code ioctl(file_object* fd, size_t cmd, void* arg);
+		error_code ftruncate(vnode_base* node, size_t length);
+
+		error_code faccessat(vnode_base* at, const char* path, size_t accmode, size_t flags);
+		error_code fstatat(vnode_base* at, const char* path, file_status* st, size_t flags);
+		error_code access_check(int desm, mode_type mode, uid_type uid, gid_type gid);
+		error_code access_node(vnode_base* vn, size_t mode);
+
+		error_code_with_result<size_t> write(file_object* fd, const void* buf, size_t count);
+		error_code_with_result<size_t> read(file_object* fd, void* buf, size_t count);
+
+		size_t lseek(file_object* fd, size_t offset, size_t whence);
+	};
+
+	error_code vfs_init();
+
 }

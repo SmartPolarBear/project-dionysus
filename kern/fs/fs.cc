@@ -56,7 +56,11 @@ PANIC void file_system::fs_init()
 		KDEBUG_RICHPANIC_CODE(ret, false, "");
 	}
 
-
+	ret = file_system::vfs_init();
+	if (ret != ERROR_SUCCESS)
+	{
+		KDEBUG_RICHPANIC_CODE(ret, false, "");
+	}
 }
 
 error_code file_system::fs_create(fs_class_base* fs_class, device_class* dev, size_t flags, const char* data)

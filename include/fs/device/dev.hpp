@@ -39,6 +39,8 @@ namespace file_system
 		friend error_code device_add(device_class_id cls, size_t subcls, device_class& dev, const char* name);
 	};
 
+	error_code init_devfs_root();
+
 	error_code device_add(device_class_id cls, size_t subcls, IN device_class& dev, NULLABLE const char* name);
 
 }

@@ -1,6 +1,7 @@
 #include "system/types.h"
 #include "system/memlayout.h"
 #include "system/pmm.h"
+#include "system/kmem.hpp"
 
 #include "drivers/pci/pci.hpp"
 #include "drivers/pci/pci_device.hpp"
@@ -22,6 +23,7 @@
 #include <fs/vfs/vfs.hpp>
 
 using namespace file_system;
+using namespace memory::kmem;
 
 [[maybe_unused]] char block_dev_sd_idx_char = 'a';
 [[maybe_unused]] char block_dev_cd_idx_char = 'a';
@@ -30,6 +32,14 @@ using namespace file_system;
 [[maybe_unused]]const char* block_dev_sd_name = "sd ";
 [[maybe_unused]]const char* block_dev_cd_name = "cd ";
 [[maybe_unused]]const char* block_dev_hd_name = "hd ";
+
+struct vnode_base_wrapper
+{
+	vnode_base* vnode;
+	list_head link;
+};
+
+kmem_cache* vnode_wrapper_cache = nullptr;
 
 vnode_base* devfs_root = nullptr;
 
@@ -47,6 +57,8 @@ error_code file_system::init_devfs_root()
 
 	devfs_root->uid = 0;
 	devfs_root->gid = 0;
+
+	vnode_wrapper_cache = kmem_cache_create("vnode wrapper", sizeof(vnode_base_wrapper));
 
 	return ERROR_SUCCESS;
 }
@@ -96,12 +108,10 @@ static inline error_code device_generate_name(device_class_id cls, size_t sbcls,
 
 fs_instance ext2_instance;
 
-
 static inline void test_filesystem()
 {
 	g_ext2fs.initialize(&ext2_instance, nullptr);
 }
-
 
 error_code file_system::device_add(device_class_id cls, size_t subcls, device_class& dev, const char* name)
 {
@@ -151,7 +161,10 @@ error_code file_system::device_add(device_class_id cls, size_t subcls, device_cl
 	node->uid = 0;
 	node->gid = 0;
 
-	libkernel::list_add(&node->link, &devfs_root->child_head);
+	auto wrapper = reinterpret_cast<vnode_base_wrapper*>(kmem_cache_alloc(vnode_wrapper_cache));
+	
+	wrapper->vnode = node;
+	libkernel::list_add(&wrapper->link, &devfs_root->child_head);
 
 	if (dev.features & DFE_HAS_PARTITIONS)
 	{
