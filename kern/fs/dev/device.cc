@@ -12,7 +12,7 @@
 #include "drivers/ahci/ata/ata_string.hpp"
 
 #include "fs/device/ata_devices.hpp"
-#include "fs/device/dev.hpp"
+#include "fs/device/device.hpp"
 #include "fs/ext2/ext2.hpp"
 
 #include "libkernel/console/builtin_text_io.hpp"
@@ -162,7 +162,7 @@ error_code file_system::device_add(device_class_id cls, size_t subcls, device_cl
 	node->gid = 0;
 
 	auto wrapper = reinterpret_cast<vnode_base_wrapper*>(kmem_cache_alloc(vnode_wrapper_cache));
-	
+
 	wrapper->vnode = node;
 	libkernel::list_add(&wrapper->link, &devfs_root->child_head);
 
@@ -171,8 +171,23 @@ error_code file_system::device_add(device_class_id cls, size_t subcls, device_cl
 		dev.enumerate_partitions(*node);
 	}
 
-	// test it
+	// FIXME:test it
 	test_filesystem();
 
 	return ret;
+}
+
+error_code device_add_link(const char* name, vnode_base* to)
+{
+	return ERROR_SUCCESS;
+}
+
+error_code device_add_live_link(const char* name, vnode_link_getter_type getter)
+{
+	return ERROR_SUCCESS;
+}
+
+error_code_with_result<vnode_base*> device_find(device_class_id cls, const char* name)
+{
+	return ERROR_SUCCESS;
 }

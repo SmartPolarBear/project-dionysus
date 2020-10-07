@@ -3,7 +3,7 @@
 #include "system/error.hpp"
 
 #include "data/List.h"
-#include "fs/device/dev.hpp"
+#include "fs/device/device.hpp"
 
 namespace file_system
 {
@@ -211,17 +211,11 @@ namespace file_system
 	class vnode_base
 	{
 	 protected:
-		using vnode_link_getter_type = vnode_base* (*)(struct thread*, vnode_base*);
-
-	 protected:
 		static constexpr size_t VNODE_NAME_MAX = 64;
 
 		vnode_type type;
 
 		size_t flags{};
-
-	 protected:
-
 		size_t open_count{};
 		size_t inode_id{};
 
@@ -239,11 +233,13 @@ namespace file_system
 
 		list_head child_head{};
 
+		vnode_base* parent;
+
 		union
 		{
-			vnode_base* node;
+			vnode_base* node_target;
 			vnode_link_getter_type link_getter;
-		};
+		} link_target;
 
 	 public:
 		virtual ~vnode_base() = default;
@@ -260,6 +256,21 @@ namespace file_system
 
 	 public:
 
+		vnode_base* get_parent() const
+		{
+			return parent;
+		}
+
+		void set_parent(vnode_base* parent)
+		{
+			vnode_base::parent = parent;
+		}
+
+		void set_link_target(vnode_base* target)
+		{
+			link_target.node_target = target;
+		}
+
 		[[nodiscard]] const char* get_name() const
 		{
 			return name_buf;
@@ -273,6 +284,16 @@ namespace file_system
 		void set_fs(fs_instance* the_fs)
 		{
 			vnode_base::fs = the_fs;
+		}
+
+		size_t get_flags() const
+		{
+			return flags;
+		}
+
+		void set_flags(size_t flags)
+		{
+			vnode_base::flags = flags;
 		}
 
 	 public:
@@ -360,7 +381,7 @@ namespace file_system
 		}
 	 public:
 
-		error_code setcwd(const char* rel_path);
+		error_code set_cwd(const char* rel_path);
 		error_code vnode_path(char* path, vnode_base* node);
 
 		error_code_with_result<vnode_base*> link_resolve(vnode_base* lnk, int link_itself);

@@ -11,7 +11,7 @@
 #include "drivers/ahci/ata/ata_string.hpp"
 
 #include "fs/device/ata_devices.hpp"
-#include "fs/device/dev.hpp"
+#include "fs/device/device.hpp"
 
 #include "libkernel/console/builtin_text_io.hpp"
 

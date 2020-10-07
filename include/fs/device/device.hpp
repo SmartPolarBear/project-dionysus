@@ -12,11 +12,20 @@ namespace file_system
 
 	class vnode_base;
 
+	using vnode_link_getter_type = vnode_base* (*)(struct thread*, vnode_base*);
+
+
 	enum device_class_id
 	{
 		DC_BLOCK = 1,
 		DC_CHAR = 2,
 		DC_ANY = 255
+	};
+
+	enum device_class_flags
+	{
+		BLOCKDEV_CACHE = 0b1,
+		BLOCKDEV_BUSY = 0b01
 	};
 
 	class device_class
@@ -26,6 +35,22 @@ namespace file_system
 		size_t block_size;
 		size_t flags;
 		size_t features;
+	 public:
+		[[nodiscard]]size_t get_flags() const
+		{
+			return flags;
+		}
+
+		[[nodiscard]]bool has_flag(size_t flag) const
+		{
+			return flags & flag;
+		}
+
+		void set_flags(size_t fl)
+		{
+			flags |= fl;
+		}
+
 	 public:
 		virtual ~device_class() = default;
 
@@ -42,5 +67,8 @@ namespace file_system
 	error_code init_devfs_root();
 
 	error_code device_add(device_class_id cls, size_t subcls, IN device_class& dev, NULLABLE const char* name);
+	error_code device_add_link(const char* name, vnode_base* to);
+	error_code device_add_live_link(const char* name, vnode_link_getter_type getter);
+	error_code_with_result<vnode_base*> device_find(device_class_id cls, const char* name);
 
 }

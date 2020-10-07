@@ -63,7 +63,10 @@ PANIC void file_system::fs_init()
 	}
 }
 
-error_code file_system::fs_create(fs_class_base* fs_class, device_class* dev, size_t flags, const char* data)
+error_code_with_result<fs_instance*> file_system::fs_create(fs_class_base* fs_class,
+	device_class* dev,
+	size_t flags,
+	const char* data)
 {
 	fs_instance* fs_ins = new fs_instance;
 	if (fs_ins == nullptr)
@@ -84,7 +87,7 @@ error_code file_system::fs_create(fs_class_base* fs_class, device_class* dev, si
 
 	list_add(&fs_ins->link, &fs_mount_head);
 
-	return ERROR_SUCCESS;
+	return fs_ins;
 }
 
 error_code file_system::fs_register(fs_class_base* fscls)

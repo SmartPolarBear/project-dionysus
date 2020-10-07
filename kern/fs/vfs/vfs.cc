@@ -3,14 +3,15 @@
 
 using namespace file_system;
 
+vnode_base* vfs_root = nullptr;
+
+vfs_io_context the_kernel_io_context{ nullptr, 0, 0 };
+vfs_io_context* const file_system::kernel_io_context = &the_kernel_io_context;
+
 error_code fs_class_base::register_this()
 {
 	return fs_register(this);
 }
-
-vfs_io_context the_kernel_io_context{ nullptr, 0, 0 };
-
-vfs_io_context* const file_system::kernel_io_context = &the_kernel_io_context;
 
 error_code file_system::vfs_init()
 {
@@ -26,7 +27,7 @@ error_code vfs_io_context::mount_internal(vnode_base* at,
 	return 0;
 }
 
-error_code vfs_io_context::setcwd(const char* rel_path)
+error_code vfs_io_context::set_cwd(const char* rel_path)
 {
 	return 0;
 }
@@ -46,8 +47,71 @@ error_code_with_result<vnode_base*> vfs_io_context::find(vnode_base* rel, const 
 	return error_code_with_result<vnode_base*>();
 }
 
-error_code vfs_io_context::mount(const char* at, device_class* blk, fs_class_id fs_id, size_t flags, const char* opt)
+error_code vfs_io_context::mount(const char* path, device_class* blk, fs_class_id fs_id, size_t flags, const char* opt)
 {
+	if (blk == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	if (path[0] != '/')
+	{
+		return -ERROR_INVALID;
+	}
+
+	fs_class_base* fs_class = fs_find(fs_id);
+
+	if (fs_class == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	if (blk->has_flag(BLOCKDEV_BUSY))
+	{
+		return -ERROR_DEV_BUSY;
+	}
+
+	auto ret = fs_create(fs_class, blk, flags, opt);
+	if (get_error_code(ret) != ERROR_SUCCESS)
+	{
+		return get_error_code(ret);
+	}
+
+	auto fs_ins = get_result(ret);
+
+	auto root_ret = fs_class->get_root();
+	if (get_error_code(root_ret) != ERROR_SUCCESS)
+	{
+		return get_error_code(root_ret);
+	}
+
+	auto fs_root = get_result(root_ret);
+
+	if (strcmp(path, "/") == 0) // mount root
+	{
+		vfs_root = fs_root;
+	}
+	else
+	{
+		auto mount_point_ret = this->find(this->cwd_vnode, path, 0);
+		if (get_error_code(mount_point_ret) == ERROR_SUCCESS)
+		{
+			return get_error_code(mount_point_ret);
+		}
+
+		auto mountpoint = get_result(mount_point_ret);
+
+		mountpoint->set_flags(VNT_MNT);
+		mountpoint->set_link_target(fs_root);
+
+		fs_root->set_link_target(mountpoint);
+		fs_root->set_parent(mountpoint);
+	}
+
+	blk->set_flags(blk->get_flags() | BLOCKDEV_BUSY);
+
+	// TODO: Do fs_class needs its own initialization?
+
 	return 0;
 }
 
