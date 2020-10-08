@@ -123,6 +123,8 @@ namespace file_system
 		FSC_EXT2,
 	};
 
+	constexpr size_t VFS_MAX_PATH_LEN = 256;
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-private-field"
 #pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -365,12 +367,7 @@ namespace file_system
 		vnode_base* cwd_vnode;
 		uid_type uid;
 		gid_type gid;
-	 private:
-		error_code mount_internal(vnode_base* at,
-			device_class* blk,
-			fs_class_base* cls,
-			uint32_t flags,
-			const char* opt);
+
 	 public:
 		vfs_io_context() = default;
 
@@ -384,8 +381,8 @@ namespace file_system
 		error_code set_cwd(const char* rel_path);
 		error_code vnode_path(char* path, vnode_base* node);
 
-		error_code_with_result<vnode_base*> link_resolve(vnode_base* lnk, int link_itself);
-		error_code_with_result<vnode_base*> find(vnode_base* rel, const char* path, int link_itself);
+		error_code_with_result<vnode_base*> link_resolve(vnode_base* lnk, bool link_itself);
+		error_code_with_result<vnode_base*> find(vnode_base* rel, const char* path, bool link_itself);
 		error_code mount(const char* at,
 			device_class* blk,
 			fs_class_id fs_id,

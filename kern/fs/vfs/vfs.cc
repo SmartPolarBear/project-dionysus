@@ -8,6 +8,7 @@ vnode_base* vfs_root = nullptr;
 vfs_io_context the_kernel_io_context{ nullptr, 0, 0 };
 vfs_io_context* const file_system::kernel_io_context = &the_kernel_io_context;
 
+
 error_code fs_class_base::register_this()
 {
 	return fs_register(this);
@@ -15,16 +16,8 @@ error_code fs_class_base::register_this()
 
 error_code file_system::vfs_init()
 {
+	vfs_root = nullptr;
 	return ERROR_SUCCESS;
-}
-
-error_code vfs_io_context::mount_internal(vnode_base* at,
-	device_class* blk,
-	fs_class_base* cls,
-	uint32_t flags,
-	const char* opt)
-{
-	return 0;
 }
 
 error_code vfs_io_context::set_cwd(const char* rel_path)
@@ -37,14 +30,40 @@ error_code vfs_io_context::vnode_path(char* path, vnode_base* node)
 	return 0;
 }
 
-error_code_with_result<vnode_base*> vfs_io_context::link_resolve(vnode_base* lnk, int link_itself)
+error_code_with_result<vnode_base*> vfs_io_context::link_resolve(vnode_base* lnk, bool link_itself)
 {
 	return error_code_with_result<vnode_base*>();
 }
 
-error_code_with_result<vnode_base*> vfs_io_context::find(vnode_base* rel, const char* path, int link_itself)
+error_code_with_result<vnode_base*> vfs_io_context::find(vnode_base* rel, const char* path, bool link_itself)
 {
-	return error_code_with_result<vnode_base*>();
+	if (vfs_root == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	vnode_base* find_base = nullptr;
+	if (path[0] == '/')
+	{
+		while (*path == '/')path++;
+
+		rel = vfs_root;
+	}
+	else
+	{
+		if (rel == nullptr)
+		{
+			rel = this->cwd_vnode;
+		}
+
+		if (rel == nullptr)
+		{
+			rel = vfs_root;
+		}
+	}
+
+	uinque_ptr<char>
+
 }
 
 error_code vfs_io_context::mount(const char* path, device_class* blk, fs_class_id fs_id, size_t flags, const char* opt)
@@ -93,7 +112,7 @@ error_code vfs_io_context::mount(const char* path, device_class* blk, fs_class_i
 	}
 	else
 	{
-		auto mount_point_ret = this->find(this->cwd_vnode, path, 0);
+		auto mount_point_ret = this->find(this->cwd_vnode, path, false);
 		if (get_error_code(mount_point_ret) == ERROR_SUCCESS)
 		{
 			return get_error_code(mount_point_ret);
