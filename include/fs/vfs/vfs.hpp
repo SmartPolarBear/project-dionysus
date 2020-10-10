@@ -293,9 +293,14 @@ namespace file_system
 			return flags;
 		}
 
-		void set_flags(size_t flags)
+		bool has_flags(size_t flgs) const
 		{
-			vnode_base::flags = flags;
+			return flags | flgs;
+		}
+
+		void set_flags(size_t flgs)
+		{
+			vnode_base::flags = flgs;
 		}
 
 	 public:
@@ -368,6 +373,8 @@ namespace file_system
 		uid_type uid;
 		gid_type gid;
 
+	 private:
+		error_code_with_result<vnode_base*> do_find(vnode_base* node, const char* path, bool link_itself);
 	 public:
 		vfs_io_context() = default;
 

@@ -28,6 +28,7 @@ enum error_code_values : error_code
 	ERROR_OBSOLETE,          // Out of date
 	ERROR_OUT_OF_BOUND,
 	ERROR_INTERNAL,
+	ERROR_NOT_DIR,
 };
 
 

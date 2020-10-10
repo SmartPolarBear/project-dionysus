@@ -1,13 +1,16 @@
 #include "fs/fs.hpp"
 #include "fs/vfs/vfs.hpp"
 
+#include <memory>
+
+using namespace std;
+
 using namespace file_system;
 
 vnode_base* vfs_root = nullptr;
 
 vfs_io_context the_kernel_io_context{ nullptr, 0, 0 };
 vfs_io_context* const file_system::kernel_io_context = &the_kernel_io_context;
-
 
 error_code fs_class_base::register_this()
 {
@@ -18,6 +21,37 @@ error_code file_system::vfs_init()
 {
 	vfs_root = nullptr;
 	return ERROR_SUCCESS;
+}
+
+error_code_with_result<vnode_base*> vfs_io_context::do_find(vnode_base* mount, const char* path, bool link_itself)
+{
+	auto name = new char[VFS_MAX_PATH_LEN];
+
+	if (mount == nullptr ||
+		path == nullptr ||
+		path[0] == 0 ||
+		path[0] == '/') // path should neither be empty nor be absolute
+	{
+		return -ERROR_INVALID;
+	}
+
+	if (mount->has_flags(VNT_LNK))
+	{
+		//TODO: multiple links
+		return -ERROR_NOT_IMPL;
+	}
+
+	if (!mount->has_flags(VNT_DIR))
+	{
+		return -ERROR_NOT_DIR;
+	}
+
+
+	// TODO: check access permissions
+
+
+
+	delete name;
 }
 
 error_code vfs_io_context::set_cwd(const char* rel_path)
@@ -61,8 +95,6 @@ error_code_with_result<vnode_base*> vfs_io_context::find(vnode_base* rel, const 
 			rel = vfs_root;
 		}
 	}
-
-	uinque_ptr<char>
 
 }
 
@@ -228,3 +260,4 @@ size_t vfs_io_context::lseek(file_object* fd, size_t offset, size_t whence)
 {
 	return 0;
 }
+
