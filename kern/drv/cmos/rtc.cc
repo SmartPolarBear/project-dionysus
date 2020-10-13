@@ -208,7 +208,7 @@ PANIC void cmos::cmos_rtc_init()
 	}
 
 	// preprocessing the prefix sums
-	for (int i = 1; i < 12; ++i)
+	for (int i = 1; i <= 12; ++i)
 	{
 		bissextile_month_ps_arr[i] = bissextile_month_ps_arr[i - 1] + bissextile_month_ps_arr[i];
 		normal_month_ps_arr[i] = normal_month_ps_arr[i - 1] + normal_month_ps_arr[i];

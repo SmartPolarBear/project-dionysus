@@ -23,9 +23,41 @@ error_code file_system::vfs_init()
 	return ERROR_SUCCESS;
 }
 
+static inline const char* next_path_element(const char* path, OUT char* element)
+{
+	auto pos = strchr(path, '/');
+	if (pos == nullptr) // no '/', there is only one element left
+	{
+		strncpy(element, path, VFS_MAX_PATH_LEN); // we can't copy more than path length
+		return nullptr;
+	}
+	else
+	{
+		strncpy(element, path, pos - path);
+
+		while (*pos == '/') // bypass the / to return
+		{
+			++pos;
+		}
+
+		if (*pos == '\0')
+		{
+			return nullptr;
+		}
+
+		return pos;
+	}
+}
+
+static inline error_code_with_result<vnode_base*> vfs_lookup_or_load(vnode_base *at,const char*name)
+{
+	return ERROR_SUCCESS;
+}
+
 error_code_with_result<vnode_base*> vfs_io_context::do_find(vnode_base* mount, const char* path, bool link_itself)
 {
-	auto name = new char[VFS_MAX_PATH_LEN];
+	auto buf = new char[VFS_MAX_PATH_LEN];
+	vnode_base* result = nullptr;
 
 	if (mount == nullptr ||
 		path == nullptr ||
@@ -48,10 +80,35 @@ error_code_with_result<vnode_base*> vfs_io_context::do_find(vnode_base* mount, c
 
 
 	// TODO: check access permissions
+	auto path_next = next_path_element(path, buf);
+	for (;; path_next = next_path_element(path_next, buf))
+	{
+		if (strcmp(buf, ".") == 0)
+		{
+			if (path_next == nullptr || path_next[0] == 0)
+			{
+				result = mount;
+				return result;
+			}
+			continue;
+		}
+		else if (strcmp(buf, "..") == 0)
+		{
+			auto parent = mount->get_parent();
+			if (parent == nullptr)
+			{
+				parent = mount;
+			}
+
+			return do_find(parent, path_next, link_itself);
+		}
+
+		break;
+	}
 
 
 
-	delete name;
+	delete[]buf;
 }
 
 error_code vfs_io_context::set_cwd(const char* rel_path)
