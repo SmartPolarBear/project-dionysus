@@ -73,7 +73,7 @@ static inline uint16_t rtc_register_read(rtc_reg_type reg)
 
 static constexpr bool check_bissextile(uint64_t year)
 {
-	return (year % 4 == 0) && (year % 100 != 0);
+	return ((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0);
 }
 
 static inline void wait_for_update()
