@@ -29,6 +29,7 @@ enum error_code_values : error_code
 	ERROR_OUT_OF_BOUND,
 	ERROR_INTERNAL,
 	ERROR_NOT_DIR,
+	ERROR_NOENTRY,
 };
 
 
@@ -36,7 +37,7 @@ template<typename T>
 using error_code_with_result = std::variant<error_code, T>;
 
 template<typename T>
-static inline bool get_error_code(error_code_with_result<T> ret) noexcept
+static inline error_code get_error_code(error_code_with_result<T> ret) noexcept
 {
 	return std::holds_alternative<error_code>(ret)
 		   ? std::get<error_code>(ret)

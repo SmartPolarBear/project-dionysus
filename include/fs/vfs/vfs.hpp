@@ -304,7 +304,13 @@ namespace file_system
 		}
 
 	 public:
-		virtual error_code find(const char* name, vnode_base& ret) = 0;
+
+		error_code attach(vnode_base *child);
+		error_code detach(vnode_base *node);
+		error_code_with_result<vnode_base*>  lookup_child( const char *name);
+
+	 public:
+		virtual error_code_with_result<vnode_base*> find(const char* name) = 0;
 		virtual size_t read_dir(const file_object& fd, directory_entry& entry) = 0;
 		virtual error_code open_dir(const file_object& fd) = 0;
 		virtual error_code open(const file_object& fd) = 0;
@@ -327,13 +333,16 @@ namespace file_system
 		virtual size_t write(const file_object& fd, const void* buf, size_t count) = 0;
 
 	 public:
+
 		friend error_code init_devfs_root();
 		friend error_code device_add(device_class_id cls, size_t subcls, device_class& dev, const char* name);
+
 		friend error_code partition_add_device(file_system::vnode_base& parent,
 			logical_block_address lba,
 			size_t size,
 			size_t disk_idx,
 			[[maybe_unused]]uint32_t sys_id);
+
 	};
 
 	class dev_fs_node
@@ -347,7 +356,9 @@ namespace file_system
 
 		~dev_fs_node() override = default;
 
-		error_code find(const char* name, vnode_base& ret) override;
+
+
+		error_code_with_result<vnode_base*> find(const char* name) override;
 		size_t read_dir(const file_object& fd, directory_entry& entry) override;
 		error_code open_dir(const file_object& fd) override;
 		error_code open(const file_object& fd) override;

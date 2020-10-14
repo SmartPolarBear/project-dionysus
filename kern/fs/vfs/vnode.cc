@@ -22,7 +22,22 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-parameter"
 
-error_code file_system::dev_fs_node::find(const char* name, file_system::vnode_base& ret)
+error_code file_system::vnode_base::attach(file_system::vnode_base* child)
+{
+	return 0;
+}
+
+error_code file_system::vnode_base::detach(file_system::vnode_base* node)
+{
+	return 0;
+}
+
+error_code_with_result<file_system::vnode_base*> file_system::vnode_base::lookup_child(const char* name)
+{
+	return error_code_with_result<file_system::vnode_base*>();
+}
+
+error_code_with_result<file_system::vnode_base*> file_system::dev_fs_node::find(const char* name)
 {
 	return -ERROR_UNSUPPORTED;
 }

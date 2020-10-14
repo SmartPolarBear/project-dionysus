@@ -19,6 +19,7 @@
 #include <cstring>
 #include <cmath>
 #include <algorithm>
+#include <fs/vfs/vfs.hpp>
 
 using namespace ahci;
 
@@ -44,6 +45,8 @@ error_code file_system::partition_add_device(file_system::vnode_base& parent,
 
 	return ERROR_SUCCESS;
 }
+
+
 
 error_code file_system::ATABlockDevice::enumerate_partitions(file_system::vnode_base& parent)
 {

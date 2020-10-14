@@ -2,7 +2,7 @@
 #include "fs/vfs/vfs.hpp"
 #include "fs/ext2/vnode.hpp"
 
-error_code file_system::ext2_vnode::find(const char* name, file_system::vnode_base& ret)
+error_code_with_result<file_system::vnode_base*> file_system::ext2_vnode::find(const char* name)
 {
 	return ERROR_SUCCESS;
 }

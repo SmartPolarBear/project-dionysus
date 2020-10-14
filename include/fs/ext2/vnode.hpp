@@ -20,7 +20,7 @@ namespace file_system
 
 		error_code initialize_from_inode(ext2_ino_type ino, const ext2_inode* src);
 
-		error_code find(const char* name, vnode_base& ret) override;
+		error_code_with_result<vnode_base*> find(const char* name) override;
 		size_t read_dir(const file_object& fd, directory_entry& entry) override;
 		error_code open_dir(const file_object& fd) override;
 		error_code open(const file_object& fd) override;

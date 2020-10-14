@@ -49,9 +49,36 @@ static inline const char* next_path_element(const char* path, OUT char* element)
 	}
 }
 
-static inline error_code_with_result<vnode_base*> vfs_lookup_or_load(vnode_base *at,const char*name)
+static inline error_code_with_result<vnode_base*> vfs_lookup_or_load(vnode_base* at, const char* name)
 {
-	return ERROR_SUCCESS;
+	auto child_ret = at->lookup_child(name);
+
+	auto ret = get_error_code(child_ret);
+	if (ret == ERROR_SUCCESS)
+	{
+		return ret;
+	}
+	else if (ret != ERROR_NOENTRY)
+	{
+		return ret;
+	}
+
+	if (!(at->has_flags(VNF_MEMORY)))
+	{
+		auto find_ret = at->find(name);
+
+		if (get_error_code(find_ret) != ERROR_SUCCESS)
+		{
+			return get_error_code(find_ret);
+		}
+
+		auto node = get_result(find_ret);
+		at->attach(node);
+
+		return node;
+	}
+
+	return -ERROR_NOENTRY;
 }
 
 error_code_with_result<vnode_base*> vfs_io_context::do_find(vnode_base* mount, const char* path, bool link_itself)
@@ -105,8 +132,6 @@ error_code_with_result<vnode_base*> vfs_io_context::do_find(vnode_base* mount, c
 
 		break;
 	}
-
-
 
 	delete[]buf;
 }
