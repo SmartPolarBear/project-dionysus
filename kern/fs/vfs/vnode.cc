@@ -1,6 +1,7 @@
 #include "system/types.h"
 #include "system/memlayout.h"
 #include "system/pmm.h"
+#include "system/kmem.hpp"
 
 #include "drivers/pci/pci.hpp"
 #include "drivers/pci/pci_device.hpp"
@@ -19,120 +20,65 @@
 #include <cmath>
 #include <algorithm>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-parameter"
+struct vnode_child_node
+{
+	file_system::vnode_base* vnode;
+	list_head list;
+};
+
+using namespace memory::kmem;
+using namespace libkernel;
+
+memory::kmem::kmem_cache* vnode_child_node_cache = nullptr;
+
+
+
+error_code file_system::vnode_init()
+{
+	vnode_child_node_cache = kmem_cache_create("vnode_child", sizeof(vnode_child_node));
+
+	if (vnode_child_node_cache == nullptr)
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
+
+	return ERROR_SUCCESS;
+}
 
 error_code file_system::vnode_base::attach(file_system::vnode_base* child)
 {
+	vnode_child_node* child_node = reinterpret_cast<vnode_child_node*>(kmem_cache_alloc(vnode_child_node_cache));
+	child_node->vnode = child;
+	list_add(&child_node->list, &this->child_head);
 	return 0;
 }
 
 error_code file_system::vnode_base::detach(file_system::vnode_base* node)
 {
+	list_head* iter = nullptr, * t = nullptr;
+	list_for_safe(iter, t, &this->child_head)
+	{
+		auto n = list_entry(iter, vnode_child_node, list);
+		if (n->vnode == node)
+		{
+			list_remove(iter);
+			break;
+		}
+	}
 	return 0;
 }
 
 error_code_with_result<file_system::vnode_base*> file_system::vnode_base::lookup_child(const char* name)
 {
-	return error_code_with_result<file_system::vnode_base*>();
+	list_head* iter = nullptr;
+	list_for(iter, &this->child_head)
+	{
+		auto n = list_entry(iter, vnode_child_node, list);
+		if (strcmp(n->vnode->get_name(),name)==0)
+		{
+			return n->vnode;
+		}
+	}
+
+	return -ERROR_NOENTRY;
 }
-
-error_code_with_result<file_system::vnode_base*> file_system::dev_fs_node::find(const char* name)
-{
-	return -ERROR_UNSUPPORTED;
-}
-
-size_t file_system::dev_fs_node::read_dir(const file_system::file_object& fd, file_system::directory_entry& entry)
-{
-	return -ERROR_UNSUPPORTED;
-}
-
-error_code file_system::dev_fs_node::open_dir(const file_system::file_object& fd)
-{
-	return -ERROR_UNSUPPORTED;
-}
-
-error_code file_system::dev_fs_node::open(const file_system::file_object& fd)
-{
-	return -ERROR_UNSUPPORTED;
-}
-
-error_code file_system::dev_fs_node::close(const file_system::file_object& fd)
-{
-	return -ERROR_UNSUPPORTED;
-}
-
-error_code file_system::dev_fs_node::create(const char* filename, uid_type uid, gid_type gid, size_t mode)
-{
-	return -ERROR_UNSUPPORTED;
-}
-
-error_code file_system::dev_fs_node::make_dir(const char* filename, uid_type uid, gid_type gid, size_t mode)
-{
-	return -ERROR_UNSUPPORTED;
-}
-
-error_code file_system::dev_fs_node::truncate(size_t size)
-{
-	return -ERROR_UNSUPPORTED;
-}
-
-error_code file_system::dev_fs_node::unlink(file_system::vnode_base& vn)
-{
-	return -ERROR_UNSUPPORTED;
-}
-
-uintptr_t file_system::dev_fs_node::lseek(const file_system::file_object& fd, size_t offset, int whence)
-{
-	return -ERROR_UNSUPPORTED;
-}
-
-error_code file_system::dev_fs_node::chmod(size_t mode)
-{
-	return -ERROR_UNSUPPORTED;
-}
-
-error_code file_system::dev_fs_node::chown(uid_type uid, gid_type gid)
-{
-	return -ERROR_UNSUPPORTED;
-}
-
-error_code file_system::dev_fs_node::read_link(char* buf, size_t lim)
-{
-	return -ERROR_UNSUPPORTED;
-}
-size_t file_system::dev_fs_node::read(const file_system::file_object& fd, void* buf, size_t count)
-{
-	return -ERROR_UNSUPPORTED;
-}
-
-size_t file_system::dev_fs_node::write(const file_system::file_object& fd, const void* buf, size_t count)
-{
-	return -ERROR_UNSUPPORTED;
-}
-
-#pragma clang diagnostic pop
-
-error_code file_system::dev_fs_node::stat(file_system::file_status& st)
-{
-	st.mode = (this->mode & VFS_MODE_MASK) | vnode_type_to_mode_type(this->type);
-	st.uid = this->uid;
-	st.gid = this->gid;
-	st.size = 0;
-	st.blksize = 0;
-	st.blocks = 0;
-	st.ino = 0;
-
-	// TODO: these all should be the boot time
-	st.atime = 0;
-	st.mtime = 0;
-	st.ctime = 0;
-
-	st.dev = 0;
-	st.rdev = 0;
-
-	return ERROR_SUCCESS;
-}
-
-
-

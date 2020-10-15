@@ -37,7 +37,7 @@ template<typename T>
 using error_code_with_result = std::variant<error_code, T>;
 
 template<typename T>
-static inline bool is_error(error_code_with_result<T> ret) noexcept
+static inline bool has_error(error_code_with_result<T> ret) noexcept
 {
 	return std::holds_alternative<error_code>(ret);
 }

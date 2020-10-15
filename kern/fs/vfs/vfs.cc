@@ -1,11 +1,14 @@
 #include "fs/fs.hpp"
 #include "fs/vfs/vfs.hpp"
 
+#include "system/kmem.hpp"
+
 #include <memory>
 
 using namespace std;
 
 using namespace file_system;
+
 
 vnode_base* vfs_root = nullptr;
 
@@ -20,6 +23,13 @@ error_code fs_class_base::register_this()
 error_code file_system::vfs_init()
 {
 	vfs_root = nullptr;
+
+	auto ret = vnode_init();
+	if (ret != ERROR_SUCCESS)
+	{
+		return ret;
+	}
+
 	return ERROR_SUCCESS;
 }
 

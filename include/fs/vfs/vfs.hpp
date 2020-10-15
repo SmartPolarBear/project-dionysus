@@ -438,5 +438,5 @@ namespace file_system
 	extern vfs_io_context* const kernel_io_context;
 
 	error_code vfs_init();
-
+	error_code vnode_init();
 }

@@ -33,7 +33,7 @@ using namespace memory::kmem;
 [[maybe_unused]]const char* block_dev_cd_name = "cd ";
 [[maybe_unused]]const char* block_dev_hd_name = "hd ";
 
-struct vnode_base_wrapper
+struct vnode_base_node
 {
 	vnode_base* vnode;
 	list_head link;
@@ -58,7 +58,7 @@ error_code file_system::init_devfs_root()
 	devfs_root->uid = 0;
 	devfs_root->gid = 0;
 
-	vnode_wrapper_cache = kmem_cache_create("vnode wrapper", sizeof(vnode_base_wrapper));
+	vnode_wrapper_cache = kmem_cache_create("vnode wrapper", sizeof(vnode_base_node));
 
 	return ERROR_SUCCESS;
 }
@@ -161,7 +161,7 @@ error_code file_system::device_add(device_class_id cls, size_t subcls, device_cl
 	node->uid = 0;
 	node->gid = 0;
 
-	auto wrapper = reinterpret_cast<vnode_base_wrapper*>(kmem_cache_alloc(vnode_wrapper_cache));
+	auto wrapper = reinterpret_cast<vnode_base_node*>(kmem_cache_alloc(vnode_wrapper_cache));
 
 	wrapper->vnode = node;
 	libkernel::list_add(&wrapper->link, &devfs_root->child_head);
