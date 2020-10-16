@@ -12,9 +12,6 @@ using namespace file_system;
 
 vnode_base* vfs_root = nullptr;
 
-vfs_io_context the_kernel_io_context{ nullptr, 0, 0 };
-vfs_io_context* const file_system::kernel_io_context = &the_kernel_io_context;
-
 error_code fs_class_base::register_this()
 {
 	return fs_register(this);

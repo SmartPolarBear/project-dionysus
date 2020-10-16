@@ -229,6 +229,7 @@ namespace file_system
 		fs_instance* fs{};
 
 		device_class* dev{};
+
 		void* private_data{};
 
 		char name_buf[VNODE_NAME_MAX]{};
@@ -268,7 +269,7 @@ namespace file_system
 			vnode_base::parent = parent;
 		}
 
-		[[nodiscard]] vnode_base *get_link_target()const
+		[[nodiscard]] vnode_base* get_link_target() const
 		{
 			return link_target.node_target;
 		}
@@ -293,12 +294,12 @@ namespace file_system
 			vnode_base::fs = the_fs;
 		}
 
-		size_t get_flags() const
+		[[nodiscard]] size_t get_flags() const
 		{
 			return flags;
 		}
 
-		bool has_flags(size_t flgs) const
+		[[nodiscard]] bool has_flags(size_t flgs) const
 		{
 			return flags | flgs;
 		}
@@ -306,6 +307,11 @@ namespace file_system
 		void set_flags(size_t flgs)
 		{
 			vnode_base::flags = flgs;
+		}
+
+		[[nodiscard]]device_class* get_dev() const
+		{
+			return dev;
 		}
 
 	 public:

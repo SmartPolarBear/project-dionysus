@@ -43,12 +43,12 @@ kmem_cache* vnode_base_node_cache = nullptr;
 
 vnode_base* devfs_root = nullptr;
 
-fs_instance ext2_instance;
-
-static inline void test_filesystem()
-{
-	g_ext2fs.initialize(&ext2_instance, nullptr);
-}
+//fs_instance ext2_instance;
+//
+//static inline void test_filesystem()
+//{
+//	g_ext2fs.initialize(&ext2_instance, nullptr);
+//}
 
 static inline error_code device_generate_name(device_class_id cls, size_t sbcls, OUT char* namebuf)
 {
@@ -95,7 +95,7 @@ static inline error_code device_generate_name(device_class_id cls, size_t sbcls,
 
 error_code file_system::device_add(device_class_id cls, size_t subcls, device_class& dev, const char* name)
 {
-	ext2_instance.dev = &dev;
+//	ext2_instance.dev = &dev;
 
 	char* node_name = new char[64];
 	error_code ret = ERROR_SUCCESS;
@@ -151,8 +151,8 @@ error_code file_system::device_add(device_class_id cls, size_t subcls, device_cl
 		dev.enumerate_partitions(*node);
 	}
 
-	// FIXME:test it
-	test_filesystem();
+//	// FIXME:test it
+//	test_filesystem();
 
 	return ret;
 }

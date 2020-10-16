@@ -21,17 +21,38 @@ using namespace file_system;
 list_head fs_class_head;
 list_head fs_mount_head;
 
+vfs_io_context the_kernel_io_context{ nullptr, 0, 0 };
+vfs_io_context* const file_system::kernel_io_context = &the_kernel_io_context;
+
 // workaround the problem that it's impossible to use current
 // implementation of intrusive linked list with non-pod types
 
-struct fs_class_wrapper_node
+struct fs_class_node
 {
 	file_system::fs_class_base* fs_class;
 
 	list_head link;
 };
 
+static inline error_code kernel_io_context_init()
+{
+	auto dev_find_ret = device_find(DC_BLOCK, "sda");
+	if (has_error(dev_find_ret))
+	{
+		return get_error_code(dev_find_ret);
+	}
 
+	auto vnode = get_result(dev_find_ret);
+
+	auto err = kernel_io_context->mount("/", vnode->get_dev(), FSC_EXT2, 0, nullptr);
+
+	if (err != ERROR_SUCCESS)
+	{
+		return err;
+	}
+
+	return -ERROR_SUCCESS;
+}
 
 PANIC void file_system::fs_init()
 {
@@ -61,6 +82,12 @@ PANIC void file_system::fs_init()
 	{
 		KDEBUG_RICHPANIC_CODE(ret, false, "");
 	}
+
+	ret = kernel_io_context_init();
+	if (ret != ERROR_SUCCESS)
+	{
+		KDEBUG_RICHPANIC_CODE(ret, false, "");
+	}
 }
 
 error_code_with_result<fs_instance*> file_system::fs_create(fs_class_base* fs_class,
@@ -71,7 +98,7 @@ error_code_with_result<fs_instance*> file_system::fs_create(fs_class_base* fs_cl
 	fs_instance* fs_ins = new fs_instance;
 	if (fs_ins == nullptr)
 	{
-		return ERROR_MEMORY_ALLOC;
+		return -ERROR_MEMORY_ALLOC;
 	}
 
 	fs_ins->fs_class = fs_class;
@@ -97,7 +124,7 @@ error_code file_system::fs_register(fs_class_base* fscls)
 		return -ERROR_REWRITE;
 	}
 
-	fs_class_wrapper_node* node = new fs_class_wrapper_node
+	fs_class_node* node = new fs_class_node
 		{
 			.fs_class=fscls,
 		};
@@ -111,7 +138,7 @@ file_system::fs_class_base* file_system::fs_find(fs_class_id id)
 	list_head* iter = nullptr;
 	list_for(iter, &fs_class_head)
 	{
-		auto entry = list_entry(iter, fs_class_wrapper_node, link);
+		auto entry = list_entry(iter, fs_class_node, link);
 		if (entry->fs_class->get_id() == id)
 		{
 			return entry->fs_class;
@@ -125,7 +152,7 @@ file_system::fs_class_base* file_system::fs_find(const char* name)
 	list_head* iter = nullptr;
 	list_for(iter, &fs_class_head)
 	{
-		auto entry = list_entry(iter, fs_class_wrapper_node, link);
+		auto entry = list_entry(iter, fs_class_node, link);
 		if (strcmp(entry->fs_class->get_name(), name) == 0)
 		{
 			return entry->fs_class;
