@@ -39,28 +39,15 @@ struct vnode_base_node
 	list_head link;
 };
 
-kmem_cache* vnode_wrapper_cache = nullptr;
+kmem_cache* vnode_base_node_cache = nullptr;
 
 vnode_base* devfs_root = nullptr;
 
-error_code file_system::init_devfs_root()
+fs_instance ext2_instance;
+
+static inline void test_filesystem()
 {
-	devfs_root = static_cast<vnode_base*>(new dev_fs_node(VNT_BLK, nullptr));
-
-	if (!devfs_root)
-	{
-		return -ERROR_MEMORY_ALLOC;
-	}
-
-	devfs_root->flags |= VNF_MEMORY;
-	devfs_root->mode = ROOT_DEFAULT_MODE;
-
-	devfs_root->uid = 0;
-	devfs_root->gid = 0;
-
-	vnode_wrapper_cache = kmem_cache_create("vnode wrapper", sizeof(vnode_base_node));
-
-	return ERROR_SUCCESS;
+	g_ext2fs.initialize(&ext2_instance, nullptr);
 }
 
 static inline error_code device_generate_name(device_class_id cls, size_t sbcls, OUT char* namebuf)
@@ -104,13 +91,6 @@ static inline error_code device_generate_name(device_class_id cls, size_t sbcls,
 		return ERROR_SUCCESS;
 	}
 	return -ERROR_INVALID;
-}
-
-fs_instance ext2_instance;
-
-static inline void test_filesystem()
-{
-	g_ext2fs.initialize(&ext2_instance, nullptr);
 }
 
 error_code file_system::device_add(device_class_id cls, size_t subcls, device_class& dev, const char* name)
@@ -161,7 +141,7 @@ error_code file_system::device_add(device_class_id cls, size_t subcls, device_cl
 	node->uid = 0;
 	node->gid = 0;
 
-	auto wrapper = reinterpret_cast<vnode_base_node*>(kmem_cache_alloc(vnode_wrapper_cache));
+	auto wrapper = reinterpret_cast<vnode_base_node*>(kmem_cache_alloc(vnode_base_node_cache));
 
 	wrapper->vnode = node;
 	libkernel::list_add(&wrapper->link, &devfs_root->child_head);
@@ -177,17 +157,87 @@ error_code file_system::device_add(device_class_id cls, size_t subcls, device_cl
 	return ret;
 }
 
-error_code device_add_link(const char* name, vnode_base* to)
+error_code_with_result<vnode_base*> file_system::device_find(device_class_id cls, const char* name)
 {
+	if (!devfs_root)
+	{
+		return -ERROR_DEV_NOT_FOUND;
+	}
+
+	auto child_ret = devfs_root->lookup_child(name);
+	if (has_error(child_ret))
+	{
+		return get_error_code(child_ret);
+	}
+
+	auto vnode = get_result(child_ret);
+	if (vnode->type == VNT_LNK)
+	{
+		//TODO: multiple link
+		vnode = vnode->get_link_target();
+	}
+
+	if (cls == DC_BLOCK && vnode->type != VNT_BLK)
+	{
+		return -ERROR_DEV_NOT_FOUND;
+	}
+
+	if (cls == DC_CHAR && vnode->type != VNT_CHR)
+	{
+		return -ERROR_DEV_NOT_FOUND;
+	}
+
+	return vnode;
+}
+
+error_code file_system::device_add_link(const char* name, vnode_base* to)
+{
+	dev_fs_node* node = new dev_fs_node(VNT_LNK, name);
+	node->link_target.node_target = to;
+	node->flags |= VNF_MEMORY;
+
+	node->mode = 0777;
+	node->uid = 0;
+	node->gid = 0;
+
+	devfs_root->attach(node);
+
+	return 0;
+}
+
+error_code file_system::device_add_link(const char* name, vnode_link_getter_type getter)
+{
+	dev_fs_node* node = new dev_fs_node(VNT_LNK, name);
+	node->link_target.link_getter = getter;
+	node->flags |= VNF_MEMORY | VNF_PER_PROCESS;
+
+	node->mode = 0777;
+	node->uid = 0;
+	node->gid = 0;
+
+	devfs_root->attach(node);
+
+	return 0;
+}
+
+error_code file_system::init_devfs_root()
+{
+	devfs_root = static_cast<vnode_base*>(new dev_fs_node(VNT_BLK, nullptr));
+
+	if (!devfs_root)
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
+
+	devfs_root->flags |= VNF_MEMORY;
+	devfs_root->mode = ROOT_DEFAULT_MODE;
+
+	devfs_root->uid = 0;
+	devfs_root->gid = 0;
+
+	vnode_base_node_cache = kmem_cache_create("vnode_node_base", sizeof(vnode_base_node));
+
 	return ERROR_SUCCESS;
 }
 
-error_code device_add_live_link(const char* name, vnode_link_getter_type getter)
-{
-	return ERROR_SUCCESS;
-}
 
-error_code_with_result<vnode_base*> device_find(device_class_id cls, const char* name)
-{
-	return ERROR_SUCCESS;
-}

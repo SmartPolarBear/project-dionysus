@@ -268,6 +268,11 @@ namespace file_system
 			vnode_base::parent = parent;
 		}
 
+		[[nodiscard]] vnode_base *get_link_target()const
+		{
+			return link_target.node_target;
+		}
+
 		void set_link_target(vnode_base* target)
 		{
 			link_target.node_target = target;
@@ -305,9 +310,9 @@ namespace file_system
 
 	 public:
 
-		error_code attach(vnode_base *child);
-		error_code detach(vnode_base *node);
-		error_code_with_result<vnode_base*>  lookup_child( const char *name);
+		error_code attach(vnode_base* child);
+		error_code detach(vnode_base* node);
+		error_code_with_result<vnode_base*> lookup_child(const char* name);
 
 	 public:
 		virtual error_code_with_result<vnode_base*> find(const char* name) = 0;
@@ -335,14 +340,16 @@ namespace file_system
 	 public:
 
 		friend error_code init_devfs_root();
-		friend error_code device_add(device_class_id cls, size_t subcls, device_class& dev, const char* name);
-
 		friend error_code partition_add_device(file_system::vnode_base& parent,
 			logical_block_address lba,
 			size_t size,
 			size_t disk_idx,
 			[[maybe_unused]]uint32_t sys_id);
 
+		friend error_code device_add(device_class_id cls, size_t subcls, device_class& dev, const char* name);
+		friend error_code_with_result<vnode_base*> device_find(device_class_id cls, const char* name);
+		friend error_code device_add_link(const char* name, vnode_link_getter_type getter);
+		friend error_code device_add_link(const char* name, vnode_base* to);
 	};
 
 	class dev_fs_node
@@ -355,8 +362,6 @@ namespace file_system
 		}
 
 		~dev_fs_node() override = default;
-
-
 
 		error_code_with_result<vnode_base*> find(const char* name) override;
 		size_t read_dir(const file_object& fd, directory_entry& entry) override;

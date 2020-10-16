@@ -68,7 +68,7 @@ static inline error_code_with_result<vnode_base*> vfs_lookup_or_load(vnode_base*
 	{
 		return ret;
 	}
-	else if (ret != ERROR_NOENTRY)
+	else if (ret != ERROR_NO_ENTRY)
 	{
 		return ret;
 	}
@@ -88,7 +88,7 @@ static inline error_code_with_result<vnode_base*> vfs_lookup_or_load(vnode_base*
 		return node;
 	}
 
-	return -ERROR_NOENTRY;
+	return -ERROR_NO_ENTRY;
 }
 
 error_code_with_result<vnode_base*> vfs_io_context::do_find(vnode_base* mount, const char* path, bool link_itself)

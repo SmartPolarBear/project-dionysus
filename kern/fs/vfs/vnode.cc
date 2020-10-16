@@ -80,5 +80,5 @@ error_code_with_result<file_system::vnode_base*> file_system::vnode_base::lookup
 		}
 	}
 
-	return -ERROR_NOENTRY;
+	return -ERROR_NO_ENTRY;
 }

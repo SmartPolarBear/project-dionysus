@@ -29,7 +29,8 @@ enum error_code_values : error_code
 	ERROR_OUT_OF_BOUND,
 	ERROR_INTERNAL,
 	ERROR_NOT_DIR,
-	ERROR_NOENTRY,
+	ERROR_DEV_NOT_FOUND,
+	ERROR_NO_ENTRY,
 };
 
 
