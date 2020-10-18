@@ -246,3 +246,13 @@ timestamp_type cmos::cmos_read_rtc_timestamp()
 	auto datetime = cmos_read_rtc();
 	return datetime_to_timestamp(datetime);
 }
+
+timestamp_type cmos::get_boot_timestamp()
+{
+	return datetime_to_timestamp(boot_time);
+}
+
+cmos_date_time_struct&& cmos::get_boot_time()
+{
+	return std::move(boot_time);
+}

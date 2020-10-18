@@ -3,6 +3,7 @@
 #include "system/pmm.h"
 #include "system/kmem.hpp"
 
+#include "drivers/cmos/rtc.hpp"
 #include "drivers/pci/pci.hpp"
 #include "drivers/pci/pci_device.hpp"
 #include "drivers/pci/pci_header.hpp"
@@ -109,10 +110,9 @@ error_code file_system::dev_fs_node::stat(file_system::file_status& st)
 	st.blocks = 0;
 	st.ino = 0;
 
-	// TODO: these all should be the boot time
-	st.atime = 0;
-	st.mtime = 0;
-	st.ctime = 0;
+	st.atime = cmos::get_boot_timestamp();
+	st.mtime = cmos::get_boot_timestamp();
+	st.ctime = cmos::get_boot_timestamp();
 
 	st.dev = 0;
 	st.rdev = 0;
