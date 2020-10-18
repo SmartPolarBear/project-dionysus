@@ -353,7 +353,7 @@ namespace file_system
 			[[maybe_unused]]uint32_t sys_id);
 
 		friend error_code device_add(device_class_id cls, size_t subcls, device_class& dev, const char* name);
-		friend error_code_with_result<vnode_base*> device_find(device_class_id cls, const char* name);
+		friend error_code_with_result<vnode_base*> device_find_first(device_class_id cls, const char* name);
 		friend error_code device_add_link(const char* name, vnode_link_getter_type getter);
 		friend error_code device_add_link(const char* name, vnode_base* to);
 	};

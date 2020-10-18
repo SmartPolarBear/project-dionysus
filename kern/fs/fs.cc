@@ -36,7 +36,7 @@ struct fs_class_node
 
 static inline error_code kernel_io_context_init()
 {
-	auto dev_find_ret = device_find(DC_BLOCK, "sda1");
+	auto dev_find_ret = device_find_first(DC_BLOCK, "sda1");
 	if (has_error(dev_find_ret))
 	{
 		return get_error_code(dev_find_ret);

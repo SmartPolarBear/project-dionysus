@@ -157,7 +157,7 @@ error_code file_system::device_add(device_class_id cls, size_t subcls, device_cl
 	return ret;
 }
 
-error_code_with_result<vnode_base*> file_system::device_find(device_class_id cls, const char* name)
+error_code_with_result<vnode_base*> file_system::device_find_first(device_class_id cls, const char* name)
 {
 	if (!devfs_root)
 	{
