@@ -36,7 +36,7 @@ struct fs_class_node
 
 static inline error_code kernel_io_context_init()
 {
-	auto dev_find_ret = device_find(DC_BLOCK, "sda");
+	auto dev_find_ret = device_find(DC_BLOCK, "sda1");
 	if (has_error(dev_find_ret))
 	{
 		return get_error_code(dev_find_ret);
@@ -51,7 +51,7 @@ static inline error_code kernel_io_context_init()
 		return err;
 	}
 
-	return -ERROR_SUCCESS;
+	return ERROR_SUCCESS;
 }
 
 PANIC void file_system::fs_init()

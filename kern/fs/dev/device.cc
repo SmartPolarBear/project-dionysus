@@ -78,10 +78,10 @@ static inline error_code device_generate_name(device_class_id cls, size_t sbcls,
 			{
 				return -ERROR_UNSUPPORTED;
 			}
-			strncpy(namebuf, block_dev_hd_name, 3);
+			strncpy(namebuf, block_dev_sd_name, 3);
 			namebuf[3] = '\0';// ensure null-terminated
 
-			namebuf[2] = block_dev_hd_idx_char++;
+			namebuf[2] = block_dev_sd_idx_char++;
 			break;
 
 		default:

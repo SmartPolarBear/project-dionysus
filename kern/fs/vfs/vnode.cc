@@ -31,8 +31,6 @@ using namespace libkernel;
 
 memory::kmem::kmem_cache* vnode_child_node_cache = nullptr;
 
-
-
 error_code file_system::vnode_init()
 {
 	vnode_child_node_cache = kmem_cache_create("vnode_child", sizeof(vnode_child_node));
@@ -74,7 +72,9 @@ error_code_with_result<file_system::vnode_base*> file_system::vnode_base::lookup
 	list_for(iter, &this->child_head)
 	{
 		auto n = list_entry(iter, vnode_child_node, list);
-		if (strcmp(n->vnode->get_name(),name)==0)
+
+		auto node_name = n->vnode->get_name();
+		if (strcmp(node_name, name) == 0)
 		{
 			return n->vnode;
 		}
