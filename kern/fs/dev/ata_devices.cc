@@ -65,6 +65,7 @@ error_code file_system::ATABlockDevice::enumerate_partitions(file_system::vnode_
 
 	// Compare last two bytes to identify valid MBR disk
 	// TODO: GPT support
+	
 	if (memcmp(head_data + 510, MBR_SIG, sizeof(uint8_t[2])) == 0)
 	{
 		// Parse the master boot record
@@ -75,7 +76,7 @@ error_code file_system::ATABlockDevice::enumerate_partitions(file_system::vnode_
 		memmove(&signature, head_data + MBR_UNIQUE_ID_OFFSET, sizeof(uint8_t[4]));
 		memmove(&reserved, head_data + MBR_RESERVED_OFFSET, sizeof(uint8_t[2]));
 
-		write_format("Unique disk ID: 0x%x, reserved field: 0x%x\n", signature, reserved);
+		kdebug::kdebug_log("Unique disk ID: 0x%x, reserved field: 0x%x\n", signature, reserved);
 
 		size_t partition_count = 0;
 
@@ -93,7 +94,7 @@ error_code file_system::ATABlockDevice::enumerate_partitions(file_system::vnode_
 
 			partition_count++;
 
-			write_format("Partition %s, system ID : 0x%x, start LBA: 0x%x, sectors %d\n",
+			kdebug::kdebug_log("Partition %s, system ID : 0x%x, start LBA: 0x%x, sectors %d\n",
 				entry->bootable == 0x80 ? "active" : "inactive",
 				entry->sys_id,
 				entry->start_lba,
