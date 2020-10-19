@@ -43,13 +43,6 @@ kmem_cache* vnode_base_node_cache = nullptr;
 
 vnode_base* devfs_root = nullptr;
 
-//fs_instance ext2_instance;
-//
-//static inline void test_filesystem()
-//{
-//	g_ext2fs.initialize(&ext2_instance, nullptr);
-//}
-
 static inline error_code device_generate_name(device_class_id cls, size_t sbcls, OUT char* namebuf)
 {
 	if (namebuf == nullptr)
@@ -150,9 +143,6 @@ error_code file_system::device_add(device_class_id cls, size_t subcls, device_cl
 	{
 		dev.enumerate_partitions(*node);
 	}
-
-//	// FIXME:test it
-//	test_filesystem();
 
 	return ret;
 }
