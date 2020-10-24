@@ -14,7 +14,78 @@ using std::max;
 
 error_code_with_result<file_system::vnode_base*> file_system::ext2_vnode::find(const char* name)
 {
-	return ERROR_SUCCESS;
+	auto inode = reinterpret_cast<ext2_inode*>(this->private_data);
+	auto ext2_fs = this->fs;
+	ext2_data* data = reinterpret_cast<ext2_data*>(ext2_fs->private_data);
+
+	if (inode == nullptr || ext2_fs == nullptr || data == nullptr)
+	{
+		return -ERROR_INTERNAL;
+	}
+
+	size_t name_len = strlen(name);
+	if (name_len >= VFS_MAX_PATH_LEN)
+	{
+		return -ERROR_INVALID;
+	}
+
+	size_t block_size = data->get_block_size();
+	uint8_t* block_buf = new uint8_t[block_size];
+
+	size_t block_off = 0;
+	size_t dir_block_count = EXT2_INODE_SIZE(inode) / block_size;
+
+	for (size_t block_idx = 0; block_idx < dir_block_count; block_idx++)
+	{
+		auto ret = ext2_inode_read_block(ext2_fs, inode, block_buf, block_idx);
+		if (ret != ERROR_SUCCESS)
+		{
+			delete[] block_buf;
+			return ret;
+		}
+
+		while (block_off < block_size)
+		{
+			ext2_directory_entry* dir_entry = reinterpret_cast<ext2_directory_entry*>((block_buf + block_off));
+			if (dir_entry->ino && (dir_entry->name_length_low == name_len))
+			{
+				if (!strncmp(dir_entry->name, name, name_len))
+				{
+					auto alloc_inode_ret = data->create_new_inode();
+					if (has_error(alloc_inode_ret))
+					{
+						delete[] block_buf;
+						return get_error_code(alloc_inode_ret);
+					}
+
+					ext2_inode* new_inode = get_result(alloc_inode_ret);
+
+					ext2_vnode* vnode = new ext2_vnode(VNT_DIR, name);
+					if (vnode == nullptr)
+					{
+						delete[] block_buf;
+						return -ERROR_MEMORY_ALLOC;
+					}
+
+					auto err = ext2_inode_read(ext2_fs, dir_entry->ino, new_inode);
+					if (err != ERROR_SUCCESS)
+					{
+						data->free_inode(new_inode);
+						return err;
+					}
+
+					vnode->set_fs(ext2_fs);
+
+					vnode->initialize_from_inode(dir_entry->ino, new_inode);
+					return vnode;
+				}
+			}
+
+			block_off += dir_entry->ent_size;
+		}
+	}
+
+	return -ERROR_NO_ENTRY;
 }
 
 size_t file_system::ext2_vnode::read_dir(const file_system::file_object& fd, file_system::directory_entry& entry)

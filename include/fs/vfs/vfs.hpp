@@ -450,7 +450,7 @@ namespace file_system
 		error_code_with_result<size_t> write(file_object* fd, const void* buf, size_t count);
 		error_code_with_result<size_t> read(file_object* fd, void* buf, size_t count);
 
-		size_t lseek(file_object* fd, size_t offset, size_t whence);
+		size_t seek(file_object* fd, size_t offset, size_t whence);
 	};
 
 	extern vfs_io_context* const kernel_io_context;

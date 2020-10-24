@@ -345,7 +345,7 @@ error_code_with_result<size_t> vfs_io_context::read(file_object* fd, void* buf, 
 	return error_code_with_result<size_t>();
 }
 
-size_t vfs_io_context::lseek(file_object* fd, size_t offset, size_t whence)
+size_t vfs_io_context::seek(file_object* fd, size_t offset, size_t whence)
 {
 	return 0;
 }

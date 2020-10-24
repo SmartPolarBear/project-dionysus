@@ -88,6 +88,7 @@ PANIC void file_system::fs_init()
 	{
 		KDEBUG_RICHPANIC_CODE(ret, false, "");
 	}
+	
 }
 
 error_code_with_result<fs_instance*> file_system::fs_create(fs_class_base* fs_class,

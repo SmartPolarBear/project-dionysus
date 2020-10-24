@@ -140,6 +140,21 @@ error_code ext2_data::superblock_write_back(fs_instance* fs)
 	return get_result(ret) == 1024 ? ERROR_SUCCESS : ERROR_IO;
 }
 
+error_code_with_result<ext2_inode*> ext2_data::create_new_inode()
+{
+	auto ret = reinterpret_cast<ext2_inode*>(kmem_cache_alloc(this->inode_cache));
+	if (ret == nullptr)
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
+
+	return ret;
+}
+void ext2_data::free_inode(ext2_inode* nd)
+{
+	kmem_cache_free(inode_cache, nd);
+}
+
 error_code_with_result<file_system::vnode_base*> file_system::ext2_fs_class::get_root()
 {
 	if (this->data == nullptr || this->data->get_root() == nullptr)

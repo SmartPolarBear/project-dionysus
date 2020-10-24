@@ -30,7 +30,6 @@ namespace file_system
 	constexpr ext2_ino_type EXT2_FIRST_INODE_NUMBER = 1;
 	constexpr ext2_ino_type EXT2_ROOT_DIR_INODE_NUMBER = 2;
 
-
 	static inline constexpr size_t EXT2_CALC_SIZE(size_t logged_size)
 	{
 		return 1024u << logged_size;
@@ -169,6 +168,19 @@ namespace file_system
 		uint32_t os_val2;
 	} __attribute__((packed));
 
+	struct ext2_directory_entry
+	{
+		uint32_t ino;
+		uint16_t ent_size;
+		uint8_t name_length_low;
+		union
+		{
+			uint8_t type_indicator;
+			uint8_t name_length_high;
+		};
+		char name[0];
+	} __attribute__((packed));
+
 	static inline constexpr size_t EXT2_INODE_SIZE(const ext2_inode* inode)
 	{
 		return (((uint64_t)inode->size_upper) << 32ull) | ((uint64_t)inode->size_lower);
@@ -261,6 +273,9 @@ namespace file_system
 		{
 			return bgdt;
 		}
+
+		[[nodiscard]] error_code_with_result<ext2_inode*> create_new_inode();
+		void free_inode(ext2_inode *nd);
 	 public:
 		ext2_data();
 		~ext2_data();
