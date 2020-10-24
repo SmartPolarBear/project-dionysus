@@ -31,6 +31,7 @@ enum error_code_values : error_code
 	ERROR_NOT_DIR,
 	ERROR_DEV_NOT_FOUND,
 	ERROR_NO_ENTRY,
+	ERROR_EOF,
 };
 
 

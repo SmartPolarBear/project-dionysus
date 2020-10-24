@@ -34,7 +34,7 @@ namespace file_system
 		error_code chmod(size_t mode) override;
 		error_code chown(uid_type uid, gid_type gid) override;
 		error_code read_link(char* buf, size_t lim) override;
-		size_t read(const file_object& fd, void* buf, size_t count) override;
-		size_t write(const file_object& fd, const void* buf, size_t count) override;
+		error_code_with_result<size_t> read( file_object& fd, void* buf, size_t count) override;
+		error_code_with_result<size_t>  write( file_object& fd, const void* buf, size_t count) override;
 	};
 }

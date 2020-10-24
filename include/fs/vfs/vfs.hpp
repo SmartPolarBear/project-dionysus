@@ -340,8 +340,8 @@ namespace file_system
 
 		virtual error_code read_link(char* buf, size_t lim) = 0;
 
-		virtual size_t read(const file_object& fd, void* buf, size_t count) = 0;
-		virtual size_t write(const file_object& fd, const void* buf, size_t count) = 0;
+		virtual error_code_with_result<size_t> read(file_object& fd, void* buf, size_t count) = 0;
+		virtual error_code_with_result<size_t>  write( file_object& fd, const void* buf, size_t count) = 0;
 
 	 public:
 

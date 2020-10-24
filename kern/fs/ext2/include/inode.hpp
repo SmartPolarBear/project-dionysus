@@ -14,6 +14,16 @@
 	file_system::ext2_ino_type number,
 	IN file_system::ext2_inode* inode);
 
+[[nodiscard]] error_code ext2_inode_read_block(file_system::fs_instance* fs,
+	OUT file_system::ext2_inode* inode,
+	uint8_t *buf,
+	size_t index);
+
+[[nodiscard]] error_code ext2_inode_write_block(file_system::fs_instance* fs,
+	OUT file_system::ext2_inode* inode,
+	uint8_t *buf,
+	size_t index);
+
 [[nodiscard]] error_code_with_result<uint32_t> ext2_inode_get_index(file_system::fs_instance* fs,
 	IN file_system::ext2_inode* inode,
 	uint32_t index);
