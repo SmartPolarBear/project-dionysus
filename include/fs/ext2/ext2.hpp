@@ -30,6 +30,7 @@ namespace file_system
 	constexpr ext2_ino_type EXT2_FIRST_INODE_NUMBER = 1;
 	constexpr ext2_ino_type EXT2_ROOT_DIR_INODE_NUMBER = 2;
 
+
 	static inline constexpr size_t EXT2_CALC_SIZE(size_t logged_size)
 	{
 		return 1024u << logged_size;

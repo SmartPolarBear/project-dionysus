@@ -69,7 +69,9 @@ error_code file_system::dev_fs_node::unlink(file_system::vnode_base& vn)
 	return -ERROR_UNSUPPORTED;
 }
 
-uintptr_t file_system::dev_fs_node::lseek(const file_system::file_object& fd, size_t offset, int whence)
+error_code_with_result<offset_t> file_system::dev_fs_node::seek(file_system::file_object& fd,
+	size_t offset,
+	seek_methods whence)
 {
 	return -ERROR_UNSUPPORTED;
 }
@@ -88,12 +90,15 @@ error_code file_system::dev_fs_node::read_link(char* buf, size_t lim)
 {
 	return -ERROR_UNSUPPORTED;
 }
-size_t file_system::dev_fs_node::read(const file_system::file_object& fd, void* buf, size_t count)
+
+error_code_with_result<size_t> file_system::dev_fs_node::read(file_system::file_object& fd, void* buf, size_t count)
 {
 	return -ERROR_UNSUPPORTED;
 }
 
-size_t file_system::dev_fs_node::write(const file_system::file_object& fd, const void* buf, size_t count)
+error_code_with_result<size_t> file_system::dev_fs_node::write(file_system::file_object& fd,
+	const void* buf,
+	size_t count)
 {
 	return -ERROR_UNSUPPORTED;
 }

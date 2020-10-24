@@ -24,9 +24,9 @@ namespace cmos
 	PANIC void cmos_rtc_init();
 
 	cmos_date_time_struct&& cmos_read_rtc();
-	timestamp_type cmos_read_rtc_timestamp();
-	timestamp_type datetime_to_timestamp(const cmos_date_time_struct& datetime);
+	timestamp_t cmos_read_rtc_timestamp();
+	timestamp_t datetime_to_timestamp(const cmos_date_time_struct& datetime);
 
 	cmos_date_time_struct&& get_boot_time();
-	timestamp_type get_boot_timestamp();
+	timestamp_t get_boot_timestamp();
 }

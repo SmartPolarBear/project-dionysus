@@ -56,9 +56,41 @@ error_code file_system::ext2_vnode::unlink(file_system::vnode_base& vn)
 	return ERROR_SUCCESS;
 }
 
-uintptr_t file_system::ext2_vnode::lseek(const file_system::file_object& fd, size_t offset, int whence)
+error_code_with_result<offset_t> file_system::ext2_vnode::seek(file_system::file_object& fd,
+	size_t offset,
+	seek_methods method)
 {
-	return ERROR_SUCCESS;
+	auto inode = reinterpret_cast<ext2_inode*>(this->private_data);
+
+	if (inode == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	offset_t new_pos = fd.pos;
+	switch (method)
+	{
+	case vnode_base::SM_FROM_START:
+		new_pos = offset;
+		break;
+	case vnode_base::SM_FROM_CURRENT:
+		new_pos += offset;
+		break;
+	case vnode_base::SM_FROM_END:
+		new_pos = EXT2_INODE_SIZE(inode) + offset;
+		break;
+	default:
+		return -ERROR_INVALID;
+	}
+
+	if (new_pos <= 0)
+	{
+		return -ERROR_INVALID;
+	}
+
+	fd.pos = new_pos;
+
+	return new_pos;
 }
 
 error_code file_system::ext2_vnode::stat(file_system::file_status& st)
@@ -102,7 +134,7 @@ error_code_with_result<size_t> file_system::ext2_vnode::read(file_system::file_o
 
 	ext2_data* data = reinterpret_cast<ext2_data*>(ext2_fs->private_data);
 
-	size_t full_size = (inode->size_upper << 32) || inode->size_lower;
+	size_t full_size = EXT2_INODE_SIZE(inode);
 
 	if (fd.pos >= full_size)
 	{
@@ -120,7 +152,7 @@ error_code_with_result<size_t> file_system::ext2_vnode::read(file_system::file_o
 		auto ret = ext2_inode_read_block(ext2_fs, inode, block_buf, block_idx);
 		if (ret != ERROR_SUCCESS)
 		{
-			delete block_buf;
+			delete[]block_buf;
 			return ret;
 		}
 
@@ -155,7 +187,7 @@ error_code_with_result<size_t> file_system::ext2_vnode::write(file_system::file_
 
 	ext2_data* data = reinterpret_cast<ext2_data*>(ext2_fs->private_data);
 
-	size_t full_size = (inode->size_upper << 32) || inode->size_lower;
+	size_t full_size = EXT2_INODE_SIZE(inode);
 
 	if (fd.pos > full_size)
 	{

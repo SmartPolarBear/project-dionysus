@@ -222,7 +222,7 @@ PANIC void cmos::cmos_rtc_init()
 		datetime_to_timestamp(boot_time));
 }
 
-timestamp_type cmos::datetime_to_timestamp(const cmos_date_time_struct& datetime)
+timestamp_t cmos::datetime_to_timestamp(const cmos_date_time_struct& datetime)
 {
 	/* POSIX says:
 	 *
@@ -241,13 +241,13 @@ timestamp_type cmos::datetime_to_timestamp(const cmos_date_time_struct& datetime
 		((year - 1ull) / 100ull) * 86400ull + ((year + 299ull) / 400ull) * 86400ull;
 }
 
-timestamp_type cmos::cmos_read_rtc_timestamp()
+timestamp_t cmos::cmos_read_rtc_timestamp()
 {
 	auto datetime = cmos_read_rtc();
 	return datetime_to_timestamp(datetime);
 }
 
-timestamp_type cmos::get_boot_timestamp()
+timestamp_t cmos::get_boot_timestamp()
 {
 	return datetime_to_timestamp(boot_time);
 }

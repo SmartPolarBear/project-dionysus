@@ -9,13 +9,13 @@ namespace ahci
 
 	 private:
 		using char_pair = std::pair<uint8_t, uint8_t>;
-		word_type data;
+		word_t data;
 	 public:
 		ATAStrWord() : data(0)
 		{
 		}
 
-		explicit ATAStrWord(word_type _data) : data(_data)
+		explicit ATAStrWord(word_t _data) : data(_data)
 		{
 		}
 

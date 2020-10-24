@@ -212,6 +212,13 @@ namespace file_system
 
 	class vnode_base
 	{
+	 public:
+		enum seek_methods : uint64_t
+		{
+			SM_FROM_START,
+			SM_FROM_CURRENT,
+			SM_FROM_END,
+		};
 	 protected:
 		static constexpr size_t VNODE_NAME_MAX = 64;
 
@@ -332,7 +339,7 @@ namespace file_system
 		virtual error_code truncate(size_t size) = 0;
 		virtual error_code unlink(vnode_base& vn) = 0;
 
-		virtual uintptr_t lseek(const file_object& fd, size_t offset, int whence) = 0;
+		virtual error_code_with_result<offset_t> seek(file_object& fd, size_t offset, seek_methods whence) = 0;
 
 		virtual error_code stat(file_status& st) = 0;
 		virtual error_code chmod(size_t mode) = 0;
@@ -341,7 +348,7 @@ namespace file_system
 		virtual error_code read_link(char* buf, size_t lim) = 0;
 
 		virtual error_code_with_result<size_t> read(file_object& fd, void* buf, size_t count) = 0;
-		virtual error_code_with_result<size_t>  write( file_object& fd, const void* buf, size_t count) = 0;
+		virtual error_code_with_result<size_t> write(file_object& fd, const void* buf, size_t count) = 0;
 
 	 public:
 
@@ -378,13 +385,13 @@ namespace file_system
 		error_code make_dir(const char* filename, uid_type uid, gid_type gid, size_t mode) override;
 		error_code truncate(size_t size) override;
 		error_code unlink(vnode_base& vn) override;
-		uintptr_t lseek(const file_object& fd, size_t offset, int whence) override;
+		error_code_with_result<offset_t> seek(file_object& fd, size_t offset, seek_methods whence) override;
 		error_code stat(file_status& st) override;
 		error_code chmod(size_t mode) override;
 		error_code chown(uid_type uid, gid_type gid) override;
 		error_code read_link(char* buf, size_t lim) override;
-		size_t read(const file_object& fd, void* buf, size_t count) override;
-		size_t write(const file_object& fd, const void* buf, size_t count) override;
+		error_code_with_result<size_t> read(file_object& fd, void* buf, size_t count) override;
+		error_code_with_result<size_t> write(file_object& fd, const void* buf, size_t count) override;
 
 	};
 

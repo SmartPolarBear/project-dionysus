@@ -137,8 +137,10 @@ using list_foreach_func = void (*)(list_head*);
 
 template<size_t size_in_byte> using BLOCK = uint8_t[size_in_byte];
 
-using byte_type = uint8_t;
-using word_type = uint16_t;
-using dword_type = uint32_t;
+using byte_t = uint8_t;
+using word_t = uint16_t;
+using dword_t = uint32_t;
 
-using timestamp_type = uint64_t;
+using timestamp_t = uint64_t;
+
+using offset_t = uintptr_t;
