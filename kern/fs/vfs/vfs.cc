@@ -4,11 +4,49 @@
 #include "system/kmem.hpp"
 
 #include <memory>
+#include <cstring>
 
 using namespace std;
 
 using namespace file_system;
 
+static inline error_code_with_result<const char*> separate_parent_name(const char* full_path, OUT char* path)
+{
+	auto sep = strrchr(full_path, '/');
+
+	if (strlen(full_path) >= VFS_MAX_PATH_LEN || strlen(full_path) <= 0)
+	{
+		return -ERROR_INVALID;
+	}
+
+	// path name like "file.ext"
+	if (sep == nullptr)
+	{
+		path[0] = '.';
+		path[1] = '\0';
+
+		return full_path;
+	}
+		// path name like "/a/b/c/file.ext
+	else if (sep == full_path)
+	{
+		path[0] = '/';
+		path[1] = '\0';
+
+		return full_path + 1;
+	}
+	else
+	{
+		if (sep - full_path < VFS_MAX_PATH_LEN)
+		{
+			return -ERROR_INVALID;
+		}
+
+		strncpy(path, full_path, sep - full_path);
+		path[sep - full_path] = '\0';
+		return full_path + 1;
+	}
+}
 
 vnode_base* vfs_root = nullptr;
 
@@ -265,9 +303,64 @@ error_code vfs_io_context::open_vnode(file_object* fd, vnode_base* node, int opt
 	return 0;
 }
 
-error_code vfs_io_context::openat(file_object* fd, vnode_base* at, const char* path, size_t flags, size_t mode)
+error_code vfs_io_context::create_at(vnode_base* at, const char* path, mode_type mode)
 {
+	if (path == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
 	return 0;
+}
+
+error_code vfs_io_context::open_at(file_object* fd, vnode_base* at, const char* path, size_t flags, size_t mode)
+{
+	if (at == nullptr)
+	{
+		at = this->cwd_vnode;
+	}
+
+	if (fd == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	if (path == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	auto find_ret = this->find(at, path, false);
+	if (has_error(find_ret))
+	{
+		if (flags & IOCTX_FLG_CREATE)
+		{
+			if (flags & IOCTX_FLG_DIRECTORY)
+			{
+				return -ERROR_INVALID;
+			}
+
+			// try creating
+			auto create_ret = this->create_at(at, path, mode);
+			if (create_ret != ERROR_SUCCESS)
+			{
+				return create_ret;
+			}
+
+			find_ret = this->find(at, path, false);
+			if (has_error(find_ret))
+			{
+				return get_error_code(find_ret);
+			}
+		}
+		else
+		{
+			return get_error_code(find_ret);
+		}
+	}
+	auto node = get_result(find_ret);
+
+	return this->open_vnode(fd, node, flags);
 }
 
 error_code vfs_io_context::close(file_object* fd)

@@ -395,6 +395,21 @@ namespace file_system
 
 	};
 
+	enum vfs_ioctx_flags
+	{
+		IOCTX_FLG_EXEC = (1 << 2),
+		IOCTX_FLG_ACCMODE = (3 << 0),
+		IOCTX_FLG_RDONLY = (0 << 0),
+		IOCTX_FLG_WRONLY = (1 << 0),
+		IOCTX_FLG_RDWR = (2 << 0),
+		IOCTX_FLG_CREATE = (1 << 6),
+		IOCTX_FLG_EXCL = (1 << 7),
+		IOCTX_FLG_TRUNC = (1 << 9),
+		IOCTX_FLG_APPEND = (1 << 10),
+		IOCTX_FLG_DIRECTORY = (1 << 16),
+		IOCTX_FLG_CLOEXEC = (1 << 19),
+	};
+
 	class vfs_io_context
 	{
 	 private:
@@ -427,7 +442,8 @@ namespace file_system
 		error_code umount(const char* dir_name);
 
 		error_code open_vnode(file_object* fd, vnode_base* node, int opt);
-		error_code openat(
+		error_code create_at(vnode_base* at, const char* path, mode_type mode);
+		error_code open_at(
 			file_object* fd,
 			vnode_base* at,
 			const char* path,
