@@ -303,14 +303,37 @@ error_code vfs_io_context::open_vnode(file_object* fd, vnode_base* node, int opt
 	return 0;
 }
 
-error_code vfs_io_context::create_at(vnode_base* at, const char* path, mode_type mode)
+error_code vfs_io_context::create_at(vnode_base* at, const char* full_path, mode_type mode)
 {
-	if (path == nullptr)
+	if (full_path == nullptr)
 	{
 		return -ERROR_INVALID;
 	}
 
-	return 0;
+	char* path = new char[VFS_MAX_PATH_LEN];
+	auto name_ret = separate_parent_name(full_path, path);
+	if (has_error(name_ret))
+	{
+		return get_error_code(name_ret);
+	}
+
+	auto name = get_result(name_ret);
+
+	auto find_ret = this->find(at, path, false);
+	if (has_error(find_ret))
+	{
+		return get_error_code(find_ret);
+	}
+
+	auto vnode_at = get_result(find_ret);
+
+	auto access_ret = this->access_node(vnode_at, W_OK);
+	if (access_ret != ERROR_SUCCESS)
+	{
+		return access_ret;
+	}
+
+	return vnode_at->create(name, this->uid, this->gid, mode & ~this->mode_mask);
 }
 
 error_code vfs_io_context::open_at(file_object* fd, vnode_base* at, const char* path, size_t flags, size_t mode)

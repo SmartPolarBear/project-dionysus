@@ -410,12 +410,21 @@ namespace file_system
 		IOCTX_FLG_CLOEXEC = (1 << 19),
 	};
 
+	enum vfs_access_status
+	{
+		R_OK = 4,
+		W_OK = 2,
+		X_OK = 1,
+		F_OK = 0,
+	};
+
 	class vfs_io_context
 	{
 	 private:
 		vnode_base* cwd_vnode;
 		uid_type uid;
 		gid_type gid;
+		mode_type mode_mask;
 
 	 private:
 		error_code_with_result<vnode_base*> do_find(vnode_base* node, const char* path, bool link_itself);
