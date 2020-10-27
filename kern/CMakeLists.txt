@@ -55,6 +55,7 @@ target_compile_options(kernel BEFORE
         PRIVATE -D_POSIX_TIMERS)
 
 target_link_options(kernel
+        PRIVATE -fuse-ld=gold
         PRIVATE -nostdlib
         PRIVATE -ffreestanding
         PRIVATE -nostartfiles
