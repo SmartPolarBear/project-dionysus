@@ -64,7 +64,6 @@ req_tag_end:
     .long 8     //self-containing size
 mboot_header_end:
 
-
 mboot_entry:
 
 // stack for mbi

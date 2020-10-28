@@ -107,11 +107,11 @@ error_code file_system::device_add(device_class_id cls, size_t subcls, device_cl
 	vnode_base* node = nullptr;
 	if (cls == DC_BLOCK)
 	{
-		node = new dev_fs_node(VNT_BLK, name);
+		node = new dev_fs_node(vnode_types::VNT_BLK, name);
 	}
 	else if (cls == DC_CHAR)
 	{
-		node = new dev_fs_node(VNT_CHR, name);
+		node = new dev_fs_node(vnode_types::VNT_CHR, name);
 	}
 	else
 	{
@@ -161,18 +161,18 @@ error_code_with_result<vnode_base*> file_system::device_find_first(device_class_
 	}
 
 	auto vnode = get_result(child_ret);
-	if (vnode->type == VNT_LNK)
+	if (vnode->type == vnode_types::VNT_LNK)
 	{
 		//TODO: multiple link
 		vnode = vnode->get_link_target();
 	}
 
-	if (cls == DC_BLOCK && vnode->type != VNT_BLK)
+	if (cls == DC_BLOCK && vnode->type != vnode_types::VNT_BLK)
 	{
 		return -ERROR_DEV_NOT_FOUND;
 	}
 
-	if (cls == DC_CHAR && vnode->type != VNT_CHR)
+	if (cls == DC_CHAR && vnode->type != vnode_types::VNT_CHR)
 	{
 		return -ERROR_DEV_NOT_FOUND;
 	}
@@ -182,7 +182,7 @@ error_code_with_result<vnode_base*> file_system::device_find_first(device_class_
 
 error_code file_system::device_add_link(const char* name, vnode_base* to)
 {
-	dev_fs_node* node = new dev_fs_node(VNT_LNK, name);
+	dev_fs_node* node = new dev_fs_node(vnode_types::VNT_LNK, name);
 	node->link_target.node_target = to;
 	node->flags |= VNF_MEMORY;
 
@@ -197,7 +197,7 @@ error_code file_system::device_add_link(const char* name, vnode_base* to)
 
 error_code file_system::device_add_link(const char* name, vnode_link_getter_type getter)
 {
-	dev_fs_node* node = new dev_fs_node(VNT_LNK, name);
+	dev_fs_node* node = new dev_fs_node(vnode_types::VNT_LNK, name);
 	node->link_target.link_getter = getter;
 	node->flags |= VNF_MEMORY | VNF_PER_PROCESS;
 
@@ -212,7 +212,7 @@ error_code file_system::device_add_link(const char* name, vnode_link_getter_type
 
 error_code file_system::init_devfs_root()
 {
-	devfs_root = static_cast<vnode_base*>(new dev_fs_node(VNT_BLK, nullptr));
+	devfs_root = static_cast<vnode_base*>(new dev_fs_node(vnode_types::VNT_BLK, nullptr));
 
 	if (!devfs_root)
 	{

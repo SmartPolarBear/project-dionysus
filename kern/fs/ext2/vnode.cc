@@ -60,7 +60,7 @@ error_code_with_result<file_system::vnode_base*> file_system::ext2_vnode::find(c
 
 					ext2_inode* new_inode = get_result(alloc_inode_ret);
 
-					ext2_vnode* vnode = new ext2_vnode(VNT_DIR, name);
+					ext2_vnode* vnode = new ext2_vnode(vnode_types::VNT_DIR, name);
 					if (vnode == nullptr)
 					{
 						delete[] block_buf;
@@ -382,12 +382,12 @@ error_code file_system::ext2_vnode::initialize_from_inode(file_system::ext2_ino_
 	{
 	case EXT2_IFDIR:
 	{
-		this->type = VNT_DIR;
+		this->type = vnode_types::VNT_DIR;
 		break;
 	}
 	case EXT2_IFREG:
 	{
-		this->type = VNT_REG;
+		this->type = vnode_types::VNT_REG;
 		break;
 	}
 	default:

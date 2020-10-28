@@ -139,13 +139,13 @@ error_code_with_result<vnode_base*> vfs_io_context::do_find(vnode_base* mount, c
 		return -ERROR_INVALID;
 	}
 
-	if (mount->has_flags(VNT_LNK))
+	if (mount->get_type() == (vnode_types::VNT_LNK))
 	{
 		//TODO: multiple links
 		return -ERROR_NOT_IMPL;
 	}
 
-	if (!mount->has_flags(VNT_DIR))
+	if (mount->get_type() != (vnode_types::VNT_DIR))
 	{
 		return -ERROR_NOT_DIR;
 	}
@@ -279,7 +279,7 @@ error_code vfs_io_context::mount(const char* path, device_class* blk, fs_class_i
 
 		auto mountpoint = get_result(mount_point_ret);
 
-		mountpoint->set_flags(VNT_MNT);
+		mountpoint->set_type(vnode_types::VNT_MNT);
 		mountpoint->set_link_target(fs_root);
 
 		fs_root->set_link_target(mountpoint);
@@ -298,8 +298,29 @@ error_code vfs_io_context::umount(const char* dir_name)
 	return 0;
 }
 
-error_code vfs_io_context::open_vnode(file_object* fd, vnode_base* node, int opt)
+error_code vfs_io_context::open_vnode(file_object* fd, vnode_base* node, mode_type opt)
 {
+	if (fd == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	if (node == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	// TODO: network socket file support?
+
+	if (opt & IOCTX_FLG_DIRECTORY)
+	{
+
+	}
+	else if (node->get_type() == vnode_types::VNT_DIR || node->get_type() == vnode_types::VNT_MNT)
+	{
+		return -ERROR_IS_DIR;
+	}
+
 	return 0;
 }
 

@@ -51,6 +51,8 @@ static inline error_code kernel_io_context_init()
 		return err;
 	}
 
+//	kernel_io_context->open_at()
+
 	return ERROR_SUCCESS;
 }
 

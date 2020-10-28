@@ -83,7 +83,7 @@ error_code ext2_data::initialize(fs_instance* fs)
 	}
 
 	// allocate root
-	auto root_vnode = new ext2_vnode{ VNT_DIR, nullptr };
+	auto root_vnode = new ext2_vnode{ vnode_types::VNT_DIR, nullptr };
 	root = root_vnode;
 	if (root == nullptr)
 	{

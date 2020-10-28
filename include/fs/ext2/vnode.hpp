@@ -11,7 +11,7 @@ namespace file_system
 		: public vnode_base
 	{
 	 public:
-		ext2_vnode(vnode_type t, const char* n)
+		ext2_vnode(vnode_types t, const char* n)
 			: vnode_base(t, n)
 		{
 		}

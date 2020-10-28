@@ -17,7 +17,7 @@ namespace file_system
 		VNF_PER_PROCESS = (1u << 1u)
 	};
 
-	enum vnode_type
+	enum class vnode_types : uint64_t
 	{
 		VNT_REG,
 		VNT_DIR,
@@ -187,21 +187,21 @@ namespace file_system
 
 #pragma GCC diagnostic pop
 
-	static inline constexpr mode_type vnode_type_to_mode_type(vnode_type type)
+	static inline constexpr mode_type vnode_type_to_mode_type(vnode_types type)
 	{
 		switch (type)
 		{
-		case VNT_MNT:
-		case VNT_DIR:
+		case vnode_types::VNT_MNT:
+		case vnode_types::VNT_DIR:
 			return S_IFDIR;
-		case VNT_LNK:
+		case vnode_types::VNT_LNK:
 			return S_IFLNK;
-		case VNT_BLK:
+		case vnode_types::VNT_BLK:
 			return S_IFBLK;
-		case VNT_CHR:
+		case vnode_types::VNT_CHR:
 			return S_IFCHR;
 		default:
-		case VNT_REG:
+		case vnode_types::VNT_REG:
 			return S_IFREG;
 		}
 
@@ -222,7 +222,7 @@ namespace file_system
 	 protected:
 		static constexpr size_t VNODE_NAME_MAX = 64;
 
-		vnode_type type;
+		vnode_types type;
 
 		size_t flags{};
 		size_t open_count{};
@@ -254,7 +254,7 @@ namespace file_system
 	 public:
 		virtual ~vnode_base() = default;
 
-		vnode_base(vnode_type t, const char* n)
+		vnode_base(vnode_types t, const char* n)
 			: type(t)
 		{
 			if (n != nullptr)
@@ -321,6 +321,16 @@ namespace file_system
 			return dev;
 		}
 
+		[[nodiscard]]vnode_types get_type() const
+		{
+			return type;
+		}
+
+		void set_type(vnode_types t)
+		{
+			vnode_base::type = t;
+		}
+
 	 public:
 
 		error_code attach(vnode_base* child);
@@ -369,7 +379,7 @@ namespace file_system
 		: public vnode_base
 	{
 	 public:
-		dev_fs_node(vnode_type t, const char* n)
+		dev_fs_node(vnode_types t, const char* n)
 			: vnode_base(t, n)
 		{
 		}
@@ -450,7 +460,7 @@ namespace file_system
 			const char* opt);
 		error_code umount(const char* dir_name);
 
-		error_code open_vnode(file_object* fd, vnode_base* node, int opt);
+		error_code open_vnode(file_object* fd, vnode_base* node, mode_type opt);
 		error_code create_at(vnode_base* at, const char* path, mode_type mode);
 		error_code open_at(
 			file_object* fd,
