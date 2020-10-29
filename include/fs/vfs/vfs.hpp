@@ -453,7 +453,7 @@ namespace file_system
 		IOCTX_FLG_CLOEXEC = (1 << 19),
 	};
 
-	enum vfs_access_status
+	enum vfs_access_status : size_t
 	{
 		R_OK = 4,
 		W_OK = 2,

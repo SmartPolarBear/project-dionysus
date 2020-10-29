@@ -37,7 +37,7 @@ static inline error_code_with_result<const char*> separate_parent_name(const cha
 	}
 	else
 	{
-		if (sep - full_path < VFS_MAX_PATH_LEN)
+		if ((sep - full_path) < (int64_t)VFS_MAX_PATH_LEN)
 		{
 			return -ERROR_INVALID;
 		}
@@ -151,6 +151,31 @@ static inline error_code_with_result<vnode_base*> vfs_lookup_or_load(vnode_base*
 
 error_code vfs_io_context::open_directory(file_object& fd)
 {
+	if (fd.vnode->get_type() != vnode_types::VNT_DIR)
+	{
+		return -ERROR_NOT_DIR;
+	}
+
+	if (fd.vnode->has_flags(VNF_MEMORY))
+	{
+		fd.flags |= FO_FLAG_MEMDIR | FO_FLAG_MEMDIR_DOT;
+		// FIXME
+//		fd.pos = (size_t)node->first_child;
+
+		fd.vnode->increase_open_count();
+	}
+	else
+	{
+		auto ret = fd.vnode->open_dir(fd);
+
+		if (ret != ERROR_SUCCESS)
+		{
+			return ret;
+		}
+
+		fd.vnode->increase_open_count();
+	}
+
 	return ERROR_SUCCESS;
 }
 
