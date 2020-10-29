@@ -28,7 +28,7 @@
 
 #include "libkernel/console/builtin_text_io.hpp"
 
-#include <cstring>
+#include "data/basic_containers.hpp"
 
 // std::optional is usable unconditionally
 #include <optional>

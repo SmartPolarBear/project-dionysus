@@ -78,7 +78,12 @@ error_code_with_result<uint64_t> ext2_block_alloc(file_system::fs_instance* fs)
 			continue;
 		}
 
-		ext2_block_read(fs, reinterpret_cast<uint8_t*>(bitmap_buf), bgd.block_bitmap_no);
+		ret = ext2_block_read(fs, reinterpret_cast<uint8_t*>(bitmap_buf), bgd.block_bitmap_no);
+		if (ret != ERROR_SUCCESS)
+		{
+			delete[] bitmap_buf;
+			return ret;
+		}
 
 		for (size_t j = 0; j < superblock.block_group_block_count; j++)
 		{
