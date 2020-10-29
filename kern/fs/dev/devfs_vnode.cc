@@ -39,7 +39,7 @@ error_code file_system::dev_fs_node::open_dir(const file_system::file_object& fd
 	return -ERROR_UNSUPPORTED;
 }
 
-error_code file_system::dev_fs_node::open(const file_system::file_object& fd)
+error_code file_system::dev_fs_node::open(const file_system::file_object& fd, mode_type opt)
 {
 	return -ERROR_UNSUPPORTED;
 }

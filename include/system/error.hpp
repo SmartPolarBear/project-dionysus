@@ -33,6 +33,7 @@ enum error_code_values : error_code
 	ERROR_DEV_NOT_FOUND,
 	ERROR_NO_ENTRY,
 	ERROR_EOF,
+	ERROR_INVALID_ACCESS,
 };
 
 

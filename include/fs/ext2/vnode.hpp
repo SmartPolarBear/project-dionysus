@@ -23,7 +23,7 @@ namespace file_system
 		error_code_with_result<vnode_base*> find(const char* name) override;
 		size_t read_dir(const file_object& fd, directory_entry& entry) override;
 		error_code open_dir(const file_object& fd) override;
-		error_code open(const file_object& fd) override;
+		error_code open(const file_object& fd, mode_type opt) override;
 		error_code close(const file_object& fd) override;
 		error_code create(const char* filename, uid_type uid, gid_type gid, size_t mode) override;
 		error_code make_dir(const char* filename, uid_type uid, gid_type gid, size_t mode) override;

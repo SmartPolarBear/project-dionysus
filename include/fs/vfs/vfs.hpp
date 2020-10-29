@@ -74,13 +74,24 @@ namespace file_system
 		char name[0];
 	};
 
+	enum file_object_flags
+	{
+		FO_FLAG_WRITABLE = (1 << 0),
+		FO_FLAG_READABLE = (1 << 1),
+		FO_FLAG_DIRECTORY = (1 << 2),
+		FO_FLAG_MEMDIR = (1 << 3),
+		FO_FLAG_MEMDIR_DOT = (1 << 4),
+		FO_FLAG_MEMDIR_DOTDOT = (1 << 5),
+		FO_FLAG_CLOEXEC = (1 << 7),
+	};
+
 	struct file_object
 	{
 		size_t flags;
 		size_t ref;
 		size_t pos;
 
-		class IVNode* vnode;
+		vnode_base* vnode;
 		void* private_data;
 	};
 
@@ -226,6 +237,7 @@ namespace file_system
 
 		size_t flags{};
 		size_t open_count{};
+
 		size_t inode_id{};
 
 		mode_type mode{};
@@ -331,6 +343,26 @@ namespace file_system
 			vnode_base::type = t;
 		}
 
+		[[nodiscard]] size_t get_open_count() const
+		{
+			return open_count;
+		}
+
+		void set_open_count(size_t oc)
+		{
+			vnode_base::open_count = oc;
+		}
+
+		void increase_open_count()
+		{
+			vnode_base::open_count++;
+		}
+
+		void decrease_open_count()
+		{
+			vnode_base::open_count--;
+		}
+
 	 public:
 
 		error_code attach(vnode_base* child);
@@ -341,7 +373,7 @@ namespace file_system
 		virtual error_code_with_result<vnode_base*> find(const char* name) = 0;
 		virtual size_t read_dir(const file_object& fd, directory_entry& entry) = 0;
 		virtual error_code open_dir(const file_object& fd) = 0;
-		virtual error_code open(const file_object& fd) = 0;
+		virtual error_code open(const file_object& fd, mode_type opt) = 0;
 		virtual error_code close(const file_object& fd) = 0;
 
 		virtual error_code create(const char* filename, uid_type uid, gid_type gid, size_t mode) = 0;
@@ -389,7 +421,7 @@ namespace file_system
 		error_code_with_result<vnode_base*> find(const char* name) override;
 		size_t read_dir(const file_object& fd, directory_entry& entry) override;
 		error_code open_dir(const file_object& fd) override;
-		error_code open(const file_object& fd) override;
+		error_code open(const file_object& fd, mode_type opt) override;
 		error_code close(const file_object& fd) override;
 		error_code create(const char* filename, uid_type uid, gid_type gid, size_t mode) override;
 		error_code make_dir(const char* filename, uid_type uid, gid_type gid, size_t mode) override;
@@ -405,10 +437,11 @@ namespace file_system
 
 	};
 
-	enum vfs_ioctx_flags
+	constexpr size_t IOCTX_FLG_MASK_ACCESS_MODE = (3 << 0);
+
+	enum vfs_ioctx_flags : mode_type
 	{
 		IOCTX_FLG_EXEC = (1 << 2),
-		IOCTX_FLG_ACCMODE = (3 << 0),
 		IOCTX_FLG_RDONLY = (0 << 0),
 		IOCTX_FLG_WRONLY = (1 << 0),
 		IOCTX_FLG_RDWR = (2 << 0),
@@ -437,6 +470,7 @@ namespace file_system
 		mode_type mode_mask;
 
 	 private:
+		error_code open_directory(file_object& fd);
 		error_code_with_result<vnode_base*> do_find(vnode_base* node, const char* path, bool link_itself);
 	 public:
 		vfs_io_context() = default;
@@ -460,21 +494,21 @@ namespace file_system
 			const char* opt);
 		error_code umount(const char* dir_name);
 
-		error_code open_vnode(file_object* fd, vnode_base* node, mode_type opt);
+		error_code open_vnode(file_object& fd, vnode_base* node, mode_type opt);
 		error_code create_at(vnode_base* at, const char* path, mode_type mode);
 		error_code open_at(
-			file_object* fd,
+			file_object& fd,
 			vnode_base* at,
 			const char* path,
 			size_t flags, size_t mode);
-		error_code close(file_object* fd);
-		error_code readdir(file_object* fd, directory_entry* ent);
+		error_code close(file_object& fd);
+		error_code readdir(file_object& fd, directory_entry* ent);
 		error_code unlinkat(vnode_base* at, const char* pathname, size_t flags);
 		error_code mkdirat(vnode_base* at, const char* path, mode_type mode);
 		error_code_with_result<vnode_base*> mknod(const char* path, mode_type mode);
 		error_code chmod(const char* path, mode_type mode);
 		error_code chown(const char* path, uid_type uid, gid_type gid);
-		error_code ioctl(file_object* fd, size_t cmd, void* arg);
+		error_code ioctl(file_object& fd, size_t cmd, void* arg);
 		error_code ftruncate(vnode_base* node, size_t length);
 
 		error_code faccessat(vnode_base* at, const char* path, size_t accmode, size_t flags);
@@ -482,10 +516,10 @@ namespace file_system
 		error_code access_check(int desm, mode_type mode, uid_type uid, gid_type gid);
 		error_code access_node(vnode_base* vn, size_t mode);
 
-		error_code_with_result<size_t> write(file_object* fd, const void* buf, size_t count);
-		error_code_with_result<size_t> read(file_object* fd, void* buf, size_t count);
+		error_code_with_result<size_t> write(file_object& fd, const void* buf, size_t count);
+		error_code_with_result<size_t> read(file_object& fd, void* buf, size_t count);
 
-		size_t seek(file_object* fd, size_t offset, size_t whence);
+		size_t seek(file_object& fd, size_t offset, size_t whence);
 	};
 
 	extern vfs_io_context* const kernel_io_context;

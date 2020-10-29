@@ -68,6 +68,29 @@ error_code file_system::vfs_init()
 	return ERROR_SUCCESS;
 }
 
+static constexpr size_t get_open_mode(size_t opt)
+{
+	size_t r = 0;
+	if (opt & IOCTX_FLG_EXEC)
+	{
+		r |= X_OK;
+	}
+
+	switch (opt & IOCTX_FLG_MASK_ACCESS_MODE)
+	{
+	case IOCTX_FLG_WRONLY:
+		r |= W_OK;
+		break;
+	case IOCTX_FLG_RDONLY:
+		r |= R_OK;
+		break;
+	case IOCTX_FLG_RDWR:
+		r |= W_OK | R_OK;
+		break;
+	}
+	return r;
+}
+
 static inline const char* next_path_element(const char* path, OUT char* element)
 {
 	auto pos = strchr(path, '/');
@@ -124,6 +147,11 @@ static inline error_code_with_result<vnode_base*> vfs_lookup_or_load(vnode_base*
 	}
 
 	return -ERROR_NO_ENTRY;
+}
+
+error_code vfs_io_context::open_directory(file_object& fd)
+{
+	return ERROR_SUCCESS;
 }
 
 error_code_with_result<vnode_base*> vfs_io_context::do_find(vnode_base* mount, const char* path, bool link_itself)
@@ -298,13 +326,8 @@ error_code vfs_io_context::umount(const char* dir_name)
 	return 0;
 }
 
-error_code vfs_io_context::open_vnode(file_object* fd, vnode_base* node, mode_type opt)
+error_code vfs_io_context::open_vnode(file_object& fd, vnode_base* node, mode_type opt)
 {
-	if (fd == nullptr)
-	{
-		return -ERROR_INVALID;
-	}
-
 	if (node == nullptr)
 	{
 		return -ERROR_INVALID;
@@ -314,14 +337,85 @@ error_code vfs_io_context::open_vnode(file_object* fd, vnode_base* node, mode_ty
 
 	if (opt & IOCTX_FLG_DIRECTORY)
 	{
+		if (node->get_type() != vnode_types::VNT_DIR)
+		{
+			return -ERROR_NOT_DIR;
+		}
 
+		if ((opt & IOCTX_FLG_MASK_ACCESS_MODE) != IOCTX_FLG_RDONLY)
+		{
+			return -ERROR_INVALID_ACCESS;
+		}
+
+		fd.pos = 0;
+		fd.vnode = node;
+		fd.flags = FO_FLAG_DIRECTORY | FO_FLAG_READABLE;
+
+		auto err = this->open_directory(fd);
+		if (err != ERROR_SUCCESS)
+		{
+			return err;
+		}
+
+		return ERROR_SUCCESS;
 	}
 	else if (node->get_type() == vnode_types::VNT_DIR || node->get_type() == vnode_types::VNT_MNT)
 	{
 		return -ERROR_IS_DIR;
 	}
 
-	return 0;
+	auto access_mode = get_open_mode(opt);
+	auto err = access_node(node, access_mode);
+	if (err != ERROR_SUCCESS)
+	{
+		return err;
+	}
+
+	if (opt & IOCTX_FLG_TRUNC)
+	{
+		err = node->truncate(0);
+		if (err != ERROR_SUCCESS)
+		{
+			return err;
+		}
+	}
+
+	fd.pos = 0;
+	fd.vnode = node;
+	fd.flags = 0;
+
+	if ((opt & ~IOCTX_FLG_MASK_ACCESS_MODE) & ~(IOCTX_FLG_CLOEXEC | IOCTX_FLG_CREATE | IOCTX_FLG_TRUNC))
+	{
+		return -ERROR_INVALID;
+	}
+
+	switch (opt & IOCTX_FLG_MASK_ACCESS_MODE)
+	{
+	case IOCTX_FLG_RDONLY:
+		fd.flags |= FO_FLAG_READABLE;
+		break;
+	case IOCTX_FLG_WRONLY:
+		fd.flags |= FO_FLAG_WRITABLE;
+		break;
+	case IOCTX_FLG_RDWR:
+		fd.flags |= FO_FLAG_READABLE | FO_FLAG_WRITABLE;
+		break;
+	}
+	if (opt & IOCTX_FLG_CLOEXEC)
+	{
+		fd.flags |= FO_FLAG_CLOEXEC;
+	}
+
+	// Here the vnode can choose not to support this, so we see ERROR_UNSUPPORTED as normal.
+	err = node->open(fd, opt);
+	if (err != ERROR_SUCCESS && err != ERROR_UNSUPPORTED)
+	{
+		return err;
+	}
+
+	fd.vnode->increase_open_count();
+
+	return ERROR_SUCCESS;
 }
 
 error_code vfs_io_context::create_at(vnode_base* at, const char* full_path, mode_type mode)
@@ -357,16 +451,11 @@ error_code vfs_io_context::create_at(vnode_base* at, const char* full_path, mode
 	return vnode_at->create(name, this->uid, this->gid, mode & ~this->mode_mask);
 }
 
-error_code vfs_io_context::open_at(file_object* fd, vnode_base* at, const char* path, size_t flags, size_t mode)
+error_code vfs_io_context::open_at(file_object& fd, vnode_base* at, const char* path, size_t flags, size_t mode)
 {
 	if (at == nullptr)
 	{
 		at = this->cwd_vnode;
-	}
-
-	if (fd == nullptr)
-	{
-		return -ERROR_INVALID;
 	}
 
 	if (path == nullptr)
@@ -407,12 +496,12 @@ error_code vfs_io_context::open_at(file_object* fd, vnode_base* at, const char* 
 	return this->open_vnode(fd, node, flags);
 }
 
-error_code vfs_io_context::close(file_object* fd)
+error_code vfs_io_context::close(file_object& fd)
 {
 	return 0;
 }
 
-error_code vfs_io_context::readdir(file_object* fd, directory_entry* ent)
+error_code vfs_io_context::readdir(file_object& fd, directory_entry* ent)
 {
 	return 0;
 }
@@ -442,7 +531,7 @@ error_code vfs_io_context::chown(const char* path, uid_type uid, gid_type gid)
 	return 0;
 }
 
-error_code vfs_io_context::ioctl(file_object* fd, size_t cmd, void* arg)
+error_code vfs_io_context::ioctl(file_object& fd, size_t cmd, void* arg)
 {
 	return 0;
 }
@@ -472,17 +561,17 @@ error_code vfs_io_context::access_node(vnode_base* vn, size_t mode)
 	return 0;
 }
 
-error_code_with_result<size_t> vfs_io_context::write(file_object* fd, const void* buf, size_t count)
+error_code_with_result<size_t> vfs_io_context::write(file_object& fd, const void* buf, size_t count)
 {
 	return error_code_with_result<size_t>();
 }
 
-error_code_with_result<size_t> vfs_io_context::read(file_object* fd, void* buf, size_t count)
+error_code_with_result<size_t> vfs_io_context::read(file_object& fd, void* buf, size_t count)
 {
 	return error_code_with_result<size_t>();
 }
 
-size_t vfs_io_context::seek(file_object* fd, size_t offset, size_t whence)
+size_t vfs_io_context::seek(file_object& fd, size_t offset, size_t whence)
 {
 	return 0;
 }

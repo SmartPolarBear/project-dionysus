@@ -98,7 +98,7 @@ error_code file_system::ext2_vnode::open_dir(const file_system::file_object& fd)
 	return ERROR_SUCCESS;
 }
 
-error_code file_system::ext2_vnode::open(const file_system::file_object& fd)
+error_code file_system::ext2_vnode::open(const file_system::file_object& fd, mode_type opt)
 {
 	return ERROR_SUCCESS;
 }
