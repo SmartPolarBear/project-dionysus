@@ -181,8 +181,7 @@ error_code vfs_io_context::open_directory(file_object& fd)
 
 error_code_with_result<vnode_base*> vfs_io_context::do_find(vnode_base* mount, const char* path, bool link_itself)
 {
-	auto buf = new char[VFS_MAX_PATH_LEN];
-	vnode_base* result = nullptr;
+//	auto buf = make_unique<char[]>(VFS_MAX_PATH_LEN);
 
 	if (mount == nullptr ||
 		path == nullptr ||
@@ -205,6 +204,10 @@ error_code_with_result<vnode_base*> vfs_io_context::do_find(vnode_base* mount, c
 
 
 	// TODO: check access permissions
+
+	auto buf = new char[VFS_MAX_PATH_LEN];
+	vnode_base* result = nullptr;
+
 	auto path_next = next_path_element(path, buf);
 	for (;; path_next = next_path_element(path_next, buf))
 	{
@@ -213,6 +216,8 @@ error_code_with_result<vnode_base*> vfs_io_context::do_find(vnode_base* mount, c
 			if (path_next == nullptr || path_next[0] == 0)
 			{
 				result = mount;
+
+				delete[] buf;
 				return result;
 			}
 			continue;
@@ -225,13 +230,54 @@ error_code_with_result<vnode_base*> vfs_io_context::do_find(vnode_base* mount, c
 				parent = mount;
 			}
 
+			delete[] buf;
 			return do_find(parent, path_next, link_itself);
 		}
 
 		break;
 	}
 
-	delete[]buf;
+	auto load_ret = vfs_lookup_or_load(mount, buf);
+	if (has_error(load_ret))
+	{
+		return get_error_code(load_ret);
+	}
+
+	result = get_result(load_ret);
+
+	if (path_next != nullptr)
+	{
+		vnode_base* r = result;
+		if (link_itself == false)
+		{
+
+			if (r->get_type() == vnode_types::VNT_LNK)
+			{
+				auto lres_ret = link_resolve(r, false);
+				if (has_error(lres_ret))
+				{
+					return get_error_code(lres_ret);
+				}
+
+				r = get_result(lres_ret);
+			}
+
+			// TODO: support multiple links
+			if (r->get_type() == vnode_types::VNT_LNK)
+			{
+				return -ERROR_NOT_IMPL;
+			}
+		}
+
+		return r;
+	}
+	else
+	{
+		return do_find(result, path_next, link_itself);
+	}
+
+	// Shouldn't reach here
+	return -ERROR_NO_ENTRY;
 }
 
 error_code vfs_io_context::set_cwd(const char* rel_path)

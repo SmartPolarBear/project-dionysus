@@ -34,6 +34,7 @@ enum error_code_values : error_code
 	ERROR_NO_ENTRY,
 	ERROR_EOF,
 	ERROR_INVALID_ACCESS,
+	ERROR_SHOULD_NOT_REACH_HERE
 };
 
 
