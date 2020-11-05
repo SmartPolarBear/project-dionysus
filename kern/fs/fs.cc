@@ -51,7 +51,9 @@ static inline error_code kernel_io_context_init()
 		return err;
 	}
 
-//	kernel_io_context->open_at()
+	file_object ob;
+
+	kernel_io_context->open_at(ob, nullptr, "/hello", IOCTX_FLG_RDONLY, IOCTX_FLG_RDONLY);
 
 	return ERROR_SUCCESS;
 }
@@ -90,7 +92,7 @@ PANIC void file_system::fs_init()
 	{
 		KDEBUG_RICHPANIC_CODE(ret, false, "");
 	}
-	
+
 }
 
 error_code_with_result<fs_instance*> file_system::fs_create(fs_class_base* fs_class,

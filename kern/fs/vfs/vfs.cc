@@ -256,12 +256,19 @@ error_code_with_result<vnode_base*> vfs_io_context::find(vnode_base* rel, const 
 		return -ERROR_INVALID;
 	}
 
-	vnode_base* find_base = nullptr;
+	vnode_base* vnode_ret;
 	if (path[0] == '/')
 	{
 		while (*path == '/')path++;
 
 		rel = vfs_root;
+		auto find_ret = do_find(vfs_root, path, link_itself);
+		if (has_error(find_ret))
+		{
+			return get_error_code(find_ret);
+		}
+
+		vnode_ret = get_result(find_ret);
 	}
 	else
 	{
@@ -274,8 +281,23 @@ error_code_with_result<vnode_base*> vfs_io_context::find(vnode_base* rel, const 
 		{
 			rel = vfs_root;
 		}
+
+		auto find_ret = do_find(vfs_root, path, link_itself);
+		if (has_error(find_ret))
+		{
+			return get_error_code(find_ret);
+		}
+
+		vnode_ret = get_result(find_ret);
+
 	}
 
+	if (vnode_ret->get_type() == vnode_types::VNT_MNT)
+	{
+		vnode_ret = vnode_ret->get_link_target();
+	}
+
+	return vnode_ret;
 }
 
 error_code vfs_io_context::mount(const char* path, device_class* blk, fs_class_id fs_id, size_t flags, const char* opt)
