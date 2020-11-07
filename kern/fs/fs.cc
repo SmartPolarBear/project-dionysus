@@ -55,6 +55,11 @@ static inline error_code kernel_io_context_init()
 
 	kernel_io_context->open_at(ob, nullptr, "/hello", IOCTX_FLG_RDONLY, IOCTX_FLG_RDONLY);
 
+	char* buf = new char[1024];
+	kernel_io_context->read(ob, buf, 1024);
+
+	delete[]buf;
+
 	return ERROR_SUCCESS;
 }
 

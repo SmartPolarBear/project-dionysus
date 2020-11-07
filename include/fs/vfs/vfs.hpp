@@ -482,44 +482,44 @@ namespace file_system
 		}
 	 public:
 
-		error_code set_cwd(const char* rel_path);
-		error_code vnode_path(char* path, vnode_base* node);
+		[[nodiscard]]error_code set_cwd(const char* rel_path);
+		[[nodiscard]]error_code vnode_path(char* path, vnode_base* node);
 
-		error_code_with_result<vnode_base*> link_resolve(vnode_base* lnk, bool link_itself);
-		error_code_with_result<vnode_base*> find(vnode_base* rel, const char* path, bool link_itself);
-		error_code mount(const char* at,
+		[[nodiscard]]error_code_with_result<vnode_base*> link_resolve(vnode_base* lnk, bool link_itself);
+		[[nodiscard]]error_code_with_result<vnode_base*> find(vnode_base* rel, const char* path, bool link_itself);
+		[[nodiscard]]error_code mount(const char* at,
 			device_class* blk,
 			fs_class_id fs_id,
 			size_t flags,
 			const char* opt);
-		error_code umount(const char* dir_name);
+		[[nodiscard]]error_code umount(const char* dir_name);
 
-		error_code open_vnode(file_object& fd, vnode_base* node, mode_type opt);
-		error_code create_at(vnode_base* at, const char* path, mode_type mode);
-		error_code open_at(
+		[[nodiscard]]error_code open_vnode(file_object& fd, vnode_base* node, mode_type opt);
+		[[nodiscard]]error_code create_at(vnode_base* at, const char* path, mode_type mode);
+		[[nodiscard]]error_code open_at(
 			file_object& fd,
 			vnode_base* at,
 			const char* path,
 			size_t flags, size_t mode);
-		error_code close(file_object& fd);
-		error_code readdir(file_object& fd, directory_entry* ent);
-		error_code unlinkat(vnode_base* at, const char* pathname, size_t flags);
-		error_code mkdirat(vnode_base* at, const char* path, mode_type mode);
-		error_code_with_result<vnode_base*> mknod(const char* path, mode_type mode);
-		error_code chmod(const char* path, mode_type mode);
-		error_code chown(const char* path, uid_type uid, gid_type gid);
-		error_code ioctl(file_object& fd, size_t cmd, void* arg);
-		error_code ftruncate(vnode_base* node, size_t length);
+		[[nodiscard]]error_code close(file_object& fd);
+		[[nodiscard]]error_code readdir(file_object& fd, directory_entry* ent);
+		[[nodiscard]]error_code unlinkat(vnode_base* at, const char* pathname, size_t flags);
+		[[nodiscard]]error_code mkdirat(vnode_base* at, const char* path, mode_type mode);
+		[[nodiscard]]error_code_with_result<vnode_base*> mknod(const char* path, mode_type mode);
+		[[nodiscard]]error_code chmod(const char* path, mode_type mode);
+		[[nodiscard]]error_code chown(const char* path, uid_type uid, gid_type gid);
+		[[nodiscard]]error_code ioctl(file_object& fd, size_t cmd, void* arg);
+		[[nodiscard]]error_code ftruncate(vnode_base* node, size_t length);
 
-		error_code faccessat(vnode_base* at, const char* path, size_t accmode, size_t flags);
-		error_code fstatat(vnode_base* at, const char* path, file_status* st, size_t flags);
-		error_code access_check(int desm, mode_type mode, uid_type uid, gid_type gid);
-		error_code access_node(vnode_base* vn, size_t mode);
+		[[nodiscard]]error_code faccessat(vnode_base* at, const char* path, size_t accmode, size_t flags);
+		[[nodiscard]]error_code fstatat(vnode_base* at, const char* path, file_status* st, size_t flags);
+		[[nodiscard]]error_code access_check(int desm, mode_type mode, uid_type uid, gid_type gid);
+		[[nodiscard]]error_code access_node(vnode_base* vn, size_t mode);
 
-		error_code_with_result<size_t> write(file_object& fd, const void* buf, size_t count);
-		error_code_with_result<size_t> read(file_object& fd, void* buf, size_t count);
+		[[nodiscard]]error_code_with_result<size_t> write(file_object& fd, const void* buf, size_t count);
+		[[nodiscard]]error_code_with_result<size_t> read(file_object& fd, void* buf, size_t count);
 
-		size_t seek(file_object& fd, size_t offset, size_t whence);
+		[[nodiscard]]size_t seek(file_object& fd, size_t offset, size_t whence);
 	};
 
 	extern vfs_io_context* const kernel_io_context;
