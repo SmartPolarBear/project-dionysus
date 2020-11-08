@@ -320,7 +320,7 @@ namespace file_system
 
 		[[nodiscard]] bool has_flags(size_t flgs) const
 		{
-			return flags | flgs;
+			return flags & flgs;
 		}
 
 		void set_flags(size_t flgs)

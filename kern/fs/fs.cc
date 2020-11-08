@@ -34,6 +34,7 @@ struct fs_class_node
 	list_head link;
 };
 
+char testbuf[1024];
 static inline error_code kernel_io_context_init()
 {
 	auto dev_find_ret = device_find_first(DC_BLOCK, "sda1");
@@ -53,12 +54,19 @@ static inline error_code kernel_io_context_init()
 
 	file_object ob;
 
-	kernel_io_context->open_at(ob, nullptr, "/hello", IOCTX_FLG_RDONLY, IOCTX_FLG_RDONLY);
+	err = kernel_io_context->open_at(ob, nullptr, "hello", IOCTX_FLG_RDONLY, IOCTX_FLG_RDONLY);
+	if (err != ERROR_SUCCESS)
+	{
+		return err;
+	}
 
-	char* buf = new char[1024];
-	kernel_io_context->read(ob, buf, 1024);
+	auto read_ret = kernel_io_context->read(ob, testbuf, 1024);
+	if (has_error(read_ret))
+	{
+		return get_error_code(read_ret);
+	}
 
-	delete[]buf;
+	auto size = get_result(read_ret);
 
 	return ERROR_SUCCESS;
 }

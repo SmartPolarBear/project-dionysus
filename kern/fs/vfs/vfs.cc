@@ -126,7 +126,7 @@ static inline error_code_with_result<vnode_base*> vfs_lookup_or_load(vnode_base*
 	{
 		return ret;
 	}
-	else if (ret != ERROR_NO_ENTRY)
+	else if (ret != -ERROR_NO_ENTRY)
 	{
 		return ret;
 	}

@@ -15,10 +15,20 @@ using std::max;
 error_code_with_result<file_system::vnode_base*> file_system::ext2_vnode::find(const char* name)
 {
 	auto inode = reinterpret_cast<ext2_inode*>(this->private_data);
+	if (inode == nullptr)
+	{
+		return -ERROR_INTERNAL;
+	}
+
 	auto ext2_fs = this->fs;
+	if (ext2_fs == nullptr)
+	{
+		return -ERROR_INTERNAL;
+	}
+
 	ext2_data* data = reinterpret_cast<ext2_data*>(ext2_fs->private_data);
 
-	if (inode == nullptr || ext2_fs == nullptr || data == nullptr)
+	if (data == nullptr)
 	{
 		return -ERROR_INTERNAL;
 	}
