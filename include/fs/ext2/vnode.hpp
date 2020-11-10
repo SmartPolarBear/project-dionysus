@@ -22,7 +22,6 @@ namespace file_system
 		ext2_vnode(vnode_types t, const char* n)
 			: vnode_base(t, n)
 		{
-			kdebug::kdebug_log("Create vnode: type %d, name %s\n", (uint32_t)t, n);
 		}
 
 		~ext2_vnode() override = default;

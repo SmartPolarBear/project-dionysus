@@ -70,7 +70,7 @@ error_code_with_result<file_system::vnode_base*> file_system::ext2_vnode::find(c
 
 					ext2_inode* new_inode = get_result(alloc_inode_ret);
 
-					ext2_vnode* vnode = new ext2_vnode(vnode_types::VNT_DIR, name);
+					ext2_vnode* vnode = new ext2_vnode(ext2_fs,vnode_types::VNT_DIR, name);
 					if (vnode == nullptr)
 					{
 						delete[] block_buf;
@@ -84,7 +84,6 @@ error_code_with_result<file_system::vnode_base*> file_system::ext2_vnode::find(c
 						return err;
 					}
 
-					vnode->set_fs(ext2_fs);
 
 					vnode->initialize_from_inode(dir_entry->ino, new_inode);
 					return vnode;

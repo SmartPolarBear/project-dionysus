@@ -10,7 +10,30 @@ using namespace std;
 
 using namespace file_system;
 
-static inline error_code_with_result<const char*> separate_parent_name(const char* full_path, OUT char* path)
+static constexpr size_t get_open_mode(size_t opt)
+{
+	size_t r = 0;
+	if (opt & IOCTX_FLG_EXEC)
+	{
+		r |= X_OK;
+	}
+
+	switch (opt & IOCTX_FLG_MASK_ACCESS_MODE)
+	{
+	case IOCTX_FLG_WRONLY:
+		r |= W_OK;
+		break;
+	case IOCTX_FLG_RDONLY:
+		r |= R_OK;
+		break;
+	case IOCTX_FLG_RDWR:
+		r |= W_OK | R_OK;
+		break;
+	}
+	return r;
+}
+
+error_code_with_result<const char*> vfs_io_context::separate_parent_name(const char* full_path, OUT char* path)
 {
 	auto sep = strrchr(full_path, '/');
 
@@ -68,30 +91,7 @@ error_code file_system::vfs_init()
 	return ERROR_SUCCESS;
 }
 
-static constexpr size_t get_open_mode(size_t opt)
-{
-	size_t r = 0;
-	if (opt & IOCTX_FLG_EXEC)
-	{
-		r |= X_OK;
-	}
-
-	switch (opt & IOCTX_FLG_MASK_ACCESS_MODE)
-	{
-	case IOCTX_FLG_WRONLY:
-		r |= W_OK;
-		break;
-	case IOCTX_FLG_RDONLY:
-		r |= R_OK;
-		break;
-	case IOCTX_FLG_RDWR:
-		r |= W_OK | R_OK;
-		break;
-	}
-	return r;
-}
-
-static inline const char* next_path_element(const char* path, OUT char* element)
+const char* vfs_io_context::next_path_element(const char* path, OUT char* element)
 {
 	auto pos = strchr(path, '/');
 	if (pos == nullptr) // no '/', there is only one element left
@@ -117,7 +117,7 @@ static inline const char* next_path_element(const char* path, OUT char* element)
 	}
 }
 
-static inline error_code_with_result<vnode_base*> vfs_lookup_or_load(vnode_base* at, const char* name)
+error_code_with_result<vnode_base*> vfs_io_context::lookup_or_load_node(vnode_base* at, const char* name)
 {
 	auto child_ret = at->lookup_child(name);
 
@@ -179,43 +179,66 @@ error_code vfs_io_context::open_directory(file_object& fd)
 	return ERROR_SUCCESS;
 }
 
-error_code_with_result<vnode_base*> vfs_io_context::do_find(vnode_base* mount, const char* path, bool link_itself)
+error_code_with_result<vnode_base*> vfs_io_context::do_find(vnode_base* at, const char* path, bool link_itself)
 {
-//	auto buf = make_unique<char[]>(VFS_MAX_PATH_LEN);
-
-	if (mount == nullptr ||
-		path == nullptr ||
-		path[0] == 0 ||
-		path[0] == '/') // path should neither be empty nor be absolute
+	if (at == nullptr) // path should neither be empty nor be absolute
 	{
 		return -ERROR_INVALID;
 	}
 
-	if (mount->get_type() == (vnode_types::VNT_LNK))
+	if (path[0] == '/')
 	{
-		//TODO: multiple links
-		return -ERROR_NOT_IMPL;
+		return -ERROR_INVALID;
 	}
 
-	if (mount->get_type() != (vnode_types::VNT_DIR))
+	// have completely solve the path
+	if (path == nullptr ||
+		path[0] == 0)
+	{
+		return at;
+	}
+
+	if (at->get_type() == (vnode_types::VNT_LNK))
+	{
+		auto sv_ret = link_resolve(at, link_itself);
+		if (has_error(sv_ret))
+		{
+			return sv_ret;
+		}
+		else
+		{
+			at = get_result(sv_ret);
+		}
+	}
+
+	if (at->get_type() == vnode_types::VNT_LNK)
+	{
+		// TODO: multiple link
+	}
+
+	if (at->get_type() != vnode_types::VNT_MNT)
+	{
+		at = at->get_link_target();
+	}
+
+	if (at->get_type() != (vnode_types::VNT_DIR))
 	{
 		return -ERROR_NOT_DIR;
 	}
 
-
 	// TODO: check access permissions
 
 	auto buf = new char[VFS_MAX_PATH_LEN];
-	vnode_base* result = nullptr;
-
 	auto path_next = next_path_element(path, buf);
+
+	vnode_base* result = nullptr;
 	for (;; path_next = next_path_element(path_next, buf))
 	{
 		if (strcmp(buf, ".") == 0)
 		{
 			if (path_next == nullptr || path_next[0] == 0)
 			{
-				result = mount;
+				result = at;
 
 				delete[] buf;
 				return result;
@@ -224,10 +247,10 @@ error_code_with_result<vnode_base*> vfs_io_context::do_find(vnode_base* mount, c
 		}
 		else if (strcmp(buf, "..") == 0)
 		{
-			auto parent = mount->get_parent();
+			auto parent = at->get_parent();
 			if (parent == nullptr)
 			{
-				parent = mount;
+				parent = at;
 			}
 
 			delete[] buf;
@@ -237,7 +260,7 @@ error_code_with_result<vnode_base*> vfs_io_context::do_find(vnode_base* mount, c
 		break;
 	}
 
-	auto load_ret = vfs_lookup_or_load(mount, buf);
+	auto load_ret = lookup_or_load_node(at, buf);
 	if (has_error(load_ret))
 	{
 		return get_error_code(load_ret);

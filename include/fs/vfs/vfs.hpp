@@ -2,6 +2,8 @@
 
 #include "system/error.hpp"
 
+#include "drivers/debug/kdebug.h"
+
 #include "data/List.h"
 #include "fs/device/device.hpp"
 
@@ -274,6 +276,8 @@ namespace file_system
 				strncpy(name_buf, n, strnlen(n, VNODE_NAME_MAX));
 			}
 			libkernel::list_init(&child_head);
+
+			kdebug::kdebug_log("Create vnode: type %d, name %s\n", (uint32_t)t, n);
 		}
 
 	 public:
@@ -464,14 +468,19 @@ namespace file_system
 	class vfs_io_context
 	{
 	 private:
-		vnode_base* cwd_vnode;
-		uid_type uid;
-		gid_type gid;
-		mode_type mode_mask;
+		vnode_base* cwd_vnode{};
+		uid_type uid{};
+		gid_type gid{};
+		mode_type mode_mask{};
 
 	 private:
-		error_code open_directory(file_object& fd);
-		error_code_with_result<vnode_base*> do_find(vnode_base* node, const char* path, bool link_itself);
+		static const char* next_path_element(const char* path, OUT char* element);
+		error_code_with_result<const char*> separate_parent_name(const char* full_path, OUT char* path);
+
+	 private:
+		static error_code open_directory(file_object& fd);
+		static error_code_with_result<vnode_base*> lookup_or_load_node(vnode_base* at, const char* name);
+		error_code_with_result<vnode_base*> do_find(vnode_base* at, const char* path, bool link_itself);
 	 public:
 		vfs_io_context() = default;
 
