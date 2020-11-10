@@ -117,6 +117,72 @@ const char* vfs_io_context::next_path_element(const char* path, OUT char* elemen
 	}
 }
 
+error_code_with_result<vnode_base*> vfs_io_context::do_link_resolve(vnode_base* lnk, bool link_itself, size_t count)
+{
+	if (lnk == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	if (lnk->get_type() != vnode_types::VNT_LNK)
+	{
+		return lnk;
+	}
+
+	if (lnk->get_link_target() != nullptr && lnk->has_flags(VNF_MEMORY) == false)
+	{
+		char* path_buf = new char[VFS_MAX_PATH_LEN];
+
+		auto err = lnk->read_link(path_buf, VFS_MAX_PATH_LEN);
+		if (err != ERROR_SUCCESS)
+		{
+			delete[] path_buf;
+			return err;
+		}
+
+		auto find_ret = find(lnk->get_parent(), path_buf, link_itself);
+
+		if (has_error(find_ret))
+		{
+			lnk->set_link_target(nullptr);
+
+			delete[] path_buf;
+			return get_error_code(find_ret);
+		}
+
+		delete[] path_buf;
+	}
+
+	vnode_base* target = nullptr;
+	if (lnk->has_flags(VNF_PER_PROCESS))
+	{
+		target = lnk->get_link_getter_func()(cur_proc(), lnk, nullptr, 0);
+	}
+	else
+	{
+		target = lnk->get_link_target();
+	}
+
+	if (target != nullptr)
+	{
+		if (target->get_type() == vnode_types::VNT_LNK)
+		{
+			if (count <= 1)
+			{
+				return -ERROR_TOO_MANY_CALLS;
+			}
+
+			return do_link_resolve(target, link_itself, count - 1);
+		}
+		else
+		{
+			return target;
+		}
+	}
+
+	return -ERROR_NO_ENTRY;
+}
+
 error_code_with_result<vnode_base*> vfs_io_context::lookup_or_load_node(vnode_base* at, const char* name)
 {
 	auto child_ret = at->lookup_child(name);
@@ -315,7 +381,7 @@ error_code vfs_io_context::vnode_path(char* path, vnode_base* node)
 
 error_code_with_result<vnode_base*> vfs_io_context::link_resolve(vnode_base* lnk, bool link_itself)
 {
-	return error_code_with_result<vnode_base*>();
+	return do_link_resolve(lnk, link_itself, LINK_MAX);
 }
 
 error_code_with_result<vnode_base*> vfs_io_context::find(vnode_base* rel, const char* path, bool link_itself)
@@ -691,4 +757,5 @@ size_t vfs_io_context::seek(file_object& fd, size_t offset, size_t whence)
 {
 	return 0;
 }
+
 

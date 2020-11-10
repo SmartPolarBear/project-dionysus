@@ -3,6 +3,8 @@
 #include "system/types.h"
 #include "system/error.hpp"
 
+#include "system/process.h"
+
 #include <cstring>
 
 namespace file_system
@@ -12,7 +14,7 @@ namespace file_system
 
 	class vnode_base;
 
-	using vnode_link_getter_type = vnode_base* (*)(struct thread*, vnode_base*);
+	using vnode_link_getter_type = vnode_base* (*)(process::process_dispatcher* proc, vnode_base*, char*, size_t);
 
 
 	enum device_class_id

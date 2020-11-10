@@ -302,6 +302,16 @@ namespace file_system
 			link_target.node_target = target;
 		}
 
+		[[nodiscard]] vnode_link_getter_type get_link_getter_func() const
+		{
+			return link_target.link_getter;
+		}
+
+		void set_link_getter_func(vnode_link_getter_type getter)
+		{
+			link_target.link_getter = getter;
+		}
+
 		[[nodiscard]] const char* get_name() const
 		{
 			return name_buf;
@@ -468,6 +478,8 @@ namespace file_system
 	class vfs_io_context
 	{
 	 private:
+		static constexpr size_t LINK_MAX = 32;
+	 private:
 		vnode_base* cwd_vnode{};
 		uid_type uid{};
 		gid_type gid{};
@@ -475,12 +487,12 @@ namespace file_system
 
 	 private:
 		static const char* next_path_element(const char* path, OUT char* element);
-		error_code_with_result<const char*> separate_parent_name(const char* full_path, OUT char* path);
-
-	 private:
 		static error_code open_directory(file_object& fd);
 		static error_code_with_result<vnode_base*> lookup_or_load_node(vnode_base* at, const char* name);
+	 private:
 		error_code_with_result<vnode_base*> do_find(vnode_base* at, const char* path, bool link_itself);
+		error_code_with_result<const char*> separate_parent_name(const char* full_path, OUT char* path);
+		error_code_with_result<vnode_base*> do_link_resolve(vnode_base* lnk, bool link_itself, size_t count);
 	 public:
 		vfs_io_context() = default;
 
