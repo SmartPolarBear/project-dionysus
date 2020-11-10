@@ -13,6 +13,12 @@ namespace file_system
 		: public vnode_base
 	{
 	 public:
+		ext2_vnode(fs_instance* fs, vnode_types t, const char* name)
+			: vnode_base(t, name)
+		{
+			set_fs(fs);
+		}
+
 		ext2_vnode(vnode_types t, const char* n)
 			: vnode_base(t, n)
 		{
