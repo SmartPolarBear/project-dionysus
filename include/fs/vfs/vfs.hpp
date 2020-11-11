@@ -294,6 +294,10 @@ namespace file_system
 
 		[[nodiscard]] vnode_base* get_link_target() const
 		{
+			if (this->type != vnode_types::VNT_MNT)
+			{
+				return nullptr;
+			}
 			return link_target.node_target;
 		}
 
@@ -304,6 +308,10 @@ namespace file_system
 
 		[[nodiscard]] vnode_link_getter_type get_link_getter_func() const
 		{
+			if (this->type != vnode_types::VNT_MNT)
+			{
+				return nullptr;
+			}
 			return link_target.link_getter;
 		}
 

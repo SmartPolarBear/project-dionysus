@@ -247,24 +247,23 @@ error_code vfs_io_context::open_directory(file_object& fd)
 
 error_code_with_result<vnode_base*> vfs_io_context::do_find(vnode_base* at, const char* path, bool link_itself)
 {
-	if (at == nullptr) // path should neither be empty nor be absolute
+	if (at == nullptr)
 	{
 		return -ERROR_INVALID;
 	}
 
-	if (path[0] == '/')
-	{
-		return -ERROR_INVALID;
-	}
-
-	// have completely solve the path
-	if (path == nullptr ||
-		path[0] == 0)
+	// it's nullptr if we have completely solve the path
+	if (path == nullptr || path[0] == 0)
 	{
 		return at;
 	}
 
-	if (at->get_type() == (vnode_types::VNT_LNK))
+	if (path[0] == '/')// path should neither be empty nor be absolute
+	{
+		return -ERROR_INVALID;
+	}
+
+	if (at->get_type() == vnode_types::VNT_LNK)
 	{
 		auto sv_ret = link_resolve(at, link_itself);
 		if (has_error(sv_ret))
@@ -282,7 +281,7 @@ error_code_with_result<vnode_base*> vfs_io_context::do_find(vnode_base* at, cons
 		// TODO: multiple link
 	}
 
-	if (at->get_type() != vnode_types::VNT_MNT)
+	if (at->get_type() == vnode_types::VNT_MNT)
 	{
 		at = at->get_link_target();
 	}
