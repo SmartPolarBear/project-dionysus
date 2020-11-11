@@ -749,7 +749,32 @@ error_code_with_result<size_t> vfs_io_context::write(file_object& fd, const void
 
 error_code_with_result<size_t> vfs_io_context::read(file_object& fd, void* buf, size_t count)
 {
-	return error_code_with_result<size_t>();
+	if (!(fd.flags & FO_FLAG_READABLE))
+	{
+		return -ERROR_INVALID;
+	}
+
+	if (buf == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	switch (fd.vnode->get_type())
+	{
+	case vnode_types::VNT_FIFO:
+	case vnode_types::VNT_REG:
+		return fd.vnode->read(fd, buf, count);
+		break;
+	case vnode_types::VNT_BLK:
+	case vnode_types::VNT_CHR:
+		return fd.vnode->get_dev()->read(buf, fd.pos, count);
+		break;
+	default:
+	case vnode_types::VNT_DIR:
+		return -ERROR_INVALID;
+	}
+
+	return -ERROR_SHOULD_NOT_REACH_HERE;
 }
 
 size_t vfs_io_context::seek(file_object& fd, size_t offset, size_t whence)

@@ -86,7 +86,12 @@ error_code_with_result<file_system::vnode_base*> file_system::ext2_vnode::find(c
 						return -ERROR_MEMORY_ALLOC;
 					}
 
-					vnode->initialize_from_inode(dir_entry->ino, new_inode);
+					err = vnode->initialize_from_inode(dir_entry->ino, new_inode);
+					if (err == ERROR_SUCCESS)
+					{
+						delete[] block_buf;
+						return err;
+					}
 
 					delete[] block_buf;
 					return vnode;
@@ -405,7 +410,7 @@ error_code_with_result<size_t> file_system::ext2_vnode::write(file_system::file_
 	}
 	default:
 	{
-		return ERROR_INVALID;
+		return -ERROR_INVALID;
 	}
 	}
 

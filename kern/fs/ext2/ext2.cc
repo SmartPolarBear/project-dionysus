@@ -91,7 +91,12 @@ error_code ext2_data::initialize(fs_instance* fs)
 		return -ERROR_IO;
 	}
 
-	root_vnode->initialize_from_inode(EXT2_ROOT_DIR_INODE_NUMBER, root_inode);
+	err = root_vnode->initialize_from_inode(EXT2_ROOT_DIR_INODE_NUMBER, root_inode);
+	if (err == ERROR_SUCCESS)
+	{
+		delete[] block_buf;
+		return err;
+	}
 
 	this->print_debug_message();
 	return ERROR_SUCCESS;
