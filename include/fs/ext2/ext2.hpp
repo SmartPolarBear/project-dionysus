@@ -15,13 +15,13 @@ namespace file_system
 
 	enum ext2_inode_type
 	{
-		EXT2_IFIFO = 0x1000,
-		EXT2_IFCHR = 0x2000,
-		EXT2_IFDIR = 0x4000,
-		EXT2_IFBLK = 0x6000,
-		EXT2_IFREG = 0x8000,
-		EXT2_IFLNK = 0xA000,
-		EXT2_IFSOCK = 0xC000,
+		EXT2_IFIFO = 0x1,
+		EXT2_IFCHR = 0x2,
+		EXT2_IFDIR = 0x4,
+		EXT2_IFBLK = 0x6,
+		EXT2_IFREG = 0x8,
+		EXT2_IFLNK = 0xA,
+		EXT2_IFSOCK = 0xC,
 	};
 
 	using ext2_ino_type = uint32_t;

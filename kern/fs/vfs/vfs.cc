@@ -190,11 +190,11 @@ error_code_with_result<vnode_base*> vfs_io_context::lookup_or_load_node(vnode_ba
 	auto ret = get_error_code(child_ret);
 	if (ret == ERROR_SUCCESS)
 	{
-		return ret;
+		return child_ret;
 	}
 	else if (ret != -ERROR_NO_ENTRY)
 	{
-		return ret;
+		return child_ret;
 	}
 
 	if (!(at->has_flags(VNF_MEMORY)))

@@ -40,6 +40,7 @@ error_code_with_result<file_system::vnode_base*> file_system::ext2_vnode::find(c
 	}
 
 	size_t block_size = data->get_block_size();
+
 	uint8_t* block_buf = new uint8_t[block_size];
 
 	size_t block_off = 0;
@@ -70,22 +71,24 @@ error_code_with_result<file_system::vnode_base*> file_system::ext2_vnode::find(c
 
 					ext2_inode* new_inode = get_result(alloc_inode_ret);
 
-					ext2_vnode* vnode = new ext2_vnode(ext2_fs,vnode_types::VNT_DIR, name);
+					auto err = ext2_inode_read(ext2_fs, dir_entry->ino, new_inode);
+					if (err != ERROR_SUCCESS)
+					{
+						data->free_inode(new_inode);
+						delete[] block_buf;
+						return err;
+					}
+
+					ext2_vnode* vnode = new ext2_vnode(ext2_fs, vnode_types::VNT_DIR, name);
 					if (vnode == nullptr)
 					{
 						delete[] block_buf;
 						return -ERROR_MEMORY_ALLOC;
 					}
 
-					auto err = ext2_inode_read(ext2_fs, dir_entry->ino, new_inode);
-					if (err != ERROR_SUCCESS)
-					{
-						data->free_inode(new_inode);
-						return err;
-					}
-
-
 					vnode->initialize_from_inode(dir_entry->ino, new_inode);
+
+					delete[] block_buf;
 					return vnode;
 				}
 			}
@@ -94,6 +97,7 @@ error_code_with_result<file_system::vnode_base*> file_system::ext2_vnode::find(c
 		}
 	}
 
+	delete[] block_buf;
 	return -ERROR_NO_ENTRY;
 }
 
@@ -378,7 +382,7 @@ error_code_with_result<size_t> file_system::ext2_vnode::write(file_system::file_
 	return offset;
 }
 
-error_code file_system::ext2_vnode::initialize_from_inode(file_system::ext2_ino_type ino,
+[[nodiscard]]error_code file_system::ext2_vnode::initialize_from_inode(file_system::ext2_ino_type ino,
 	const file_system::ext2_inode* src)
 {
 	this->inode_id = ino;
