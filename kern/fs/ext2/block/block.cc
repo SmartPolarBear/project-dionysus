@@ -19,7 +19,7 @@ error_code ext2_block_read(file_system::fs_instance* fs, uint8_t* buf, size_t bl
 	}
 
 	auto ret = fs->dev->read(buf, block_num * ext2data->get_block_size(), ext2data->get_block_size());
-	if (get_error_code(ret) != ERROR_SUCCESS)
+	if (has_error(ret))
 	{
 		return get_error_code(ret);
 	}
@@ -42,7 +42,7 @@ error_code ext2_block_write(file_system::fs_instance* fs, const uint8_t* buf, si
 	}
 
 	auto ret = fs->dev->write(buf, block_num * ext2data->get_block_size(), ext2data->get_block_size());
-	if (get_error_code(ret) != ERROR_SUCCESS)
+	if (has_error(ret))
 	{
 		return get_error_code(ret);
 	}

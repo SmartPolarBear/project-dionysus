@@ -57,7 +57,7 @@ error_code file_system::ATABlockDevice::enumerate_partitions(file_system::vnode_
 	memset(head_data, 0, HEAD_DATA_SIZE);
 
 	auto ret = this->read(head_data, 0, HEAD_DATA_SIZE);
-	if (get_error_code(ret) != ERROR_SUCCESS)
+	if (has_error(ret))
 	{
 		delete[] head_data;
 		return ERROR_SUCCESS;
@@ -108,7 +108,7 @@ error_code file_system::ATABlockDevice::enumerate_partitions(file_system::vnode_
 					partition_count,
 					entry->sys_id);
 
-			if (get_error_code(ret) != ERROR_SUCCESS)
+			if (has_error(ret))
 			{
 				delete[] head_data;
 				return get_error_code(ret);

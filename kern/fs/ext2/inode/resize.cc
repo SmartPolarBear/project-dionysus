@@ -47,7 +47,7 @@ error_code ext2_inode_resize(file_system::fs_instance* fs,
 		{
 			auto ret = ext2_inode_get_index(fs, inode, index);
 
-			if (get_error_code(ret) != ERROR_SUCCESS)
+			if (has_error(ret))
 			{
 				return get_error_code(ret);
 			}
@@ -87,7 +87,7 @@ error_code ext2_inode_resize(file_system::fs_instance* fs,
 		{
 			auto ret = ext2_block_alloc(fs);
 
-			if (get_error_code(ret) != ERROR_SUCCESS)
+			if (has_error(ret))
 			{
 				return get_error_code(ret);
 			}

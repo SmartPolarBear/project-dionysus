@@ -97,7 +97,7 @@ error_code ext2_inode_set_index(file_system::fs_instance* fs,
 		if (inode->indirect_block_l1 == 0)
 		{
 			auto ret = ext2_block_alloc(fs);
-			if (get_error_code(ret) != ERROR_SUCCESS)
+			if (has_error(ret))
 			{
 				delete[]addrs;
 				return get_error_code(ret);

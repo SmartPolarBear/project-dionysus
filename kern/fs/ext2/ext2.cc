@@ -24,7 +24,7 @@ ext2_data::ext2_data()
 error_code ext2_data::initialize(fs_instance* fs)
 {
 	auto ret = fs->dev->read(reinterpret_cast<void*>(&this->superblock_data), 1024, 1024);
-	if (get_error_code(ret) != ERROR_SUCCESS)
+	if (has_error(ret))
 	{
 		return -ERROR_IO;
 	}
@@ -65,7 +65,7 @@ error_code ext2_data::initialize(fs_instance* fs)
 	for (size_t i = 0; i < bgdt_size_blocks; i++)
 	{
 		ret = ext2_block_read(fs, ((uint8_t*)this->bgdt) + i * this->block_size, i + 2);
-		if (get_error_code(ret) != ERROR_SUCCESS)
+		if (has_error(ret))
 		{
 			kfree(this->bgdt);
 			return get_error_code(ret);
@@ -94,7 +94,7 @@ error_code ext2_data::initialize(fs_instance* fs)
 	err = root_vnode->initialize_from_inode(EXT2_ROOT_DIR_INODE_NUMBER, root_inode);
 	if (err == ERROR_SUCCESS)
 	{
-		delete[] block_buf;
+		kfree(this->bgdt);
 		return err;
 	}
 
@@ -137,7 +137,7 @@ void ext2_data::print_debug_message()
 error_code ext2_data::superblock_write_back(fs_instance* fs)
 {
 	auto ret = fs->dev->write(superblock_data, 1024, 1024);
-	if (get_error_code(ret) != ERROR_SUCCESS)
+	if (has_error(ret))
 	{
 		return get_error_code(ret);
 	}

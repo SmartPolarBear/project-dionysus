@@ -201,7 +201,7 @@ error_code_with_result<vnode_base*> vfs_io_context::lookup_or_load_node(vnode_ba
 	{
 		auto find_ret = at->find(name);
 
-		if (get_error_code(find_ret) != ERROR_SUCCESS)
+		if (has_error(find_ret))
 		{
 			return get_error_code(find_ret);
 		}
@@ -459,7 +459,7 @@ error_code vfs_io_context::mount(const char* path, device_class* blk, fs_class_i
 	}
 
 	auto ret = fs_create(fs_class, blk, flags, opt);
-	if (get_error_code(ret) != ERROR_SUCCESS)
+	if (has_error(ret))
 	{
 		return get_error_code(ret);
 	}
@@ -467,7 +467,7 @@ error_code vfs_io_context::mount(const char* path, device_class* blk, fs_class_i
 	auto fs_ins = get_result(ret);
 
 	auto root_ret = fs_class->get_root();
-	if (get_error_code(root_ret) != ERROR_SUCCESS)
+	if (has_error(ret))
 	{
 		return get_error_code(root_ret);
 	}
@@ -481,7 +481,7 @@ error_code vfs_io_context::mount(const char* path, device_class* blk, fs_class_i
 	else
 	{
 		auto mount_point_ret = this->find(this->cwd_vnode, path, false);
-		if (get_error_code(mount_point_ret) == ERROR_SUCCESS)
+		if (has_error(ret))
 		{
 			return get_error_code(mount_point_ret);
 		}

@@ -87,7 +87,7 @@ error_code_with_result<file_system::vnode_base*> file_system::ext2_vnode::find(c
 					}
 
 					err = vnode->initialize_from_inode(dir_entry->ino, new_inode);
-					if (err == ERROR_SUCCESS)
+					if (err != ERROR_SUCCESS)
 					{
 						delete[] block_buf;
 						return err;
