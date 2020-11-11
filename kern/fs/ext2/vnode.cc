@@ -60,7 +60,7 @@ error_code_with_result<file_system::vnode_base*> file_system::ext2_vnode::find(c
 			ext2_directory_entry* dir_entry = reinterpret_cast<ext2_directory_entry*>((block_buf + block_off));
 			if (dir_entry->ino && (dir_entry->name_length_low == name_len))
 			{
-				if (!strncmp(dir_entry->name, name, name_len))
+				if (strncmp(dir_entry->name, name, name_len) == 0)
 				{
 					auto alloc_inode_ret = data->create_new_inode();
 					if (has_error(alloc_inode_ret))
