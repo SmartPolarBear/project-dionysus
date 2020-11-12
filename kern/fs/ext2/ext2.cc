@@ -23,8 +23,8 @@ ext2_data::ext2_data()
 
 error_code ext2_data::initialize(fs_instance* fs)
 {
-	auto ret = fs->dev->read(reinterpret_cast<void*>(&this->superblock_data), 1024, 1024);
-	if (has_error(ret))
+	auto read_ret = fs->dev->read(reinterpret_cast<void*>(&this->superblock_data), 1024, 1024);
+	if (has_error(read_ret))
 	{
 		return -ERROR_IO;
 	}
@@ -64,11 +64,12 @@ error_code ext2_data::initialize(fs_instance* fs)
 	// starting from block 2, we read all bgds
 	for (size_t i = 0; i < bgdt_size_blocks; i++)
 	{
-		ret = ext2_block_read(fs, ((uint8_t*)this->bgdt) + i * this->block_size, i + 2);
-		if (has_error(ret))
+
+		auto err = ext2_block_read(fs, ((uint8_t*)this->bgdt) + i * this->block_size, i + 2);
+		if (err != ERROR_SUCCESS)
 		{
 			kfree(this->bgdt);
-			return get_error_code(ret);
+			return err;
 		}
 	}
 

@@ -4,6 +4,12 @@
 
 #include <variant>
 
+// declaration to avoid fucking circle reference of headers
+namespace kdebug
+{
+	void kdebug_warning(const char* fmt, ...);
+}
+
 // use negative value to indicate errors
 
 enum error_code_values : error_code
@@ -45,6 +51,11 @@ using error_code_with_result = std::variant<error_code, T>;
 template<typename T>
 static inline bool has_error(error_code_with_result<T> ret) noexcept
 {
+	if (std::holds_alternative<error_code>(ret) && std::get<error_code>(ret) == ERROR_SUCCESS)
+	{
+		kdebug::kdebug_warning("has_error: ret contains a ERROR_SUCCESS.\nThis may reveal a misuse.\n");
+		return false;
+	}
 	return std::holds_alternative<error_code>(ret);
 }
 

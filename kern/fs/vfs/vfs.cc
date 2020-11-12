@@ -464,10 +464,10 @@ error_code vfs_io_context::mount(const char* path, device_class* blk, fs_class_i
 		return get_error_code(ret);
 	}
 
-	auto fs_ins = get_result(ret);
+	[[maybe_unused]]auto fs_ins = get_result(ret);
 
 	auto root_ret = fs_class->get_root();
-	if (has_error(ret))
+	if (has_error(root_ret))
 	{
 		return get_error_code(root_ret);
 	}
@@ -481,7 +481,7 @@ error_code vfs_io_context::mount(const char* path, device_class* blk, fs_class_i
 	else
 	{
 		auto mount_point_ret = this->find(this->cwd_vnode, path, false);
-		if (has_error(ret))
+		if (has_error(mount_point_ret))
 		{
 			return get_error_code(mount_point_ret);
 		}
@@ -645,7 +645,7 @@ error_code vfs_io_context::open_at(file_object& fd, vnode_base* at, const char* 
 	}
 
 	auto find_ret = this->find(at, path, false);
-	if (has_error(find_ret))
+	if (!has_error(find_ret))
 	{
 		if (flags & IOCTX_FLG_CREATE)
 		{
