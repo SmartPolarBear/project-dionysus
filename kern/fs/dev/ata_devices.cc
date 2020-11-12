@@ -56,11 +56,11 @@ error_code file_system::ATABlockDevice::enumerate_partitions(file_system::vnode_
 	uint8_t* head_data = new uint8_t[1024];
 	memset(head_data, 0, HEAD_DATA_SIZE);
 
-	auto ret = this->read(head_data, 0, HEAD_DATA_SIZE);
-	if (has_error(ret))
+	auto read_ret = this->read(head_data, 0, HEAD_DATA_SIZE);
+	if (has_error(read_ret))
 	{
 		delete[] head_data;
-		return ERROR_SUCCESS;
+		return get_error_code(read_ret);
 	}
 
 	// Compare last two bytes to identify valid MBR disk
@@ -101,17 +101,16 @@ error_code file_system::ATABlockDevice::enumerate_partitions(file_system::vnode_
 				entry->sector_count
 			);
 
-			ret =
-				partition_add_device(parent,
+			auto err = partition_add_device(parent,
 					entry->start_lba,
 					entry->sector_count * 512,
 					partition_count,
 					entry->sys_id);
 
-			if (has_error(ret))
+			if (err != ERROR_SUCCESS)
 			{
 				delete[] head_data;
-				return get_error_code(ret);
+				return err;
 			}
 		}
 	}
