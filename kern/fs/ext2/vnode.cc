@@ -287,6 +287,7 @@ error_code_with_result<size_t> file_system::ext2_vnode::read(file_system::file_o
 
 	}
 
+	delete[]block_buf;
 	return ERROR_SUCCESS;
 }
 

@@ -14,6 +14,7 @@
 
 using namespace file_system;
 
+// FIXME: this cuases a GPF
 error_code_with_result<uint32_t> ext2_inode_get_index(file_system::fs_instance* fs,
 	file_system::ext2_inode* inode,
 	uint32_t index)
@@ -25,15 +26,16 @@ error_code_with_result<uint32_t> ext2_inode_get_index(file_system::fs_instance* 
 		return -ERROR_INVALID;
 	}
 
-	auto addr_count = ADDR_COUNT_PER_BLOCK(data->get_block_size());
-	block_address_type* addrs = new block_address_type[addr_count];
-
 	if (index < EXT2_DIRECT_BLOCK_COUNT)
 	{
-		delete[] addrs;
 		return inode->direct_blocks[index];
 	}
-	else if (index < EXT2_DIRECT_BLOCK_COUNT + addr_count)
+
+	auto addr_count = ADDR_COUNT_PER_BLOCK(data->get_block_size());
+
+	block_address_type* addrs = new block_address_type[addr_count];
+
+	if (index < EXT2_DIRECT_BLOCK_COUNT + addr_count)
 	{
 		if (inode->indirect_block_l1 == 0)
 		{
@@ -68,7 +70,7 @@ error_code_with_result<uint32_t> ext2_inode_get_index(file_system::fs_instance* 
 	}
 
 	delete[] addrs;
-	return -ERROR_INVALID;
+	return -ERROR_SHOULD_NOT_REACH_HERE;
 }
 
 error_code ext2_inode_set_index(file_system::fs_instance* fs,

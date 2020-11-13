@@ -250,7 +250,9 @@ error_code ext2_inode_free(file_system::fs_instance* fs, file_system::ext2_ino_t
 	uint8_t* buf,
 	size_t index)
 {
+	// FIXME: this cuases a GPF
 	auto block_ret = ext2_inode_get_index(fs, inode, index);
+
 	if (has_error(block_ret))
 	{
 		return get_error_code(block_ret);
