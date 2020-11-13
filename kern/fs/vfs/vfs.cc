@@ -645,7 +645,7 @@ error_code vfs_io_context::open_at(file_object& fd, vnode_base* at, const char* 
 	}
 
 	auto find_ret = this->find(at, path, false);
-	if (!has_error(find_ret))
+	if (has_error(find_ret))
 	{
 		if (flags & IOCTX_FLG_CREATE)
 		{
