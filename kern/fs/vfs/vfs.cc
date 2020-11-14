@@ -747,6 +747,9 @@ error_code_with_result<size_t> vfs_io_context::write(file_object& fd, const void
 	return error_code_with_result<size_t>();
 }
 
+using namespace memory::kmem;
+// defined in slab.cc
+extern kmem_cache* sized_caches[KMEM_SIZED_CACHE_COUNT];
 error_code_with_result<size_t> vfs_io_context::read(file_object& fd, void* buf, size_t count)
 {
 	if (!(fd.flags & FO_FLAG_READABLE))

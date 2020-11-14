@@ -237,6 +237,10 @@ error_code file_system::ext2_vnode::read_link(char* buf, size_t lim)
 	return ERROR_SUCCESS;
 }
 
+using namespace memory::kmem;
+// defined in slab.cc
+extern kmem_cache* sized_caches[KMEM_SIZED_CACHE_COUNT];
+
 error_code_with_result<size_t> file_system::ext2_vnode::read(file_system::file_object& fd,
 	void* _buf,
 	size_t sz)
@@ -258,7 +262,7 @@ error_code_with_result<size_t> file_system::ext2_vnode::read(file_system::file_o
 
 	ext2_data* data = reinterpret_cast<ext2_data*>(ext2_fs->private_data);
 
-	size_t full_size = EXT2_INODE_SIZE(inode);
+	size_t full_size = EXT2_INODE_SIZE(inode), has_read = 0;
 
 	if (fd.pos >= full_size)
 	{
@@ -266,7 +270,7 @@ error_code_with_result<size_t> file_system::ext2_vnode::read(file_system::file_o
 	}
 
 	uint8_t* block_buf = new uint8_t[data->get_block_size()];
-	for (size_t size = min(sz, full_size - fd.pos); size != 0;)
+	for (size_t size = min(sz, full_size - fd.pos); size > 0;)
 	{
 		size_t block_off = fd.pos % data->get_block_size();
 		size_t block_idx = fd.pos / data->get_block_size();
@@ -284,11 +288,21 @@ error_code_with_result<size_t> file_system::ext2_vnode::read(file_system::file_o
 
 		buf += readable;
 		fd.pos += readable;
+		has_read += readable;
 
+		// To avoid overflow
+		if (readable >= size)
+		{
+			size = 0;
+		}
+		else
+		{
+			size -= readable;
+		}
 	}
 
 	delete[]block_buf;
-	return ERROR_SUCCESS;
+	return has_read;
 }
 
 error_code_with_result<size_t> file_system::ext2_vnode::write(file_system::file_object& fd,

@@ -81,7 +81,7 @@ static inline kmem_cache* cache_from_size(size_t sz)
 {
 	kmem_cache* cache = nullptr;
 
-	// assumption: sized_caches are sorted ascendingly.
+	// assumption: sized_caches are sorted ascending.
 	for (auto c : sized_caches)
 	{
 		if (sz <= c->obj_size)
@@ -114,7 +114,7 @@ void* memory::kmalloc(size_t sz, [[maybe_unused]] size_t flags)
 	else
 	{
 		// use slab
-		kmem_cache* cache = cache_from_size(actual_size);
+		auto cache = cache_from_size(actual_size);
 
 		ret = reinterpret_cast<decltype(ret)>(kmem_cache_alloc(cache));
 		ret->type = allocator_types::SLAB;
