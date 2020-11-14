@@ -76,7 +76,9 @@ static inline error_code kernel_io_context_init()
 	for (int i = 0; i < 128; i++)
 	{
 		kdebug::kdebug_log("%x ", testbuf[i]);
+		if ((i + 1) % 24 == 0)kdebug::kdebug_log("\n");
 	}
+	kdebug::kdebug_log("\n");
 
 	return ERROR_SUCCESS;
 }
