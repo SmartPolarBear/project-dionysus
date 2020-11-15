@@ -14,7 +14,6 @@
 
 using namespace file_system;
 
-// FIXME: this cuases a GPF
 error_code_with_result<uint32_t> ext2_inode_get_index(file_system::fs_instance* fs,
 	file_system::ext2_inode* inode,
 	uint32_t index)

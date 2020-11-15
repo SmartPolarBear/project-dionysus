@@ -11,6 +11,7 @@
 
 namespace file_system
 {
+
 	struct partition_data
 	{
 		device_class* parent_dev;
@@ -22,12 +23,15 @@ namespace file_system
 		public file_system::device_class
 	{
 	 public:
+		static constexpr uint8_t MBR_SIG[] = { 0x55, 0xAA };
+		static constexpr uint8_t GPT_SIG[] = { 'E', 'F', 'I', ' ', 'P', 'A', 'R', 'T' };
+	 public:
 		explicit ATABlockDevice(ahci::ahci_port* port);
 
 		~ATABlockDevice() override;
 
-		error_code_with_result<size_t>  read(void* buf, uintptr_t offset, size_t count) override;
-		error_code_with_result<size_t>  write(const void* buf, uintptr_t offset, size_t count) override;
+		error_code_with_result<size_t> read(void* buf, uintptr_t offset, size_t count) override;
+		error_code_with_result<size_t> write(const void* buf, uintptr_t offset, size_t count) override;
 		error_code ioctl(size_t req, void* args) override;
 		error_code mmap(uintptr_t base, size_t page_count, int prot, size_t flags) override;
 		error_code enumerate_partitions(vnode_base& parent) override;
@@ -40,8 +44,8 @@ namespace file_system
 		explicit ATAPartitionDevice(ATABlockDevice* parent, logical_block_address lba, size_t sz);
 
 		~ATAPartitionDevice() override = default;
-		error_code_with_result<size_t>  read(void* buf, uintptr_t offset, size_t size) override;
-		error_code_with_result<size_t>  write(const void* buf, uintptr_t offset, size_t size) override;
+		error_code_with_result<size_t> read(void* buf, uintptr_t offset, size_t size) override;
+		error_code_with_result<size_t> write(const void* buf, uintptr_t offset, size_t size) override;
 		error_code ioctl(size_t req, void* args) override;
 		error_code mmap(uintptr_t base, size_t page_count, int prot, size_t flags) override;
 		error_code enumerate_partitions(vnode_base& parent) override;

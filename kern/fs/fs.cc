@@ -34,10 +34,6 @@ struct fs_class_node
 	list_head link;
 };
 
-using namespace memory::kmem;
-// defined in slab.cc
-extern kmem_cache* sized_caches[KMEM_SIZED_CACHE_COUNT];
-
 char testbuf[1024];
 static inline error_code kernel_io_context_init()
 {
@@ -75,8 +71,9 @@ static inline error_code kernel_io_context_init()
 	kdebug::kdebug_log("Read size=%lld, first 128 byte:\n", size);
 	for (int i = 0; i < 128; i++)
 	{
-		kdebug::kdebug_log("%x ", testbuf[i]);
+		kdebug::kdebug_log("%x", testbuf[i]);
 		if ((i + 1) % 24 == 0)kdebug::kdebug_log("\n");
+		else kdebug::kdebug_log(" ");
 	}
 	kdebug::kdebug_log("\n");
 

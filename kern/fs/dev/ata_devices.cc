@@ -46,13 +46,12 @@ error_code file_system::partition_add_device(file_system::vnode_base& parent,
 	return ERROR_SUCCESS;
 }
 
-
-
 error_code file_system::ATABlockDevice::enumerate_partitions(file_system::vnode_base& parent)
 {
 	constexpr size_t HEAD_DATA_SIZE = sizeof(uint8_t[1024]);
-	constexpr uint8_t MBR_SIG[] = { 0x55, 0xAA };
 
+
+	// 1024 bytes should contain both MBR and GPT
 	uint8_t* head_data = new uint8_t[1024];
 	memset(head_data, 0, HEAD_DATA_SIZE);
 
@@ -64,9 +63,12 @@ error_code file_system::ATABlockDevice::enumerate_partitions(file_system::vnode_
 	}
 
 	// Compare last two bytes to identify valid MBR disk
-	// TODO: GPT support
-	
-	if (memcmp(head_data + 510, MBR_SIG, sizeof(uint8_t[2])) == 0)
+	if (memcmp(head_data+512,GPT_SIG,sizeof(uint8_t[8])))
+	{
+		//TODO: handle GPT
+		return -ERROR_NOT_IMPL;
+	}
+	else if (memcmp(head_data + 510, MBR_SIG, sizeof(uint8_t[2])) == 0)
 	{
 		// Parse the master boot record
 		// print the *optional* disk signature and reserved field
@@ -102,10 +104,10 @@ error_code file_system::ATABlockDevice::enumerate_partitions(file_system::vnode_
 			);
 
 			auto err = partition_add_device(parent,
-					entry->start_lba,
-					entry->sector_count * 512,
-					partition_count,
-					entry->sys_id);
+				entry->start_lba,
+				entry->sector_count * 512,
+				partition_count,
+				entry->sys_id);
 
 			if (err != ERROR_SUCCESS)
 			{
