@@ -162,7 +162,7 @@ static inline error_code ahci_port_add([[maybe_unused]]ahci_controller* ctl, ahc
 	{
 	case ahci::DEVICE_SATA:
 		subclass = DBT_SDx;
-		blk_dev = new ATABlockDevice(port);
+		blk_dev = new ata_block_device(port);
 		break;
 	case ahci::DEVICE_SATAPI:
 		subclass = DBT_CDx;

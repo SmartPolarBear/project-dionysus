@@ -39,14 +39,14 @@ error_code file_system::partition_add_device(file_system::vnode_base& parent,
 	namebuf[parent_name_len++] = '0' + static_cast<uint8_t>(disk_idx);
 	namebuf[parent_name_len++] = '\0';
 
-	auto* dev = new file_system::ATAPartitionDevice((ATABlockDevice*)(parent.dev), lba, size);
+	auto* dev = new file_system::ata_partition_device((ata_block_device*)(parent.dev), lba, size);
 
 	device_add(DC_BLOCK, DBT_PARTITION, *dev, namebuf);
 
 	return ERROR_SUCCESS;
 }
 
-error_code file_system::ATABlockDevice::enumerate_partitions(file_system::vnode_base& parent)
+error_code file_system::ata_block_device::enumerate_partitions(file_system::vnode_base& parent)
 {
 	constexpr size_t HEAD_DATA_SIZE = sizeof(uint8_t[1024]);
 
@@ -121,12 +121,12 @@ error_code file_system::ATABlockDevice::enumerate_partitions(file_system::vnode_
 	return ERROR_SUCCESS;
 }
 
-error_code file_system::ATABlockDevice::ioctl([[maybe_unused]]size_t req, [[maybe_unused]]void* args)
+error_code file_system::ata_block_device::ioctl([[maybe_unused]]size_t req, [[maybe_unused]]void* args)
 {
 	return -ERROR_UNSUPPORTED;
 }
 
-error_code_with_result<size_t> file_system::ATABlockDevice::write(const void* buf, uintptr_t offset, size_t sz)
+error_code_with_result<size_t> file_system::ata_block_device::write(const void* buf, uintptr_t offset, size_t sz)
 {
 	if (offset % this->block_size)
 	{
@@ -157,7 +157,7 @@ error_code_with_result<size_t> file_system::ATABlockDevice::write(const void* bu
 	return sz;
 }
 
-error_code_with_result<size_t> file_system::ATABlockDevice::read(void* buf, uintptr_t offset, size_t sz)
+error_code_with_result<size_t> file_system::ata_block_device::read(void* buf, uintptr_t offset, size_t sz)
 {
 	if (offset % this->block_size)
 	{
@@ -188,9 +188,9 @@ error_code_with_result<size_t> file_system::ATABlockDevice::read(void* buf, uint
 	return sz;
 }
 
-file_system::ATABlockDevice::~ATABlockDevice() = default;
+file_system::ata_block_device::~ata_block_device() = default;
 
-file_system::ATABlockDevice::ATABlockDevice(ahci::ahci_port* port)
+file_system::ata_block_device::ata_block_device(ahci::ahci_port* port)
 {
 	this->dev_data = port;
 	this->flags = 0;
@@ -199,7 +199,7 @@ file_system::ATABlockDevice::ATABlockDevice(ahci::ahci_port* port)
 	this->features = DFE_HAS_PARTITIONS;
 }
 
-error_code file_system::ATABlockDevice::mmap([[maybe_unused]]uintptr_t base,
+error_code file_system::ata_block_device::mmap([[maybe_unused]]uintptr_t base,
 	[[maybe_unused]]size_t page_count,
 	[[maybe_unused]]int prot,
 	[[maybe_unused]]size_t flags)
@@ -207,7 +207,7 @@ error_code file_system::ATABlockDevice::mmap([[maybe_unused]]uintptr_t base,
 	return -ERROR_UNSUPPORTED;
 }
 
-error_code_with_result<size_t> file_system::ATAPartitionDevice::read(void* buf, uintptr_t offset, size_t size)
+error_code_with_result<size_t> file_system::ata_partition_device::read(void* buf, uintptr_t offset, size_t size)
 {
 	partition_data* part = (partition_data*)this->dev_data;
 	size_t part_size_bytes = part->size * 512;
@@ -225,7 +225,7 @@ error_code_with_result<size_t> file_system::ATAPartitionDevice::read(void* buf, 
 	return ret;
 }
 
-error_code_with_result<size_t> file_system::ATAPartitionDevice::write(const void* buf, uintptr_t offset, size_t size)
+error_code_with_result<size_t> file_system::ata_partition_device::write(const void* buf, uintptr_t offset, size_t size)
 {
 	partition_data* part = (partition_data*)this->dev_data;
 	size_t part_size_bytes = part->size * 512;
@@ -246,24 +246,24 @@ error_code_with_result<size_t> file_system::ATAPartitionDevice::write(const void
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
-error_code file_system::ATAPartitionDevice::ioctl(size_t req, void* args)
+error_code file_system::ata_partition_device::ioctl(size_t req, void* args)
 {
 	return -ERROR_UNSUPPORTED;
 }
 
-error_code file_system::ATAPartitionDevice::mmap(uintptr_t base, size_t page_count, int prot, size_t flags)
+error_code file_system::ata_partition_device::mmap(uintptr_t base, size_t page_count, int prot, size_t flags)
 {
 	return -ERROR_UNSUPPORTED;
 }
 
-error_code file_system::ATAPartitionDevice::enumerate_partitions(file_system::vnode_base& parent)
+error_code file_system::ata_partition_device::enumerate_partitions(file_system::vnode_base& parent)
 {
 	return -ERROR_UNSUPPORTED;
 }
 
 #pragma GCC diagnostic pop
 
-file_system::ATAPartitionDevice::ATAPartitionDevice(file_system::ATABlockDevice* parent,
+file_system::ata_partition_device::ata_partition_device(file_system::ata_block_device* parent,
 	logical_block_address lba,
 	size_t sz)
 {
