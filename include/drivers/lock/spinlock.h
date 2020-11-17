@@ -20,13 +20,23 @@ namespace lock
 
 	void spinlock_acquire(spinlock* lock);
 	bool spinlock_holding(spinlock* lock);
-	void spinlock_initlock(spinlock* lock, const char* name);
+	void spinlock_initialize_lock(spinlock* lk, const char* name);
 	void spinlock_release(spinlock* lock);
 
 	class spinlock_lockable
 		: public lockable
 	{
+	 private:
+		spinlock* lk;
+	 public:
+		spinlock_lockable() = delete;
+		explicit spinlock_lockable(spinlock* _lk) : lk(_lk)
+		{
+		}
 
+		void lock() noexcept override;
+		void unlock() noexcept override;
+		bool try_lock() noexcept override;
 	};
 
 } // namespace lock

@@ -14,14 +14,14 @@
 using lock::spinlock;
 using lock::spinlock_acquire;
 using lock::spinlock_holding;
-using lock::spinlock_initlock;
+using lock::spinlock_initialize_lock;
 using lock::spinlock_release;
 
 spinlock printf_lock;
 
 __attribute__((constructor)) void printf_init()
 {
-    spinlock_initlock(&printf_lock, "printf");
+	spinlock_initialize_lock(&printf_lock, "printf");
 }
 
 void put_str(const char *str)

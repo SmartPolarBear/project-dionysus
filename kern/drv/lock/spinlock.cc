@@ -7,11 +7,11 @@
 
 using lock::spinlock;
 
-void lock::spinlock_initlock(spinlock* splk, const char* name)
+void lock::spinlock_initialize_lock(spinlock* lk, const char* name)
 {
-	splk->name = name;
-	splk->locked = 0u;
-	splk->cpu = nullptr;
+	lk->name = name;
+	lk->locked = 0u;
+	lk->cpu = nullptr;
 }
 
 void lock::spinlock_acquire(spinlock* lock)
@@ -50,4 +50,24 @@ void lock::spinlock_release(spinlock* lock)
 bool lock::spinlock_holding(spinlock* lock)
 {
 	return lock->locked && lock->cpu == cpu();
+}
+
+void lock::spinlock_lockable::lock() noexcept
+{
+	spinlock_acquire(this->lk);
+}
+
+void lock::spinlock_lockable::unlock() noexcept
+{
+	spinlock_release(this->lk);
+}
+
+bool lock::spinlock_lockable::try_lock() noexcept
+{
+	if (spinlock_holding(this->lk))
+	{
+		return false;
+	}
+	spinlock_acquire(this->lk);
+	return true;
 }

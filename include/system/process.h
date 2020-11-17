@@ -115,7 +115,7 @@ namespace process
 		{
 			memmove(this->name, name, std::min((size_t)strlen(name), PROC_NAME_LEN));
 
-			lock::spinlock_initlock(&messaging_data.lock, name);
+			lock::spinlock_initialize_lock(&messaging_data.lock, name);
 		}
 	};
 

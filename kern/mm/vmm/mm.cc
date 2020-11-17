@@ -57,7 +57,7 @@ using libkernel::list_remove;
 // spinlock
 using lock::spinlock;
 using lock::spinlock_acquire;
-using lock::spinlock_initlock;
+using lock::spinlock_initialize_lock;
 using lock::spinlock_release;
 using lock::spinlock_holding;
 
@@ -79,7 +79,7 @@ mm_struct* vmm::mm_create(void)
 		mm->map_count = 0;
 	}
 
-	spinlock_initlock(&mm->lock, "mm_lock");
+	spinlock_initialize_lock(&mm->lock, "mm_lock");
 
 	return mm;
 }

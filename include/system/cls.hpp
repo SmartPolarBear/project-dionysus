@@ -79,12 +79,12 @@ class CLSItem
  public:
 	CLSItem() : use_lock(true)
 	{
-		lock::spinlock_initlock(&lk, "clslock");
+		lock::spinlock_initialize_lock(&lk, "clslock");
 	}
 
 	CLSItem(bool _use_lock) : use_lock(_use_lock)
 	{
-		lock::spinlock_initlock(&lk, "clslock");
+		lock::spinlock_initialize_lock(&lk, "clslock");
 	}
 
 	void set_lock(bool _use_lock)

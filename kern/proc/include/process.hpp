@@ -11,7 +11,7 @@
 
 using lock::spinlock;
 using lock::spinlock_acquire;
-using lock::spinlock_initlock;
+using lock::spinlock_initialize_lock;
 using lock::spinlock_release;
 
 //extern __thread process::process_dispatcher *current;

@@ -24,7 +24,7 @@ namespace libkernel
 		Queue() : m_size(0)
 		{
 			list_init(&this->head);
-			lock::spinlock_initlock(&queue_lock, __PRETTY_FUNCTION__);
+			lock::spinlock_initialize_lock(&queue_lock, __PRETTY_FUNCTION__);
 		}
 
 		~Queue()

@@ -24,7 +24,7 @@ using trap::TRAP_NUMBERMAX;
 
 using lock::spinlock;
 using lock::spinlock_acquire;
-using lock::spinlock_initlock;
+using lock::spinlock_initialize_lock;
 using lock::spinlock_release;
 
 constexpr size_t IDT_SIZE = 4_KB;
@@ -122,7 +122,7 @@ PANIC void trap::init_trap()
 
 	load_idt(desc);
 
-	spinlock_initlock(&handle_table.lock, "traphandles");
+	spinlock_initialize_lock(&handle_table.lock, "traphandles");
 
 	trap_handle_register(trap::irq_to_trap_number(IRQ_SPURIOUS), trap_handle{
 		.handle = spurious_trap_handle,

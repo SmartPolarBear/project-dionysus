@@ -16,7 +16,7 @@ using libkernel::list_remove;
 using lock::spinlock;
 using lock::spinlock_acquire;
 using lock::spinlock_holding;
-using lock::spinlock_initlock;
+using lock::spinlock_initialize_lock;
 using lock::spinlock_release;
 
 using namespace console;
@@ -57,7 +57,7 @@ void console::console_init()
 	list_init(&cons.devs_head);
 
 	// initialize the lock
-	spinlock_initlock(&cons.cons_lock, "console_main");
+	spinlock_initialize_lock(&cons.cons_lock, "console_main");
 	cons.lock_enable = true;
 
 	// add the built-in device drivers

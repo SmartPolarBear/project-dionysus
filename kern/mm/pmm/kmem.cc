@@ -52,7 +52,7 @@ using libkernel::list_remove;
 using lock::spinlock;
 using lock::spinlock_acquire;
 using lock::spinlock_holding;
-using lock::spinlock_initlock;
+using lock::spinlock_initialize_lock;
 using lock::spinlock_release;
 
 struct slab
@@ -188,8 +188,8 @@ void memory::kmem::kmem_init(void)
     auto cache_cache_name = "cache_cache";
     strncpy(cache_cache.name, cache_cache_name, KMEM_CACHE_NAME_MAXLEN);
 
-    spinlock_initlock(&cache_cache.lock, cache_cache_name);
-    spinlock_initlock(&cache_head_lock, "cache_head");
+	spinlock_initialize_lock(&cache_cache.lock, cache_cache_name);
+	spinlock_initialize_lock(&cache_head_lock, "cache_head");
 
     list_init(&cache_cache.full);
     list_init(&cache_cache.partial);
@@ -235,7 +235,7 @@ kmem_cache *memory::kmem::kmem_cache_create(const char *name, size_t size, kmem_
         ret->flags = flags;
 
         strncpy(ret->name, name, KMEM_CACHE_NAME_MAXLEN);
-        spinlock_initlock(&ret->lock, ret->name);
+		spinlock_initialize_lock(&ret->lock, ret->name);
 
         list_init(&ret->full);
         list_init(&ret->partial);

@@ -27,7 +27,7 @@ using local_apic::write_lapic;
 
 using lock::spinlock;
 using lock::spinlock_acquire;
-using lock::spinlock_initlock;
+using lock::spinlock_initialize_lock;
 using lock::spinlock_release;
 
 using trap::IRQ_TIMER;
@@ -65,7 +65,7 @@ PANIC void timer::init_apic_timer()
 				.enable = true
 			});
 
-	spinlock_initlock(ticks_lock(), "timer_ticks");
+	spinlock_initialize_lock(ticks_lock(), "timer_ticks");
 }
 
 error_code trap_handle_tick([[maybe_unused]] trap::trap_frame info)
