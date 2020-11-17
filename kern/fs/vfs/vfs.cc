@@ -368,9 +368,94 @@ error_code_with_result<vnode_base*> vfs_io_context::do_find(vnode_base* at, cons
 	return -ERROR_NO_ENTRY;
 }
 
-error_code vfs_io_context::set_cwd(const char* rel_path)
+error_code vfs_io_context::set_cwd(const char* path)
 {
-	return 0;
+	if (strncmp(path, "/", 2) == 0)
+	{
+		this->cwd_vnode = nullptr;
+		return ERROR_SUCCESS;
+	}
+
+	if (path[0] == '/')
+	{
+		if (!vfs_root)
+		{
+			this->cwd_vnode = nullptr;
+		}
+		else
+		{
+			auto find_ret = do_find(vfs_root, path, false);
+			if (has_error(find_ret))
+			{
+				return get_error_code(find_ret);
+			}
+
+			auto resolve_ret = link_resolve(get_result(find_ret), false);
+			if (has_error(resolve_ret))
+			{
+				return get_error_code(resolve_ret);
+			}
+
+			auto dest = get_result(resolve_ret);
+
+			if (dest->get_type() == vnode_types::VNT_MNT)
+			{
+				dest = dest->get_link_target();
+			}
+
+			if (dest->get_type() != vnode_types::VNT_DIR)
+			{
+				return -ERROR_NOT_DIR;
+			}
+
+			auto err = access_node(dest, X_OK);
+			if (err != ERROR_SUCCESS)
+			{
+				return err;
+			}
+
+			this->cwd_vnode = dest;
+		}
+		return ERROR_SUCCESS;
+	}
+	else
+	{
+		auto find_ret = do_find(vfs_root, path, false);
+		if (has_error(find_ret))
+		{
+			return get_error_code(find_ret);
+		}
+
+		auto resolve_ret = link_resolve(get_result(find_ret), false);
+		if (has_error(resolve_ret))
+		{
+			return get_error_code(resolve_ret);
+		}
+
+		auto dest = get_result(resolve_ret);
+
+		if (dest->get_type() == vnode_types::VNT_MNT)
+		{
+			dest = dest->get_link_target();
+		}
+
+		if (dest->get_type() != vnode_types::VNT_DIR)
+		{
+			return -ERROR_NOT_DIR;
+		}
+
+		auto err = access_node(dest, X_OK);
+		if (err != ERROR_SUCCESS)
+		{
+			return err;
+		}
+
+		this->cwd_vnode = dest;
+
+		return ERROR_SUCCESS;
+	}
+
+	return -ERROR_SHOULD_NOT_REACH_HERE;
 }
 
 error_code vfs_io_context::vnode_path(char* path, vnode_base* node)

@@ -30,7 +30,7 @@ namespace lock
 		spinlock* lk;
 	 public:
 		spinlock_lockable() = delete;
-		explicit spinlock_lockable(spinlock* _lk) : lk(_lk)
+		[[maybe_unused]] explicit spinlock_lockable(spinlock* _lk) : lk(_lk)
 		{
 		}
 

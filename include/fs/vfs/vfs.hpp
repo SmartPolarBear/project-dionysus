@@ -511,7 +511,7 @@ namespace file_system
 		}
 	 public:
 
-		[[nodiscard]]error_code set_cwd(const char* rel_path);
+		[[nodiscard]]error_code set_cwd(const char* path);
 		[[nodiscard]]error_code vnode_path(char* path, vnode_base* node);
 
 		[[nodiscard]]error_code_with_result<vnode_base*> link_resolve(vnode_base* lnk, bool link_itself);
