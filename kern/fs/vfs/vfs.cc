@@ -573,7 +573,7 @@ error_code vfs_io_context::mount(const char* path, device_class* blk, fs_class_i
 
 	if (blk->has_flag(BLOCKDEV_BUSY))
 	{
-		return -ERROR_DEV_BUSY;
+		return -ERROR_BUSY;
 	}
 
 	auto ret = fs_create(fs_class, blk, flags, opt);
@@ -622,7 +622,68 @@ error_code vfs_io_context::mount(const char* path, device_class* blk, fs_class_i
 
 error_code vfs_io_context::umount(const char* dir_name)
 {
-	return 0;
+	auto find_ret = find(cwd_vnode, dir_name, false);
+	if (has_error(find_ret))
+	{
+		return get_error_code(find_ret);
+	}
+
+	auto node = get_result(find_ret);
+	if (node->get_parent() == nullptr)
+	{
+		kdebug::kdebug_warning("Tried to unmount the root!");
+		return -ERROR_BUSY;
+	}
+
+	if (node->get_type() != vnode_types::VNT_DIR)
+	{
+		return -ERROR_NOT_DIR;
+	}
+
+	if (!node->get_link_target())
+	{
+		return -ERROR_INVALID;
+	}
+
+	auto mount_point = node->get_link_target();
+	if (mount_point->get_link_target() != node) // TODO: this can be wrong!
+	{
+		return -ERROR_INVALID;
+	}
+
+	mount_point->set_type(vnode_types::VNT_DIR);
+	mount_point->set_link_target(nullptr);
+
+	auto fs = node->get_fs();
+	if (fs == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	auto blk = fs->dev;
+	if (blk == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	auto fs_class = fs->fs_class;
+	if (fs_class == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	auto dispose_ret = fs_class->dispose(fs);
+	if (dispose_ret != -ERROR_UNSUPPORTED && dispose_ret != ERROR_SUCCESS)
+	{
+		return dispose_ret;
+	}
+
+	memset(fs, 0, sizeof(fs_instance));
+	blk->set_flags(blk->get_flags() & (~BLOCKDEV_BUSY));
+
+	// TODO: destory filesystem tree
+
+	return ERROR_SUCCESS;
 }
 
 error_code vfs_io_context::open_vnode(file_object& fd, vnode_base* node, mode_type opt)

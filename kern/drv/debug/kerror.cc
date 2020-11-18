@@ -32,7 +32,7 @@ const char* err_msg[] = {
 	[ERROR_TOO_MANY_PROC]=         "too many processes",
 	[ERROR_CANNOT_WAKEUP]=           "process's state isn't valid for waking up",
 	[ERROR_HAS_KILLED]=              "process to be killed has been killed",
-	[ERROR_DEV_BUSY]=              "device is busy",
+	[ERROR_BUSY]=              "device is busy",
 	[ERROR_DEV_TIMEOUT]=             "device operation time out",
 	[ERROR_IO]=              "IO error"
 };
@@ -52,7 +52,7 @@ const char* err_title[] = {
 	[ERROR_TOO_MANY_PROC]="ERROR_TOO_MANY_PROC",
 	[ERROR_CANNOT_WAKEUP]="ERROR_CANNOT_WAKEUP",
 	[ERROR_HAS_KILLED]="ERROR_HAS_KILLED",
-	[ERROR_DEV_BUSY]="ERROR_DEV_BUSY",
+	[ERROR_BUSY]="ERROR_BUSY",
 	[ERROR_DEV_TIMEOUT]="ERROR_DEV_TIMEOUT",
 	[ERROR_IO]="ERROR_IO",
 };

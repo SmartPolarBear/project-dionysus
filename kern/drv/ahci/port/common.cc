@@ -79,7 +79,7 @@ error_code ahci::ahci_port_send_command(ahci_port* port,
 
 	if (slot > 31)
 	{
-		return -ERROR_DEV_BUSY;
+		return -ERROR_BUSY;
 	}
 
 	auto cl_entry = &ahci_port_cmd_list(port)[slot];
