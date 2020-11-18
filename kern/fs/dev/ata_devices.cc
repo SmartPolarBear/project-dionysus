@@ -56,7 +56,7 @@ error_code file_system::ata_block_device::enumerate_partitions(file_system::vnod
 	memset(head_data, 0, HEAD_DATA_SIZE);
 
 	auto read_ret = this->read(head_data, 0, HEAD_DATA_SIZE);
-	if (has_error(read_ret))()
+	if (has_error(read_ret))
 	{
 		delete[] head_data;
 		return get_error_code(read_ret);
