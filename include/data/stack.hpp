@@ -24,7 +24,7 @@ namespace libkernel
 		stack() : m_size(0)
 		{
 			list_init(&this->head);
-			lock::spinlock_initlock(&stack_lock, __PRETTY_FUNCTION__);
+			lock::spinlock_initialize_lock(&stack_lock, __PRETTY_FUNCTION__);
 		}
 
 		~stack()

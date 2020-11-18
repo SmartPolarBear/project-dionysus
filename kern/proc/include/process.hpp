@@ -7,7 +7,7 @@
 #include "drivers/lock/spinlock.h"
 #include "drivers/apic/traps.h"
 
-#include "data/Queue.hpp"
+#include "data/queue.hpp"
 
 using lock::spinlock;
 using lock::spinlock_acquire;
@@ -23,7 +23,7 @@ struct process_list_struct
 	spinlock lock;
 	size_t proc_count;
 	list_head active_head;
-	libkernel::Queue<process::process_dispatcher*> zombie_queue;
+	libkernel::queue<process::process_dispatcher*> zombie_queue;
 };
 
 extern process_list_struct proc_list;

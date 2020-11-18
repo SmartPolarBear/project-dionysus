@@ -7,7 +7,7 @@
 namespace libkernel
 {
 	template<typename T>
-	class Queue
+	class queue
 	{
 	 private:
 		struct node
@@ -21,13 +21,13 @@ namespace libkernel
 
 		size_t m_size;
 	 public:
-		Queue() : m_size(0)
+		queue() : m_size(0)
 		{
 			list_init(&this->head);
 			lock::spinlock_initialize_lock(&queue_lock, __PRETTY_FUNCTION__);
 		}
 
-		~Queue()
+		~queue()
 		{
 			clear();
 		}
@@ -43,7 +43,7 @@ namespace libkernel
 				list_remove(iter);
 				delete n;
 			}
-			m_size=0;
+			m_size = 0;
 			lock::spinlock_release(&queue_lock);
 		}
 
@@ -59,19 +59,22 @@ namespace libkernel
 			lock::spinlock_release(&queue_lock);
 		}
 
-		T pop()
+		const T& front()
+		{
+			node* n = list_entry(head.prev, node, link);
+			return n->member;
+		}
+
+		void pop()
 		{
 			lock::spinlock_acquire(&queue_lock);
 
 			node* n = list_entry(head.prev, node, link);
 
-			T data = n->member;
 			list_remove(&n->link);
 			delete n;
 			m_size--;
 			lock::spinlock_release(&queue_lock);
-
-			return data;
 		}
 
 		size_t size()

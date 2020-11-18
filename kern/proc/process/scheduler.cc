@@ -78,7 +78,8 @@ using lock::spinlock_holding;
 			// In scheduler, we check if there's process to be killed
 			while (proc_list.zombie_queue.size())
 			{
-				auto zombie = proc_list.zombie_queue.pop();
+				auto zombie = proc_list.zombie_queue.front();
+				proc_list.zombie_queue.pop();
 
 				delete[] (uint8_t*)zombie->kstack;
 
