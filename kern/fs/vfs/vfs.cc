@@ -462,6 +462,36 @@ error_code vfs_io_context::set_cwd(const char* path)
 
 error_code vfs_io_context::vnode_path(char* path, vnode_base* node)
 {
+	stl_stack<vnode_base*> backstack;
+	if (node == nullptr || node->get_parent() == nullptr)
+	{
+		path[0] = '/';
+		path[0] = 0;
+	}
+
+	for (auto n = node; n != nullptr; n = n->get_parent())
+	{
+		backstack.push(n);
+	}
+
+	size_t off = 0;
+	while (!backstack.empty())
+	{
+		auto top = backstack.top();
+		backstack.pop();
+		path[off++] = '/';
+		if (top->get_type() == vnode_types::VNT_DIR && top->get_link_target())
+		{
+			top = top->get_link_target();
+		}
+
+		strncpy(path + off, top->get_name(), VFS_MAX_PATH_LEN);
+		off += strlen(top->get_name());
+		if (off >= VFS_MAX_PATH_LEN)
+		{
+			return -ERROR_INVALID;
+		}
+	}
 
 	return 0;
 }
