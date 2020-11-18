@@ -3,6 +3,8 @@
 
 #include "system/kmem.hpp"
 
+#include "data/container_adapters.hpp"
+
 #include <memory>
 #include <cstring>
 
@@ -460,6 +462,7 @@ error_code vfs_io_context::set_cwd(const char* path)
 
 error_code vfs_io_context::vnode_path(char* path, vnode_base* node)
 {
+
 	return 0;
 }
 

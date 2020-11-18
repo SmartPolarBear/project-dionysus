@@ -20,6 +20,12 @@ namespace memory
 	{
 		using value_type = T;
 
+		template<typename U>
+		struct rebind
+		{
+			typedef kernel_stl_allocator<U> other;
+		};
+
 		kernel_stl_allocator() = default;
 
 		template<typename U, size_t U_FLAGS = T_FLAGS>
