@@ -7,7 +7,7 @@
 #include "drivers/pci/pci_header.hpp"
 #include "drivers/apic/traps.h"
 
-#include "data/List.h"
+#include "data/list.h"
 
 namespace pci
 {

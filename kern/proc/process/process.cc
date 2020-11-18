@@ -16,7 +16,7 @@
 #include "drivers/apic/traps.h"
 #include "drivers/lock/spinlock.h"
 
-#include "data/List.h"
+#include "data/list.h"
 #include "libkernel/console/builtin_text_io.hpp"
 
 using libkernel::list_add;

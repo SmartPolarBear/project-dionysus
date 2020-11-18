@@ -7,7 +7,7 @@
 
 #include "system/types.h"
 
-#include "data/List.h"
+#include "data/list.h"
 
 // the end of the kernel binary
 extern uint8_t end[]; // kernel.ld

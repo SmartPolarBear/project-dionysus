@@ -4,7 +4,7 @@
 
 #include "drivers/debug/kdebug.h"
 
-#include "data/List.h"
+#include "data/list.h"
 #include "fs/device/device.hpp"
 
 namespace file_system

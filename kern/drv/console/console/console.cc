@@ -5,7 +5,7 @@
 #include "drivers/debug/kdebug.h"
 #include "drivers/lock/spinlock.h"
 
-#include "data/List.h"
+#include "data/list.h"
 
 using libkernel::list_add;
 using libkernel::list_for_each;
