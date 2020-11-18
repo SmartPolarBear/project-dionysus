@@ -7,7 +7,7 @@
 namespace libkernel
 {
 	template<typename T>
-	class Stack
+	class stack
 	{
 	 private:
 		struct node
@@ -21,13 +21,13 @@ namespace libkernel
 
 		size_t m_size;
 	 public:
-		Stack() : m_size(0)
+		stack() : m_size(0)
 		{
 			list_init(&this->head);
 			lock::spinlock_initlock(&stack_lock, __PRETTY_FUNCTION__);
 		}
 
-		~Stack()
+		~stack()
 		{
 			clear();
 		}
@@ -43,7 +43,7 @@ namespace libkernel
 				list_remove(iter);
 				delete n;
 			}
-			m_size=0;
+			m_size = 0;
 			lock::spinlock_release(&stack_lock);
 		}
 
@@ -59,19 +59,23 @@ namespace libkernel
 			lock::spinlock_release(&stack_lock);
 		}
 
-		T pop()
+		const T& top()
+		{
+			node* n = list_entry(head.next, node, link);
+			return n->member;
+		}
+
+		void pop()
 		{
 			lock::spinlock_acquire(&stack_lock);
 
 			node* n = list_entry(head.next, node, link);
 
-			T data = n->member;
 			list_remove(&n->link);
 			delete n;
 			m_size--;
 			lock::spinlock_release(&stack_lock);
 
-			return data;
 		}
 
 		size_t size()
