@@ -10,6 +10,8 @@
 #define IN
 #define OPTIONAL
 #define NULLABLE
+#define MUST_SUPPORT
+#define OPTIONAL_SUPPORT
 
 constexpr size_t log2(size_t n)
 {

@@ -132,8 +132,12 @@ error_code_with_result<fs_instance*> file_system::fs_create(fs_class_base* fs_cl
 	fs_ins->dev = dev;
 	fs_ins->flags = flags;
 
-	error_code ret = ERROR_SUCCESS;
-	if ((ret = fs_class->initialize(fs_ins, data)) != ERROR_SUCCESS)
+	error_code ret = fs_class->initialize(fs_ins, data);
+	if (ret == ERROR_UNSUPPORTED)
+	{
+		kdebug::kdebug_warning("%s do not have a initialize function!", fs_class->get_name());
+	}
+	else if (ret != ERROR_SUCCESS && ret != ERROR_UNSUPPORTED)
 	{
 		delete fs_ins;
 		return ret;

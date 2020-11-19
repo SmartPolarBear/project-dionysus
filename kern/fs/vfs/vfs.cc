@@ -460,7 +460,7 @@ error_code vfs_io_context::set_cwd(const char* path)
 	return -ERROR_SHOULD_NOT_REACH_HERE;
 }
 
-error_code vfs_io_context::vnode_path(char* path, vnode_base* node)
+error_code vfs_io_context::vnode_get_path(char* path, vnode_base* node)
 {
 	stl_stack<vnode_base*> backstack;
 	if (node == nullptr || node->get_parent() == nullptr)
@@ -858,30 +858,51 @@ error_code vfs_io_context::open_at(file_object& fd, vnode_base* at, const char* 
 
 error_code vfs_io_context::close(file_object& fd)
 {
-	return 0;
+	// TODO: socket can't be close
+
+	if (fd.ref == 0)
+	{
+		return -ERROR_INVALID;
+	}
+
+	if (fd.vnode == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	fd.vnode->decrease_open_count();
+
+	auto ret = fd.vnode->close(fd);
+
+	if (ret != ERROR_SUCCESS && ret != ERROR_UNSUPPORTED)
+	{
+		return ret;
+	}
+
+	return ERROR_SUCCESS;
 }
 
-error_code vfs_io_context::readdir(file_object& fd, directory_entry* ent)
+error_code vfs_io_context::read_directory(file_object& fd, directory_entry* ent)
 {
 	return 0;
 }
 
-error_code vfs_io_context::unlinkat(vnode_base* at, const char* pathname, size_t flags)
+error_code vfs_io_context::unlink_at(vnode_base* at, const char* pathname, size_t flags)
 {
 	return 0;
 }
 
-error_code vfs_io_context::mkdirat(vnode_base* at, const char* path, mode_type mode)
+error_code vfs_io_context::make_directory_at(vnode_base* at, const char* path, mode_type mode)
 {
 	return 0;
 }
 
-error_code_with_result<vnode_base*> vfs_io_context::mknod(const char* path, mode_type mode)
+error_code_with_result<vnode_base*> vfs_io_context::make_node(const char* path, mode_type mode)
 {
 	return error_code_with_result<vnode_base*>();
 }
 
-error_code vfs_io_context::chmod(const char* path, mode_type mode)
+error_code vfs_io_context::change_mode(const char* path, mode_type mode)
 {
 	return 0;
 }
@@ -896,17 +917,34 @@ error_code vfs_io_context::ioctl(file_object& fd, size_t cmd, void* arg)
 	return 0;
 }
 
-error_code vfs_io_context::ftruncate(vnode_base* node, size_t length)
+error_code vfs_io_context::file_truncate(vnode_base* node, size_t length)
 {
 	return 0;
 }
 
-error_code vfs_io_context::faccessat(vnode_base* at, const char* path, size_t accmode, size_t flags)
+error_code vfs_io_context::file_access_at(vnode_base* at, const char* path, size_t accmode, size_t flags)
 {
-	return 0;
+	if (path == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	auto find_ret = find(at, path, flags); // FIXME: ?
+	if (has_error(find_ret))
+	{
+		return get_error_code(find_ret);
+	}
+	auto node = get_result(find_ret);
+
+	if (accmode == F_OK)
+	{
+		return ERROR_SUCCESS;
+	}
+
+	return access_node(node, accmode);
 }
 
-error_code vfs_io_context::fstatat(vnode_base* at, const char* path, file_status* st, size_t flags)
+error_code vfs_io_context::file_status_at(vnode_base* at, const char* path, file_status* st, size_t flags)
 {
 	return 0;
 }
@@ -926,9 +964,7 @@ error_code_with_result<size_t> vfs_io_context::write(file_object& fd, const void
 	return error_code_with_result<size_t>();
 }
 
-using namespace memory::kmem;
-// defined in slab.cc
-extern kmem_cache* sized_caches[KMEM_SIZED_CACHE_COUNT];
+
 error_code_with_result<size_t> vfs_io_context::read(file_object& fd, void* buf, size_t count)
 {
 	if (!(fd.flags & FO_FLAG_READABLE))

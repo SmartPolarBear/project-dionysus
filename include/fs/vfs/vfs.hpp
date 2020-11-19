@@ -180,11 +180,11 @@ namespace file_system
 
 		~fs_class_base() = default;
 
-		virtual error_code_with_result<vnode_base*> get_root() = 0;
-		virtual error_code_with_result<vfs_status> get_vfs_status(fs_instance* fs) = 0;
+		MUST_SUPPORT virtual error_code_with_result<vnode_base*> get_root() = 0;
+		MUST_SUPPORT virtual error_code_with_result<vfs_status> get_vfs_status(fs_instance* fs) = 0;
 
-		virtual error_code initialize(fs_instance* fs, OPTIONAL const char* data) = 0;
-		virtual error_code dispose(fs_instance* fs) = 0;
+		MUST_SUPPORT virtual error_code initialize(fs_instance* fs, OPTIONAL const char* data) = 0;
+		OPTIONAL_SUPPORT virtual error_code dispose(fs_instance* fs) = 0;
 	};
 
 	struct fs_instance
@@ -512,7 +512,7 @@ namespace file_system
 	 public:
 
 		[[nodiscard]]error_code set_cwd(const char* path);
-		[[nodiscard]]error_code vnode_path(char* path, vnode_base* node);
+		[[nodiscard]]error_code vnode_get_path(char* path, vnode_base* node);
 
 		[[nodiscard]]error_code_with_result<vnode_base*> link_resolve(vnode_base* lnk, bool link_itself);
 		[[nodiscard]]error_code_with_result<vnode_base*> find(vnode_base* rel, const char* path, bool link_itself);
@@ -531,17 +531,17 @@ namespace file_system
 			const char* path,
 			size_t flags, size_t mode);
 		[[nodiscard]]error_code close(file_object& fd);
-		[[nodiscard]]error_code readdir(file_object& fd, directory_entry* ent);
-		[[nodiscard]]error_code unlinkat(vnode_base* at, const char* pathname, size_t flags);
-		[[nodiscard]]error_code mkdirat(vnode_base* at, const char* path, mode_type mode);
-		[[nodiscard]]error_code_with_result<vnode_base*> mknod(const char* path, mode_type mode);
-		[[nodiscard]]error_code chmod(const char* path, mode_type mode);
+		[[nodiscard]]error_code read_directory(file_object& fd, directory_entry* ent);
+		[[nodiscard]]error_code unlink_at(vnode_base* at, const char* pathname, size_t flags);
+		[[nodiscard]]error_code make_directory_at(vnode_base* at, const char* path, mode_type mode);
+		[[nodiscard]]error_code_with_result<vnode_base*> make_node(const char* path, mode_type mode);
+		[[nodiscard]]error_code change_mode(const char* path, mode_type mode);
 		[[nodiscard]]error_code chown(const char* path, uid_type uid, gid_type gid);
 		[[nodiscard]]error_code ioctl(file_object& fd, size_t cmd, void* arg);
-		[[nodiscard]]error_code ftruncate(vnode_base* node, size_t length);
+		[[nodiscard]]error_code file_truncate(vnode_base* node, size_t length);
 
-		[[nodiscard]]error_code faccessat(vnode_base* at, const char* path, size_t accmode, size_t flags);
-		[[nodiscard]]error_code fstatat(vnode_base* at, const char* path, file_status* st, size_t flags);
+		[[nodiscard]]error_code file_access_at(vnode_base* at, const char* path, size_t accmode, size_t flags);
+		[[nodiscard]]error_code file_status_at(vnode_base* at, const char* path, file_status* st, size_t flags);
 		[[nodiscard]]error_code access_check(int desm, mode_type mode, uid_type uid, gid_type gid);
 		[[nodiscard]]error_code access_node(vnode_base* vn, size_t mode);
 
