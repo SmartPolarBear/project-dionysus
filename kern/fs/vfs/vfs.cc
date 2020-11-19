@@ -8,6 +8,8 @@
 #include <memory>
 #include <cstring>
 
+//FIXME: better process ERROR_UNSUPPORTED
+
 using namespace std;
 
 using namespace file_system;
@@ -217,31 +219,31 @@ error_code_with_result<vnode_base*> vfs_io_context::lookup_or_load_node(vnode_ba
 	return -ERROR_NO_ENTRY;
 }
 
-error_code vfs_io_context::open_directory(file_object& fd)
+error_code vfs_io_context::open_directory(file_object* fd)
 {
-	if (fd.vnode->get_type() != vnode_types::VNT_DIR)
+	if (fd->vnode->get_type() != vnode_types::VNT_DIR)
 	{
 		return -ERROR_NOT_DIR;
 	}
 
-	if (fd.vnode->has_flags(VNF_MEMORY))
+	if (fd->vnode->has_flags(VNF_MEMORY))
 	{
-		fd.flags |= FO_FLAG_MEMDIR | FO_FLAG_MEMDIR_DOT;
+		fd->flags |= FO_FLAG_MEMDIR | FO_FLAG_MEMDIR_DOT;
 		// FIXME
-//		fd.pos = (size_t)node->first_child;
+//		fd->pos = (size_t)node->first_child;
 
-		fd.vnode->increase_open_count();
+		fd->vnode->increase_open_count();
 	}
 	else
 	{
-		auto ret = fd.vnode->open_dir(fd);
+		auto ret = fd->vnode->open_dir(fd);
 
 		if (ret != ERROR_SUCCESS)
 		{
 			return ret;
 		}
 
-		fd.vnode->increase_open_count();
+		fd->vnode->increase_open_count();
 	}
 
 	return ERROR_SUCCESS;
@@ -686,7 +688,7 @@ error_code vfs_io_context::umount(const char* dir_name)
 	return ERROR_SUCCESS;
 }
 
-error_code vfs_io_context::open_vnode(file_object& fd, vnode_base* node, mode_type opt)
+error_code vfs_io_context::open_vnode(file_object* fd, vnode_base* node, mode_type opt)
 {
 	if (node == nullptr)
 	{
@@ -707,9 +709,9 @@ error_code vfs_io_context::open_vnode(file_object& fd, vnode_base* node, mode_ty
 			return -ERROR_INVALID_ACCESS;
 		}
 
-		fd.pos = 0;
-		fd.vnode = node;
-		fd.flags = FO_FLAG_DIRECTORY | FO_FLAG_READABLE;
+		fd->pos = 0;
+		fd->vnode = node;
+		fd->flags = FO_FLAG_DIRECTORY | FO_FLAG_READABLE;
 
 		auto err = this->open_directory(fd);
 		if (err != ERROR_SUCCESS)
@@ -740,9 +742,9 @@ error_code vfs_io_context::open_vnode(file_object& fd, vnode_base* node, mode_ty
 		}
 	}
 
-	fd.pos = 0;
-	fd.vnode = node;
-	fd.flags = 0;
+	fd->pos = 0;
+	fd->vnode = node;
+	fd->flags = 0;
 
 	if ((opt & ~IOCTX_FLG_MASK_ACCESS_MODE) & ~(IOCTX_FLG_CLOEXEC | IOCTX_FLG_CREATE | IOCTX_FLG_TRUNC))
 	{
@@ -752,18 +754,18 @@ error_code vfs_io_context::open_vnode(file_object& fd, vnode_base* node, mode_ty
 	switch (opt & IOCTX_FLG_MASK_ACCESS_MODE)
 	{
 	case IOCTX_FLG_RDONLY:
-		fd.flags |= FO_FLAG_READABLE;
+		fd->flags |= FO_FLAG_READABLE;
 		break;
 	case IOCTX_FLG_WRONLY:
-		fd.flags |= FO_FLAG_WRITABLE;
+		fd->flags |= FO_FLAG_WRITABLE;
 		break;
 	case IOCTX_FLG_RDWR:
-		fd.flags |= FO_FLAG_READABLE | FO_FLAG_WRITABLE;
+		fd->flags |= FO_FLAG_READABLE | FO_FLAG_WRITABLE;
 		break;
 	}
 	if (opt & IOCTX_FLG_CLOEXEC)
 	{
-		fd.flags |= FO_FLAG_CLOEXEC;
+		fd->flags |= FO_FLAG_CLOEXEC;
 	}
 
 	// Here the vnode can choose not to support this, so we see ERROR_UNSUPPORTED as normal.
@@ -773,7 +775,7 @@ error_code vfs_io_context::open_vnode(file_object& fd, vnode_base* node, mode_ty
 		return err;
 	}
 
-	fd.vnode->increase_open_count();
+	fd->vnode->increase_open_count();
 
 	return ERROR_SUCCESS;
 }
@@ -811,7 +813,7 @@ error_code vfs_io_context::create_at(vnode_base* at, const char* full_path, mode
 	return vnode_at->create(name, this->uid, this->gid, mode & ~this->mode_mask);
 }
 
-error_code vfs_io_context::open_at(file_object& fd, vnode_base* at, const char* path, size_t flags, size_t mode)
+error_code vfs_io_context::open_at(file_object* fd, vnode_base* at, const char* path, size_t flags, size_t mode)
 {
 	if (at == nullptr)
 	{
@@ -856,23 +858,23 @@ error_code vfs_io_context::open_at(file_object& fd, vnode_base* at, const char* 
 	return this->open_vnode(fd, node, flags);
 }
 
-error_code vfs_io_context::close(file_object& fd)
+error_code vfs_io_context::close(file_object* fd)
 {
 	// TODO: socket can't be close
 
-	if (fd.ref == 0)
+	if (fd->ref == 0)
 	{
 		return -ERROR_INVALID;
 	}
 
-	if (fd.vnode == nullptr)
+	if (fd->vnode == nullptr)
 	{
 		return -ERROR_INVALID;
 	}
 
-	fd.vnode->decrease_open_count();
+	fd->vnode->decrease_open_count();
 
-	auto ret = fd.vnode->close(fd);
+	auto ret = fd->vnode->close(fd);
 
 	if (ret != ERROR_SUCCESS && ret != ERROR_UNSUPPORTED)
 	{
@@ -882,8 +884,14 @@ error_code vfs_io_context::close(file_object& fd)
 	return ERROR_SUCCESS;
 }
 
-error_code vfs_io_context::read_directory(file_object& fd, directory_entry* ent)
+error_code vfs_io_context::read_directory(file_object* fd, directory_entry* ent)
 {
+	//TODO: socket?
+
+	if ((fd->flags & FO_FLAG_DIRECTORY)== 0)
+	{
+		return -ERROR_NOT_DIR;
+	}
 	return 0;
 }
 
@@ -912,7 +920,7 @@ error_code vfs_io_context::chown(const char* path, uid_type uid, gid_type gid)
 	return 0;
 }
 
-error_code vfs_io_context::ioctl(file_object& fd, size_t cmd, void* arg)
+error_code vfs_io_context::ioctl(file_object* fd, size_t cmd, void* arg)
 {
 	return 0;
 }
@@ -959,15 +967,14 @@ error_code vfs_io_context::access_node(vnode_base* vn, size_t mode)
 	return 0;
 }
 
-error_code_with_result<size_t> vfs_io_context::write(file_object& fd, const void* buf, size_t count)
+error_code_with_result<size_t> vfs_io_context::write(file_object* fd, const void* buf, size_t count)
 {
 	return error_code_with_result<size_t>();
 }
 
-
-error_code_with_result<size_t> vfs_io_context::read(file_object& fd, void* buf, size_t count)
+error_code_with_result<size_t> vfs_io_context::read(file_object* fd, void* buf, size_t count)
 {
-	if (!(fd.flags & FO_FLAG_READABLE))
+	if (!(fd->flags & FO_FLAG_READABLE))
 	{
 		return -ERROR_INVALID;
 	}
@@ -977,15 +984,15 @@ error_code_with_result<size_t> vfs_io_context::read(file_object& fd, void* buf, 
 		return -ERROR_INVALID;
 	}
 
-	switch (fd.vnode->get_type())
+	switch (fd->vnode->get_type())
 	{
 	case vnode_types::VNT_FIFO:
 	case vnode_types::VNT_REG:
-		return fd.vnode->read(fd, buf, count);
+		return fd->vnode->read(fd, buf, count);
 		break;
 	case vnode_types::VNT_BLK:
 	case vnode_types::VNT_CHR:
-		return fd.vnode->get_dev()->read(buf, fd.pos, count);
+		return fd->vnode->get_dev()->read(buf, fd->pos, count);
 		break;
 	default:
 	case vnode_types::VNT_DIR:
@@ -995,7 +1002,7 @@ error_code_with_result<size_t> vfs_io_context::read(file_object& fd, void* buf, 
 	return -ERROR_SHOULD_NOT_REACH_HERE;
 }
 
-size_t vfs_io_context::seek(file_object& fd, size_t offset, size_t whence)
+size_t vfs_io_context::seek(file_object* fd, size_t offset, size_t whence)
 {
 	return 0;
 }

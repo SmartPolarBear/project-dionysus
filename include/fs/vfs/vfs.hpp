@@ -393,17 +393,17 @@ namespace file_system
 
 	 public:
 		virtual error_code_with_result<vnode_base*> find(const char* name) = 0;
-		virtual size_t read_dir(const file_object& fd, directory_entry& entry) = 0;
-		virtual error_code open_dir(const file_object& fd) = 0;
-		virtual error_code open(const file_object& fd, mode_type opt) = 0;
-		virtual error_code close(const file_object& fd) = 0;
+		virtual size_t read_dir(const file_object* fd, directory_entry& entry) = 0;
+		virtual error_code open_dir(const file_object* fd) = 0;
+		virtual error_code open(const file_object* fd, mode_type opt) = 0;
+		virtual error_code close(const file_object* fd) = 0;
 
 		virtual error_code create(const char* filename, uid_type uid, gid_type gid, size_t mode) = 0;
 		virtual error_code make_dir(const char* filename, uid_type uid, gid_type gid, size_t mode) = 0;
 		virtual error_code truncate(size_t size) = 0;
 		virtual error_code unlink(vnode_base& vn) = 0;
 
-		virtual error_code_with_result<offset_t> seek(file_object& fd, size_t offset, seek_methods whence) = 0;
+		virtual error_code_with_result<offset_t> seek(file_object* fd, size_t offset, seek_methods whence) = 0;
 
 		virtual error_code stat(file_status& st) = 0;
 		virtual error_code chmod(size_t mode) = 0;
@@ -411,8 +411,8 @@ namespace file_system
 
 		virtual error_code read_link(char* buf, size_t lim) = 0;
 
-		virtual error_code_with_result<size_t> read(file_object& fd, void* buf, size_t count) = 0;
-		virtual error_code_with_result<size_t> write(file_object& fd, const void* buf, size_t count) = 0;
+		virtual error_code_with_result<size_t> read(file_object* fd, void* buf, size_t count) = 0;
+		virtual error_code_with_result<size_t> write(file_object* fd, const void* buf, size_t count) = 0;
 
 	 public:
 
@@ -441,21 +441,21 @@ namespace file_system
 		~dev_fs_node() override = default;
 
 		error_code_with_result<vnode_base*> find(const char* name) override;
-		size_t read_dir(const file_object& fd, directory_entry& entry) override;
-		error_code open_dir(const file_object& fd) override;
-		error_code open(const file_object& fd, mode_type opt) override;
-		error_code close(const file_object& fd) override;
+		size_t read_dir(const file_object* fd, directory_entry& entry) override;
+		error_code open_dir(const file_object* fd) override;
+		error_code open(const file_object* fd, mode_type opt) override;
+		error_code close(const file_object* fd) override;
 		error_code create(const char* filename, uid_type uid, gid_type gid, size_t mode) override;
 		error_code make_dir(const char* filename, uid_type uid, gid_type gid, size_t mode) override;
 		error_code truncate(size_t size) override;
 		error_code unlink(vnode_base& vn) override;
-		error_code_with_result<offset_t> seek(file_object& fd, size_t offset, seek_methods whence) override;
+		error_code_with_result<offset_t> seek(file_object* fd, size_t offset, seek_methods whence) override;
 		error_code stat(file_status& st) override;
 		error_code chmod(size_t mode) override;
 		error_code chown(uid_type uid, gid_type gid) override;
 		error_code read_link(char* buf, size_t lim) override;
-		error_code_with_result<size_t> read(file_object& fd, void* buf, size_t count) override;
-		error_code_with_result<size_t> write(file_object& fd, const void* buf, size_t count) override;
+		error_code_with_result<size_t> read(file_object* fd, void* buf, size_t count) override;
+		error_code_with_result<size_t> write(file_object* fd, const void* buf, size_t count) override;
 
 	};
 
@@ -495,7 +495,7 @@ namespace file_system
 
 	 private:
 		static const char* next_path_element(const char* path, OUT char* element);
-		static error_code open_directory(file_object& fd);
+		static error_code open_directory(file_object* fd);
 		static error_code_with_result<vnode_base*> lookup_or_load_node(vnode_base* at, const char* name);
 	 private:
 		error_code_with_result<vnode_base*> do_find(vnode_base* at, const char* path, bool link_itself);
@@ -523,21 +523,21 @@ namespace file_system
 			const char* opt);
 		[[nodiscard]]error_code umount(const char* dir_name);
 
-		[[nodiscard]]error_code open_vnode(file_object& fd, vnode_base* node, mode_type opt);
+		[[nodiscard]]error_code open_vnode(file_object* fd, vnode_base* node, mode_type opt);
 		[[nodiscard]]error_code create_at(vnode_base* at, const char* path, mode_type mode);
 		[[nodiscard]]error_code open_at(
-			file_object& fd,
+			file_object* fd,
 			vnode_base* at,
 			const char* path,
 			size_t flags, size_t mode);
-		[[nodiscard]]error_code close(file_object& fd);
-		[[nodiscard]]error_code read_directory(file_object& fd, directory_entry* ent);
+		[[nodiscard]]error_code close(file_object* fd);
+		[[nodiscard]]error_code read_directory(file_object* fd, directory_entry* ent);
 		[[nodiscard]]error_code unlink_at(vnode_base* at, const char* pathname, size_t flags);
 		[[nodiscard]]error_code make_directory_at(vnode_base* at, const char* path, mode_type mode);
 		[[nodiscard]]error_code_with_result<vnode_base*> make_node(const char* path, mode_type mode);
 		[[nodiscard]]error_code change_mode(const char* path, mode_type mode);
 		[[nodiscard]]error_code chown(const char* path, uid_type uid, gid_type gid);
-		[[nodiscard]]error_code ioctl(file_object& fd, size_t cmd, void* arg);
+		[[nodiscard]]error_code ioctl(file_object* fd, size_t cmd, void* arg);
 		[[nodiscard]]error_code file_truncate(vnode_base* node, size_t length);
 
 		[[nodiscard]]error_code file_access_at(vnode_base* at, const char* path, size_t accmode, size_t flags);
@@ -545,10 +545,10 @@ namespace file_system
 		[[nodiscard]]error_code access_check(int desm, mode_type mode, uid_type uid, gid_type gid);
 		[[nodiscard]]error_code access_node(vnode_base* vn, size_t mode);
 
-		[[nodiscard]]error_code_with_result<size_t> write(file_object& fd, const void* buf, size_t count);
-		[[nodiscard]]error_code_with_result<size_t> read(file_object& fd, void* buf, size_t count);
+		[[nodiscard]]error_code_with_result<size_t> write(file_object* fd, const void* buf, size_t count);
+		[[nodiscard]]error_code_with_result<size_t> read(file_object* fd, void* buf, size_t count);
 
-		[[nodiscard]]size_t seek(file_object& fd, size_t offset, size_t whence);
+		[[nodiscard]]size_t seek(file_object* fd, size_t offset, size_t whence);
 	};
 
 	extern vfs_io_context* const kernel_io_context;

@@ -106,22 +106,22 @@ error_code_with_result<file_system::vnode_base*> file_system::ext2_vnode::find(c
 	return -ERROR_NO_ENTRY;
 }
 
-size_t file_system::ext2_vnode::read_dir(const file_system::file_object& fd, file_system::directory_entry& entry)
+size_t file_system::ext2_vnode::read_dir(const file_system::file_object* fd, file_system::directory_entry& entry)
 {
 	return ERROR_SUCCESS;
 }
 
-error_code file_system::ext2_vnode::open_dir(const file_system::file_object& fd)
+error_code file_system::ext2_vnode::open_dir(const file_system::file_object* fd)
 {
 	return ERROR_SUCCESS;
 }
 
-error_code file_system::ext2_vnode::open(const file_system::file_object& fd, mode_type opt)
+error_code file_system::ext2_vnode::open(const file_system::file_object* fd, mode_type opt)
 {
 	return ERROR_SUCCESS;
 }
 
-error_code file_system::ext2_vnode::close(const file_system::file_object& fd)
+error_code file_system::ext2_vnode::close(const file_system::file_object* fd)
 {
 	return ERROR_SUCCESS;
 }
@@ -145,7 +145,7 @@ error_code file_system::ext2_vnode::unlink(file_system::vnode_base& vn)
 	return ERROR_SUCCESS;
 }
 
-error_code_with_result<offset_t> file_system::ext2_vnode::seek(file_system::file_object& fd,
+error_code_with_result<offset_t> file_system::ext2_vnode::seek(file_system::file_object* fd,
 	size_t offset,
 	seek_methods method)
 {
@@ -156,7 +156,7 @@ error_code_with_result<offset_t> file_system::ext2_vnode::seek(file_system::file
 		return -ERROR_INVALID;
 	}
 
-	offset_t new_pos = fd.pos;
+	offset_t new_pos = fd->pos;
 	switch (method)
 	{
 	case vnode_base::SM_FROM_START:
@@ -177,7 +177,7 @@ error_code_with_result<offset_t> file_system::ext2_vnode::seek(file_system::file
 		return -ERROR_INVALID;
 	}
 
-	fd.pos = new_pos;
+	fd->pos = new_pos;
 
 	return new_pos;
 }
@@ -241,7 +241,7 @@ using namespace memory::kmem;
 // defined in slab.cc
 extern kmem_cache* sized_caches[KMEM_SIZED_CACHE_COUNT];
 
-error_code_with_result<size_t> file_system::ext2_vnode::read(file_system::file_object& fd,
+error_code_with_result<size_t> file_system::ext2_vnode::read(file_system::file_object* fd,
 	void* _buf,
 	size_t sz)
 {
@@ -264,16 +264,16 @@ error_code_with_result<size_t> file_system::ext2_vnode::read(file_system::file_o
 
 	size_t full_size = EXT2_INODE_SIZE(inode), has_read = 0;
 
-	if (fd.pos >= full_size)
+	if (fd->pos >= full_size)
 	{
 		return -ERROR_EOF;
 	}
 
 	uint8_t* block_buf = new uint8_t[data->get_block_size()];
-	for (size_t size = min(sz, full_size - fd.pos); size > 0;)
+	for (size_t size = min(sz, full_size - fd->pos); size > 0;)
 	{
-		size_t block_off = fd.pos % data->get_block_size();
-		size_t block_idx = fd.pos / data->get_block_size();
+		size_t block_off = fd->pos % data->get_block_size();
+		size_t block_idx = fd->pos / data->get_block_size();
 
 		size_t readable = min(size, data->get_block_size() - block_off);
 
@@ -287,7 +287,7 @@ error_code_with_result<size_t> file_system::ext2_vnode::read(file_system::file_o
 		memmove(buf, block_buf + block_off, readable);
 
 		buf += readable;
-		fd.pos += readable;
+		fd->pos += readable;
 		has_read += readable;
 
 		// To avoid overflow
@@ -305,7 +305,7 @@ error_code_with_result<size_t> file_system::ext2_vnode::read(file_system::file_o
 	return has_read;
 }
 
-error_code_with_result<size_t> file_system::ext2_vnode::write(file_system::file_object& fd,
+error_code_with_result<size_t> file_system::ext2_vnode::write(file_system::file_object* fd,
 	const void* _buf,
 	size_t sz)
 {
@@ -328,12 +328,12 @@ error_code_with_result<size_t> file_system::ext2_vnode::write(file_system::file_
 
 	size_t full_size = EXT2_INODE_SIZE(inode);
 
-	if (fd.pos > full_size)
+	if (fd->pos > full_size)
 	{
 		return -ERROR_EOF;
 	}
 
-	size_t request_size = max(fd.pos + sz, full_size);
+	size_t request_size = max(fd->pos + sz, full_size);
 	size_t offset = 0;
 
 	auto err = ext2_inode_resize(ext2_fs, inode, request_size);
@@ -346,8 +346,8 @@ error_code_with_result<size_t> file_system::ext2_vnode::write(file_system::file_
 
 	for (offset = 0; sz;)
 	{
-		auto block_index = fd.pos / data->get_block_size();
-		auto block_offset = fd.pos % data->get_block_size();
+		auto block_index = fd->pos / data->get_block_size();
+		auto block_offset = fd->pos % data->get_block_size();
 		size_t writable = min(sz, data->get_block_size() - block_offset);
 
 		if (writable == 0)
@@ -386,7 +386,7 @@ error_code_with_result<size_t> file_system::ext2_vnode::write(file_system::file_
 
 		sz -= writable;
 		offset += writable;
-		fd.pos += writable;
+		fd->pos += writable;
 	}
 
 	inode->mtime = cmos::cmos_read_rtc_timestamp();

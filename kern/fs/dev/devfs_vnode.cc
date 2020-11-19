@@ -29,22 +29,22 @@ error_code_with_result<file_system::vnode_base*> file_system::dev_fs_node::find(
 	return -ERROR_UNSUPPORTED;
 }
 
-size_t file_system::dev_fs_node::read_dir(const file_system::file_object& fd, file_system::directory_entry& entry)
+size_t file_system::dev_fs_node::read_dir(const file_system::file_object* fd, file_system::directory_entry& entry)
 {
 	return -ERROR_UNSUPPORTED;
 }
 
-error_code file_system::dev_fs_node::open_dir(const file_system::file_object& fd)
+error_code file_system::dev_fs_node::open_dir(const file_system::file_object* fd)
 {
 	return -ERROR_UNSUPPORTED;
 }
 
-error_code file_system::dev_fs_node::open(const file_system::file_object& fd, mode_type opt)
+error_code file_system::dev_fs_node::open(const file_system::file_object* fd, mode_type opt)
 {
 	return -ERROR_UNSUPPORTED;
 }
 
-error_code file_system::dev_fs_node::close(const file_system::file_object& fd)
+error_code file_system::dev_fs_node::close(const file_system::file_object* fd)
 {
 	return -ERROR_UNSUPPORTED;
 }
@@ -69,7 +69,7 @@ error_code file_system::dev_fs_node::unlink(file_system::vnode_base& vn)
 	return -ERROR_UNSUPPORTED;
 }
 
-error_code_with_result<offset_t> file_system::dev_fs_node::seek(file_system::file_object& fd,
+error_code_with_result<offset_t> file_system::dev_fs_node::seek(file_system::file_object* fd,
 	size_t offset,
 	seek_methods whence)
 {
@@ -91,12 +91,12 @@ error_code file_system::dev_fs_node::read_link(char* buf, size_t lim)
 	return -ERROR_UNSUPPORTED;
 }
 
-error_code_with_result<size_t> file_system::dev_fs_node::read(file_system::file_object& fd, void* buf, size_t count)
+error_code_with_result<size_t> file_system::dev_fs_node::read(file_system::file_object* fd, void* buf, size_t count)
 {
 	return -ERROR_UNSUPPORTED;
 }
 
-error_code_with_result<size_t> file_system::dev_fs_node::write(file_system::file_object& fd,
+error_code_with_result<size_t> file_system::dev_fs_node::write(file_system::file_object* fd,
 	const void* buf,
 	size_t count)
 {

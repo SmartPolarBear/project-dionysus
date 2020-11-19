@@ -54,13 +54,13 @@ static inline error_code kernel_io_context_init()
 
 	file_object ob;
 
-	err = kernel_io_context->open_at(ob, nullptr, "hello", IOCTX_FLG_RDONLY, IOCTX_FLG_RDONLY);
+	err = kernel_io_context->open_at(&ob, nullptr, "hello", IOCTX_FLG_RDONLY, IOCTX_FLG_RDONLY);
 	if (err != ERROR_SUCCESS)
 	{
 		return err;
 	}
 
-	auto read_ret = kernel_io_context->read(ob, testbuf, 1024);
+	auto read_ret = kernel_io_context->read(&ob, testbuf, 1024);
 	if (has_error(read_ret))
 	{
 		return get_error_code(read_ret);
