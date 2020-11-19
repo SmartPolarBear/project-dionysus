@@ -221,6 +221,11 @@ error_code_with_result<vnode_base*> vfs_io_context::lookup_or_load_node(vnode_ba
 
 error_code vfs_io_context::open_directory(file_object* fd)
 {
+	if (fd == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
 	if (fd->vnode->get_type() != vnode_types::VNT_DIR)
 	{
 		return -ERROR_NOT_DIR;
@@ -690,6 +695,11 @@ error_code vfs_io_context::umount(const char* dir_name)
 
 error_code vfs_io_context::open_vnode(file_object* fd, vnode_base* node, mode_type opt)
 {
+	if (fd == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
 	if (node == nullptr)
 	{
 		return -ERROR_INVALID;
@@ -815,6 +825,11 @@ error_code vfs_io_context::create_at(vnode_base* at, const char* full_path, mode
 
 error_code vfs_io_context::open_at(file_object* fd, vnode_base* at, const char* path, size_t flags, size_t mode)
 {
+	if (fd == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
 	if (at == nullptr)
 	{
 		at = this->cwd_vnode;
@@ -860,6 +875,11 @@ error_code vfs_io_context::open_at(file_object* fd, vnode_base* at, const char* 
 
 error_code vfs_io_context::close(file_object* fd)
 {
+	if (fd == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
 	// TODO: socket can't be close
 
 	if (fd->ref == 0)
@@ -886,9 +906,14 @@ error_code vfs_io_context::close(file_object* fd)
 
 error_code vfs_io_context::read_directory(file_object* fd, directory_entry* ent)
 {
+	if (fd == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
 	//TODO: socket?
 
-	if ((fd->flags & FO_FLAG_DIRECTORY)== 0)
+	if ((fd->flags & FO_FLAG_DIRECTORY) == 0)
 	{
 		return -ERROR_NOT_DIR;
 	}
@@ -974,6 +999,11 @@ error_code_with_result<size_t> vfs_io_context::write(file_object* fd, const void
 
 error_code_with_result<size_t> vfs_io_context::read(file_object* fd, void* buf, size_t count)
 {
+	if (fd == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+	
 	if (!(fd->flags & FO_FLAG_READABLE))
 	{
 		return -ERROR_INVALID;

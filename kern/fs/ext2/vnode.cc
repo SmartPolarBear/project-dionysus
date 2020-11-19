@@ -149,6 +149,11 @@ error_code_with_result<offset_t> file_system::ext2_vnode::seek(file_system::file
 	size_t offset,
 	seek_methods method)
 {
+	if (fd == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
 	auto inode = reinterpret_cast<ext2_inode*>(this->private_data);
 
 	if (inode == nullptr)
@@ -245,6 +250,11 @@ error_code_with_result<size_t> file_system::ext2_vnode::read(file_system::file_o
 	void* _buf,
 	size_t sz)
 {
+	if (fd == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
 	if (_buf == nullptr)
 	{
 		return -ERROR_INVALID;
@@ -309,6 +319,11 @@ error_code_with_result<size_t> file_system::ext2_vnode::write(file_system::file_
 	const void* _buf,
 	size_t sz)
 {
+	if (fd == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
 	uint8_t* buf = const_cast< uint8_t*>((const uint8_t*)_buf);
 
 	if (buf == nullptr)
