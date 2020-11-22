@@ -10,7 +10,7 @@
 #include "elf/elf64_spec.hpp"
 
 #include "libkernel/console/builtin_text_io.hpp"
-#include "data/list.h"
+#include "data/pod_list.h"
 
 #include <utility>
 
