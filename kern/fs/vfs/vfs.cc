@@ -233,7 +233,7 @@ error_code vfs_io_context::open_directory(file_object* fd)
 
 	if (fd->vnode->has_flags(VNF_MEMORY))
 	{
-		fd->flags |= FO_FLAG_MEMDIR | FO_FLAG_MEMDIR_DOT;
+		fd->flags |= FO_FLAG_PSEUDO_DIR | FO_FLAG_PSEUDO_DIR_DOT;
 		// FIXME
 //		fd->pos = (size_t)node->first_child;
 
@@ -904,7 +904,7 @@ error_code vfs_io_context::close(file_object* fd)
 	return ERROR_SUCCESS;
 }
 
-error_code vfs_io_context::read_directory(file_object* fd, directory_entry* ent)
+error_code_with_result<uint16_t> vfs_io_context::read_directory(file_object* fd, directory_entry* ent)
 {
 	if (fd == nullptr)
 	{
@@ -916,6 +916,39 @@ error_code vfs_io_context::read_directory(file_object* fd, directory_entry* ent)
 	if ((fd->flags & FO_FLAG_DIRECTORY) == 0)
 	{
 		return -ERROR_NOT_DIR;
+	}
+
+	if (fd->flags & FO_FLAG_PSEUDO_DIR)
+	{
+		if (fd->flags & FO_FLAG_PSEUDO_DIR_DOT)
+		{
+			auto vnode = fd->vnode;
+
+			if (vnode == nullptr)
+			{
+				return -ERROR_INVALID;
+			}
+
+			fd->flags &= ~FO_FLAG_PSEUDO_DIR_DOT;
+			fd->flags |= FO_FLAG_PSEUDO_DIR_DOTDOT;
+
+			ent->ino = vnode->get_inode_id();
+			ent->type = DT_DIR;
+			ent->off = 0;
+			strncpy(ent->name, ".", 2);
+
+			ent->reclen = sizeof(directory_entry) + 1;
+
+			return ent->reclen;
+		}
+
+		vnode_base* item = (vnode_base*)fd->pos;
+
+		if (item == nullptr)
+		{
+			
+		}
+
 	}
 	return 0;
 }
@@ -1003,7 +1036,7 @@ error_code_with_result<size_t> vfs_io_context::read(file_object* fd, void* buf, 
 	{
 		return -ERROR_INVALID;
 	}
-	
+
 	if (!(fd->flags & FO_FLAG_READABLE))
 	{
 		return -ERROR_INVALID;

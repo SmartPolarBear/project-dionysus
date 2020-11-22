@@ -20,63 +20,88 @@
 #include <cmath>
 #include <algorithm>
 
-struct vnode_child_node
-{
-	file_system::vnode_base* vnode;
-	list_head list;
-};
+//struct vnode_child_node
+//{
+//	file_system::vnode_base* vnode;
+//	list_head list;
+//};
 
 using namespace memory::kmem;
 using namespace libkernel;
 
-memory::kmem::kmem_cache* vnode_child_node_cache = nullptr;
+//memory::kmem::kmem_cache* vnode_child_node_cache = nullptr;
 
 error_code file_system::vnode_init()
 {
-	vnode_child_node_cache = kmem_cache_create("vnode_child", sizeof(vnode_child_node));
-
-	if (vnode_child_node_cache == nullptr)
-	{
-		return -ERROR_MEMORY_ALLOC;
-	}
+//	vnode_child_node_cache = kmem_cache_create("vnode_child", sizeof(vnode_child_node));
+//
+//	if (vnode_child_node_cache == nullptr)
+//	{
+//		return -ERROR_MEMORY_ALLOC;
+//	}
 
 	return ERROR_SUCCESS;
 }
 
 error_code file_system::vnode_base::attach(file_system::vnode_base* child)
 {
-	vnode_child_node* child_node = reinterpret_cast<vnode_child_node*>(kmem_cache_alloc(vnode_child_node_cache));
-	child_node->vnode = child;
-	list_add(&child_node->list, &this->child_head);
-	return 0;
+//	vnode_child_node* child_node = reinterpret_cast<vnode_child_node*>(kmem_cache_alloc(vnode_child_node_cache));
+//	child_node->vnode = child;
+//	list_add(&child_node->list, &this->child_head);
+
+	child->next_child = this->first_child;
+	this->first_child = child;
+	return ERROR_SUCCESS;
 }
 
 error_code file_system::vnode_base::detach(file_system::vnode_base* node)
 {
-	list_head* iter = nullptr, * t = nullptr;
-	list_for_safe(iter, t, &this->child_head)
+	for (auto vn = this->first_child; vn != nullptr; vn = vn->next_child)
 	{
-		auto n = list_entry(iter, vnode_child_node, list);
-		if (n->vnode == node)
+		if (vn->next_child == node)
 		{
-			list_remove(iter);
-			break;
+			vn->next_child = node->next_child;
+			node->next_child = nullptr;
+			return ERROR_SUCCESS;
 		}
 	}
-	return 0;
+//	list_head* iter = nullptr, * t = nullptr;
+//	list_for_safe(iter, t, &this->child_head)
+//	{
+//		auto n = list_entry(iter, vnode_child_node, list);
+//		if (n->vnode == node)
+//		{
+//			list_remove(iter);
+//			break;
+//		}
+//	}
+	return -ERROR_NO_ENTRY;
 }
 
 error_code_with_result<file_system::vnode_base*> file_system::vnode_base::lookup_child(const char* name)
 {
-	list_head* iter = nullptr;
-	list_for(iter, &this->child_head)
-	{
-		auto n = list_entry(iter, vnode_child_node, list);
+//	list_head* iter = nullptr;
+//	list_for(iter, &this->child_head)
+//	{
+//		auto n = list_entry(iter, vnode_child_node, list);
+//
+//		auto node_name = n->vnode->get_name();
+//		if (strcmp(node_name, name) == 0)
+//		{
+//			return n->vnode;
+//		}
+//	}
 
-		auto node_name = n->vnode->get_name();
-		if (strcmp(node_name, name) == 0)
+	if (strnlen(name, VNODE_NAME_MAX) >= VNODE_NAME_MAX)
+	{
+		return -ERROR_INVALID;
+	}
+
+	for (auto vn = this->first_child; vn != nullptr; vn = vn->next_child)
+	{
+		if (strncmp(vn->name_buf, name, VNODE_NAME_MAX) == 0)
 		{
-			return n->vnode;
+			return vn;
 		}
 	}
 

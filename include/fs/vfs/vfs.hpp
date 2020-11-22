@@ -67,6 +67,19 @@ namespace file_system
 		DEF_HAS_CHILD_DEVICES = 1u << 3u
 	};
 
+	enum directory_entry_type
+	{
+		DT_UNKNOWN = 0,
+		DT_FIFO = 1,
+		DT_CHR = 2,
+		DT_DIR = 4,
+		DT_BLK = 6,
+		DT_REG = 8,
+		DT_LNK = 10,
+		DT_SOCK = 12,
+		DT_WHT = 14
+	};
+
 	struct directory_entry
 	{
 		uint64_t ino;
@@ -81,9 +94,9 @@ namespace file_system
 		FO_FLAG_WRITABLE = (1 << 0),
 		FO_FLAG_READABLE = (1 << 1),
 		FO_FLAG_DIRECTORY = (1 << 2),
-		FO_FLAG_MEMDIR = (1 << 3),
-		FO_FLAG_MEMDIR_DOT = (1 << 4),
-		FO_FLAG_MEMDIR_DOTDOT = (1 << 5),
+		FO_FLAG_PSEUDO_DIR = (1 << 3),
+		FO_FLAG_PSEUDO_DIR_DOT = (1 << 4),
+		FO_FLAG_PSEUDO_DIR_DOTDOT = (1 << 5),
 		FO_FLAG_CLOEXEC = (1 << 7),
 	};
 
@@ -255,8 +268,8 @@ namespace file_system
 
 		char name_buf[VNODE_NAME_MAX]{};
 
-		list_head child_head{};
-
+		vnode_base* first_child;
+		vnode_base* next_child;
 		vnode_base* parent;
 
 		union
@@ -269,13 +282,12 @@ namespace file_system
 		virtual ~vnode_base() = default;
 
 		vnode_base(vnode_types t, const char* n)
-			: type(t)
+			: type(t), first_child(nullptr), next_child(nullptr), parent(nullptr)
 		{
 			if (n != nullptr)
 			{
 				strncpy(name_buf, n, strnlen(n, VNODE_NAME_MAX));
 			}
-			libkernel::list_init(&child_head);
 
 			kdebug::kdebug_log("Create vnode: type %d, name %s\n", (uint32_t)t, n);
 		}
@@ -383,6 +395,11 @@ namespace file_system
 		void decrease_open_count()
 		{
 			vnode_base::open_count--;
+		}
+
+		[[nodiscard]]size_t get_inode_id() const
+		{
+			return inode_id;
 		}
 
 	 public:
@@ -531,7 +548,7 @@ namespace file_system
 			const char* path,
 			size_t flags, size_t mode);
 		[[nodiscard]]error_code close(file_object* fd);
-		[[nodiscard]]error_code read_directory(file_object* fd, directory_entry* ent);
+		[[nodiscard]]error_code_with_result<uint16_t> read_directory(file_object* fd, directory_entry* ent);
 		[[nodiscard]]error_code unlink_at(vnode_base* at, const char* pathname, size_t flags);
 		[[nodiscard]]error_code make_directory_at(vnode_base* at, const char* path, mode_type mode);
 		[[nodiscard]]error_code_with_result<vnode_base*> make_node(const char* path, mode_type mode);
