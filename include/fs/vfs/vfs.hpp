@@ -5,6 +5,8 @@
 #include "drivers/debug/kdebug.h"
 
 #include "data/pod_list.h"
+#include "data/list_base.hpp"
+
 #include "fs/device/device.hpp"
 
 namespace file_system
@@ -237,6 +239,7 @@ namespace file_system
 	}
 
 	class vnode_base
+		: public libkernel::single_linked_list_base<vnode_base*>
 	{
 	 public:
 		enum seek_methods : uint64_t
@@ -268,8 +271,6 @@ namespace file_system
 
 		char name_buf[VNODE_NAME_MAX]{};
 
-		vnode_base* first_child;
-		vnode_base* next_child;
 		vnode_base* parent;
 
 		union
@@ -282,7 +283,7 @@ namespace file_system
 		virtual ~vnode_base() = default;
 
 		vnode_base(vnode_types t, const char* n)
-			: type(t), first_child(nullptr), next_child(nullptr), parent(nullptr)
+			: type(t), parent(nullptr)
 		{
 			if (n != nullptr)
 			{

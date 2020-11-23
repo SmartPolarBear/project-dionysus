@@ -45,65 +45,33 @@ error_code file_system::vnode_init()
 
 error_code file_system::vnode_base::attach(file_system::vnode_base* child)
 {
-//	vnode_child_node* child_node = reinterpret_cast<vnode_child_node*>(kmem_cache_alloc(vnode_child_node_cache));
-//	child_node->vnode = child;
-//	list_add(&child_node->list, &this->child_head);
-
-	child->next_child = this->first_child;
-	this->first_child = child;
-	return ERROR_SUCCESS;
+	return this->add_node(child);
 }
 
 error_code file_system::vnode_base::detach(file_system::vnode_base* node)
 {
-	for (auto vn = this->first_child; vn != nullptr; vn = vn->next_child)
-	{
-		if (vn->next_child == node)
-		{
-			vn->next_child = node->next_child;
-			node->next_child = nullptr;
-			return ERROR_SUCCESS;
-		}
-	}
-//	list_head* iter = nullptr, * t = nullptr;
-//	list_for_safe(iter, t, &this->child_head)
-//	{
-//		auto n = list_entry(iter, vnode_child_node, list);
-//		if (n->vnode == node)
-//		{
-//			list_remove(iter);
-//			break;
-//		}
-//	}
-	return -ERROR_NO_ENTRY;
+	return this->remove_node(node);
 }
 
 error_code_with_result<file_system::vnode_base*> file_system::vnode_base::lookup_child(const char* name)
 {
-//	list_head* iter = nullptr;
-//	list_for(iter, &this->child_head)
-//	{
-//		auto n = list_entry(iter, vnode_child_node, list);
-//
-//		auto node_name = n->vnode->get_name();
-//		if (strcmp(node_name, name) == 0)
-//		{
-//			return n->vnode;
-//		}
-//	}
 
 	if (strnlen(name, VNODE_NAME_MAX) >= VNODE_NAME_MAX)
 	{
 		return -ERROR_INVALID;
 	}
 
-	for (auto vn = this->first_child; vn != nullptr; vn = vn->next_child)
+	auto ret = this->find_first([](vnode_base* vn, const void* key)
 	{
-		if (strncmp(vn->name_buf, name, VNODE_NAME_MAX) == 0)
-		{
-			return vn;
-		}
-	}
+	  return strncmp(vn->name_buf, (char*)key, VNODE_NAME_MAX) == 0;
+	}, name);
 
-	return -ERROR_NO_ENTRY;
+	if (ret == nullptr)
+	{
+		return -ERROR_NO_ENTRY;
+	}
+	else
+	{
+		return ret;
+	}
 }
