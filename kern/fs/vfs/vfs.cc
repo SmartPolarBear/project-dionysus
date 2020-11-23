@@ -350,13 +350,13 @@ error_code_with_result<vnode_base*> vfs_io_context::do_find(vnode_base* at, cons
 
 			if (r->get_type() == vnode_types::VNT_LNK)
 			{
-				auto lres_ret = link_resolve(r, false);
-				if (has_error(lres_ret))
+				auto link_res_ret = link_resolve(r, false);
+				if (has_error(link_res_ret))
 				{
-					return get_error_code(lres_ret);
+					return get_error_code(link_res_ret);
 				}
 
-				r = get_result(lres_ret);
+				r = get_result(link_res_ret);
 			}
 
 			// TODO: support multiple links
@@ -611,13 +611,13 @@ error_code vfs_io_context::mount(const char* path, device_class* blk, fs_class_i
 			return get_error_code(mount_point_ret);
 		}
 
-		auto mountpoint = get_result(mount_point_ret);
+		auto mount_point = get_result(mount_point_ret);
 
-		mountpoint->set_type(vnode_types::VNT_MNT);
-		mountpoint->set_link_target(fs_root);
+		mount_point->set_type(vnode_types::VNT_MNT);
+		mount_point->set_link_target(fs_root);
 
-		fs_root->set_link_target(mountpoint);
-		fs_root->set_parent(mountpoint);
+		fs_root->set_link_target(mount_point);
+		fs_root->set_parent(mount_point);
 	}
 
 	blk->set_flags(blk->get_flags() | BLOCKDEV_BUSY);
@@ -688,7 +688,7 @@ error_code vfs_io_context::umount(const char* dir_name)
 	memset(fs, 0, sizeof(fs_instance));
 	blk->set_flags(blk->get_flags() & (~BLOCKDEV_BUSY));
 
-	// TODO: destory filesystem tree
+	// TODO: destroy filesystem tree
 
 	return ERROR_SUCCESS;
 }
@@ -949,7 +949,7 @@ error_code_with_result<size_t> vfs_io_context::read_directory(file_object* fd, d
 			return -ERROR_INVALID;
 		}
 
-		// Fill dirent
+		// Fill directory entry
 		ent->ino = item->get_inode_id();
 		ent->off = 0;
 
@@ -1017,7 +1017,7 @@ error_code vfs_io_context::file_truncate(vnode_base* node, size_t length)
 	return 0;
 }
 
-error_code vfs_io_context::file_access_at(vnode_base* at, const char* path, size_t accmode, size_t flags)
+error_code vfs_io_context::file_access_at(vnode_base* at, const char* path, vfs_access_status access_mode, size_t flags)
 {
 	if (path == nullptr)
 	{
@@ -1031,12 +1031,12 @@ error_code vfs_io_context::file_access_at(vnode_base* at, const char* path, size
 	}
 	auto node = get_result(find_ret);
 
-	if (accmode == F_OK)
+	if (access_mode == F_OK)
 	{
 		return ERROR_SUCCESS;
 	}
 
-	return access_node(node, accmode);
+	return access_node(node, access_mode);
 }
 
 error_code vfs_io_context::file_status_at(vnode_base* at, const char* path, file_status* st, size_t flags)

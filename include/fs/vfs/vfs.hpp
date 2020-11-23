@@ -558,7 +558,11 @@ namespace file_system
 		[[nodiscard]]error_code ioctl(file_object* fd, size_t cmd, void* arg);
 		[[nodiscard]]error_code file_truncate(vnode_base* node, size_t length);
 
-		[[nodiscard]]error_code file_access_at(vnode_base* at, const char* path, size_t accmode, size_t flags);
+		[[nodiscard]]error_code file_access_at(vnode_base* at,
+			const char* path,
+			vfs_access_status access_mode,
+			size_t flags);
+
 		[[nodiscard]]error_code file_status_at(vnode_base* at, const char* path, file_status* st, size_t flags);
 		[[nodiscard]]error_code access_check(int desm, mode_type mode, uid_type uid, gid_type gid);
 		[[nodiscard]]error_code access_node(vnode_base* vn, size_t mode);
