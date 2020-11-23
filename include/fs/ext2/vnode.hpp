@@ -29,7 +29,7 @@ namespace file_system
 		[[nodiscard]]error_code initialize_from_inode(ext2_ino_type ino, const ext2_inode* src);
 
 		[[nodiscard]]error_code_with_result<vnode_base*> find(const char* name) override;
-		[[nodiscard]]size_t read_dir(const file_object* fd, directory_entry& entry) override;
+		[[nodiscard]]size_t read_directory(const file_object* fd, directory_entry* entry) override;
 		[[nodiscard]]error_code open_dir(const file_object* fd) override;
 		[[nodiscard]]error_code open(const file_object* fd, mode_type opt) override;
 		[[nodiscard]]error_code close(const file_object* fd) override;

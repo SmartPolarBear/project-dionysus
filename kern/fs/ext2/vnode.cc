@@ -106,7 +106,7 @@ error_code_with_result<file_system::vnode_base*> file_system::ext2_vnode::find(c
 	return -ERROR_NO_ENTRY;
 }
 
-size_t file_system::ext2_vnode::read_dir(const file_system::file_object* fd, file_system::directory_entry& entry)
+size_t file_system::ext2_vnode::read_directory(const file_system::file_object* fd, file_system::directory_entry* entry)
 {
 	return ERROR_SUCCESS;
 }

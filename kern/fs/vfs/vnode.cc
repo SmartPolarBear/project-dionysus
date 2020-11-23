@@ -55,7 +55,6 @@ error_code file_system::vnode_base::detach(file_system::vnode_base* node)
 
 error_code_with_result<file_system::vnode_base*> file_system::vnode_base::lookup_child(const char* name)
 {
-
 	if (strnlen(name, VNODE_NAME_MAX) >= VNODE_NAME_MAX)
 	{
 		return -ERROR_INVALID;

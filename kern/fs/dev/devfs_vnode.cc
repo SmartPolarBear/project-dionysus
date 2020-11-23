@@ -29,7 +29,7 @@ error_code_with_result<file_system::vnode_base*> file_system::dev_fs_node::find(
 	return -ERROR_UNSUPPORTED;
 }
 
-size_t file_system::dev_fs_node::read_dir(const file_system::file_object* fd, file_system::directory_entry& entry)
+size_t file_system::dev_fs_node::read_directory(const file_system::file_object* fd, file_system::directory_entry* entry)
 {
 	return -ERROR_UNSUPPORTED;
 }

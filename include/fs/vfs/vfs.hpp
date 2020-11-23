@@ -411,7 +411,7 @@ namespace file_system
 
 	 public:
 		virtual error_code_with_result<vnode_base*> find(const char* name) = 0;
-		virtual size_t read_dir(const file_object* fd, directory_entry& entry) = 0;
+		virtual size_t read_directory(const file_object* fd, directory_entry* entry) = 0;
 		virtual error_code open_dir(const file_object* fd) = 0;
 		virtual error_code open(const file_object* fd, mode_type opt) = 0;
 		virtual error_code close(const file_object* fd) = 0;
@@ -459,7 +459,7 @@ namespace file_system
 		~dev_fs_node() override = default;
 
 		error_code_with_result<vnode_base*> find(const char* name) override;
-		size_t read_dir(const file_object* fd, directory_entry& entry) override;
+		size_t read_directory(const file_object* fd, directory_entry* entry) override;
 		error_code open_dir(const file_object* fd) override;
 		error_code open(const file_object* fd, mode_type opt) override;
 		error_code close(const file_object* fd) override;
@@ -549,7 +549,7 @@ namespace file_system
 			const char* path,
 			size_t flags, size_t mode);
 		[[nodiscard]]error_code close(file_object* fd);
-		[[nodiscard]]error_code_with_result<uint16_t> read_directory(file_object* fd, directory_entry* ent);
+		[[nodiscard]]error_code_with_result<size_t> read_directory(file_object* fd, directory_entry* ent);
 		[[nodiscard]]error_code unlink_at(vnode_base* at, const char* pathname, size_t flags);
 		[[nodiscard]]error_code make_directory_at(vnode_base* at, const char* path, mode_type mode);
 		[[nodiscard]]error_code_with_result<vnode_base*> make_node(const char* path, mode_type mode);

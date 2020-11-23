@@ -57,5 +57,17 @@ namespace libkernel
 			return nullptr;
 		}
 
+	 public:
+
+		[[nodiscard]]TPtr get_first() const
+		{
+			return first;
+		}
+
+		[[nodiscard]]TPtr get_next() const
+		{
+			return next;
+		}
+
 	};
 }

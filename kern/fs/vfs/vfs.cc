@@ -234,8 +234,8 @@ error_code vfs_io_context::open_directory(file_object* fd)
 	if (fd->vnode->has_flags(VNF_MEMORY))
 	{
 		fd->flags |= FO_FLAG_PSEUDO_DIR | FO_FLAG_PSEUDO_DIR_DOT;
-		// FIXME
-//		fd->pos = (size_t)node->first_child;
+
+		fd->pos = (size_t)fd->vnode->get_first();
 
 		fd->vnode->increase_open_count();
 	}
@@ -904,7 +904,7 @@ error_code vfs_io_context::close(file_object* fd)
 	return ERROR_SUCCESS;
 }
 
-error_code_with_result<uint16_t> vfs_io_context::read_directory(file_object* fd, directory_entry* ent)
+error_code_with_result<size_t> vfs_io_context::read_directory(file_object* fd, directory_entry* ent)
 {
 	if (fd == nullptr)
 	{
@@ -939,18 +939,47 @@ error_code_with_result<uint16_t> vfs_io_context::read_directory(file_object* fd,
 
 			ent->reclen = sizeof(directory_entry) + 1;
 
-			return ent->reclen;
+			return (size_t)ent->reclen;
 		}
 
 		vnode_base* item = (vnode_base*)fd->pos;
 
 		if (item == nullptr)
 		{
-			
+			return -ERROR_INVALID;
 		}
 
+		// Fill dirent
+		ent->ino = item->get_inode_id();
+		ent->off = 0;
+
+		switch (item->get_type())
+		{
+		case vnode_types::VNT_REG:
+			ent->type = DT_REG;
+			break;
+		case vnode_types::VNT_DIR:
+		case vnode_types::VNT_MNT:
+			ent->type = DT_DIR;
+			break;
+		default:
+			ent->type = DT_UNKNOWN;
+			break;
+		}
+
+		strncpy(ent->name, item->get_name(), VFS_MAX_PATH_LEN);
+		ent->reclen = sizeof(directory_entry) + strnlen(item->get_name(), VFS_MAX_PATH_LEN);
+
+		fd->pos = (size_t)item->get_next();
+
+		return (size_t)ent->reclen;
 	}
-	return 0;
+	else
+	{
+		return fd->vnode->read_directory(fd, ent);
+	}
+
+	return -ERROR_SHOULD_NOT_REACH_HERE;
 }
 
 error_code vfs_io_context::unlink_at(vnode_base* at, const char* pathname, size_t flags)
