@@ -140,7 +140,7 @@ error_code file_system::ext2_vnode::truncate(size_t size)
 	return ERROR_SUCCESS;
 }
 
-error_code file_system::ext2_vnode::unlink(file_system::vnode_base& vn)
+error_code file_system::ext2_vnode::unlink(file_system::vnode_base* vn)
 {
 	return ERROR_SUCCESS;
 }

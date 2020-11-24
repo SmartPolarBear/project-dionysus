@@ -36,7 +36,7 @@ namespace file_system
 		[[nodiscard]]error_code create(const char* filename, uid_type uid, gid_type gid, size_t mode) override;
 		[[nodiscard]]error_code make_dir(const char* filename, uid_type uid, gid_type gid, size_t mode) override;
 		[[nodiscard]]error_code truncate(size_t size) override;
-		[[nodiscard]]error_code unlink(vnode_base& vn) override;
+		[[nodiscard]]error_code unlink(vnode_base* vn) override;
 		[[nodiscard]]error_code_with_result<offset_t> seek(file_object* fd, size_t offset, seek_methods whence) override;
 		[[nodiscard]]error_code stat(file_status& st) override;
 		[[nodiscard]]error_code chmod(size_t mode) override;

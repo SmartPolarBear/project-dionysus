@@ -64,7 +64,7 @@ error_code file_system::dev_fs_node::truncate(size_t size)
 	return -ERROR_UNSUPPORTED;
 }
 
-error_code file_system::dev_fs_node::unlink(file_system::vnode_base& vn)
+error_code file_system::dev_fs_node::unlink(file_system::vnode_base* vn)
 {
 	return -ERROR_UNSUPPORTED;
 }

@@ -50,6 +50,7 @@ error_code file_system::vnode_base::attach(file_system::vnode_base* child)
 
 error_code file_system::vnode_base::detach(file_system::vnode_base* node)
 {
+	node->parent = nullptr;
 	return this->remove_node(node);
 }
 

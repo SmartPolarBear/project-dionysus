@@ -27,6 +27,13 @@ namespace libkernel
 
 		error_code remove_node(single_linked_list_base* child)
 		{
+			if (this->first == child)
+			{
+				this->first = child->next;
+				child->next = NULL;
+				return ERROR_SUCCESS;
+			}
+
 			for (auto node = this->first; node != nullptr; node = node->next)
 			{
 				if (node->next == child)

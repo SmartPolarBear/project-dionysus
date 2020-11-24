@@ -1029,6 +1029,7 @@ error_code vfs_io_context::unlink_at(vnode_base* at, const char* pathname, size_
 		return unlink_ret;
 	}
 
+	node->get_parent()->detach(node);
 
 
 	return 0;
