@@ -984,6 +984,53 @@ error_code_with_result<size_t> vfs_io_context::read_directory(file_object* fd, d
 
 error_code vfs_io_context::unlink_at(vnode_base* at, const char* pathname, size_t flags)
 {
+	if (at == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	auto find_ret = find(at, pathname, true);
+	if (has_error(find_ret))
+	{
+		return get_error_code(find_ret);
+	}
+
+	auto node = get_result(find_ret);
+
+	if (node->get_type() == vnode_types::VNT_MNT)
+	{
+		return -ERROR_BUSY;
+	}
+
+	if (node->get_open_count() != 0)
+	{
+		return -ERROR_BUSY;
+	}
+
+	if (flags & AT_REMOVEDIR)
+	{
+		if (node->get_type() != vnode_types::VNT_DIR)
+		{
+			return -ERROR_NOT_DIR;
+		}
+		// TODO: empty check
+	}
+	else
+	{
+		if (node->get_type() == vnode_types::VNT_DIR)
+		{
+			return ERROR_IS_DIR;
+		}
+	}
+
+	auto unlink_ret = node->unlink(node);
+	if (unlink_ret != ERROR_SUCCESS)
+	{
+		return unlink_ret;
+	}
+
+
+
 	return 0;
 }
 

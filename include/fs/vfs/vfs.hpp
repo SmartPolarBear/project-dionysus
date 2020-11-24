@@ -419,7 +419,7 @@ namespace file_system
 		virtual error_code create(const char* filename, uid_type uid, gid_type gid, size_t mode) = 0;
 		virtual error_code make_dir(const char* filename, uid_type uid, gid_type gid, size_t mode) = 0;
 		virtual error_code truncate(size_t size) = 0;
-		virtual error_code unlink(vnode_base& vn) = 0;
+		virtual error_code unlink(vnode_base* vn) = 0;
 
 		virtual error_code_with_result<offset_t> seek(file_object* fd, size_t offset, seek_methods whence) = 0;
 
@@ -499,6 +499,14 @@ namespace file_system
 		W_OK = 2,
 		X_OK = 1,
 		F_OK = 0,
+	};
+
+	enum vfs_vnode_operation_flags
+	{
+		AT_FDCWD = (-100),
+		AT_SYMLINK_NOFOLLOW = (1 << 0),
+		AT_EMPTY_PATH = (1 << 1),
+		AT_REMOVEDIR = (1 << 2),
 	};
 
 	class vfs_io_context
