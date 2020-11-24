@@ -1031,13 +1031,49 @@ error_code vfs_io_context::unlink_at(vnode_base* at, const char* pathname, size_
 
 	node->get_parent()->detach(node);
 
+	// TODO: slab? freelist?
+	delete node;
 
 	return 0;
 }
 
-error_code vfs_io_context::make_directory_at(vnode_base* at, const char* path, mode_type mode)
+error_code vfs_io_context::make_directory_at(vnode_base* vnode, const char* path, mode_type mode)
 {
-	return 0;
+	if (vnode == nullptr)
+	{
+		vnode = this->cwd_vnode;
+	}
+
+	if (path == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	auto parent_name = new char[VFS_MAX_PATH_LEN];
+	auto filename = next_path_element(path, parent_name);
+	if (filename[0] == '\0')
+	{
+		delete[] parent_name;
+		return -ERROR_NO_ENTRY;
+	}
+
+	auto find_ret = find(vnode, parent_name, false);
+	if (has_error(find_ret))
+	{
+		delete[] parent_name;
+		return get_error_code(find_ret);
+	}
+	vnode = get_result(find_ret);
+
+	auto access_ret = access_node(vnode, W_OK);
+	if (access_ret != ERROR_SUCCESS)
+	{
+		return access_ret;
+	}
+
+	auto mkdir_ret = vnode->make_dir(filename, this->uid, this->gid, mode & ~this->mode_mask);
+
+	return mkdir_ret;
 }
 
 error_code_with_result<vnode_base*> vfs_io_context::make_node(const char* path, mode_type mode)
