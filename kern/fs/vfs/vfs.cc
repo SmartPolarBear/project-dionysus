@@ -1034,7 +1034,7 @@ error_code vfs_io_context::unlink_at(vnode_base* at, const char* pathname, size_
 	// TODO: slab? freelist?
 	delete node;
 
-	return 0;
+	return ERROR_SUCCESS;
 }
 
 error_code vfs_io_context::make_directory_at(vnode_base* vnode, const char* path, mode_type mode)
@@ -1068,16 +1068,71 @@ error_code vfs_io_context::make_directory_at(vnode_base* vnode, const char* path
 	auto access_ret = access_node(vnode, W_OK);
 	if (access_ret != ERROR_SUCCESS)
 	{
+		delete[] parent_name;
 		return access_ret;
 	}
 
 	auto mkdir_ret = vnode->make_dir(filename, this->uid, this->gid, mode & ~this->mode_mask);
 
+	delete[] parent_name;
 	return mkdir_ret;
 }
 
 error_code_with_result<vnode_base*> vfs_io_context::make_node(const char* path, mode_type mode)
 {
+	if (path == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	auto parent_name = new char[VFS_MAX_PATH_LEN];
+	auto file_name = next_path_element(path, parent_name);
+
+	if (file_name[0] == '\0')
+	{
+		return -ERROR_NO_ENTRY;
+	}
+
+	auto find_ret = find(cwd_vnode, parent_name, false);
+	if (has_error(find_ret))
+	{
+		delete[] parent_name;
+		return get_error_code(find_ret);
+	}
+
+	auto vnode = get_result(find_ret);
+
+	auto acc_ret = access_node(vnode, W_OK);
+	if (acc_ret != ERROR_SUCCESS)
+	{
+		delete[] parent_name;
+		return acc_ret;
+	}
+
+	vnode_types type = vnode_types::VNT_FIFO;
+	switch (mode & S_IFMT)
+	{
+	case S_IFIFO:
+		type = vnode_types::VNT_FIFO;
+		break;
+	case S_IFSOCK:
+		type = vnode_types::VNT_SOCK;
+		break;
+	default:
+		delete[] parent_name;
+		return -ERROR_INVALID;
+	}
+
+	auto new_node_ret = vnode->allocate_new(file_name);
+	if (has_error(new_node_ret))
+	{
+		return get_error_code(new_node_ret);
+	}
+
+	auto new_node = get_result(new_node_ret);
+
+
+
 	return error_code_with_result<vnode_base*>();
 }
 

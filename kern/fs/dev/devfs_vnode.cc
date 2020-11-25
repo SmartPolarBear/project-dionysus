@@ -126,4 +126,10 @@ error_code file_system::dev_fs_node::stat(file_system::file_status& st)
 }
 
 
+error_code_with_result<file_system::vnode_base*> file_system::dev_fs_node::allocate_new(const char* name)
+{
+	return 0;
+}
+
+
 

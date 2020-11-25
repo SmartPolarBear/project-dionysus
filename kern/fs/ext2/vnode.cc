@@ -446,3 +446,8 @@ error_code_with_result<size_t> file_system::ext2_vnode::write(file_system::file_
 
 	return ERROR_SUCCESS;
 }
+
+error_code_with_result<file_system::vnode_base*> file_system::ext2_vnode::allocate_new(const char* name)
+{
+	return 0;
+}

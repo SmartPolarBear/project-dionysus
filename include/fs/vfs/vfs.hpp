@@ -416,6 +416,7 @@ namespace file_system
 		virtual error_code open(const file_object* fd, mode_type opt) = 0;
 		virtual error_code close(const file_object* fd) = 0;
 
+		virtual error_code_with_result<vnode_base*> allocate_new(const char* name) = 0;
 		virtual error_code create(const char* filename, uid_type uid, gid_type gid, size_t mode) = 0;
 		virtual error_code make_dir(const char* filename, uid_type uid, gid_type gid, size_t mode) = 0;
 		virtual error_code truncate(size_t size) = 0;
@@ -475,6 +476,7 @@ namespace file_system
 		error_code_with_result<size_t> read(file_object* fd, void* buf, size_t count) override;
 		error_code_with_result<size_t> write(file_object* fd, const void* buf, size_t count) override;
 
+		error_code_with_result<file_system::vnode_base*> allocate_new(const char* name) override;
 	};
 
 	constexpr size_t IOCTX_FLG_MASK_ACCESS_MODE = (3 << 0);

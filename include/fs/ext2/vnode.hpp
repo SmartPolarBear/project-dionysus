@@ -44,5 +44,7 @@ namespace file_system
 		[[nodiscard]]error_code read_link(char* buf, size_t lim) override;
 		[[nodiscard]]error_code_with_result<size_t> read(file_object* fd, void* buf, size_t count) override;
 		[[nodiscard]]error_code_with_result<size_t> write(file_object* fd, const void* buf, size_t count) override;
+
+		error_code_with_result<vnode_base*> allocate_new(const char* name) override;
 	};
 }
