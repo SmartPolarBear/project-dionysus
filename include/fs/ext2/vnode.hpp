@@ -37,7 +37,9 @@ namespace file_system
 		[[nodiscard]]error_code make_dir(const char* filename, uid_type uid, gid_type gid, size_t mode) override;
 		[[nodiscard]]error_code truncate(size_t size) override;
 		[[nodiscard]]error_code unlink(vnode_base* vn) override;
-		[[nodiscard]]error_code_with_result<offset_t> seek(file_object* fd, size_t offset, seek_methods whence) override;
+		[[nodiscard]]error_code_with_result<offset_t> seek(file_object* fd,
+			size_t offset,
+			seek_methods whence) override;
 		[[nodiscard]]error_code stat(file_status& st) override;
 		[[nodiscard]]error_code chmod(size_t mode) override;
 		[[nodiscard]]error_code chown(uid_type uid, gid_type gid) override;
@@ -45,6 +47,8 @@ namespace file_system
 		[[nodiscard]]error_code_with_result<size_t> read(file_object* fd, void* buf, size_t count) override;
 		[[nodiscard]]error_code_with_result<size_t> write(file_object* fd, const void* buf, size_t count) override;
 
-		error_code_with_result<vnode_base*> allocate_new(const char* name) override;
+		error_code_with_result<vnode_base*> allocate_new(const char* name, gid_type git,
+			uid_type uid,
+			mode_type mode) override;
 	};
 }

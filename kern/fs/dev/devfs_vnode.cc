@@ -125,8 +125,10 @@ error_code file_system::dev_fs_node::stat(file_system::file_status& st)
 	return ERROR_SUCCESS;
 }
 
-
-error_code_with_result<file_system::vnode_base*> file_system::dev_fs_node::allocate_new(const char* name)
+error_code_with_result<file_system::vnode_base*> file_system::dev_fs_node::allocate_new(const char* name,
+	gid_type gid,
+	uid_type uid,
+	mode_type mode)
 {
 	return 0;
 }

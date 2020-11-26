@@ -447,7 +447,21 @@ error_code_with_result<size_t> file_system::ext2_vnode::write(file_system::file_
 	return ERROR_SUCCESS;
 }
 
-error_code_with_result<file_system::vnode_base*> file_system::ext2_vnode::allocate_new(const char* name)
+error_code_with_result<file_system::vnode_base*> file_system::ext2_vnode::allocate_new(const char* name,
+	gid_type gid,
+	uid_type uid,
+	mode_type mode)
 {
-	return 0;
+	ext2_vnode* ret = new ext2_vnode{ type, name };
+
+	if (ret == nullptr)
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
+
+	ret->mode = mode;
+	ret->uid = uid;
+	ret->gid = gid;
+
+	return ret;
 }

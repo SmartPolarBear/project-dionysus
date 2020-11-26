@@ -1123,7 +1123,7 @@ error_code_with_result<vnode_base*> vfs_io_context::make_node(const char* path, 
 		return -ERROR_INVALID;
 	}
 
-	auto new_node_ret = vnode->allocate_new(file_name);
+	auto new_node_ret = vnode->allocate_new(file_name, gid, uid, mode & ~mode_mask);
 	if (has_error(new_node_ret))
 	{
 		return get_error_code(new_node_ret);
@@ -1131,9 +1131,7 @@ error_code_with_result<vnode_base*> vfs_io_context::make_node(const char* path, 
 
 	auto new_node = get_result(new_node_ret);
 
-
-
-	return error_code_with_result<vnode_base*>();
+	return new_node;
 }
 
 error_code vfs_io_context::change_mode(const char* path, mode_type mode)
