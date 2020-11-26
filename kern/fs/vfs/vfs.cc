@@ -14,6 +14,13 @@ using namespace std;
 
 using namespace file_system;
 
+vnode_base* vfs_root = nullptr;
+
+error_code fs_class_base::register_this()
+{
+	return fs_register(this);
+}
+
 static constexpr size_t get_open_mode(size_t opt)
 {
 	size_t r = 0;
@@ -73,13 +80,6 @@ error_code_with_result<const char*> vfs_io_context::separate_parent_name(const c
 		path[sep - full_path] = '\0';
 		return full_path + 1;
 	}
-}
-
-vnode_base* vfs_root = nullptr;
-
-error_code fs_class_base::register_this()
-{
-	return fs_register(this);
 }
 
 error_code file_system::vfs_init()
@@ -1123,7 +1123,7 @@ error_code_with_result<vnode_base*> vfs_io_context::make_node(const char* path, 
 		return -ERROR_INVALID;
 	}
 
-	auto new_node_ret = vnode->allocate_new(file_name, gid, uid, mode & ~mode_mask);
+	auto new_node_ret = vnode->allocate_new(file_name, gid, uid, mode & VFS_MODE_MASK & ~mode_mask);
 	if (has_error(new_node_ret))
 	{
 		return get_error_code(new_node_ret);
@@ -1136,7 +1136,39 @@ error_code_with_result<vnode_base*> vfs_io_context::make_node(const char* path, 
 
 error_code vfs_io_context::change_mode(const char* path, mode_type mode)
 {
-	return 0;
+	if (path == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	mode &= VFS_MODE_MASK;
+
+	auto find_ret = find(cwd_vnode, path, true);
+	if (has_error(find_ret))
+	{
+		return get_error_code(find_ret);
+	}
+
+	auto node = get_result(find_ret);
+
+	if (node->get_type() == vnode_types::VNT_LNK)
+	{
+		return -ERROR_INVALID;
+	}
+
+	if (uid != UID_ROOT && uid != node->get_uid())
+	{
+		return -ERROR_ACCESS;
+	}
+
+	// TODO: the vnodes should have different implementation from the template
+	auto err = node->chmod(mode);
+	if (err != ERROR_SUCCESS)
+	{
+		return err;
+	}
+
+	return ERROR_SUCCESS;
 }
 
 error_code vfs_io_context::chown(const char* path, uid_type uid, gid_type gid)
@@ -1146,7 +1178,20 @@ error_code vfs_io_context::chown(const char* path, uid_type uid, gid_type gid)
 
 error_code vfs_io_context::ioctl(file_object* fd, size_t cmd, void* arg)
 {
-	return 0;
+	if (fd == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	// TODO: socket check
+
+	auto vnode = fd->vnode;
+	if (vnode == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	return vnode->get_dev()->ioctl(cmd, arg);
 }
 
 error_code vfs_io_context::file_truncate(vnode_base* node, size_t length)

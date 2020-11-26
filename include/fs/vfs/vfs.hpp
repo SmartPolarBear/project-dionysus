@@ -403,6 +403,11 @@ namespace file_system
 			return inode_id;
 		}
 
+		[[nodiscard]]uid_type get_uid() const
+		{
+			return uid;
+		}
+
 	 public:
 
 		error_code attach(vnode_base* child);
@@ -480,7 +485,7 @@ namespace file_system
 		error_code_with_result<size_t> read(file_object* fd, void* buf, size_t count) override;
 		error_code_with_result<size_t> write(file_object* fd, const void* buf, size_t count) override;
 
-		error_code_with_result<file_system::vnode_base*> allocate_new(const char* name,gid_type git,
+		error_code_with_result<file_system::vnode_base*> allocate_new(const char* name, gid_type git,
 			uid_type uid,
 			mode_type mode) override;
 	};

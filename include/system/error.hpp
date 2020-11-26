@@ -42,6 +42,7 @@ enum error_code_values : error_code
 	ERROR_INVALID_ACCESS,
 	ERROR_SHOULD_NOT_REACH_HERE,
 	ERROR_TOO_MANY_CALLS,
+	ERROR_ACCESS
 };
 
 
