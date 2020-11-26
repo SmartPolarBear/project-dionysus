@@ -1238,7 +1238,50 @@ error_code vfs_io_context::access_node(vnode_base* vn, size_t mode)
 
 error_code_with_result<size_t> vfs_io_context::write(file_object* fd, const void* buf, size_t count)
 {
-	return error_code_with_result<size_t>();
+	//TODO: socket checking
+	if (fd == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	if (buf == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	if ((!(fd->flags & FO_FLAG_WRITABLE)))
+	{
+		return -ERROR_ACCESS;
+	}
+
+	if (fd->flags & FO_FLAG_DIRECTORY)
+	{
+		return -ERROR_IS_DIR;
+	}
+
+	auto node = fd->vnode;
+
+	if (node == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	switch (node->get_type())
+	{
+	case vnode_types::VNT_FIFO:
+	case vnode_types::VNT_REG:
+		return fd->vnode->write(fd, buf, count);
+		break;
+	case vnode_types::VNT_BLK:
+	case vnode_types::VNT_CHR:
+		return fd->vnode->get_dev()->write(buf, fd->pos, count);
+		break;
+	default:
+	case vnode_types::VNT_DIR:
+		return -ERROR_INVALID;
+	}
+
+	return -ERROR_SHOULD_NOT_REACH_HERE;
 }
 
 error_code_with_result<size_t> vfs_io_context::read(file_object* fd, void* buf, size_t count)
