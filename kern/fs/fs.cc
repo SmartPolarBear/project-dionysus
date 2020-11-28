@@ -35,26 +35,11 @@ struct fs_class_node
 };
 
 char testbuf[1024];
-static inline error_code kernel_io_context_init()
+static inline error_code test_read()
 {
-	auto dev_find_ret = device_find_first(DC_BLOCK, "sda1");
-	if (has_error(dev_find_ret))
-	{
-		return get_error_code(dev_find_ret);
-	}
-
-	auto vnode = get_result(dev_find_ret);
-
-	auto err = kernel_io_context->mount("/", vnode->get_dev(), FSC_EXT2, 0, nullptr);
-
-	if (err != ERROR_SUCCESS)
-	{
-		return err;
-	}
-
 	file_object ob;
 
-	err = kernel_io_context->open_at(&ob, nullptr, "hello", IOCTX_FLG_RDONLY, IOCTX_FLG_RDONLY);
+	auto err = kernel_io_context->open_at(&ob, nullptr, "hello", IOCTX_FLG_RDONLY, S_IFREG);
 	if (err != ERROR_SUCCESS)
 	{
 		return err;
@@ -76,6 +61,78 @@ static inline error_code kernel_io_context_init()
 		else kdebug::kdebug_log(" ");
 	}
 	kdebug::kdebug_log("\n");
+
+	return ERROR_SUCCESS;
+}
+
+static inline error_code test_rw()
+{
+	file_object ob;
+
+	auto err = kernel_io_context->open_at(&ob, nullptr, "test.txt", IOCTX_FLG_RDWR | IOCTX_FLG_CREATE, S_IFREG);
+	if (err != ERROR_SUCCESS)
+	{
+		return err;
+	}
+
+	memset(testbuf, 0, sizeof(testbuf));
+	strcpy(testbuf, "Miao miao miao miao miao!!!");
+
+	auto write_ret = kernel_io_context->write(&ob, testbuf, 1024);
+	if (has_error(write_ret))
+	{
+		return get_error_code(write_ret);
+	}
+
+	memset(testbuf, 0, sizeof(testbuf));
+
+	auto read_ret = kernel_io_context->read(&ob, testbuf, 1024);
+	if (has_error(read_ret))
+	{
+		return get_error_code(read_ret);
+	}
+
+	auto size = get_result(read_ret);
+	kdebug::kdebug_log("Read size=%lld, first 128 byte:\n", size);
+	for (int i = 0; i < 128; i++)
+	{
+		kdebug::kdebug_log("%x", testbuf[i]);
+		if ((i + 1) % 24 == 0)kdebug::kdebug_log("\n");
+		else kdebug::kdebug_log(" ");
+	}
+	kdebug::kdebug_log("\n");
+
+	return ERROR_SUCCESS;
+}
+
+static inline error_code kernel_io_context_init()
+{
+	auto dev_find_ret = device_find_first(DC_BLOCK, "sda1");
+	if (has_error(dev_find_ret))
+	{
+		return get_error_code(dev_find_ret);
+	}
+
+	auto vnode = get_result(dev_find_ret);
+
+	auto err = kernel_io_context->mount("/", vnode->get_dev(), FSC_EXT2, 0, nullptr);
+
+	if (err != ERROR_SUCCESS)
+	{
+		return err;
+	}
+
+	err = test_read();
+	if (err != ERROR_SUCCESS)
+	{
+		return err;
+	}
+
+	err = test_rw();
+	if (err != ERROR_SUCCESS)
+	{
+		return err;
+	}
 
 	return ERROR_SUCCESS;
 }

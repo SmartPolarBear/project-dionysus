@@ -3,4 +3,4 @@
 	url = https://github.91chifun.workers.dev//https://github.com/mirror/newlib-cygwin.git
 [submodule "external/llvm-project/llvm-project"]
 	path = external/llvm-project/llvm-project
-	url = https://hub.fastgit.org/llvm/llvm-project.git
+	url = https://mirrors.tuna.tsinghua.edu.cn/git/llvm-project.git
