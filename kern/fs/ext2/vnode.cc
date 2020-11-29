@@ -128,6 +128,37 @@ error_code file_system::ext2_vnode::close(const file_system::file_object* fd)
 
 error_code file_system::ext2_vnode::create(const char* filename, uid_type uid, gid_type gid, size_t mode)
 {
+	auto inode = (ext2_inode*)this->fs;
+	if (inode == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	auto fs_ins = (fs_instance*)this->fs;
+	if (fs_ins == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	auto fs_data = (ext2_data*)fs_ins->private_data;
+	if (fs_data == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	auto find_ret = find(filename);
+	if (has_error(find_ret))
+	{
+		return -ERROR_NOT_EXIST;
+	}
+
+	if ((mode & 0xF000u) != EXT2_IFDIR)
+	{
+		return -ERROR_NOT_DIR;
+	}
+
+
+
 	return ERROR_SUCCESS;
 }
 error_code file_system::ext2_vnode::make_dir(const char* filename, uid_type uid, gid_type gid, size_t mode)
