@@ -157,8 +157,6 @@ error_code file_system::ext2_vnode::create(const char* filename, uid_type uid, g
 		return -ERROR_NOT_DIR;
 	}
 
-
-
 	return ERROR_SUCCESS;
 }
 error_code file_system::ext2_vnode::make_dir(const char* filename, uid_type uid, gid_type gid, size_t mode)
@@ -310,7 +308,12 @@ error_code_with_result<size_t> file_system::ext2_vnode::read(file_system::file_o
 		return -ERROR_EOF;
 	}
 
-	uint8_t* block_buf = new uint8_t[data->get_block_size()];
+	uint8_t* block_buf = new(std::nothrow) uint8_t[data->get_block_size()];
+	if (block_buf == nullptr)
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
+
 	for (size_t size = min(sz, full_size - fd->pos); size > 0;)
 	{
 		size_t block_off = fd->pos % data->get_block_size();
