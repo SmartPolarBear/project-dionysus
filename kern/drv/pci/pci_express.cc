@@ -116,7 +116,7 @@ static inline void pcie_enumerate_device(uintptr_t base_address,
 
 		if ((id & 0xFFFFu) != 0xFFFF)
 		{
-			auto dev = new pci_device
+			auto dev = new (std::nothrow)pci_device
 				{
 					.bus=bus,
 					.dev=dev_no,
@@ -124,6 +124,11 @@ static inline void pcie_enumerate_device(uintptr_t base_address,
 					.seg=seg,
 					.config=config
 				};
+
+			if(dev== nullptr)
+			{
+				//FIXME: error process
+			}
 
 			pcie_config_device(dev);
 		}

@@ -9,6 +9,7 @@
 #include "drivers/pci/pci.hpp"
 #include "drivers/pci/pci_device.hpp"
 #include "drivers/pci/pci_header.hpp"
+#include "drivers/pci/pci_header.hpp"
 #include "drivers/pci/pci_capability.hpp"
 #include "drivers/ahci/ahci.hpp"
 #include "drivers/ahci/ata/ata.hpp"
@@ -181,7 +182,7 @@ error_code ahci::ahci_port_send_command(ahci_port* port,
 
 error_code common_identify_device(ahci_port* port, bool atapi)
 {
-	uint16_t* identify_buf = new uint16_t[256];
+	uint16_t* identify_buf = new (std::nothrow)uint16_t[256];
 
 	char model_num[40] = {};
 	char serial_num[20] = {};

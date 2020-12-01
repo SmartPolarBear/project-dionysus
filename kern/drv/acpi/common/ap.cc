@@ -71,7 +71,7 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
 	{
 		if (core.present && core.id != local_apic::get_cpunum())
 		{
-			uint8_t* stack = new BLOCK<PAGE_SIZE>;
+			uint8_t* stack = new(std::nothrow)BLOCK<PAGE_SIZE>;
 
 			if (stack == nullptr)
 			{
@@ -91,7 +91,6 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
 	// after all cpu cores started, we can enable that damn lock.
 	cpu.set_lock(true);
 }
-
 
 extern "C" [[clang::optnone]] void ap_enter(void)
 {

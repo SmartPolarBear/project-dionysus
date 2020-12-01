@@ -95,14 +95,14 @@ static inline void make_idt_entry(idt_entry* gate, exception_type type, uintptr_
 
 PANIC void trap::init_trap()
 {
-	auto idt = reinterpret_cast<idt_entry*>(new BLOCK<IDT_SIZE>);
+	auto idt = reinterpret_cast<idt_entry*>(new (std::nothrow)BLOCK<IDT_SIZE>);
 	if (idt == nullptr)
 	{
 		KDEBUG_GENERALPANIC("Can't allocate memory for IDT.");
 	}
 	memset(idt, 0, IDT_SIZE);
 
-	auto desc = reinterpret_cast<idt_table_desc*>(new BLOCK<sizeof(idt_table_desc)>);
+	auto desc = reinterpret_cast<idt_table_desc*>(new (std::nothrow)BLOCK<sizeof(idt_table_desc)>);
 	if (desc == nullptr)
 	{
 		KDEBUG_GENERALPANIC("Can't allocate memory for IDT descriptor.");
