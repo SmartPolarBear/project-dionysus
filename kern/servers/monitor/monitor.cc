@@ -10,12 +10,12 @@ uintptr_t g_framebuffer_addr = 0;
 multiboot_tag_framebuffer* g_tag_framebuffer = nullptr;
 volatile uint16_t* g_framebuffer = nullptr;
 
-static inline constexpr uint16_t make_cga_color_attrib(uint8_t freground, uint8_t background)
+[[maybe_unused]]static inline constexpr uint16_t make_cga_color_attrib(uint8_t foreground, uint8_t background)
 {
-	return (background << 4) | (freground & 0x0F);
+	return (background << 4) | (foreground & 0x0F);
 }
 
-static inline constexpr uint16_t make_cga_char(char content, uint16_t attr)
+[[maybe_unused]]static inline constexpr uint16_t make_cga_char(char content, uint16_t attr)
 {
 	uint16_t ret = content | (attr << 8);
 	return ret;
