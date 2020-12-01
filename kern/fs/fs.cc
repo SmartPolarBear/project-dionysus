@@ -13,7 +13,7 @@
 #include "drivers/pci/pci_capability.hpp"
 #include "drivers/ahci/ahci.hpp"
 
-#include "libkernel/console/builtin_text_io.hpp"
+#include "../libs/basic_io/include/builtin_text_io.hpp"
 
 using namespace libkernel;
 using namespace file_system;

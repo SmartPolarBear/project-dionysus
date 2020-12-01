@@ -11,7 +11,7 @@
 #include "system/multiboot.h"
 #include "system/pmm.h"
 
-#include "libkernel/console/builtin_text_io.hpp"
+#include "../../libs/basic_io/include/builtin_text_io.hpp"
 
 console::console_dev g_monitor_dev{};
 process::process_dispatcher* g_monitor_proc = nullptr;

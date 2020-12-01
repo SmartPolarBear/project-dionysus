@@ -14,7 +14,7 @@
 #include "drivers/ahci/ata/ata_string.hpp"
 #include "drivers/ahci/atapi/atapi.hpp"
 
-#include "libkernel/console/builtin_text_io.hpp"
+#include "../../../libs/basic_io/include/builtin_text_io.hpp"
 
 #include <cstring>
 #include <cmath>

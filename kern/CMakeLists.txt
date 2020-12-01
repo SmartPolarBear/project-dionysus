@@ -8,7 +8,7 @@ add_executable(kernel
         ${CMAKE_CURRENT_SOURCE_DIR}/drv/apic/vectors.S
         ${CMAKE_CURRENT_SOURCE_DIR}/proc/syscall/syscall_entry.S
         ${CMAKE_CURRENT_SOURCE_DIR}/proc/process/process_run.S
-        ${CMAKE_CURRENT_SOURCE_DIR}/proc/process/context_switch.S ../include/data/basic_containers.hpp ../include/drivers/lock/lockable.hpp drv/lock/spinlock_lockable.cc ../include/data/container_adapters.hpp ../include/data/list_base.hpp libs/kernel/cxxsupport/operator_delete.cc)
+        ${CMAKE_CURRENT_SOURCE_DIR}/proc/process/context_switch.S ../include/data/basic_containers.hpp ../include/drivers/lock/lockable.hpp drv/lock/spinlock_lockable.cc ../include/data/container_adapters.hpp ../include/data/list_base.hpp libs/cxxrt_support/operator_delete.cc)
 
 
 add_dependencies(kernel vectors_S)

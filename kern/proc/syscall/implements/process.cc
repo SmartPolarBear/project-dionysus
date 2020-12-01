@@ -11,7 +11,7 @@
 #include "arch/amd64/msr.h"
 #include "arch/amd64/regs.h"
 
-#include "libkernel/console/builtin_text_io.hpp"
+#include "../../../libs/basic_io/include/builtin_text_io.hpp"
 
 // take the following argument:
 //  1. exit code, the value of which is error_codes

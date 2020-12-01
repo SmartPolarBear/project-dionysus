@@ -12,7 +12,7 @@
 #include "arch/amd64/msr.h"
 #include "arch/amd64/regs.h"
 
-#include "libkernel/console/builtin_text_io.hpp"
+#include "../../libs/basic_io/include/builtin_text_io.hpp"
 
 using namespace syscall;
 

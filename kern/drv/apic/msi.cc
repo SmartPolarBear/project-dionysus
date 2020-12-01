@@ -16,7 +16,7 @@
 #include "system/vmm.h"
 #include "system/process.h"
 
-#include "libkernel/console/builtin_text_io.hpp"
+#include "../../libs/basic_io/include/builtin_text_io.hpp"
 #include <cstring>
 
 error_code msi_base_trap_handle([[maybe_unused]]trap::trap_frame tf)

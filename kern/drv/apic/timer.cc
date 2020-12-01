@@ -14,7 +14,7 @@
 #include "drivers/lock/spinlock.h"
 #include "drivers/acpi/cpu.h"
 
-#include "libkernel/console/builtin_text_io.hpp"
+#include "../../libs/basic_io/include/builtin_text_io.hpp"
 
 using local_apic::TDCR;
 using local_apic::TIC_DEFUALT_VALUE;

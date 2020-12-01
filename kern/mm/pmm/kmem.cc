@@ -26,7 +26,7 @@
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"
 
-#include "libkernel/maths/maths.hpp"
+#include "../../libs/basic_io/include/maths.hpp"
 
 #include <cstring>
 

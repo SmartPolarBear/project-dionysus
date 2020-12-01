@@ -15,7 +15,7 @@
 #include "fs/device/device.hpp"
 #include "fs/ext2/ext2.hpp"
 
-#include "libkernel/console/builtin_text_io.hpp"
+#include "../../libs/basic_io/include/builtin_text_io.hpp"
 
 #include <cstring>
 #include <cmath>

@@ -8,7 +8,7 @@
 #include "drivers/pci/pci_header.hpp"
 #include "drivers/pci/pci_capability.hpp"
 
-#include "libkernel/console/builtin_text_io.hpp"
+#include "../../libs/basic_io/include/builtin_text_io.hpp"
 
 #include <utility>
 

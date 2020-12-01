@@ -17,7 +17,7 @@
 #include "drivers/lock/spinlock.h"
 
 #include "data/pod_list.h"
-#include "libkernel/console/builtin_text_io.hpp"
+#include "../../libs/basic_io/include/builtin_text_io.hpp"
 
 using libkernel::list_add;
 using libkernel::list_empty;
