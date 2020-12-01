@@ -1,5 +1,6 @@
 #include "include/inode.hpp"
 #include "include/block.hpp"
+#include "include/directory.hpp"
 
 #include "fs/fs.hpp"
 #include "fs/vfs/vfs.hpp"
@@ -180,7 +181,11 @@ error_code file_system::ext2_vnode::create(const char* filename, uid_type uid, g
 
 	new_inode->hard_link_count = 1;
 
-	
+	auto insert_ret = ext2_directory_inode_insert(fs_ins, inode_id, at_inode, filename, inode_id, vnode_types::VNT_REG);
+	if (insert_ret != ERROR_SUCCESS)
+	{
+		return insert_ret;
+	}
 
 	auto write_ret = ext2_inode_write(fs_ins, this->inode_id, new_inode);
 	if (write_ret != ERROR_SUCCESS)
