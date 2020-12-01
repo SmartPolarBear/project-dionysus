@@ -167,10 +167,20 @@ error_code process::create_process(IN const char* name,
 		return -ERROR_TOO_MANY_PROC;
 	}
 
-	auto proc = new (std::nothrow)process_dispatcher(name, alloc_pid(), cur_proc == nullptr ? 0 : cur_proc->id, flags);
+	auto proc = new(std::nothrow)process_dispatcher(name, alloc_pid(), cur_proc == nullptr ? 0 : cur_proc->id, flags);
+	if (proc == nullptr)
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
 
 	//setup kernel stack
-	proc->kstack = (uintptr_t)new (std::nothrow)BLOCK<process::process_dispatcher::KERNSTACK_SIZE>;
+	auto stack_block=new(std::nothrow)BLOCK<process::process_dispatcher::KERNSTACK_SIZE>;
+	if (stack_block == nullptr)
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
+	proc->kstack = (uintptr_t)stack_block;
+
 
 	// setup initial kernel stack
 	uintptr_t sp = proc->kstack + process::process_dispatcher::KERNSTACK_SIZE;

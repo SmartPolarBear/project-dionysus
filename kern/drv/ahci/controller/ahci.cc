@@ -37,7 +37,7 @@ using namespace file_system;
 using std::min;
 using std::max;
 
- //FIXME: check the return value of new (std::nothrow)
+//FIXME: check the return value of new (std::nothrow)
 
 struct pci_achi_devices_struct
 {
@@ -164,7 +164,11 @@ static inline error_code ahci_port_add([[maybe_unused]]ahci_controller* ctl, ahc
 	{
 	case ahci::DEVICE_SATA:
 		subclass = DBT_SDx;
-		blk_dev = new (std::nothrow)ata_block_device(port);
+		blk_dev = new(std::nothrow)ata_block_device(port);
+		if (blk_dev == nullptr)
+		{
+			return -ERROR_MEMORY_ALLOC;
+		}
 		break;
 	case ahci::DEVICE_SATAPI:
 		subclass = DBT_CDx;
@@ -276,6 +280,7 @@ static inline error_code ahci_initialize_controller(ahci_controller* ctl)
 	return ret;
 }
 
+// TODO: better error process
 error_code ahci::ahci_init()
 {
 	auto find_pred = [](const pci_device* dev)
@@ -293,7 +298,12 @@ error_code ahci::ahci_init()
 
 	size_t count = pcie_find_devices(find_pred, 0, nullptr);
 
-	auto devs = new (std::nothrow)pci_device[count];
+	auto devs = new(std::nothrow)pci_device[count];
+	if (devs == nullptr)
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
+
 	pcie_find_devices(find_pred, count, devs);
 
 	for (size_t i = 0; i < count; i++)
@@ -301,19 +311,26 @@ error_code ahci::ahci_init()
 		ahci_abar* abar = devs[i].read_dword_as<ahci_abar*>(PCIE_T0_HEADER_OFFSET_BAR(5));
 		if (abar->res_type_indicator == 0)
 		{
-			ahci_controller* ahci = new (std::nothrow)ahci_controller
+			ahci_controller* ahci = new(std::nothrow)ahci_controller
 				{
 					.pci_dev=&devs[i],
 					.regs=(uint8_t*)P2V(devs[i].read_dword(PCIE_T0_HEADER_OFFSET_BAR(5)))
 				};
 
-			if (ahci_initialize_controller(ahci) == ERROR_SUCCESS)
+			if (ahci == nullptr)
+			{
+				kdebug::kdebug_warning("ahci_init: memory alloc error.\n");
+			}
+
+			auto err = ahci_initialize_controller(ahci);
+			if (err == ERROR_SUCCESS)
 			{
 				ahci_devs.add(ahci);
 			}
 			else
 			{
 				delete ahci;
+				kdebug::kdebug_warning("ahci_init: memory alloc error.\n");
 			}
 		}
 	}

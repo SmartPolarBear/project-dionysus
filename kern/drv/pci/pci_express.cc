@@ -116,7 +116,7 @@ static inline void pcie_enumerate_device(uintptr_t base_address,
 
 		if ((id & 0xFFFFu) != 0xFFFF)
 		{
-			auto dev = new (std::nothrow)pci_device
+			auto dev = new(std::nothrow)pci_device
 				{
 					.bus=bus,
 					.dev=dev_no,
@@ -125,9 +125,10 @@ static inline void pcie_enumerate_device(uintptr_t base_address,
 					.config=config
 				};
 
-			if(dev== nullptr)
+			if (dev == nullptr)
 			{
-				//FIXME: error process
+				//TODO: better error process. may need API design update
+				kdebug::kdebug_warning("pcie_enumerate_device memory allocate error\n");
 			}
 
 			pcie_config_device(dev);
