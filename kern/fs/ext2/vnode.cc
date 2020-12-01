@@ -128,8 +128,8 @@ error_code file_system::ext2_vnode::close(const file_system::file_object* fd)
 
 error_code file_system::ext2_vnode::create(const char* filename, uid_type uid, gid_type gid, size_t mode)
 {
-	auto inode = (ext2_inode*)this->fs;
-	if (inode == nullptr)
+	auto at_inode = (ext2_inode*)this->fs;
+	if (at_inode == nullptr)
 	{
 		return -ERROR_INVALID;
 	}
@@ -155,6 +155,37 @@ error_code file_system::ext2_vnode::create(const char* filename, uid_type uid, g
 	if ((mode & 0xF000u) != EXT2_IFDIR)
 	{
 		return -ERROR_NOT_DIR;
+	}
+
+	auto alloc_inode_ret = fs_data->create_new_inode();
+	if (has_error(alloc_inode_ret))
+	{
+		return get_error_code(alloc_inode_ret);
+	}
+	ext2_inode* new_inode = get_result(alloc_inode_ret);
+
+	auto alloc_ret = ext2_inode_alloc(fs_ins, false);
+	if (has_error(alloc_ret))
+	{
+		return get_error_code(alloc_ret);
+	}
+	auto inode_id = get_result(alloc_ret);
+
+	new_inode->mtime = new_inode->ctime = new_inode->atime = cmos::cmos_read_rtc_timestamp();
+
+	new_inode->uid = uid;
+	new_inode->gid = gid;
+	new_inode->flags = mode & 0xFFF;
+	new_inode->type = EXT2_IFREG;
+
+	new_inode->hard_link_count = 1;
+
+	
+
+	auto write_ret = ext2_inode_write(fs_ins, this->inode_id, new_inode);
+	if (write_ret != ERROR_SUCCESS)
+	{
+		return write_ret;
 	}
 
 	return ERROR_SUCCESS;
@@ -486,7 +517,7 @@ error_code_with_result<file_system::vnode_base*> file_system::ext2_vnode::alloca
 	uid_type uid,
 	mode_type mode)
 {
-	ext2_vnode* ret = new (std::nothrow) ext2_vnode{ type, name };
+	ext2_vnode* ret = new(std::nothrow) ext2_vnode{ type, name };
 
 	if (ret == nullptr)
 	{
