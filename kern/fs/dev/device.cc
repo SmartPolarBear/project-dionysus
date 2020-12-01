@@ -137,7 +137,7 @@ error_code file_system::device_add(device_class_id cls, size_t subcls, device_cl
 //	auto wrapper = reinterpret_cast<vnode_base_node*>(kmem_cache_alloc(vnode_base_node_cache));
 //
 //	wrapper->vnode = node;
-//	libkernel::list_add(&wrapper->link, &devfs_root->child_head);
+//	kernel::list_add(&wrapper->link, &devfs_root->child_head);
 	devfs_root->attach(node);
 
 	if (dev.features & DFE_HAS_PARTITIONS)
