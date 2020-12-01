@@ -41,7 +41,7 @@ error_code_with_result<file_system::vnode_base*> file_system::ext2_vnode::find(c
 
 	size_t block_size = data->get_block_size();
 
-	uint8_t* block_buf = new uint8_t[block_size];
+	uint8_t* block_buf = new(std::nothrow)  uint8_t[block_size];
 
 	size_t block_off = 0;
 	size_t dir_block_count = EXT2_INODE_SIZE(inode) / block_size;
@@ -79,7 +79,7 @@ error_code_with_result<file_system::vnode_base*> file_system::ext2_vnode::find(c
 						return err;
 					}
 
-					ext2_vnode* vnode = new ext2_vnode(ext2_fs, vnode_types::VNT_DIR, name);
+					ext2_vnode* vnode = new(std::nothrow)  ext2_vnode(ext2_fs, vnode_types::VNT_DIR, name);
 					if (vnode == nullptr)
 					{
 						delete[] block_buf;
@@ -391,7 +391,7 @@ error_code_with_result<size_t> file_system::ext2_vnode::write(file_system::file_
 		return err;
 	}
 
-	uint8_t* block_buf = new uint8_t[1024];
+	uint8_t* block_buf = new(std::nothrow)uint8_t[1024];
 
 	for (offset = 0; sz;)
 	{
@@ -486,7 +486,7 @@ error_code_with_result<file_system::vnode_base*> file_system::ext2_vnode::alloca
 	uid_type uid,
 	mode_type mode)
 {
-	ext2_vnode* ret = new ext2_vnode{ type, name };
+	ext2_vnode* ret = new (std::nothrow) ext2_vnode{ type, name };
 
 	if (ret == nullptr)
 	{

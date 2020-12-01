@@ -179,7 +179,7 @@ error_code_with_result<fs_instance*> file_system::fs_create(fs_class_base* fs_cl
 	size_t flags,
 	const char* data)
 {
-	fs_instance* fs_ins = new fs_instance;
+	fs_instance* fs_ins = new (std::nothrow) fs_instance;
 	if (fs_ins == nullptr)
 	{
 		return -ERROR_MEMORY_ALLOC;
@@ -212,7 +212,7 @@ error_code file_system::fs_register(fs_class_base* fscls)
 		return -ERROR_REWRITE;
 	}
 
-	fs_class_node* node = new fs_class_node
+	fs_class_node* node = new (std::nothrow) fs_class_node
 		{
 			.fs_class=fscls,
 		};

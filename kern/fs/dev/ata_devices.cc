@@ -39,7 +39,7 @@ error_code file_system::partition_add_device(file_system::vnode_base& parent,
 	namebuf[parent_name_len++] = '0' + static_cast<uint8_t>(disk_idx);
 	namebuf[parent_name_len++] = '\0';
 
-	auto* dev = new file_system::ata_partition_device((ata_block_device*)(parent.dev), lba, size);
+	auto* dev = new (std::nothrow)file_system::ata_partition_device((ata_block_device*)(parent.dev), lba, size);
 
 	device_add(DC_BLOCK, DBT_PARTITION, *dev, namebuf);
 
@@ -52,7 +52,7 @@ error_code file_system::ata_block_device::enumerate_partitions(file_system::vnod
 
 
 	// 1024 bytes should contain both MBR and GPT
-	uint8_t* head_data = new uint8_t[1024];
+	uint8_t* head_data = new (std::nothrow)uint8_t[1024];
 	memset(head_data, 0, HEAD_DATA_SIZE);
 
 	auto read_ret = this->read(head_data, 0, HEAD_DATA_SIZE);
@@ -267,7 +267,7 @@ file_system::ata_partition_device::ata_partition_device(file_system::ata_block_d
 	logical_block_address lba,
 	size_t sz)
 {
-	partition_data* data = new partition_data;
+	partition_data* data = new (std::nothrow)partition_data;
 
 	data->parent_dev = parent;
 	data->lba_start = lba;

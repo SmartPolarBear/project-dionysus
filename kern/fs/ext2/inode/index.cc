@@ -32,7 +32,7 @@ error_code_with_result<uint32_t> ext2_inode_get_index(file_system::fs_instance* 
 
 	auto addr_count = ADDR_COUNT_PER_BLOCK(data->get_block_size());
 
-	block_address_type* addrs = new block_address_type[addr_count];
+	block_address_type* addrs = new (std::nothrow)block_address_type[addr_count];
 
 	if (index < EXT2_DIRECT_BLOCK_COUNT + addr_count)
 	{
@@ -85,7 +85,7 @@ error_code ext2_inode_set_index(file_system::fs_instance* fs,
 	}
 
 	auto addr_count = ADDR_COUNT_PER_BLOCK(data->get_block_size());
-	block_address_type* addrs = new block_address_type[addr_count];
+	block_address_type* addrs = new (std::nothrow)block_address_type[addr_count];
 
 	if (index < EXT2_DIRECT_BLOCK_COUNT)
 	{

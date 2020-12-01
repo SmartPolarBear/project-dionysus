@@ -84,7 +84,7 @@ error_code ext2_data::initialize(fs_instance* fs)
 	}
 
 	// allocate root
-	auto root_vnode = new ext2_vnode{ fs, vnode_types::VNT_DIR, nullptr };
+	auto root_vnode = new (std::nothrow) ext2_vnode{ fs, vnode_types::VNT_DIR, nullptr };
 	root = root_vnode;
 	if (root == nullptr)
 	{
@@ -175,7 +175,7 @@ error_code file_system::ext2_fs_class::initialize(fs_instance* fs, [[maybe_unuse
 {
 	ext2_data* ext2data = nullptr;
 
-	fs->private_data = this->data = ext2data = new ext2_data{};
+	fs->private_data = this->data = ext2data = new (std::nothrow) ext2_data{};
 
 	if (fs->private_data == nullptr)
 	{
