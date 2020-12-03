@@ -212,7 +212,7 @@ namespace file_system
 	{
 		return has_type_indicator
 			   ? dirent->name_length_low
-			   : ((((size_t)dirent->name_length_high) << 32ull) | ((size_t)dirent->name_length_low));
+			   : ((((size_t)dirent->name_length_high) << 8ull) | ((size_t)dirent->name_length_low));
 	}
 
 	static inline constexpr size_t EXT2_INODE_SIZE(const ext2_inode* inode)

@@ -42,6 +42,7 @@ error_code ext2_directory_inode_insert(file_system::fs_instance* fs,
 		if (read_ret != ERROR_SUCCESS)
 		{
 			delete[] buf;
+			return read_ret;
 		}
 
 		size_t offset = 0;
@@ -53,7 +54,7 @@ error_code ext2_directory_inode_insert(file_system::fs_instance* fs,
 			if (ent->ino)
 			{
 				auto name_len =
-					EXT2_DIRENT_NAME_LEN(ent, !(data->get_superblock().required_features & SBRF_DIRENT_TYPE_FIELD));
+					EXT2_DIRENT_NAME_LEN(ent, (data->get_superblock().required_features & SBRF_DIRENT_TYPE_FIELD));
 
 				size_prev += roundup<size_t>(name_len, 4ul);
 			}
@@ -109,7 +110,7 @@ error_code ext2_directory_inode_insert(file_system::fs_instance* fs,
 
 	strncpy(ret->name,
 		name,
-		EXT2_DIRENT_NAME_LEN(ret, !(data->get_superblock().required_features & SBRF_DIRENT_TYPE_FIELD))
+		EXT2_DIRENT_NAME_LEN(ret, (data->get_superblock().required_features & SBRF_DIRENT_TYPE_FIELD))
 	);
 
 	// set the type indicator
@@ -132,7 +133,7 @@ error_code ext2_directory_inode_insert(file_system::fs_instance* fs,
 	if (write_ret != ERROR_SUCCESS)
 	{
 		delete[] buf;
-		return ERROR_SUCCESS;
+		return write_ret;
 	}
 
 	if (writeback_need)
@@ -141,7 +142,7 @@ error_code ext2_directory_inode_insert(file_system::fs_instance* fs,
 		if (write_ret != ERROR_SUCCESS)
 		{
 			delete[] buf;
-			return ERROR_SUCCESS;
+			return write_ret;
 		}
 	}
 
@@ -182,7 +183,7 @@ error_code ext2_directory_inode_remove(file_system::fs_instance* fs,
 
 				if (strncmp(ent->name,
 					vn->get_name(),
-					EXT2_DIRENT_NAME_LEN(ent, !(data->get_superblock().required_features & SBRF_DIRENT_TYPE_FIELD)))
+					EXT2_DIRENT_NAME_LEN(ent, (data->get_superblock().required_features & SBRF_DIRENT_TYPE_FIELD)))
 					!= 0)
 				{
 					delete[] buf;

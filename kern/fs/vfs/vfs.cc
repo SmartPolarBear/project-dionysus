@@ -850,7 +850,6 @@ error_code vfs_io_context::open_at(file_object* fd, vnode_base* at, const char* 
 				return -ERROR_INVALID;
 			}
 
-
 			// try creating
 			auto create_ret = this->create_at(at, path, mode);
 			if (create_ret != ERROR_SUCCESS)
