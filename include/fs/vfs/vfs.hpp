@@ -23,14 +23,18 @@ namespace file_system
 
 	enum class vnode_types : uint64_t
 	{
+		// same as ext2 directory entry type definition
+		VNT_UNKNOWN,
 		VNT_REG,
 		VNT_DIR,
-		VNT_BLK,
 		VNT_CHR,
-		VNT_LNK,
+		VNT_BLK,
 		VNT_FIFO,
+		VNT_SOCKET,
+		VNT_LNK,
 		VNT_SOCK,
-		VNT_UNK,
+
+		// extended
 		VNT_MNT,
 	};
 

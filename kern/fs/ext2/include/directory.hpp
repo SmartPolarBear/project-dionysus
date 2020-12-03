@@ -14,6 +14,5 @@
 	file_system::vnode_types type
 );
 [[nodiscard]]error_code ext2_directory_inode_remove(file_system::fs_instance* fs,
-	file_system::ext2_ino_type at_ino,
 	IN file_system::ext2_inode* at_inode,
 	IN file_system::vnode_base* vn);

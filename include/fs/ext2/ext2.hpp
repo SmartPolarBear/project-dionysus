@@ -77,6 +77,31 @@ namespace file_system
 		EXT2_SYSID_LITES = 4,
 	};
 
+	enum ext2_superblock_required_feature_flags
+	{
+		SBRF_COMPRESSION = 0x0001,
+		SBRF_DIRENT_TYPE_FIELD = 0x002,
+		SBRF_NEED_REPLAY_JOURNAL = 0x004,
+		SBRF_USE_JOURNAL_DEVICE = 0x008
+	};
+
+	enum ext2_superblock_optional_feature_flags
+	{
+		SBOF_BLOCK_PREALLOCATE = 0x0001,
+		SBOF_AFS_SERVER_INODE = 0x0002,
+		SBOF_JOURNAL = 0x0004,
+		SBOF_INODE_EXTENDED_ATTRIBUTES = 0x0008,
+		SBOF_SELF_RESIZE_FOR_LARGER_PART = 0x0010,
+		SBOF_DIR_USE_HASH_INDEX = 0x0020,
+	};
+
+	enum ext2_superblock_write_required_feature_flags
+	{
+		SBROF_SPARSE_SB_GDT = 0x0001,
+		SBROF_64BIT_FILE_SIZE = 0x0002,
+		SBROF_DIR_CONTENT_USE_BINARY_TREE = 0x0004
+	};
+
 	struct ext2_superblock
 	{
 		// Base superblock
@@ -109,9 +134,11 @@ namespace file_system
 		uint32_t first_inode;
 		uint16_t inode_size;
 		uint16_t superblock_block_group;
+
 		uint32_t optional_features;
 		uint32_t required_features;
 		uint32_t write_required_features;
+
 		uint8_t filesystem_id[16];
 		uint8_t volume_name[16];
 		uint8_t last_mount_path[64];
@@ -180,6 +207,13 @@ namespace file_system
 		};
 		char name[0];
 	} __attribute__((packed));
+
+	static inline constexpr size_t EXT2_DIRENT_NAME_LEN(const ext2_directory_entry* dirent, bool has_type_indicator)
+	{
+		return has_type_indicator
+			   ? dirent->name_length_low
+			   : ((((size_t)dirent->name_length_high) << 32ull) | ((size_t)dirent->name_length_low));
+	}
 
 	static inline constexpr size_t EXT2_INODE_SIZE(const ext2_inode* inode)
 	{
@@ -275,7 +309,7 @@ namespace file_system
 		}
 
 		[[nodiscard]] error_code_with_result<ext2_inode*> create_new_inode();
-		void free_inode(ext2_inode *nd);
+		void free_inode(ext2_inode* nd);
 	 public:
 		ext2_data();
 		~ext2_data();
