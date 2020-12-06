@@ -36,18 +36,20 @@ error_code ext2_block_write(file_system::fs_instance* fs, const uint8_t* buf, si
 {
 	ext2_data* ext2data = reinterpret_cast<ext2_data*>(fs->private_data);
 
+	const size_t block_size = ext2data->get_block_size();
+
 	if (ext2data == nullptr)
 	{
 		return -ERROR_INVALID;
 	}
 
-	auto ret = fs->dev->write(buf, block_num * ext2data->get_block_size(), ext2data->get_block_size());
+	auto ret = fs->dev->write(buf, block_num * block_size, block_size);
 	if (has_error(ret))
 	{
 		return get_error_code(ret);
 	}
 
-	if (get_result(ret) != ext2data->get_block_size())
+	if (get_result(ret) != block_size)
 	{
 		return -ERROR_IO;
 	}
@@ -66,7 +68,7 @@ error_code_with_result<uint64_t> ext2_block_alloc(file_system::fs_instance* fs)
 
 	auto superblock = ext2data->get_superblock();
 
-	uint64_t* bitmap_buf = new (std::nothrow)uint64_t[ext2data->get_block_size() / sizeof(uint64_t)];
+	uint64_t* bitmap_buf = new(std::nothrow)uint64_t[ext2data->get_block_size() / sizeof(uint64_t)];
 
 	error_code ret = ERROR_SUCCESS;
 
@@ -148,7 +150,7 @@ error_code ext2_block_free(file_system::fs_instance* fs, uint32_t block)
 
 	auto superblock = ext2data->get_superblock();
 
-	uint64_t* bitmap_buf = new (std::nothrow)uint64_t[ext2data->get_block_size() / sizeof(uint64_t)];
+	uint64_t* bitmap_buf = new(std::nothrow)uint64_t[ext2data->get_block_size() / sizeof(uint64_t)];
 
 	auto index = EXT2_BLOCK_INDEX_IN_BLOCK_GROUP(block, superblock.block_group_block_count);
 	auto group = EXT2_BLOCK_GET_BLOCK_GROUP(block, superblock.block_group_block_count);

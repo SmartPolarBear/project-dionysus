@@ -24,8 +24,10 @@ error_code ext2_directory_inode_insert(file_system::fs_instance* fs,
 		return -ERROR_INVALID;
 	}
 
-	size_t entry_size = roundup(sizeof(ext2_directory_entry) + strlen(name), 4ul);
-	size_t block_count = EXT2_INODE_SIZE(at_inode) / data->get_block_size();
+	const size_t block_size = data->get_block_size();
+
+	size_t entry_size = sizeof(ext2_directory_entry) + roundup(strlen(name), 4ul);
+	size_t block_count = EXT2_INODE_SIZE(at_inode) / block_size;
 
 	auto buf = new(std::nothrow) uint8_t[data->get_block_size()];
 	if (buf == nullptr)
@@ -34,9 +36,9 @@ error_code ext2_directory_inode_insert(file_system::fs_instance* fs,
 	}
 
 	ext2_directory_entry* ret = nullptr;
-	size_t index = 0;
+	size_t index = SIZE_MAX;
 
-	for (size_t i = 0; i < block_count && ret == nullptr; i++)
+	for (size_t i = 0; i < block_count; i++)
 	{
 		auto read_ret = ext2_inode_read_block(fs, at_inode, buf, i);
 		if (read_ret != ERROR_SUCCESS)
@@ -46,9 +48,9 @@ error_code ext2_directory_inode_insert(file_system::fs_instance* fs,
 		}
 
 		size_t offset = 0;
-		while (offset < data->get_block_size())
+		while (offset < block_size)
 		{
-			ext2_directory_entry* ent = (ext2_directory_entry*)(buf + offset);
+			ext2_directory_entry* ent = (ext2_directory_entry*)(&buf[offset]);
 
 			size_t size_prev = sizeof(ext2_directory_entry);
 			if (ent->ino)
@@ -72,12 +74,19 @@ error_code ext2_directory_inode_insert(file_system::fs_instance* fs,
 
 				// allocate new entry
 				ret = reinterpret_cast<ext2_directory_entry*>(&buf[offset + ent->ent_size]);
+
 				ret->ent_size = free_space;
+
 				index = i;
 
 				break;
 			}
 			offset += ent->ent_size;
+		}
+
+		if (ret != nullptr)
+		{
+			break;
 		}
 	}
 
@@ -85,17 +94,18 @@ error_code ext2_directory_inode_insert(file_system::fs_instance* fs,
 	if (ret == nullptr)
 	{
 		// grow the directory
-		auto resize_ret = ext2_inode_resize(fs, at_inode, EXT2_INODE_SIZE(at_inode) + data->get_block_size());
+		auto resize_ret = ext2_inode_resize(fs, at_inode, EXT2_INODE_SIZE(at_inode) + block_size);
 		if (resize_ret != ERROR_SUCCESS)
 		{
 			delete[] buf;
 			return resize_ret;
 		}
 
-		memset(buf, 0, data->get_block_size());
+		memset(buf, 0, block_size);
 
 		ret = reinterpret_cast<ext2_directory_entry*>(buf);
-		ret->ent_size = data->get_block_size();
+		ret->ent_size = block_size;
+
 		index = block_count;
 	}
 
