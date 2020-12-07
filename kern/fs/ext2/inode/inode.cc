@@ -44,7 +44,7 @@ error_code ext2_inode_read(file_system::fs_instance* fs, ext2_ino_type inum, OUT
 		return -ERROR_INVALID;
 	}
 
-	uint8_t* block_buf = new (std::nothrow)uint8_t[data->get_block_size()];
+	uint8_t* block_buf = new(std::nothrow)uint8_t[data->get_block_size()];
 
 	auto ret = ext2_block_read(fs, block_buf, inode_block);
 
@@ -73,6 +73,9 @@ error_code ext2_inode_write(file_system::fs_instance* fs,
 		return -ERROR_INVALID;
 	}
 
+	const size_t block_size = data->get_inodes_per_block();
+	const size_t inode_size = data->get_inode_size();
+
 	auto superblock = data->get_superblock();
 
 	if (inum < EXT2_FIRST_INODE_NUMBER || inum >= superblock.inode_count)
@@ -88,22 +91,24 @@ error_code ext2_inode_write(file_system::fs_instance* fs,
 
 	auto offset_in_block = (inode_group_index % data->get_inodes_per_block()) * data->get_inode_size();
 
-	if (offset_in_block >= data->get_block_size())
+	if (offset_in_block >= block_size)
 	{
 		return -ERROR_INVALID;
 	}
 
-	uint8_t* block_buf = new (std::nothrow)uint8_t[data->get_block_size()];
+	uint8_t* block_buf = new(std::nothrow)uint8_t[block_size];
+	if (block_buf == nullptr)
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
 
-	auto ret = ext2_block_read(fs, block_buf, inode_block);
-
-	if (ret != ERROR_SUCCESS)
+	if (auto ret = ext2_block_read(fs, block_buf, inode_block);ret != ERROR_SUCCESS)
 	{
 		delete[] block_buf;
 		return ret;
 	}
 
-	memmove(block_buf + offset_in_block, inode, data->get_inode_size());
+	memmove(block_buf + offset_in_block, inode, inode_size);
 
 	return ext2_block_write(fs, block_buf, inode_block);
 }
@@ -117,7 +122,7 @@ error_code_with_result<uint32_t> ext2_inode_alloc(file_system::fs_instance* fs, 
 		return -ERROR_INVALID;
 	}
 
-	uint64_t* bitmap_buf = new (std::nothrow)uint64_t[data->get_block_size() / sizeof(uint64_t)];
+	uint64_t* bitmap_buf = new(std::nothrow)uint64_t[data->get_block_size() / sizeof(uint64_t)];
 
 	for (size_t i = 0; i < data->get_bgdt_entry_count(); i++)
 	{
@@ -195,7 +200,7 @@ error_code ext2_inode_free(file_system::fs_instance* fs, file_system::ext2_ino_t
 	}
 
 	ext2_superblock& superblock = data->get_superblock();
-	uint64_t* bitmap_buf = new (std::nothrow)uint64_t[data->get_block_size() / sizeof(uint64_t)];
+	uint64_t* bitmap_buf = new(std::nothrow)uint64_t[data->get_block_size() / sizeof(uint64_t)];
 
 	auto block = (ino - EXT2_FIRST_INODE_NUMBER) / superblock.block_group_inode_count;
 	auto index = (ino - EXT2_FIRST_INODE_NUMBER) % superblock.block_group_inode_count;
