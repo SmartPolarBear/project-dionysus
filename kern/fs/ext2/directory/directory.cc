@@ -157,7 +157,7 @@ error_code ext2_directory_inode_insert(file_system::fs_instance* fs,
 	}
 
 	delete[] buf;
-	return ERROR_SUCCESS;
+	return -ERROR_NOT_IMPL;
 }
 
 error_code ext2_directory_inode_remove(file_system::fs_instance* fs,

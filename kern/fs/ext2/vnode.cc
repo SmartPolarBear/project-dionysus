@@ -187,11 +187,11 @@ error_code file_system::ext2_vnode::create(const char* filename, uid_type uid, g
 		return insert_ret;
 	}
 
-	auto write_ret = ext2_inode_write(fs_ins, this->inode_id, new_inode);
-	if (write_ret != ERROR_SUCCESS)
-	{
-		return write_ret;
-	}
+//	auto write_ret = ext2_inode_write(fs_ins, this->inode_id, new_inode);
+//	if (write_ret != ERROR_SUCCESS)
+//	{
+//		return write_ret;
+//	}
 
 	return ERROR_SUCCESS;
 }
