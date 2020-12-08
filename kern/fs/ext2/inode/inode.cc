@@ -108,9 +108,17 @@ error_code ext2_inode_write(file_system::fs_instance* fs,
 		return ret;
 	}
 
-	memmove(block_buf + offset_in_block, inode, inode_size);
+	memcpy(block_buf + offset_in_block, inode, inode_size);
 
-	return ext2_block_write(fs, block_buf, inode_block);
+	if (auto ret = ext2_block_write(fs, block_buf, inode_block);ret != ERROR_SUCCESS)
+	{
+		delete[] block_buf;
+		return ret;
+
+	}
+
+	delete[] block_buf;
+	return ERROR_SUCCESS;
 }
 
 error_code_with_result<uint32_t> ext2_inode_alloc(file_system::fs_instance* fs, bool is_dir)

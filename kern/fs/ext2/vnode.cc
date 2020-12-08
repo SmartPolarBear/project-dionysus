@@ -170,7 +170,7 @@ error_code file_system::ext2_vnode::create(const char* filename, uid_type uid, g
 	{
 		return get_error_code(alloc_ret);
 	}
-	auto inode_id = get_result(alloc_ret);
+	auto new_inode_id = get_result(alloc_ret);
 
 	new_inode->mtime = new_inode->ctime = new_inode->atime = cmos::cmos_read_rtc_timestamp();
 
@@ -181,14 +181,14 @@ error_code file_system::ext2_vnode::create(const char* filename, uid_type uid, g
 
 	new_inode->hard_link_count = 1;
 
-	auto insert_ret = ext2_directory_inode_insert(fs_ins, inode_id, at_inode, filename, inode_id, vnode_types::VNT_REG);
-	if (insert_ret != ERROR_SUCCESS)
+	if (auto insert_ret =
+			ext2_directory_inode_insert(fs_ins, this->inode_id, at_inode, filename, new_inode_id, vnode_types::VNT_REG);
+		insert_ret != ERROR_SUCCESS)
 	{
 		return insert_ret;
 	}
 
-	auto write_ret = ext2_inode_write(fs_ins, this->inode_id, new_inode);
-	if (write_ret != ERROR_SUCCESS)
+	if (auto write_ret = ext2_inode_write(fs_ins, new_inode_id, new_inode);write_ret != ERROR_SUCCESS)
 	{
 		return write_ret;
 	}
