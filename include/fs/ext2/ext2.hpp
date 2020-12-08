@@ -37,22 +37,22 @@ namespace file_system
 
 	static inline constexpr size_t EXT2_INODE_GET_BLOCK_GROUP(ext2_ino_type ino, size_t block_group_inode_count)
 	{
-		return (ino ) / block_group_inode_count;
+		return (ino - EXT2_FIRST_INODE_NUMBER) / block_group_inode_count;
 	}
 
 	static inline constexpr size_t EXT2_INODE_INDEX_IN_BLOCK_GROUP(ext2_ino_type ino, size_t block_group_inode_count)
 	{
-		return (ino ) % block_group_inode_count;
+		return (ino - EXT2_FIRST_INODE_NUMBER) % block_group_inode_count;
 	}
 
 	static inline constexpr size_t EXT2_BLOCK_GET_BLOCK_GROUP(uint64_t blk, size_t block_group_blocks)
 	{
-		return (blk - 1) / block_group_blocks;
+		return (blk - EXT2_FIRST_INODE_NUMBER) / block_group_blocks;
 	}
 
 	static inline constexpr size_t EXT2_BLOCK_INDEX_IN_BLOCK_GROUP(uint64_t blk, size_t block_group_blocks)
 	{
-		return (blk - 1) % block_group_blocks;
+		return (blk - EXT2_FIRST_INODE_NUMBER) % block_group_blocks;
 	}
 
 	enum ext2_superblock_states
