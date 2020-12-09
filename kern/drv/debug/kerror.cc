@@ -23,7 +23,6 @@ const char* err_msg[] = {
 	[ERROR_NOT_IMPL]=    "not implemented",
 	[ERROR_LOCK_STATUS]= "lock is not at a right status",
 	[ERROR_UNSUPPORTED]= "unsupported features",
-
 	[ERROR_MEMORY_ALLOC]=          "insufficient memory",
 	[ERROR_REWRITE]=               "rewrite the data that shouldn't be done so",
 	[ERROR_VMA_NOT_FOUND]=         "can't find a VMA",
@@ -34,7 +33,21 @@ const char* err_msg[] = {
 	[ERROR_HAS_KILLED]=              "process to be killed has been killed",
 	[ERROR_BUSY]=              "device is busy",
 	[ERROR_DEV_TIMEOUT]=             "device operation time out",
-	[ERROR_IO]=              "IO error"
+	[ERROR_IO]=              "IO error",
+	[ERROR_OBSOLETE]="out of date",           // Out of date
+	[ERROR_OUT_OF_BOUND]="out of bound",
+	[ERROR_INTERNAL]="internal error",
+	[ERROR_IS_DIR]="operation can't be on a directory",
+	[ERROR_NOT_DIR]="operation must be on a directory",
+	[ERROR_DEV_NOT_FOUND]="device not found",
+	[ERROR_NO_ENTRY]="no such entry",
+	[ERROR_EOF]="end of file",
+	[ERROR_INVALID_ACCESS]="invalid access",
+	[ERROR_SHOULD_NOT_REACH_HERE]="should not reach here",
+	[ERROR_TOO_MANY_CALLS]="too many calls",
+	[ERROR_ACCESS]="access error",
+	[ERROR_NOT_EXIST]="object not exist",
+	[ERROR_ALREADY_EXIST]="object already exist"
 };
 
 const char* err_title[] = {
@@ -55,6 +68,20 @@ const char* err_title[] = {
 	[ERROR_BUSY]="ERROR_BUSY",
 	[ERROR_DEV_TIMEOUT]="ERROR_DEV_TIMEOUT",
 	[ERROR_IO]="ERROR_IO",
+	[ERROR_OBSOLETE]="ERROR_OBSOLETE",           // Out of date
+	[ERROR_OUT_OF_BOUND]="ERROR_OUT_OF_BOUND",
+	[ERROR_INTERNAL]="ERROR_INTERNAL",
+	[ERROR_IS_DIR]="ERROR_IS_DIR",
+	[ERROR_NOT_DIR]="ERROR_NOT_DIR",
+	[ERROR_DEV_NOT_FOUND]="ERROR_DEV_NOT_FOUND",
+	[ERROR_NO_ENTRY]="ERROR_NO_ENTRY",
+	[ERROR_EOF]="ERROR_EOF",
+	[ERROR_INVALID_ACCESS]="ERROR_INVALID_ACCESS",
+	[ERROR_SHOULD_NOT_REACH_HERE]="ERROR_SHOULD_NOT_REACH_HERE",
+	[ERROR_TOO_MANY_CALLS]="ERROR_TOO_MANY_CALLS",
+	[ERROR_ACCESS]="ERROR_ACCESS",
+	[ERROR_NOT_EXIST]="ERROR_NOT_EXIST",
+	[ERROR_ALREADY_EXIST]="ERROR_ALREADY_EXIST"
 };
 
 const char* kdebug::error_message(error_code code)
