@@ -109,7 +109,7 @@ error_code ext2_inode_write(file_system::fs_instance* fs,
 		return ret;
 	}
 
-	memcpy(offset_in_block + block_buf, inode, inode_size);
+	memmove(offset_in_block + block_buf, inode, inode_size);
 
 	if (auto ret = ext2_block_write(fs, block_buf, inode_block);ret != ERROR_SUCCESS)
 	{
@@ -144,6 +144,7 @@ error_code_with_result<uint32_t> ext2_inode_alloc(file_system::fs_instance* fs, 
 	for (size_t i = 0; i < bdgt_entry_count; i++)
 	{
 		auto bgd = &data->get_bgdt()[i];
+
 		if (bgd->free_inode_count == 0)
 		{
 			continue;
@@ -193,7 +194,6 @@ error_code_with_result<uint32_t> ext2_inode_alloc(file_system::fs_instance* fs, 
 				}
 
 				delete[] bitmap_buf;
-
 				return ino;
 			}
 

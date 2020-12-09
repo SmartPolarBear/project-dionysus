@@ -78,6 +78,9 @@ static inline error_code test_rw()
 	memset(testbuf, 0, sizeof(testbuf));
 	strcpy(testbuf, "Miao miao miao miao miao!!!");
 
+	kdebug::kdebug_log("Fuck!!!!!\n");
+
+	return -ERROR_INVALID;
 	auto write_ret = kernel_io_context->write(&ob, testbuf, 1024);
 	if (has_error(write_ret))
 	{
@@ -179,7 +182,7 @@ error_code_with_result<fs_instance*> file_system::fs_create(fs_class_base* fs_cl
 	size_t flags,
 	const char* data)
 {
-	fs_instance* fs_ins = new (std::nothrow) fs_instance;
+	fs_instance* fs_ins = new(std::nothrow) fs_instance;
 	if (fs_ins == nullptr)
 	{
 		return -ERROR_MEMORY_ALLOC;
@@ -212,7 +215,7 @@ error_code file_system::fs_register(fs_class_base* fscls)
 		return -ERROR_REWRITE;
 	}
 
-	fs_class_node* node = new (std::nothrow) fs_class_node
+	fs_class_node* node = new(std::nothrow) fs_class_node
 		{
 			.fs_class=fscls,
 		};
