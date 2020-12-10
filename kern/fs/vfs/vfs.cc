@@ -3,14 +3,14 @@
 
 #include "system/kmem.hpp"
 
-#include "data/container_adapters.hpp"
+#include "stack.hpp"
 
 #include <memory>
 #include <cstring>
 
 //FIXME: better process ERROR_UNSUPPORTED
 
-using namespace std;
+using namespace ktl;
 
 using namespace file_system;
 
@@ -469,7 +469,7 @@ error_code vfs_io_context::set_cwd(const char* path)
 
 error_code vfs_io_context::vnode_get_path(char* path, vnode_base* node)
 {
-	stl_stack<vnode_base*> backstack;
+	ktl_stack<vnode_base*> backstack;
 	if (node == nullptr || node->get_parent() == nullptr)
 	{
 		path[0] = '/';

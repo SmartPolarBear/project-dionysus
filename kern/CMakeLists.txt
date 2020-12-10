@@ -62,7 +62,7 @@ target_link_options(kernel
         PRIVATE -static
         PRIVATE -Wl,--build-id=none)
 
-add_dependencies(kernel libcxx_build libcxxabi_build newlib_build ktl)
+add_dependencies(kernel libcxx_build libcxxabi_build newlib_build)
 
 target_include_directories(kernel BEFORE
         PRIVATE "${CMAKE_BINARY_DIR}/external/third_party_root/include/sys"
@@ -73,7 +73,7 @@ target_include_directories(kernel BEFORE
 
 target_link_directories(kernel BEFORE PRIVATE ${CMAKE_BINARY_DIR}/external/third_party_root/lib)
 
-target_link_libraries(kernel arch_amd64 executable ktl c g m c++abi c++ c++experimental)
+target_link_libraries(kernel arch_amd64 executable c g m c++abi c++ c++experimental)
 
 set_target_properties(kernel PROPERTIES LINK_DEPENS "${CMAKE_SOURCE_DIR}/config/build/kernel.ld")
 set_target_properties(kernel PROPERTIES LINK_FLAGS "-Wl,-T ${CMAKE_SOURCE_DIR}/config/build/kernel.ld")

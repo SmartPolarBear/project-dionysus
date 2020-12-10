@@ -42,6 +42,7 @@
 // std::span is usable unconditionally
 #include <span>
 
+#include "vector.hpp"
 
 static inline void run(char* name)
 {
