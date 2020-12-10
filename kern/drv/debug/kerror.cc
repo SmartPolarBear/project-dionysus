@@ -16,7 +16,7 @@
 // we must use array designators here whatsoever. And clang supports this.
 #pragma clang diagnostic ignored "-Wc99-designator"
 
-const char* err_msg[] = {
+const char* err_msg_arr[ERROR_CODE_COUNT] = {
 	[ERROR_SUCCESS]=     "the action is completed successfully",
 	[ERROR_UNKOWN]=      "failedbut reason can't be figured out",
 	[ERROR_INVALID]=  "invalid data",
@@ -50,7 +50,7 @@ const char* err_msg[] = {
 	[ERROR_ALREADY_EXIST]="object already exist"
 };
 
-const char* err_title[] = {
+const char* err_title_arr[ERROR_CODE_COUNT] = {
 	[ERROR_SUCCESS]="ERROR_SUCCESS",
 	[ERROR_UNKOWN]="ERROR_UNKOWN",
 	[ERROR_INVALID]="ERROR_INVALID",
@@ -84,16 +84,21 @@ const char* err_title[] = {
 	[ERROR_ALREADY_EXIST]="ERROR_ALREADY_EXIST"
 };
 
+constexpr const char* NO_SUCH_ERROR_CODE_MSG = "no such error code.";
+constexpr const char* NO_SUCH_ERROR_CODE_TITLE = "NO SUCH ERROR CODE";
+
 const char* kdebug::error_message(error_code code)
 {
 	if (code < 0)code = -code;
-	return err_msg[static_cast<size_t>(code)];
+	if (code >= ERROR_CODE_COUNT)return NO_SUCH_ERROR_CODE_MSG;
+	return err_msg_arr[static_cast<size_t>(code)];
 }
 
 const char* kdebug::error_title(error_code code)
 {
 	if (code < 0)code = -code;
-	return err_title[static_cast<size_t>(code)];
+	if (code >= ERROR_CODE_COUNT)return NO_SUCH_ERROR_CODE_TITLE;
+	return err_title_arr[static_cast<size_t>(code)];
 }
 
 #pragma clang diagnostic pop

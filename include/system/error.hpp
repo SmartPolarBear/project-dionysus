@@ -44,7 +44,10 @@ enum error_code_values : error_code
 	ERROR_TOO_MANY_CALLS,
 	ERROR_ACCESS,
 	ERROR_NOT_EXIST,
-	ERROR_ALREADY_EXIST
+	ERROR_ALREADY_EXIST,
+
+	// max element index
+	ERROR_CODE_COUNT,
 };
 
 
