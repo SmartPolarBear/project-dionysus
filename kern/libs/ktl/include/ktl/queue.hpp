@@ -2,7 +2,7 @@
 #include "system/kmalloc.hpp"
 
 #include <queue>
-#include <vector.hpp>
+#include <ktl/vector.hpp>
 
 
 namespace ktl

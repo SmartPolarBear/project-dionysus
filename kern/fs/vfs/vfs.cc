@@ -3,7 +3,7 @@
 
 #include "system/kmem.hpp"
 
-#include "stack.hpp"
+#include "ktl/stack.hpp"
 
 #include <memory>
 #include <cstring>
