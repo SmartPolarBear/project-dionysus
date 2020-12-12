@@ -411,7 +411,8 @@ error_code_with_result<size_t> file_system::ext2_vnode::write(file_system::file_
 
 	ext2_data* data = reinterpret_cast<ext2_data*>(ext2_fs->private_data);
 
-	size_t full_size = EXT2_INODE_SIZE(inode);
+	const size_t full_size = EXT2_INODE_SIZE(inode);
+	const size_t block_size = data->get_block_size();
 
 	if (fd->pos > full_size)
 	{
@@ -421,8 +422,7 @@ error_code_with_result<size_t> file_system::ext2_vnode::write(file_system::file_
 	size_t request_size = max(fd->pos + sz, full_size);
 	size_t offset = 0;
 
-	auto err = ext2_inode_resize(ext2_fs, inode, request_size);
-	if (err != ERROR_SUCCESS)
+	if (auto err = ext2_inode_resize(ext2_fs, inode, request_size);err != ERROR_SUCCESS)
 	{
 		return err;
 	}
@@ -431,9 +431,9 @@ error_code_with_result<size_t> file_system::ext2_vnode::write(file_system::file_
 
 	for (offset = 0; sz;)
 	{
-		auto block_index = fd->pos / data->get_block_size();
-		auto block_offset = fd->pos % data->get_block_size();
-		size_t writable = min(sz, data->get_block_size() - block_offset);
+		auto block_index = fd->pos / block_size;
+		auto block_offset = fd->pos % block_size;
+		size_t writable = min(sz, block_size - block_offset);
 
 		if (writable == 0)
 		{
@@ -443,8 +443,8 @@ error_code_with_result<size_t> file_system::ext2_vnode::write(file_system::file_
 
 		if (writable != data->get_block_size())
 		{
-			err = ext2_inode_read_block(ext2_fs, inode, block_buf, block_index);
-			if (err != ERROR_SUCCESS)
+
+			if (auto err = ext2_inode_read_block(ext2_fs, inode, block_buf, block_index);err != ERROR_SUCCESS)
 			{
 				delete[] block_buf;
 				return err;
@@ -452,8 +452,7 @@ error_code_with_result<size_t> file_system::ext2_vnode::write(file_system::file_
 
 			memmove(block_buf + block_offset, buf + offset, writable);
 
-			err = ext2_inode_write_block(ext2_fs, inode, block_buf, block_index);
-			if (err != ERROR_SUCCESS)
+			if (auto err = ext2_inode_write_block(ext2_fs, inode, block_buf, block_index);err != ERROR_SUCCESS)
 			{
 				delete[] block_buf;
 				return err;
@@ -461,8 +460,7 @@ error_code_with_result<size_t> file_system::ext2_vnode::write(file_system::file_
 		}
 		else
 		{
-			err = ext2_inode_write_block(ext2_fs, inode, buf + offset, block_index);
-			if (err != ERROR_SUCCESS)
+			if (auto err = ext2_inode_write_block(ext2_fs, inode, buf + offset, block_index);err != ERROR_SUCCESS)
 			{
 				delete[] block_buf;
 				return err;
@@ -476,8 +474,7 @@ error_code_with_result<size_t> file_system::ext2_vnode::write(file_system::file_
 
 	inode->mtime = cmos::cmos_read_rtc_timestamp();
 
-	err = ext2_inode_write(ext2_fs, this->inode_id, inode);
-	if (err != ERROR_SUCCESS)
+	if (auto err = ext2_inode_write(ext2_fs, this->inode_id, inode);err != ERROR_SUCCESS)
 	{
 		delete[] block_buf;
 		return err;

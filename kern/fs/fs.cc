@@ -78,15 +78,14 @@ static inline error_code test_rw()
 	memset(testbuf, 0, sizeof(testbuf));
 	strcpy(testbuf, "Miao miao miao miao miao!!!");
 
-	kdebug::kdebug_log("Fuck!!!!!\n");
 
-//	auto write_ret = kernel_io_context->write(&ob, testbuf, strlen(testbuf));
-//	if (has_error(write_ret))
-//	{
-//		return get_error_code(write_ret);
-//	}
-//
-//	memset(testbuf, 0, sizeof(testbuf));
+	auto write_ret = kernel_io_context->write(&ob, testbuf, strlen(testbuf));
+	if (has_error(write_ret))
+	{
+		return get_error_code(write_ret);
+	}
+
+	memset(testbuf, 0, sizeof(testbuf));
 
 	auto read_ret = kernel_io_context->read(&ob, testbuf, strlen(testbuf));
 	if (has_error(read_ret))
