@@ -78,26 +78,28 @@ static inline error_code test_rw()
 	memset(testbuf, 0, sizeof(testbuf));
 	strcpy(testbuf, "Miao miao miao miao miao!!!");
 
-
 	auto write_ret = kernel_io_context->write(&ob, testbuf, strlen(testbuf));
 	if (has_error(write_ret))
 	{
 		return get_error_code(write_ret);
 	}
 
+	//TODO: implement seek
+	ob.pos = 0;
+
 	memset(testbuf, 0, sizeof(testbuf));
 
-	auto read_ret = kernel_io_context->read(&ob, testbuf, strlen(testbuf));
+	auto read_ret = kernel_io_context->read(&ob, testbuf, 25);
 	if (has_error(read_ret))
 	{
 		return get_error_code(read_ret);
 	}
 
 	auto size = get_result(read_ret);
-	kdebug::kdebug_log("Read size=%lld, first 128 byte:\n", size);
-	for (int i = 0; i < 128; i++)
+	kdebug::kdebug_log("Read size=%lld, first %lld byte:\n", size, size);
+	for (size_t i = 0; i < size; i++)
 	{
-		kdebug::kdebug_log("%x", testbuf[i]);
+		kdebug::kdebug_log("%x(%c)", testbuf[i], testbuf[i]);
 		if ((i + 1) % 24 == 0)kdebug::kdebug_log("\n");
 		else kdebug::kdebug_log(" ");
 	}
