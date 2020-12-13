@@ -69,8 +69,10 @@ error_code_with_result<uint64_t> ext2_block_alloc(file_system::fs_instance* fs)
 	auto superblock = ext2data->get_superblock();
 
 	uint64_t* bitmap_buf = new(std::nothrow)uint64_t[ext2data->get_block_size() / sizeof(uint64_t)];
-
-	error_code ret = ERROR_SUCCESS;
+	if (bitmap_buf == nullptr)
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
 
 	for (size_t i = 0; i < ext2data->get_bgdt_entry_count(); i++)
 	{
@@ -80,8 +82,8 @@ error_code_with_result<uint64_t> ext2_block_alloc(file_system::fs_instance* fs)
 			continue;
 		}
 
-		ret = ext2_block_read(fs, reinterpret_cast<uint8_t*>(bitmap_buf), bgd.block_bitmap_no);
-		if (ret != ERROR_SUCCESS)
+		if (auto ret = ext2_block_read(fs, reinterpret_cast<uint8_t*>(bitmap_buf), bgd.block_bitmap_no);ret
+			!= ERROR_SUCCESS)
 		{
 			delete[] bitmap_buf;
 			return ret;
@@ -97,8 +99,8 @@ error_code_with_result<uint64_t> ext2_block_alloc(file_system::fs_instance* fs)
 				auto bgd = ext2data->get_bgd_by_index(i);
 				bitmap_buf[j / 64] |= (1ull << (j % 64));
 
-				if ((ret = ext2_block_write(fs, reinterpret_cast<const uint8_t*>(bitmap_buf), bgd.block_bitmap_no))
-					!= ERROR_SUCCESS)
+				if (auto ret = ext2_block_write(fs, reinterpret_cast<const uint8_t*>(bitmap_buf), bgd.block_bitmap_no);
+					ret != ERROR_SUCCESS)
 				{
 					break;
 				}
@@ -106,10 +108,11 @@ error_code_with_result<uint64_t> ext2_block_alloc(file_system::fs_instance* fs)
 				bgd.free_block_count--;
 				auto bdg_block_count = (i * sizeof(ext2_block_group_desc)) / ext2data->get_block_size();
 
-				if ((ret = ext2_block_write(fs,
-					reinterpret_cast<uint8_t*>(ext2data->get_bgdt()) + bdg_block_count * ext2data->get_block_size(),
-					bgd.block_bitmap_no + 2))
-					!= ERROR_SUCCESS)
+
+				if (auto ret = ext2_block_write(fs,
+						reinterpret_cast<uint8_t*>(ext2data->get_bgdt()) + bdg_block_count * ext2data->get_block_size(),
+						bdg_block_count + 2);
+					ret != ERROR_SUCCESS)
 				{
 					break;
 				}
@@ -118,7 +121,6 @@ error_code_with_result<uint64_t> ext2_block_alloc(file_system::fs_instance* fs)
 				ext2data->superblock_write_back(fs);
 
 				delete[] bitmap_buf;
-
 				return i * superblock.block_group_block_count + j + 1; // block
 
 			}
@@ -126,7 +128,7 @@ error_code_with_result<uint64_t> ext2_block_alloc(file_system::fs_instance* fs)
 	}
 
 	delete[] bitmap_buf;
-	return ret;
+	return -ERROR_NO_ENTRY;
 }
 
 error_code ext2_block_free(file_system::fs_instance* fs, uint32_t block)
