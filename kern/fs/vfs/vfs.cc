@@ -1194,9 +1194,14 @@ error_code vfs_io_context::ioctl(file_object* fd, size_t cmd, void* arg)
 	return vnode->get_dev()->ioctl(cmd, arg);
 }
 
-error_code vfs_io_context::file_truncate(vnode_base* node, size_t length)
+error_code vfs_io_context::file_truncate(vnode_base* node, size_t size)
 {
-	return 0;
+	if (node == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	return node->truncate(size);
 }
 
 error_code vfs_io_context::file_access_at(vnode_base* at, const char* path, vfs_access_status access_mode, size_t flags)
@@ -1221,8 +1226,19 @@ error_code vfs_io_context::file_access_at(vnode_base* at, const char* path, vfs_
 	return access_node(node, access_mode);
 }
 
+// TODO: unique_ptr? rvalue-reference?
 error_code vfs_io_context::file_status_at(vnode_base* at, const char* path, file_status* st, size_t flags)
 {
+	if (at == nullptr)
+	{
+		at = cwd_vnode;
+	}
+
+	if(st== nullptr)
+	{
+
+	}
+
 	return 0;
 }
 

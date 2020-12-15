@@ -581,7 +581,7 @@ namespace file_system
 		[[nodiscard]]error_code change_mode(const char* path, mode_type mode);
 		[[nodiscard]]error_code chown(const char* path, uid_type uid, gid_type gid);
 		[[nodiscard]]error_code ioctl(file_object* fd, size_t cmd, void* arg);
-		[[nodiscard]]error_code file_truncate(vnode_base* node, size_t length);
+		[[nodiscard]]error_code file_truncate(vnode_base* node, size_t size);
 
 		[[nodiscard]]error_code file_access_at(vnode_base* at,
 			const char* path,
