@@ -212,7 +212,7 @@ error_code file_system::ext2_vnode::unlink(file_system::vnode_base* vn)
 
 error_code_with_result<offset_t> file_system::ext2_vnode::seek(file_system::file_object* fd,
 	size_t offset,
-	seek_methods method)
+	vfs_seek_methods method)
 {
 	if (fd == nullptr)
 	{
@@ -229,13 +229,13 @@ error_code_with_result<offset_t> file_system::ext2_vnode::seek(file_system::file
 	offset_t new_pos = fd->pos;
 	switch (method)
 	{
-	case vnode_base::SM_FROM_START:
+	case SM_FROM_START:
 		new_pos = offset;
 		break;
-	case vnode_base::SM_FROM_CURRENT:
+	case SM_FROM_CURRENT:
 		new_pos += offset;
 		break;
-	case vnode_base::SM_FROM_END:
+	case SM_FROM_END:
 		new_pos = EXT2_INODE_SIZE(inode) + offset;
 		break;
 	default:

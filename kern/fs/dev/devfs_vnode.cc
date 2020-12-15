@@ -71,7 +71,7 @@ error_code file_system::dev_fs_node::unlink(file_system::vnode_base* vn)
 
 error_code_with_result<offset_t> file_system::dev_fs_node::seek(file_system::file_object* fd,
 	size_t offset,
-	seek_methods whence)
+	vfs_seek_methods whence)
 {
 	return -ERROR_UNSUPPORTED;
 }

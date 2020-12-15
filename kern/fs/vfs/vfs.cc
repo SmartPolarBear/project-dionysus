@@ -135,7 +135,7 @@ error_code_with_result<vnode_base*> vfs_io_context::do_link_resolve(vnode_base* 
 
 	if (lnk->get_link_target() != nullptr && lnk->has_flags(VNF_MEMORY) == false)
 	{
-		char* path_buf = new (std::nothrow)char[VFS_MAX_PATH_LEN];
+		char* path_buf = new(std::nothrow)char[VFS_MAX_PATH_LEN];
 
 		auto err = lnk->read_link(path_buf, VFS_MAX_PATH_LEN);
 		if (err != ERROR_SUCCESS)
@@ -302,7 +302,7 @@ error_code_with_result<vnode_base*> vfs_io_context::do_find(vnode_base* at, cons
 
 	// TODO: check access permissions
 
-	auto buf = new (std::nothrow)char[VFS_MAX_PATH_LEN];
+	auto buf = new(std::nothrow)char[VFS_MAX_PATH_LEN];
 	auto path_next = next_path_element(path, buf);
 
 	vnode_base* result = nullptr;
@@ -797,7 +797,7 @@ error_code vfs_io_context::create_at(vnode_base* at, const char* full_path, mode
 		return -ERROR_INVALID;
 	}
 
-	char* path = new (std::nothrow)char[VFS_MAX_PATH_LEN];
+	char* path = new(std::nothrow)char[VFS_MAX_PATH_LEN];
 	auto name_ret = separate_parent_name(full_path, path);
 	if (has_error(name_ret))
 	{
@@ -1049,7 +1049,7 @@ error_code vfs_io_context::make_directory_at(vnode_base* vnode, const char* path
 		return -ERROR_INVALID;
 	}
 
-	auto parent_name = new (std::nothrow)char[VFS_MAX_PATH_LEN];
+	auto parent_name = new(std::nothrow)char[VFS_MAX_PATH_LEN];
 	auto filename = next_path_element(path, parent_name);
 	if (filename[0] == '\0')
 	{
@@ -1085,7 +1085,7 @@ error_code_with_result<vnode_base*> vfs_io_context::make_node(const char* path, 
 		return -ERROR_INVALID;
 	}
 
-	auto parent_name = new (std::nothrow)char[VFS_MAX_PATH_LEN];
+	auto parent_name = new(std::nothrow)char[VFS_MAX_PATH_LEN];
 	auto file_name = next_path_element(path, parent_name);
 
 	if (file_name[0] == '\0')
@@ -1319,9 +1319,43 @@ error_code_with_result<size_t> vfs_io_context::read(file_object* fd, void* buf, 
 	return -ERROR_SHOULD_NOT_REACH_HERE;
 }
 
-size_t vfs_io_context::seek(file_object* fd, size_t offset, size_t whence)
+error_code_with_result<size_t> vfs_io_context::seek(file_object* fd, size_t offset, vfs_seek_methods whence)
 {
-	return 0;
+	if (fd == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	// TODO: socket
+
+	auto vnode = fd->vnode;
+	if (vnode == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	if (vnode->get_type() != vnode_types::VNT_REG)
+	{
+		return -ERROR_NOT_FILE;
+	}
+
+	if (auto ret = vnode->seek(fd, offset, whence);has_error(ret))
+	{
+		if (auto err = get_error_code(ret);err == -ERROR_UNSUPPORTED)
+		{
+			return -ERROR_INVALID;
+		}
+		else
+		{
+			return err;
+		}
+	}
+	else
+	{
+		return ret;
+	}
+
+	return -ERROR_SHOULD_NOT_REACH_HERE;
 }
 
 

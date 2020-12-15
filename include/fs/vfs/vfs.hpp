@@ -106,6 +106,13 @@ namespace file_system
 		FO_FLAG_CLOEXEC = (1 << 7),
 	};
 
+	enum vfs_seek_methods : uint64_t
+	{
+		SM_FROM_START,
+		SM_FROM_CURRENT,
+		SM_FROM_END,
+	};
+
 	struct file_object
 	{
 		size_t flags;
@@ -245,13 +252,6 @@ namespace file_system
 	class vnode_base
 		: public libkernel::single_linked_list_base<vnode_base*>
 	{
-	 public:
-		enum seek_methods : uint64_t
-		{
-			SM_FROM_START,
-			SM_FROM_CURRENT,
-			SM_FROM_END,
-		};
 	 protected:
 		static constexpr size_t VNODE_NAME_MAX = 64;
 
@@ -435,7 +435,7 @@ namespace file_system
 		virtual error_code truncate(size_t size) = 0;
 		virtual error_code unlink(vnode_base* vn) = 0;
 
-		virtual error_code_with_result<offset_t> seek(file_object* fd, size_t offset, seek_methods whence) = 0;
+		virtual error_code_with_result<offset_t> seek(file_object* fd, size_t offset, vfs_seek_methods whence) = 0;
 
 		virtual error_code stat(file_status& st) = 0;
 		virtual error_code chmod(size_t mode) = 0;
@@ -481,7 +481,7 @@ namespace file_system
 		error_code make_dir(const char* filename, uid_type uid, gid_type gid, size_t mode) override;
 		error_code truncate(size_t size) override;
 		error_code unlink(vnode_base* vn) override;
-		error_code_with_result<offset_t> seek(file_object* fd, size_t offset, seek_methods whence) override;
+		error_code_with_result<offset_t> seek(file_object* fd, size_t offset, vfs_seek_methods whence) override;
 		error_code stat(file_status& st) override;
 		error_code chmod(size_t mode) override;
 		error_code chown(uid_type uid, gid_type gid) override;
@@ -595,7 +595,7 @@ namespace file_system
 		[[nodiscard]]error_code_with_result<size_t> write(file_object* fd, const void* buf, size_t count);
 		[[nodiscard]]error_code_with_result<size_t> read(file_object* fd, void* buf, size_t count);
 
-		[[nodiscard]]size_t seek(file_object* fd, size_t offset, size_t whence);
+		[[nodiscard]]error_code_with_result<size_t> seek(file_object* fd, size_t offset, vfs_seek_methods whence);
 	};
 
 	extern vfs_io_context* const kernel_io_context;
