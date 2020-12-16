@@ -29,12 +29,13 @@ namespace file_system
 		[[nodiscard]]error_code initialize_from_inode(ext2_ino_type ino, const ext2_inode* src);
 
 		[[nodiscard]]error_code_with_result<vnode_base*> find(const char* name) override;
-		[[nodiscard]]size_t read_directory(const file_object* fd, directory_entry* entry) override;
-		[[nodiscard]]error_code open_dir(const file_object* fd) override;
-		[[nodiscard]]error_code open(const file_object* fd, mode_type opt) override;
+		[[nodiscard]]error_code_with_result<size_t> read_directory(file_object* fd,
+			directory_entry* entry) override;
+		[[nodiscard]]error_code open_directory(file_object* fd) override;
+		[[nodiscard]]error_code open(file_object* fd, mode_type opt) override;
 		[[nodiscard]]error_code close(const file_object* fd) override;
 		[[nodiscard]]error_code create(const char* filename, uid_type uid, gid_type gid, size_t mode) override;
-		[[nodiscard]]error_code make_dir(const char* filename, uid_type uid, gid_type gid, size_t mode) override;
+		[[nodiscard]]error_code make_directory(const char* filename, uid_type uid, gid_type gid, size_t mode) override;
 		[[nodiscard]]error_code truncate(size_t size) override;
 		[[nodiscard]]error_code unlink(vnode_base* vn) override;
 		[[nodiscard]]error_code_with_result<offset_t> seek(file_object* fd,

@@ -241,7 +241,7 @@ error_code vfs_io_context::open_directory(file_object* fd)
 	}
 	else
 	{
-		auto ret = fd->vnode->open_dir(fd);
+		auto ret = fd->vnode->open_directory(fd);
 
 		if (ret != ERROR_SUCCESS)
 		{
@@ -1072,7 +1072,7 @@ error_code vfs_io_context::make_directory_at(vnode_base* vnode, const char* path
 		return access_ret;
 	}
 
-	auto mkdir_ret = vnode->make_dir(filename, this->uid, this->gid, mode & ~this->mode_mask);
+	auto mkdir_ret = vnode->make_directory(filename, this->uid, this->gid, mode & ~this->mode_mask);
 
 	delete[] parent_name;
 	return mkdir_ret;

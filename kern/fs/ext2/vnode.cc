@@ -107,23 +107,138 @@ error_code_with_result<file_system::vnode_base*> file_system::ext2_vnode::find(c
 	return -ERROR_NO_ENTRY;
 }
 
-size_t file_system::ext2_vnode::read_directory(const file_system::file_object* fd, file_system::directory_entry* entry)
+error_code_with_result<size_t> file_system::ext2_vnode::read_directory(file_object* fd,
+	file_system::directory_entry* entry)
 {
+	if (fd == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	if (entry == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	auto inode = reinterpret_cast<ext2_inode*>(this->private_data);
+	if (inode == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	auto ext2data = reinterpret_cast<ext2_data*>(this->fs->private_data);
+
+	if (ext2data == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	size_t full_size = EXT2_INODE_SIZE(inode);
+	if (fd->pos >= full_size)
+	{
+		return 0;
+	}
+
+	const size_t block_size = ext2data->get_block_size();
+
+	uint8_t* block_buf = new(std::nothrow) uint8_t[block_size];
+
+	if (block_buf == nullptr)
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
+
+	uint32_t block_idx = fd->pos / block_size;
+
+	if (auto ret = ext2_inode_read_block(this->fs, inode, block_buf, block_idx);ret != ERROR_SUCCESS)
+	{
+		return ret;
+	}
+
+	ext2_directory_entry* dirent = (ext2_directory_entry*)(block_buf + fd->pos % block_size);
+
+	if (dirent->ino == 0)
+	{
+		fd->pos += dirent->ent_size;
+
+		if (fd->pos / block_size != block_idx)
+		{
+			if (fd->pos % block_size == 0)
+			{
+				delete[] block_buf;
+				return -ERROR_INVALID;
+			}
+
+			return read_directory(fd, entry);
+		}
+
+		dirent = reinterpret_cast<ext2_directory_entry*>(block_buf + fd->pos % block_size);
+
+		if (dirent->ino == 0)
+		{
+			delete[] block_buf;
+			return -ERROR_INVALID;
+		}
+	}
+
+	const auto superblock = ext2data->get_superblock();
+
+	auto name_len =
+		EXT2_DIRENT_NAME_LEN(dirent, (superblock.required_features & SBRF_DIRENT_TYPE_FIELD));
+
+	entry->type = DT_UNKNOWN;
+
+	strncpy(entry->name, dirent->name, name_len);
+
+	entry->name[name_len] = '\0';
+	entry->off = fd->pos;
+	entry->reclen = dirent->ent_size;
+
+	fd->pos += dirent->ent_size;
+
+	return (size_t)entry->reclen;
+}
+
+error_code file_system::ext2_vnode::open_directory(file_object* fd)
+{
+	if (fd == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	if (fd->vnode == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	if (fd->vnode->get_type() != vnode_types::VNT_DIR)
+	{
+		return -ERROR_INVALID;
+	}
+
+	fd->pos = 0;
 	return ERROR_SUCCESS;
 }
 
-error_code file_system::ext2_vnode::open_dir(const file_system::file_object* fd)
+error_code file_system::ext2_vnode::open(file_object* fd, mode_type opt)
 {
-	return ERROR_SUCCESS;
-}
+	if ((opt & IOCTX_FLG_APPEND) == 1 && (opt & IOCTX_FLG_MASK_ACCESS_MODE) == IOCTX_FLG_RDONLY)
+	{
+		return -ERROR_INVALID;
+	}
 
-error_code file_system::ext2_vnode::open(const file_system::file_object* fd, mode_type opt)
-{
+	if (opt & IOCTX_FLG_DIRECTORY)
+	{
+		return -ERROR_INVALID;
+	}
+
+	fd->pos = 0;
 	return ERROR_SUCCESS;
 }
 
 error_code file_system::ext2_vnode::close(const file_system::file_object* fd)
 {
+	// FIXME:do nothing for now
 	return ERROR_SUCCESS;
 }
 
@@ -195,14 +310,115 @@ error_code file_system::ext2_vnode::create(const char* filename, uid_type uid, g
 
 	return ERROR_SUCCESS;
 }
-error_code file_system::ext2_vnode::make_dir(const char* filename, uid_type uid, gid_type gid, size_t mode)
+
+error_code file_system::ext2_vnode::make_directory(const char* name, uid_type uid, gid_type gid, size_t mode)
 {
+	auto at_inode = reinterpret_cast<ext2_inode*>(this->private_data);
+	if (at_inode == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	auto ext2data = reinterpret_cast<ext2_data*>(fs->private_data);
+
+	if (ext2data == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	if (auto ret = find(name);has_error(ret) == false)
+	{
+		return -ERROR_ALREADY_EXIST;
+	}
+
+	if (at_inode->type != EXT2_IFDIR)
+	{
+		return -ERROR_NOT_DIR;
+	}
+
+	ext2_inode* inode = new(std::nothrow) ext2_inode{};
+	if (inode == nullptr)
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
+
+	uint32_t ino = 0;
+	if (auto ret = ext2_inode_alloc(fs, true);has_error(ret))
+	{
+		return get_error_code(ret);
+	}
+	else
+	{
+		ino = get_result(ret);
+	}
+
+	inode->ctime = inode->atime = inode->mtime = cmos::cmos_read_rtc_timestamp();
+	inode->uid = uid;
+	inode->gid = gid;
+	inode->type = EXT2_IFDIR;
+	inode->flags = mode & 0xFFF;
+	inode->hard_link_count = 2;// "." and parent directory entry
+
+	// setup . and ..
+	if (auto ret = ext2_directory_inode_insert(fs, ino, inode, ".", ino, vnode_types::VNT_DIR);ret != ERROR_SUCCESS)
+	{
+		return ret;
+	}
+
+	if (auto ret = ext2_directory_inode_insert(fs, ino, inode, "..", this->inode_id, vnode_types::VNT_DIR);ret
+		!= ERROR_SUCCESS)
+	{
+		return ret;
+	}
+
+	// insert to parent
+	if (auto ret = ext2_directory_inode_insert(fs, this->inode_id, at_inode, name, ino, vnode_types::VNT_DIR);ret
+		!= ERROR_SUCCESS)
+	{
+		return ret;
+	}
+
+	if (auto ret = ext2_inode_write(fs, ino, inode);ret != ERROR_SUCCESS)
+	{
+		return ret;
+	}
+
+	at_inode->hard_link_count++;
+
+	if (auto ret = ext2_inode_write(fs, this->inode_id, at_inode);ret != ERROR_SUCCESS)
+	{
+		return ret;
+	}
+
 	return ERROR_SUCCESS;
 }
 
 error_code file_system::ext2_vnode::truncate(size_t size)
 {
-	return ERROR_SUCCESS;
+	auto inode = reinterpret_cast<ext2_inode*>(this->private_data);
+	if (inode == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	if (this->fs == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	if (this->get_type() != vnode_types::VNT_REG)
+	{
+		return -ERROR_NOT_FILE;
+	}
+
+	if (auto ret = ext2_inode_resize(this->fs, inode, size);ret != ERROR_SUCCESS)
+	{
+		return ret;
+	}
+
+	inode->mtime = cmos::cmos_read_rtc_timestamp();
+
+	return ext2_inode_write(this->fs, this->inode_id, inode);
 }
 
 error_code file_system::ext2_vnode::unlink(file_system::vnode_base* vn)

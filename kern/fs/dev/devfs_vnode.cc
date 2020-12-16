@@ -29,17 +29,17 @@ error_code_with_result<file_system::vnode_base*> file_system::dev_fs_node::find(
 	return -ERROR_UNSUPPORTED;
 }
 
-size_t file_system::dev_fs_node::read_directory(const file_system::file_object* fd, file_system::directory_entry* entry)
+error_code_with_result<size_t> file_system::dev_fs_node::read_directory(file_object* fd, file_system::directory_entry* entry)
 {
 	return -ERROR_UNSUPPORTED;
 }
 
-error_code file_system::dev_fs_node::open_dir(const file_system::file_object* fd)
+error_code file_system::dev_fs_node::open_directory(file_object* fd)
 {
 	return -ERROR_UNSUPPORTED;
 }
 
-error_code file_system::dev_fs_node::open(const file_system::file_object* fd, mode_type opt)
+error_code file_system::dev_fs_node::open(file_object* fd, mode_type opt)
 {
 	return -ERROR_UNSUPPORTED;
 }
@@ -54,7 +54,7 @@ error_code file_system::dev_fs_node::create(const char* filename, uid_type uid, 
 	return -ERROR_UNSUPPORTED;
 }
 
-error_code file_system::dev_fs_node::make_dir(const char* filename, uid_type uid, gid_type gid, size_t mode)
+error_code file_system::dev_fs_node::make_directory(const char* filename, uid_type uid, gid_type gid, size_t mode)
 {
 	return -ERROR_UNSUPPORTED;
 }
