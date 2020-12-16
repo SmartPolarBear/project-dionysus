@@ -48,6 +48,25 @@ namespace file_system
 		S_IFDIR = 0040000,
 		S_IFCHR = 0020000,
 		S_IFIFO = 0010000,
+
+		S_ISUID = 04000,
+		S_ISGID = 02000,
+		S_ISVTX = 01000,
+
+		S_IRUSR = 00400,
+		S_IWUSR = 00200,
+		S_IXUSR = 00100,
+		S_IRWXU = (S_IRUSR | S_IWUSR | S_IXUSR),
+
+		S_IRGRP = 00040,
+		S_IWGRP = 00020,
+		S_IXGRP = 00010,
+		S_IRWXG = (S_IRGRP | S_IWGRP | S_IXGRP),
+
+		S_IROTH = 00004,
+		S_IWOTH = 00002,
+		S_IXOTH = 00001,
+		S_IRWXO = (S_IROTH | S_IWOTH | S_IXOTH)
 	};
 
 	enum block_device_type
@@ -299,7 +318,16 @@ namespace file_system
 
 	 public:
 
-		vnode_base* get_parent() const
+		[[nodiscard]]mode_type get_mode() const
+		{
+			return mode;
+		}
+		void set_mode(mode_type mode)
+		{
+			vnode_base::mode = mode;
+		}
+
+		[[nodiscard]]vnode_base* get_parent() const
 		{
 			return parent;
 		}
@@ -437,7 +465,7 @@ namespace file_system
 
 		virtual error_code_with_result<offset_t> seek(file_object* fd, size_t offset, vfs_seek_methods whence) = 0;
 
-		virtual error_code stat(file_status& st) = 0;
+		virtual error_code stat(file_status* st) = 0;
 		virtual error_code chmod(size_t mode) = 0;
 		virtual error_code chown(uid_type uid, gid_type gid) = 0;
 
@@ -482,7 +510,7 @@ namespace file_system
 		error_code truncate(size_t size) override;
 		error_code unlink(vnode_base* vn) override;
 		error_code_with_result<offset_t> seek(file_object* fd, size_t offset, vfs_seek_methods whence) override;
-		error_code stat(file_status& st) override;
+		error_code stat(file_status* st) override;
 		error_code chmod(size_t mode) override;
 		error_code chown(uid_type uid, gid_type gid) override;
 		error_code read_link(char* buf, size_t lim) override;

@@ -252,7 +252,7 @@ error_code_with_result<offset_t> file_system::ext2_vnode::seek(file_system::file
 	return new_pos;
 }
 
-error_code file_system::ext2_vnode::stat(OUT file_system::file_status& st)
+error_code file_system::ext2_vnode::stat(OUT file_system::file_status* st)
 {
 	auto inode = reinterpret_cast<ext2_inode*>(this->private_data);
 	auto ext2_fs = this->fs;
@@ -271,23 +271,23 @@ error_code file_system::ext2_vnode::stat(OUT file_system::file_status& st)
 	size_t full_size = EXT2_INODE_SIZE(inode);
 	size_t block_size = data->get_block_size();
 
-	st.mode = inode->flags;
-	st.uid = inode->uid;
-	st.gid = inode->gid;
+	st->mode = inode->flags;
+	st->uid = inode->uid;
+	st->gid = inode->gid;
 
-	st.size = full_size;
+	st->size = full_size;
 
-	st.blksize = block_size;
-	st.blocks = (st.size + block_size - 1) / block_size;
+	st->blksize = block_size;
+	st->blocks = (st->size + block_size - 1) / block_size;
 
-	st.dev = 0;
-	st.rdev = 0;
+	st->dev = 0;
+	st->rdev = 0;
 
-	st.mtime = inode->mtime;
-	st.atime = inode->atime;
-	st.ctime = inode->ctime;
+	st->mtime = inode->mtime;
+	st->atime = inode->atime;
+	st->ctime = inode->ctime;
 
-	st.nlink = inode->hard_link_count;
+	st->nlink = inode->hard_link_count;
 
 	return ERROR_SUCCESS;
 }

@@ -105,22 +105,22 @@ error_code_with_result<size_t> file_system::dev_fs_node::write(file_system::file
 
 #pragma clang diagnostic pop
 
-error_code file_system::dev_fs_node::stat(file_system::file_status& st)
+error_code file_system::dev_fs_node::stat(file_system::file_status* st)
 {
-	st.mode = (this->mode & VFS_MODE_MASK) | vnode_type_to_mode_type(this->type);
-	st.uid = this->uid;
-	st.gid = this->gid;
-	st.size = 0;
-	st.blksize = 0;
-	st.blocks = 0;
-	st.ino = 0;
+	st->mode = (this->mode & VFS_MODE_MASK) | vnode_type_to_mode_type(this->type);
+	st->uid = this->uid;
+	st->gid = this->gid;
+	st->size = 0;
+	st->blksize = 0;
+	st->blocks = 0;
+	st->ino = 0;
 
-	st.atime = cmos::get_boot_timestamp();
-	st.mtime = cmos::get_boot_timestamp();
-	st.ctime = cmos::get_boot_timestamp();
+	st->atime = cmos::get_boot_timestamp();
+	st->mtime = cmos::get_boot_timestamp();
+	st->ctime = cmos::get_boot_timestamp();
 
-	st.dev = 0;
-	st.rdev = 0;
+	st->dev = 0;
+	st->rdev = 0;
 
 	return ERROR_SUCCESS;
 }

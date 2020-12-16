@@ -40,7 +40,7 @@ namespace file_system
 		[[nodiscard]]error_code_with_result<offset_t> seek(file_object* fd,
 			size_t offset,
 			vfs_seek_methods whence) override;
-		[[nodiscard]]error_code stat(file_status& st) override;
+		[[nodiscard]]error_code stat(file_status* st) override;
 		[[nodiscard]]error_code chmod(size_t mode) override;
 		[[nodiscard]]error_code chown(uid_type uid, gid_type gid) override;
 		[[nodiscard]]error_code read_link(char* buf, size_t lim) override;

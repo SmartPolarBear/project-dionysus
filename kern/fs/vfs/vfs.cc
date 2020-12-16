@@ -1226,30 +1226,111 @@ error_code vfs_io_context::file_access_at(vnode_base* at, const char* path, vfs_
 	return access_node(node, access_mode);
 }
 
-// TODO: unique_ptr? rvalue-reference?
-error_code vfs_io_context::file_status_at(vnode_base* at, const char* path, file_status* st, size_t flags)
+error_code vfs_io_context::file_status_at(vnode_base* at, const char* path, OUT file_status* st, size_t flags)
 {
 	if (at == nullptr)
 	{
 		at = cwd_vnode;
 	}
 
-	if(st== nullptr)
+	if (st == nullptr)
 	{
-
+		return -ERROR_INVALID;
 	}
 
-	return 0;
+	if (path == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	vnode_base* node = at;
+	if (flags & AT_EMPTY_PATH)
+	{
+		if (node == nullptr)
+		{
+			//TODO:
+			KDEBUG_NOT_IMPLEMENTED;
+		}
+	}
+	else
+	{
+		if (auto ret = find(at, path, flags & AT_SYMLINK_NOFOLLOW);!has_error(ret))
+		{
+			node = get_result(ret);
+		}
+	}
+
+	return node->stat(st);
 }
 
 error_code vfs_io_context::access_check(int desm, mode_type mode, uid_type uid, gid_type gid)
 {
-	return 0;
+	if (this->uid == 0)
+	{
+		if (desm & X_OK)
+		{
+			// Check if anyone at all can execute this
+			if (!(mode & (S_IXOTH | S_IXGRP | S_IXUSR)))
+			{
+				return -ERROR_ACCESS;
+			}
+		}
+
+		return 0;
+	}
+
+	if (uid == this->uid)
+	{
+		if ((desm & R_OK) && !(mode & S_IRUSR))
+		{
+			return -ERROR_ACCESS;
+		}
+		if ((desm & W_OK) && !(mode & S_IWUSR))
+		{
+			return -ERROR_ACCESS;
+		}
+		if ((desm & X_OK) && !(mode & S_IXUSR))
+		{
+			return -ERROR_ACCESS;
+		}
+	}
+	else if (gid == this->gid)
+	{
+		if ((desm & R_OK) && !(mode & S_IRGRP))
+		{
+			return -ERROR_ACCESS;
+		}
+		if ((desm & W_OK) && !(mode & S_IWGRP))
+		{
+			return -ERROR_ACCESS;
+		}
+		if ((desm & X_OK) && !(mode & S_IXGRP))
+		{
+			return -ERROR_ACCESS;
+		}
+	}
+	else
+	{
+		if ((desm & R_OK) && !(mode & S_IROTH))
+		{
+			return -ERROR_ACCESS;
+		}
+		if ((desm & W_OK) && !(mode & S_IWOTH))
+		{
+			return -ERROR_ACCESS;
+		}
+		if ((desm & X_OK) && !(mode & S_IXOTH))
+		{
+			return -ERROR_ACCESS;
+		}
+	}
+
+	return ERROR_SUCCESS;
 }
 
 error_code vfs_io_context::access_node(vnode_base* vn, size_t mode)
 {
-	return 0;
+	return access_check(mode, vn->get_mode(), this->uid, this->gid);
 }
 
 error_code_with_result<size_t> vfs_io_context::write(file_object* fd, const void* buf, size_t count)
