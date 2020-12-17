@@ -423,6 +423,75 @@ error_code file_system::ext2_vnode::truncate(size_t size)
 
 error_code file_system::ext2_vnode::unlink(file_system::vnode_base* vn)
 {
+	if (this->inode_id == EXT2_ROOT_DIR_INODE_NUMBER)
+	{
+		return -ERROR_PERMISSION;
+	}
+
+	auto parent = this->parent;
+	if (parent == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	auto ext2data = reinterpret_cast<ext2_data*>(fs->private_data);
+
+	if (ext2data == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	auto parent_inode = reinterpret_cast<ext2_inode*>(parent->get_private_data());
+	if (parent_inode == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	auto inode = reinterpret_cast<ext2_inode*>(this->private_data);
+	if (inode == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	if (auto ret = parent->find(this->get_name());has_error(ret))
+	{
+		return -ERROR_NO_ENTRY;
+	}
+
+	if (auto ret = ext2_directory_inode_remove(fs, parent_inode, this);ret != ERROR_SUCCESS)
+	{
+		return ret;
+	}
+
+	if (inode->type == EXT2_IFDIR)
+	{
+		parent_inode->hard_link_count--;
+		if (auto ret = ext2_inode_write(fs, parent->get_inode_id(), parent_inode);ret != ERROR_SUCCESS)
+		{
+			return ret;
+		}
+	}
+
+	if (auto ret = ext2_inode_resize(fs, inode, 0);ret != ERROR_SUCCESS)
+	{
+		return ret;
+	}
+
+	inode->hard_link_count = 0;
+	inode->dtime = cmos::cmos_read_rtc_timestamp();
+
+	if (auto ret = ext2_inode_write(fs, this->get_inode_id(), inode);ret != ERROR_SUCCESS)
+	{
+		return ret;
+	}
+
+	if (auto ret = ext2_inode_free(fs, this->get_inode_id(), this->get_type() == vnode_types::VNT_DIR);ret
+		!= ERROR_SUCCESS)
+	{
+		return ret;
+	}
+
+	// TODO: free vnode?
 	return ERROR_SUCCESS;
 }
 
@@ -510,16 +579,74 @@ error_code file_system::ext2_vnode::stat(OUT file_system::file_status* st)
 
 error_code file_system::ext2_vnode::chmod(size_t mode)
 {
+	ext2_inode* inode = reinterpret_cast<ext2_inode*>(this->private_data);
+	if (inode == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	if (this->fs == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	// don't rewrite if mode isn't change
+	if (inode->flags == (mode & 0xFFF))
+	{
+		return ERROR_SUCCESS;
+	}
+
+	inode->flags = mode & 0xFFF;
+	this->mode = mode & 0xFFF;
+
+	inode->mtime = cmos::cmos_read_rtc_timestamp();
+
+	if (auto ret = ext2_inode_write(fs, this->inode_id, inode);ret != ERROR_SUCCESS)
+	{
+		return ret;
+	}
+
 	return ERROR_SUCCESS;
 }
 
 error_code file_system::ext2_vnode::chown(uid_type uid, gid_type gid)
 {
+	ext2_inode* inode = reinterpret_cast<ext2_inode*>(this->private_data);
+	if (inode == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	if (this->fs == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	// don't rewrite if both ids isn't change
+	if (inode->uid == uid && inode->gid == gid)
+	{
+		return ERROR_SUCCESS;
+	}
+
+	inode->uid = uid;
+	inode->gid = gid;
+	this->uid = uid;
+	this->gid = gid;
+
+	inode->mtime = cmos::cmos_read_rtc_timestamp();
+
+	if (auto ret = ext2_inode_write(fs, this->inode_id, inode);ret != ERROR_SUCCESS)
+	{
+		return ret;
+	}
+
 	return ERROR_SUCCESS;
 }
 
 error_code file_system::ext2_vnode::read_link(char* buf, size_t lim)
 {
+	//TODO: implement
+	KDEBUG_NOT_IMPLEMENTED;
 	return ERROR_SUCCESS;
 }
 

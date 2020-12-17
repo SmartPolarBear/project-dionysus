@@ -290,8 +290,6 @@ namespace file_system
 
 		device_class* dev{};
 
-		void* private_data{};
-
 		char name_buf[VNODE_NAME_MAX]{};
 
 		vnode_base* parent;
@@ -301,6 +299,8 @@ namespace file_system
 			vnode_base* node_target;
 			vnode_link_getter_type link_getter;
 		} link_target;
+
+		void* private_data{};
 
 	 public:
 		virtual ~vnode_base() = default;
@@ -317,6 +317,14 @@ namespace file_system
 		}
 
 	 public:
+		[[nodiscard]]void* get_private_data() const
+		{
+			return private_data;
+		}
+		void set_private_data(void* private_data)
+		{
+			vnode_base::private_data = private_data;
+		}
 
 		[[nodiscard]]mode_type get_mode() const
 		{
