@@ -236,7 +236,7 @@ error_code file_system::ext2_vnode::open(file_object* fd, mode_type opt)
 	return ERROR_SUCCESS;
 }
 
-error_code file_system::ext2_vnode::close(const file_system::file_object* fd)
+error_code file_system::ext2_vnode::close([[maybe_unused]]const file_system::file_object* fd)
 {
 	// FIXME:do nothing for now
 	return ERROR_SUCCESS;
@@ -421,7 +421,7 @@ error_code file_system::ext2_vnode::truncate(size_t size)
 	return ext2_inode_write(this->fs, this->inode_id, inode);
 }
 
-error_code file_system::ext2_vnode::unlink(file_system::vnode_base* vn)
+error_code file_system::ext2_vnode::unlink()
 {
 	if (this->inode_id == EXT2_ROOT_DIR_INODE_NUMBER)
 	{
@@ -643,7 +643,7 @@ error_code file_system::ext2_vnode::chown(uid_type uid, gid_type gid)
 	return ERROR_SUCCESS;
 }
 
-error_code file_system::ext2_vnode::read_link(char* buf, size_t lim)
+error_code file_system::ext2_vnode::read_link([[maybe_unused]]char* buf, [[maybe_unused]]size_t lim)
 {
 	//TODO: implement
 	KDEBUG_NOT_IMPLEMENTED;

@@ -469,7 +469,7 @@ namespace file_system
 		virtual error_code create(const char* filename, uid_type uid, gid_type gid, size_t mode) = 0;
 		virtual error_code make_directory(const char* filename, uid_type uid, gid_type gid, size_t mode) = 0;
 		virtual error_code truncate(size_t size) = 0;
-		virtual error_code unlink(vnode_base* vn) = 0;
+		virtual error_code unlink() = 0;
 
 		virtual error_code_with_result<offset_t> seek(file_object* fd, size_t offset, vfs_seek_methods whence) = 0;
 
@@ -516,7 +516,7 @@ namespace file_system
 		error_code create(const char* filename, uid_type uid, gid_type gid, size_t mode) override;
 		error_code make_directory(const char* filename, uid_type uid, gid_type gid, size_t mode) override;
 		error_code truncate(size_t size) override;
-		error_code unlink(vnode_base* vn) override;
+		error_code unlink() override;
 		error_code_with_result<offset_t> seek(file_object* fd, size_t offset, vfs_seek_methods whence) override;
 		error_code stat(file_status* st) override;
 		error_code chmod(size_t mode) override;

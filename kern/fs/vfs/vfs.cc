@@ -1023,7 +1023,7 @@ error_code vfs_io_context::unlink_at(vnode_base* at, const char* pathname, size_
 		}
 	}
 
-	auto unlink_ret = node->unlink(node);
+	auto unlink_ret = node->unlink();
 	if (unlink_ret != ERROR_SUCCESS)
 	{
 		return unlink_ret;
