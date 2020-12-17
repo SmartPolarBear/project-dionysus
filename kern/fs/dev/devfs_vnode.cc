@@ -76,12 +76,12 @@ error_code_with_result<offset_t> file_system::dev_fs_node::seek(file_system::fil
 	return -ERROR_UNSUPPORTED;
 }
 
-error_code file_system::dev_fs_node::chmod(size_t mode)
+error_code file_system::dev_fs_node::change_mode(size_t mode)
 {
 	return -ERROR_UNSUPPORTED;
 }
 
-error_code file_system::dev_fs_node::chown(uid_type uid, gid_type gid)
+error_code file_system::dev_fs_node::change_ownership(uid_type uid, gid_type gid)
 {
 	return -ERROR_UNSUPPORTED;
 }

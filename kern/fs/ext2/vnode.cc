@@ -577,7 +577,7 @@ error_code file_system::ext2_vnode::stat(OUT file_system::file_status* st)
 	return ERROR_SUCCESS;
 }
 
-error_code file_system::ext2_vnode::chmod(size_t mode)
+error_code file_system::ext2_vnode::change_mode(size_t mode)
 {
 	ext2_inode* inode = reinterpret_cast<ext2_inode*>(this->private_data);
 	if (inode == nullptr)
@@ -609,7 +609,7 @@ error_code file_system::ext2_vnode::chmod(size_t mode)
 	return ERROR_SUCCESS;
 }
 
-error_code file_system::ext2_vnode::chown(uid_type uid, gid_type gid)
+error_code file_system::ext2_vnode::change_ownership(uid_type uid, gid_type gid)
 {
 	ext2_inode* inode = reinterpret_cast<ext2_inode*>(this->private_data);
 	if (inode == nullptr)

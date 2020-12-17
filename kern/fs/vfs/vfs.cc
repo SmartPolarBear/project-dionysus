@@ -1162,7 +1162,7 @@ error_code vfs_io_context::change_mode(const char* path, mode_type mode)
 	}
 
 	// TODO: the vnodes should have different implementation from the template
-	auto err = node->chmod(mode);
+	auto err = node->change_mode(mode);
 	if (err != ERROR_SUCCESS)
 	{
 		return err;
@@ -1171,9 +1171,42 @@ error_code vfs_io_context::change_mode(const char* path, mode_type mode)
 	return ERROR_SUCCESS;
 }
 
-error_code vfs_io_context::chown(const char* path, uid_type uid, gid_type gid)
+error_code vfs_io_context::change_ownership(const char* path, uid_type uid, gid_type gid)
 {
-	return 0;
+	if (path == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	auto find_ret = find(cwd_vnode, path, true);
+	if (has_error(find_ret))
+	{
+		return get_error_code(find_ret);
+	}
+
+	auto node = get_result(find_ret);
+
+	if (node->get_type() == vnode_types::VNT_LNK)
+	{
+		return -ERROR_INVALID;
+	}
+
+	if (uid != UID_ROOT)
+	{
+		return -ERROR_ACCESS;
+	}
+
+	auto err = node->change_ownership(uid, gid);
+	if (err != ERROR_SUCCESS && err != ERROR_UNSUPPORTED)
+	{
+		return err;
+	}
+	else if (err == ERROR_UNSUPPORTED && node->has_flags(VNF_MEMORY) == false)
+	{
+		return -ERROR_INVALID;
+	}
+
+	return ERROR_SUCCESS;
 }
 
 error_code vfs_io_context::ioctl(file_object* fd, size_t cmd, void* arg)

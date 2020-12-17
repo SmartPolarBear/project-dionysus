@@ -42,8 +42,8 @@ namespace file_system
 			size_t offset,
 			vfs_seek_methods whence) override;
 		[[nodiscard]]error_code stat(file_status* st) override;
-		[[nodiscard]]error_code chmod(size_t mode) override;
-		[[nodiscard]]error_code chown(uid_type uid, gid_type gid) override;
+		[[nodiscard]]error_code change_mode(size_t mode) override;
+		[[nodiscard]]error_code change_ownership(uid_type uid, gid_type gid) override;
 		[[nodiscard]]error_code read_link(char* buf, size_t lim) override;
 		[[nodiscard]]error_code_with_result<size_t> read(file_object* fd, void* buf, size_t count) override;
 		[[nodiscard]]error_code_with_result<size_t> write(file_object* fd, const void* buf, size_t count) override;

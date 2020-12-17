@@ -474,8 +474,8 @@ namespace file_system
 		virtual error_code_with_result<offset_t> seek(file_object* fd, size_t offset, vfs_seek_methods whence) = 0;
 
 		virtual error_code stat(file_status* st) = 0;
-		virtual error_code chmod(size_t mode) = 0;
-		virtual error_code chown(uid_type uid, gid_type gid) = 0;
+		virtual error_code change_mode(size_t mode) = 0;
+		virtual error_code change_ownership(uid_type uid, gid_type gid) = 0;
 
 		virtual error_code read_link(char* buf, size_t lim) = 0;
 
@@ -519,8 +519,8 @@ namespace file_system
 		error_code unlink() override;
 		error_code_with_result<offset_t> seek(file_object* fd, size_t offset, vfs_seek_methods whence) override;
 		error_code stat(file_status* st) override;
-		error_code chmod(size_t mode) override;
-		error_code chown(uid_type uid, gid_type gid) override;
+		error_code change_mode(size_t mode) override;
+		error_code change_ownership(uid_type uid, gid_type gid) override;
 		error_code read_link(char* buf, size_t lim) override;
 		error_code_with_result<size_t> read(file_object* fd, void* buf, size_t count) override;
 		error_code_with_result<size_t> write(file_object* fd, const void* buf, size_t count) override;
@@ -615,7 +615,7 @@ namespace file_system
 		[[nodiscard]]error_code make_directory_at(vnode_base* at, const char* path, mode_type mode);
 		[[nodiscard]]error_code_with_result<vnode_base*> make_node(const char* path, mode_type mode);
 		[[nodiscard]]error_code change_mode(const char* path, mode_type mode);
-		[[nodiscard]]error_code chown(const char* path, uid_type uid, gid_type gid);
+		[[nodiscard]]error_code change_ownership(const char* path, uid_type uid, gid_type gid);
 		[[nodiscard]]error_code ioctl(file_object* fd, size_t cmd, void* arg);
 		[[nodiscard]]error_code file_truncate(vnode_base* node, size_t size);
 
