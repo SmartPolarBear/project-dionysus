@@ -1,12 +1,15 @@
 #pragma once
 #include <concepts>
 
-namespace mutex
+namespace ktl
 {
-	/// \brief concept constraints the name requirement BasicLockable
-	/// https://en.cppreference.com/w/cpp/named_req/BasicLockable
-	/// \tparam 
-	template<typename T>
-	concept BasicLockable=
-	requires(T lk){ lk.lock();lk.unlock(); };
+	namespace mutex
+	{
+		/// \brief the concept that constraints the name requirement BasicLockable
+		/// https://en.cppreference.com/w/cpp/named_req/BasicLockable
+		/// \tparam
+		template<typename T>
+		concept BasicLockable=
+		requires(T lk){ lk.lock();lk.unlock(); };
+	}
 }

@@ -13,6 +13,8 @@
 #include "drivers/pci/pci_capability.hpp"
 #include "drivers/ahci/ahci.hpp"
 
+#include "ktl/mutex/lock_guard.hpp"
+
 #include "../libs/basic_io/include/builtin_text_io.hpp"
 
 using namespace libkernel;
@@ -142,6 +144,8 @@ static inline error_code kernel_io_context_init()
 
 PANIC void file_system::fs_init()
 {
+
+
 	// Initialize list heads
 	list_init(&fs_class_head);
 	list_init(&fs_mount_head);

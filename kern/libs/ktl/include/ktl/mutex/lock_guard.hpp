@@ -1,31 +1,34 @@
 #pragma once
 #include "ktl/mutex/mutex_concepts.hpp"
 
-namespace mutex
+namespace ktl
 {
-	/// \brief Automatically lock and unlock
-	/// \tparam TMutex
-	template<BasicLockable TMutex>
-	class lock_guard
+	namespace mutex
 	{
-	 public:
-		typedef TMutex mutex_type;
-
-		explicit lock_guard(mutex_type& m) noexcept
-			: m(m)
+		/// \brief Automatically lock and unlock
+		/// \tparam TMutex
+		template<BasicLockable TMutex>
+		class lock_guard
 		{
-			m.lock();
-		}
+		 public:
+			typedef TMutex mutex_type;
 
-		~lock_guard() noexcept
-		{
-			m.unlock();
-		}
+			explicit lock_guard(mutex_type& _m) noexcept
+				: m(&_m)
+			{
+				m->lock();
+			}
 
-		lock_guard(lock_guard const&) = delete;
-		lock_guard& operator=(lock_guard const&) = delete;
+			~lock_guard() noexcept
+			{
+				m->unlock();
+			}
 
-	 private:
-		mutex_type& m;
-	};
+			lock_guard(lock_guard const&) = delete;
+			lock_guard& operator=(lock_guard const&) = delete;
+
+		 private:
+			mutex_type* m;
+		};
+	}
 }

@@ -44,10 +44,14 @@
 
 #include <mutex>
 
-#include "ktl/mutex/lock_guard.hpp"
+#include <atomic>
 
 static inline void run(char* name)
 {
+	std::atomic<int> a;
+	a++;
+
+
 	uint8_t* bin = nullptr;
 	size_t size = 0;
 

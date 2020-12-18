@@ -28,9 +28,12 @@ namespace lock
 	{
 	 private:
 		spinlock* lk;
+
+		spinlock internal_lock{};
 	 public:
 		spinlock_lockable() = delete;
-		[[maybe_unused]] explicit spinlock_lockable(spinlock* _lk) : lk(_lk)
+
+		[[maybe_unused]] explicit spinlock_lockable(spinlock& _lk) : lk(&_lk)
 		{
 		}
 
