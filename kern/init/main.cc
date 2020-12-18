@@ -42,6 +42,10 @@
 // std::span is usable unconditionally
 #include <span>
 
+#include <mutex>
+
+#include "ktl/mutex/lock_guard.hpp"
+
 static inline void run(char* name)
 {
 	uint8_t* bin = nullptr;

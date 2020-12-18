@@ -35,6 +35,9 @@ extern "C" char* environ[] =
 	{
 		(char*)"",
 		(char*)"",
+		(char*)"",
+		(char*)"",
+		(char*)"",
 	};
 
 
