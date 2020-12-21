@@ -14,7 +14,9 @@ set(RANLIB /usr/bin/ranlib)
 
 #libcxxabi
 
-set(LIBCXXABI_CFLAGS "-g -nostdlibinc -msoft-float -mno-sse -mno-avx -I${NEWLIB_INC_PATH} -fdeclspec -mcmodel=large -D__ELF__ -U__APPLE__ -D_LDBL_EQ_DBL -D_LIBCPP_HAS_NO_THREADS -D_LIBCPP_HAS_NO_LIBRARY_ALIGNED_ALLOCATION")
+set(LIBCXXABI_THREADING_INCLUDE ${CMAKE_SOURCE_DIR}/kern/libs/cxxrt_support/include)
+
+set(LIBCXXABI_CFLAGS "-g -nostdlibinc -msoft-float -mno-sse -mno-avx -I${LIBCXXABI_THREADING_INCLUDE} -I${NEWLIB_INC_PATH} -fdeclspec -mcmodel=large -D__ELF__ -U__APPLE__ -D_LDBL_EQ_DBL -D_LIBCPP_HAS_THREAD_API_EXTERNAL -D_LIBCPP_BUILDING_THREAD_LIBRARY_EXTERNAL -D_LIBCPP_HAS_NO_LIBRARY_ALIGNED_ALLOCATION")
 
 list(APPEND LIBCXXABI_CMAKE_ARGS
         -DCMAKE_AR=${AR}
