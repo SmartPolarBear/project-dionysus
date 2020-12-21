@@ -42,16 +42,9 @@
 // std::span is usable unconditionally
 #include <span>
 
-#include <mutex>
-
-#include <atomic>
 
 static inline void run(char* name)
 {
-	std::atomic<int> a;
-	a++;
-
-
 	uint8_t* bin = nullptr;
 	size_t size = 0;
 
