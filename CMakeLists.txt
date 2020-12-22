@@ -33,7 +33,7 @@ add_subdirectory(external)
 
 add_custom_target(disk.img ALL
         COMMAND python3 "${CMAKE_SOURCE_DIR}/tools/diskimg/diskimg.py" update "${CMAKE_SOURCE_DIR}" "${CMAKE_SOURCE_DIR}/config/build/image.json"
-        DEPENDS kernel ap_boot.elf
+        DEPENDS kernel ap_boot.elf hello ipctest fs monitor
 		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
