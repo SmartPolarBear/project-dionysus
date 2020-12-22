@@ -9,6 +9,8 @@
 
 #include "fs/device/device.hpp"
 
+#include "drivers/lock/spinlock.h"
+
 namespace file_system
 {
 
@@ -302,16 +304,21 @@ namespace file_system
 
 		void* private_data{};
 
+		lock::spinlock lock;
+		lock::spinlock_lockable lockable;
+
 	 public:
 		virtual ~vnode_base() = default;
 
 		vnode_base(vnode_types t, const char* n)
-			: type(t), parent(nullptr)
+			: type(t), parent(nullptr), lockable(lock)
 		{
 			if (n != nullptr)
 			{
 				strncpy(name_buf, n, strnlen(n, VNODE_NAME_MAX));
 			}
+
+			lock::spinlock_initialize_lock(&lock, n);
 
 			kdebug::kdebug_log("Create vnode: type %d, name %s\n", (uint32_t)t, n);
 		}

@@ -8,6 +8,8 @@
 
 #include "drivers/cmos/rtc.hpp"
 
+#include "ktl/mutex/lock_guard.hpp"
+
 #include <algorithm>
 
 using std::min;
@@ -679,6 +681,9 @@ error_code_with_result<size_t> file_system::ext2_vnode::read(file_system::file_o
 	}
 
 	ext2_data* data = reinterpret_cast<ext2_data*>(ext2_fs->private_data);
+
+	// acquire the vnode lock
+	ktl::mutex::lock_guard lk{ this->lockable };
 
 	size_t full_size = EXT2_INODE_SIZE(inode), has_read = 0;
 
