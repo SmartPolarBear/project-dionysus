@@ -178,7 +178,7 @@ error_code process::create_process(IN const char* name,
 
 	if (inherit_parent)
 	{
-		// TODO: copy data from parent process
+		// TODO: copy kbl from parent process
 	}
 
 	list_add(&proc->link, &proc_list.active_head);

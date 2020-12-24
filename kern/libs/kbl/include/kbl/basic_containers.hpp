@@ -1,7 +1,7 @@
 #pragma once
 
-#include "data/queue.hpp"
-#include "data/stack.hpp"
+#include "queue.hpp"
+#include "stack.hpp"
 //
 //#include <list>
 //#include <vector>

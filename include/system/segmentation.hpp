@@ -20,7 +20,7 @@ struct idt_entry
 	uint32_t gd_ist: 3;        // interrupt stack table
 	uint32_t gd_rsv1: 5;       // reserved bits
 	uint32_t gd_type: 4;       // type (STS_{TG,IG32,TG32})
-	uint32_t gd_s: 1;          // 0 for system, 1 for code or data
+	uint32_t gd_s: 1;          // 0 for system, 1 for code or kbl
 	uint32_t gd_dpl: 2;        // descriptor(meaning new) privilege level
 	uint32_t gd_p: 1;          // Present
 	uint32_t gd_off_31_16: 16; // [16 ~ 31] bits of offset in segment

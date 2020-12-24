@@ -16,12 +16,12 @@ enum error_code_values : error_code
 {
 	ERROR_SUCCESS,                // the action is completed successfully
 	ERROR_UNKOWN,                // failed, but reason can't be figured out
-	ERROR_INVALID,                    // invalid data
+	ERROR_INVALID,                    // invalid kbl
 	ERROR_NOT_IMPL,                // not implemented
 	ERROR_LOCK_STATUS,            // lock is not at a right status
 	ERROR_UNSUPPORTED,                // unsupported features
 	ERROR_MEMORY_ALLOC,            // insufficient memory
-	ERROR_REWRITE,                    // rewrite the data that shouldn't be done so
+	ERROR_REWRITE,                    // rewrite the kbl that shouldn't be done so
 	ERROR_VMA_NOT_FOUND,            // can't find a VMA
 	ERROR_PAGE_NOT_PRESENT,        // page isn't persent
 	ERROR_HARDWARE_NOT_COMPATIBLE,    // the hardware isn't compatible with the kernel

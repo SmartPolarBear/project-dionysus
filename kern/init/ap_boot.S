@@ -19,7 +19,7 @@ start:
 
 .code32
 start32:
-    movw    $(2<<3), %ax //2: kernel data section
+    movw    $(2<<3), %ax //2: kernel kbl section
     movw    %ax, %ds
     movw    %ax, %es
     movw    %ax, %ss

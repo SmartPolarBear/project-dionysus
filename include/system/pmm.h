@@ -41,9 +41,9 @@ namespace pmm
     {
         char name[PMM_MANAGER_NAME_MAXLEN];
 
-        void (*init)(void);                             // initialize internal description&management data structure
+        void (*init)(void);                             // initialize internal description&management kbl structure
         // (free superblock list, number of free superblock) of XXX_pmm_manager
-        void (*init_memmap)(page_info *base, size_t n); // setup description&management data structcure according to
+        void (*init_memmap)(page_info *base, size_t n); // setup description&management kbl structcure according to
         // the initial free physical memory space
         page_info *(*alloc_pages)(size_t n);            // allocate >=n pages, depend on the allocation algorithm
         void (*free_pages)(page_info *base,

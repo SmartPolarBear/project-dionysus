@@ -1,13 +1,13 @@
 #pragma once
 
-#include "data/pod_list.h"
+#include "pod_list.h"
 #include "drivers/lock/spinlock.h"
 #include "system/kmalloc.hpp"
 
 namespace libkernel
 {
 	template<typename T>
-	class queue
+	class stack
 	{
 	 private:
 		struct node
@@ -17,24 +17,24 @@ namespace libkernel
 		};
 
 		list_head head;
-		lock::spinlock queue_lock;
+		lock::spinlock stack_lock;
 
 		size_t m_size;
 	 public:
-		queue() : m_size(0)
+		stack() : m_size(0)
 		{
 			list_init(&this->head);
-			lock::spinlock_initialize_lock(&queue_lock, __PRETTY_FUNCTION__);
+			lock::spinlock_initialize_lock(&stack_lock, __PRETTY_FUNCTION__);
 		}
 
-		~queue()
+		~stack()
 		{
 			clear();
 		}
 
 		void clear()
 		{
-			lock::spinlock_acquire(&queue_lock);
+			lock::spinlock_acquire(&stack_lock);
 
 			list_head* iter = nullptr, * t = nullptr;
 			list_for_safe(iter, t, &this->head)
@@ -44,37 +44,38 @@ namespace libkernel
 				delete n;
 			}
 			m_size = 0;
-			lock::spinlock_release(&queue_lock);
+			lock::spinlock_release(&stack_lock);
 		}
 
 		void push(T data)
 		{
-			lock::spinlock_acquire(&queue_lock);
+			lock::spinlock_acquire(&stack_lock);
 
 			node* new_node = new node;
 			new_node->member = data;
 
 			list_add(&new_node->link, &head);
 			m_size++;
-			lock::spinlock_release(&queue_lock);
+			lock::spinlock_release(&stack_lock);
 		}
 
-		const T& front()
+		const T& top()
 		{
-			node* n = list_entry(head.prev, node, link);
+			node* n = list_entry(head.next, node, link);
 			return n->member;
 		}
 
 		void pop()
 		{
-			lock::spinlock_acquire(&queue_lock);
+			lock::spinlock_acquire(&stack_lock);
 
-			node* n = list_entry(head.prev, node, link);
+			node* n = list_entry(head.next, node, link);
 
 			list_remove(&n->link);
 			delete n;
 			m_size--;
-			lock::spinlock_release(&queue_lock);
+			lock::spinlock_release(&stack_lock);
+
 		}
 
 		size_t size()

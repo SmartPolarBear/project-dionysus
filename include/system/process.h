@@ -70,7 +70,7 @@ namespace process
 //			lock::spinlock lock;
 //
 //			// message passing
-//			void* data;
+//			void* kbl;
 //			size_t data_size;
 //			uint8_t internal_buf[INTERNAL_BUF_SIZE];
 //

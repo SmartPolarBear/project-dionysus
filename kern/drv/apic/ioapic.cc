@@ -91,7 +91,7 @@ enum destination_mode
 {
     // tell IOREGSEL where we want to read from
     *(volatile uint32_t *)(apic_base) = reg;
-    // return the data from IOWIN
+    // return the kbl from IOWIN
     return *(volatile uint32_t *)(apic_base + 0x10);
 }
 

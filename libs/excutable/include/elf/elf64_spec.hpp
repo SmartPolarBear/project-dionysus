@@ -173,7 +173,7 @@ namespace executable
 
 	enum Elf_Section_Attributes
 	{
-		SHF_WRITE = 0x1, // Section contains writable data
+		SHF_WRITE = 0x1, // Section contains writable kbl
 		SHF_ALLOC = 0x2, // Section is allocated in memory image of program
 		SHF_EXECINSTR = 0x4,// Section contains executable instructions
 		SHF_MASKOS = 0x0F000000, //Environment-specific use

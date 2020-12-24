@@ -196,7 +196,7 @@ skip_save_mbi:
 _start:
 entry64high:
 
-// ensure data segment registers are sane
+// ensure kbl segment registers are sane
     xor %rax, %rax
     mov %ax, %ss
     mov %ax, %ds
@@ -227,7 +227,7 @@ spin:
   jmp spin
 
 entry64mp:
-// obtain kstack from data superblock before entryother
+// obtain kstack from kbl superblock before entryother
     mov $0x7000, %rax
     mov -16(%rax), %rsp
     jmp ap_enter

@@ -31,17 +31,9 @@
 #include "data/basic_containers.hpp"
 
 // std::optional is usable unconditionally
-#include <optional>
-
 // std::any is usable with the pseudo-syscalls
-#include <any>
-
 // std::variant is usable with the pseudo-syscalls
-#include <variant>
-
 // std::span is usable unconditionally
-#include <span>
-
 
 static inline void run(char* name)
 {
