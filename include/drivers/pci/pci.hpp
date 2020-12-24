@@ -8,7 +8,7 @@
 #include "drivers/pci/pci_capability.hpp"
 #include "drivers/apic/traps.h"
 
-#include "data/pod_list.h"
+#include "kbl/pod_list.h"
 
 namespace pci
 {

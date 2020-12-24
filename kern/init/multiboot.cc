@@ -5,7 +5,7 @@
 #include "system/multiboot.h"
 
 #include "string.h"
-#include "data/pod_list.h"
+#include "kbl/pod_list.h"
 
 #include "drivers/console/console.h"
 #include "drivers/debug/kdebug.h"

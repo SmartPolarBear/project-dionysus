@@ -11,8 +11,8 @@
 #include "drivers/apic/traps.h"
 #include "drivers/lock/spinlock.h"
 
-#include "data/pod_list.h"
-#include "data/list_base.hpp"
+#include "kbl/pod_list.h"
+#include "kbl/list_base.hpp"
 
 #include <cstring>
 #include <algorithm>
