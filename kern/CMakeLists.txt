@@ -6,9 +6,9 @@ add_executable(kernel
         ${CMAKE_CURRENT_SOURCE_DIR}/init/boot.S
         ${CMAKE_CURRENT_SOURCE_DIR}/drv/apic/trapentry_asm.S
         ${CMAKE_CURRENT_SOURCE_DIR}/drv/apic/vectors.S
-        ${CMAKE_CURRENT_SOURCE_DIR}/proc/syscall/syscall_entry.S
-        ${CMAKE_CURRENT_SOURCE_DIR}/proc/process/process_run.S
-        ${CMAKE_CURRENT_SOURCE_DIR}/proc/process/context_switch.S)
+        user/syscall/syscall_entry.S
+        ${CMAKE_CURRENT_SOURCE_DIR}/task/process/process_run.S
+        ${CMAKE_CURRENT_SOURCE_DIR}/task/process/context_switch.S)
 
 
 add_dependencies(kernel vectors_S)
@@ -19,9 +19,9 @@ target_sources(kernel PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/drv/apic/vectors.S)
 set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/init/boot.S PROPERTY LANGUAGE C)
 set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/drv/apic/trapentry_asm.S PROPERTY LANGUAGE C)
 set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/drv/apic/vectors.S PROPERTY LANGUAGE C)
-set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/proc/syscall/syscall_entry.S PROPERTY LANGUAGE C)
-set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/proc/process/process_run.S PROPERTY LANGUAGE C)
-set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/proc/process/context_switch.S PROPERTY LANGUAGE C)
+set_property(SOURCE user/syscall/syscall_entry.S PROPERTY LANGUAGE C)
+set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/task/process/process_run.S PROPERTY LANGUAGE C)
+set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/task/process/context_switch.S PROPERTY LANGUAGE C)
 
 
 set_target_properties(kernel PROPERTIES
@@ -81,10 +81,10 @@ set_target_properties(kernel PROPERTIES LINK_FLAGS "-Wl,-T ${CMAKE_SOURCE_DIR}/c
 add_subdirectory(fs)
 add_subdirectory(init)
 add_subdirectory(libs)
-add_subdirectory(mm)
-add_subdirectory(proc)
+add_subdirectory(memory)
+add_subdirectory(task)
 add_subdirectory(drv)
-add_subdirectory(objm)
+add_subdirectory(object)
 add_subdirectory(servers)
 
 # custom targets

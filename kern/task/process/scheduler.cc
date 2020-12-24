@@ -110,7 +110,7 @@ void scheduler::scheduler_enter()
 
 	if (cur_proc->state == process::PROC_STATE_RUNNING)
 	{
-		KDEBUG_GENERALPANIC("scheduler_enter should have current proc not running");
+		KDEBUG_GENERALPANIC("scheduler_enter should have current task not running");
 	}
 
 	if (read_eflags() & trap::EFLAG_IF)

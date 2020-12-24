@@ -47,7 +47,7 @@ namespace vmm
 
 	struct vma_struct
 	{
-		mm_struct* mm; // the mm this struct belongs to
+		mm_struct* mm; // the memory this struct belongs to
 		uintptr_t vm_start;
 		uintptr_t vm_end;
 		size_t flags;

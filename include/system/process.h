@@ -49,7 +49,7 @@ namespace process
 //
 //		uintptr_t kstack;
 //
-//		vmm::mm_struct* mm;
+//		vmm::mm_struct* memory;
 //
 //		size_t flags;
 //		size_t wating_state;
@@ -87,7 +87,7 @@ namespace process
 //
 //		process_dispatcher(const char* name, process_id id, process_id parent_id, size_t flags)
 //			: state(PROC_STATE_EMBRYO), id(id), parent_id(parent_id),
-//			  runs(0), kstack(0), mm(nullptr), flags(flags), wating_state(PROC_WAITING_NONE),
+//			  runs(0), kstack(0), memory(nullptr), flags(flags), wating_state(PROC_WAITING_NONE),
 //			  exit_code(ERROR_SUCCESS), tf(nullptr), context(nullptr)
 //		{
 //			memmove(this->name, name, std::min((size_t)strlen(name), PROC_NAME_LEN));

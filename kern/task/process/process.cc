@@ -31,7 +31,7 @@ using lock::spinlock_initialize_lock;
 using lock::spinlock_release;
 using lock::spinlock_holding;
 
-using process::process_dispatcher;
+using namespace task;
 
 using namespace memory;
 using namespace vmm;
@@ -118,7 +118,7 @@ static inline size_t process_terminate_impl(process::process_dispatcher* proc,
 		proc->flags |= process::PROC_EXITING;
 		proc->exit_code = err;
 
-//		if (proc->wating_state & process::PROC_WAITING_INTERRUPTED)
+//		if (task->wating_state & process::PROC_WAITING_INTERRUPTED)
 //		{
 //
 //		}
@@ -151,7 +151,7 @@ process::process_dispatcher* find_process(process_id pid)
 void process::process_init(void)
 {
 	proc_list.proc_count = 0;
-	spinlock_initialize_lock(&proc_list.lock, "proc");
+	spinlock_initialize_lock(&proc_list.lock, "task");
 	list_init(&proc_list.active_head);
 }
 
