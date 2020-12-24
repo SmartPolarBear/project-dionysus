@@ -1,4 +1,10 @@
 cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
 target_sources(kernel
-    PRIVATE process.cc load_code.cc scheduler.cc process_run.S context_switch.S process_ipc.cc)
+        PRIVATE process.cc
+        PRIVATE load_code.cc
+        PRIVATE scheduler.cc
+        PRIVATE process_run.S
+        PRIVATE context_switch.S
+        PRIVATE process_ipc.cc
+        PRIVATE process_dispatcher.cc)

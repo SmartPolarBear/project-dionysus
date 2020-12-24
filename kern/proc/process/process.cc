@@ -40,7 +40,7 @@ CLSItem<process_dispatcher*, CLS_PROC_STRUCT_PTR> cur_proc;
 
 process_list_struct proc_list;
 
-static inline void new_proc_begin()
+void new_proc_begin()
 {
 	spinlock_release(&proc_list.lock);
 
@@ -110,7 +110,7 @@ static inline error_code setup_mm(process::process_dispatcher* proc)
 	return ERROR_SUCCESS;
 }
 
-static inline size_t process_terminal_impl(process::process_dispatcher* proc,
+static inline size_t process_terminate_impl(process::process_dispatcher* proc,
 	error_code err)
 {
 	if ((proc->flags & process::PROC_EXITING) == 0)
@@ -167,62 +167,13 @@ error_code process::create_process(IN const char* name,
 		return -ERROR_TOO_MANY_PROC;
 	}
 
-	auto proc = new(std::nothrow)process_dispatcher(name, alloc_pid(), cur_proc == nullptr ? 0 : cur_proc->id, flags);
+	auto proc = new(std::nothrow)process_dispatcher({ (char*)name, std::dynamic_extent },
+		alloc_pid(),
+		cur_proc == nullptr ? 0 : cur_proc->get_id(),
+		flags);
 	if (proc == nullptr)
 	{
 		return -ERROR_MEMORY_ALLOC;
-	}
-
-	//setup kernel stack
-	auto stack_block=new(std::nothrow)BLOCK<process::process_dispatcher::KERNSTACK_SIZE>;
-	if (stack_block == nullptr)
-	{
-		return -ERROR_MEMORY_ALLOC;
-	}
-	proc->kstack = (uintptr_t)stack_block;
-
-
-	// setup initial kernel stack
-	uintptr_t sp = proc->kstack + process::process_dispatcher::KERNSTACK_SIZE;
-
-	sp -= sizeof(*proc->tf);
-	proc->tf = reinterpret_cast<decltype(proc->tf)>(sp);
-
-	sp -= sizeof(uintptr_t);
-	*((uintptr_t*)sp) = proc->kstack;
-
-	sp -= sizeof(uintptr_t);
-	*((uintptr_t*)sp) = (uintptr_t)user_proc_entry;
-
-	sp -= sizeof(*proc->context);
-	proc->context = (context*)sp;
-	memset(proc->context, 0, sizeof(*proc->context));
-
-	proc->context->rip = (uintptr_t)new_proc_begin;
-
-	if (!proc->kstack)
-	{
-		delete proc;
-		return -ERROR_MEMORY_ALLOC;
-	}
-
-	error_code ret = ERROR_SUCCESS;
-	if ((ret = setup_mm(proc)) != ERROR_SUCCESS)
-	{
-		delete proc;
-		return ret;
-	}
-
-	proc->tf->cs = SEGMENT_VAL(SEGMENTSEL_UCODE, DPL_USER);
-	proc->tf->ss = SEGMENT_VAL(SEGMENTSEL_UDATA, DPL_USER);
-
-	proc->tf->rsp = USER_STACK_TOP;
-
-	proc->tf->rflags |= trap::EFLAG_IF;
-
-	if ((flags & PROC_SYS_SERVER) || (flags & PROC_DRIVER))
-	{
-		proc->tf->rflags |= trap::EFLAG_IOPL_MASK;
 	}
 
 	if (inherit_parent)
@@ -281,7 +232,7 @@ error_code process::process_load_binary(IN process_dispatcher* proc,
 
 error_code process::process_terminate(error_code err)
 {
-	return process_terminal_impl(cur_proc(), err);
+	return process_terminate_impl(cur_proc(), err);
 }
 
 void process::process_exit(IN process_dispatcher* proc)
@@ -448,5 +399,4 @@ error_code process::process_heap_change_size(IN process_dispatcher* proc, IN OUT
 
 	return ERROR_SUCCESS;
 }
-
 
