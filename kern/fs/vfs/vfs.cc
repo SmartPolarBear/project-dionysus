@@ -9,6 +9,7 @@
 #include <cstring>
 
 //FIXME: better process ERROR_UNSUPPORTED
+//TODO: add locks
 
 using namespace ktl;
 

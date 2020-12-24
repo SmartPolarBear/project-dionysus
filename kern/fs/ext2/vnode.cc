@@ -15,6 +15,8 @@
 using std::min;
 using std::max;
 
+using ktl::mutex::lock_guard;
+
 error_code_with_result<file_system::vnode_base*> file_system::ext2_vnode::find(const char* name)
 {
 	auto inode = reinterpret_cast<ext2_inode*>(this->private_data);
@@ -682,9 +684,6 @@ error_code_with_result<size_t> file_system::ext2_vnode::read(file_system::file_o
 
 	ext2_data* data = reinterpret_cast<ext2_data*>(ext2_fs->private_data);
 
-	// acquire the vnode lock
-	ktl::mutex::lock_guard lk{ this->lockable };
-
 	size_t full_size = EXT2_INODE_SIZE(inode), has_read = 0;
 
 	if (fd->pos >= full_size)
@@ -742,7 +741,7 @@ error_code_with_result<size_t> file_system::ext2_vnode::write(file_system::file_
 		return -ERROR_INVALID;
 	}
 
-	uint8_t* buf = const_cast< uint8_t*>((const uint8_t*)_buf);
+	auto buf = const_cast< uint8_t*>((const uint8_t*)_buf);
 
 	if (buf == nullptr)
 	{
@@ -758,6 +757,9 @@ error_code_with_result<size_t> file_system::ext2_vnode::write(file_system::file_
 	}
 
 	ext2_data* data = reinterpret_cast<ext2_data*>(ext2_fs->private_data);
+
+	// acquire the lock
+	ktl::mutex::lock_guard lk{ this->lockable };
 
 	const size_t full_size = EXT2_INODE_SIZE(inode);
 	const size_t block_size = data->get_block_size();
