@@ -26,8 +26,8 @@ enum error_code_values : error_code
 	ERROR_PAGE_NOT_PRESENT,        // page isn't persent
 	ERROR_HARDWARE_NOT_COMPATIBLE,    // the hardware isn't compatible with the kernel
 	ERROR_TOO_MANY_PROC,            // too many processes
-	ERROR_CANNOT_WAKEUP,            // process's state isn't valid for waking up
-	ERROR_HAS_KILLED,               // process to be killed has been killed
+	ERROR_CANNOT_WAKEUP,            // task's state isn't valid for waking up
+	ERROR_HAS_KILLED,               // task to be killed has been killed
 	ERROR_BUSY,                    // device is busy
 	ERROR_DEV_TIMEOUT,                // device operation time out
 	ERROR_IO,                        // IO error

@@ -127,7 +127,7 @@ static inline void pcie_enumerate_device(uintptr_t base_address,
 
 			if (dev == nullptr)
 			{
-				//TODO: better error process. may need API design update
+				//TODO: better error task. may need API design update
 				kdebug::kdebug_warning("pcie_enumerate_device memory allocate error\n");
 			}
 

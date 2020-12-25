@@ -61,7 +61,7 @@ error_code ext2_inode_resize(file_system::fs_instance* fs,
 			}
 		}
 
-		// process L1
+		// task L1
 		if (old_block_count > EXT2_DIRECT_BLOCK_COUNT
 			&& new_block_count <= EXT2_DIRECT_BLOCK_COUNT + addr_count)
 		{

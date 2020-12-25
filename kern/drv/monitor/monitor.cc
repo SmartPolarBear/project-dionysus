@@ -14,7 +14,7 @@
 #include "../../libs/basic_io/include/builtin_text_io.hpp"
 
 console::console_dev g_monitor_dev{};
-process::process_dispatcher* g_monitor_proc = nullptr;
+task::process_dispatcher* g_monitor_proc = nullptr;
 
 static inline error_code map_framebuffer(multiboot_tag_framebuffer* framebuffer_tag)
 {
@@ -48,15 +48,15 @@ static inline error_code load_monitor_executable()
 		return ret;
 	}
 
-	ret = process::create_process(name, process::PROC_SYS_SERVER, false, &g_monitor_proc);
+	ret = task::create_process(name, task::PROC_SYS_SERVER, false, &g_monitor_proc);
 
 	if (ret != ERROR_SUCCESS)
 	{
 		return ret;
 	}
 
-	// load the process, but not run
-	ret = process::process_load_binary(g_monitor_proc, bin, size, process::BINARY_ELF, 0);
+	// load the task, but not run
+	ret = task::process_load_binary(g_monitor_proc, bin, size, task::BINARY_ELF, 0);
 	if (ret != ERROR_SUCCESS)
 	{
 		return ret;
@@ -140,9 +140,9 @@ error_code monitor::monitor_init()
 		return ret;
 	}
 
-	// process is ready to run
+	// task is ready to run
 	g_monitor_proc->mm->brk_start = g_monitor_proc->mm->brk = PAGE_ROUNDUP(g_monitor_proc->mm->brk_start);
-	g_monitor_proc->state = process::PROC_STATE_RUNNABLE;
+	g_monitor_proc->state = task::PROC_STATE_RUNNABLE;
 
 	return ERROR_SUCCESS;
 }

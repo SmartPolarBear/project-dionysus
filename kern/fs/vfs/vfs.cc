@@ -8,7 +8,7 @@
 #include <memory>
 #include <cstring>
 
-//FIXME: better process ERROR_UNSUPPORTED
+//FIXME: better task ERROR_UNSUPPORTED
 //TODO: add locks
 
 using namespace ktl;

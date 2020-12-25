@@ -4,12 +4,15 @@
 #include "arch/amd64/atomic.h"
 #include "arch/amd64/cpu.h"
 
+#include "debug/kdebug.h"
+
 #include "system/error.hpp"
 #include "system/memlayout.h"
 #include "system/process.h"
 #include "system/scheduler.h"
 #include "system/types.h"
 #include "system/vmm.h"
+#include "system/cls.hpp"
 
 #include "drivers/apic/traps.h"
 #include "drivers/lock/spinlock.h"
@@ -43,15 +46,15 @@ using lock::spinlock_holding;
 		list_head* iter = nullptr, * tmp = nullptr;
 		list_for_safe(iter, tmp, &proc_list.active_head)
 		{
-			auto iter_proc = list_entry(iter, process::process_dispatcher, link);
-			if (iter_proc->state == process::PROC_STATE_RUNNABLE)
+			auto iter_proc = list_entry(iter, task::process_dispatcher, link);
+			if (iter_proc->state == task::PROC_STATE_RUNNABLE)
 			{
 
 				trap::pushcli();
 
 				cur_proc = iter_proc;
 
-				cur_proc->state = process::PROC_STATE_RUNNING;
+				cur_proc->state = task::PROC_STATE_RUNNING;
 				cur_proc->runs++;
 
 				KDEBUG_ASSERT(cur_proc != nullptr);
@@ -59,7 +62,7 @@ using lock::spinlock_holding;
 
 				lcr3(V2P((uintptr_t)cur_proc->mm->pgdir));
 
-				cpu()->tss.rsp0 = cur_proc->kstack + process::process_dispatcher::KERNSTACK_SIZE;
+				cpu()->tss.rsp0 = cur_proc->kstack + task::process_dispatcher::KERNSTACK_SIZE;
 
 //				swap_gs();
 //				gs_put(KERNEL_GS_KSTACK, (void*)cur_proc->kstack);
@@ -75,7 +78,7 @@ using lock::spinlock_holding;
 				cur_proc = nullptr;
 			}
 
-			// In scheduler, we check if there's process to be killed
+			// In scheduler, we check if there's task to be killed
 			while (proc_list.zombie_queue.size())
 			{
 				auto zombie = proc_list.zombie_queue.front();
@@ -85,7 +88,7 @@ using lock::spinlock_holding;
 
 				list_remove(&zombie->link);
 
-				zombie->state = process::PROC_STATE_UNUSED;
+				zombie->state = task::PROC_STATE_UNUSED;
 
 				delete zombie;
 			}
@@ -108,7 +111,7 @@ void scheduler::scheduler_enter()
 		KDEBUG_GENERALPANIC("scheduler_enter should validly hold proc_list.lock");
 	}
 
-	if (cur_proc->state == process::PROC_STATE_RUNNING)
+	if (cur_proc->state == task::PROC_STATE_RUNNING)
 	{
 		KDEBUG_GENERALPANIC("scheduler_enter should have current task not running");
 	}
@@ -128,7 +131,7 @@ void scheduler::scheduler_yield()
 {
 	spinlock_acquire(&proc_list.lock);
 
-	cur_proc->state = process::PROC_STATE_RUNNABLE;
+	cur_proc->state = task::PROC_STATE_RUNNABLE;
 
 	scheduler_enter();
 

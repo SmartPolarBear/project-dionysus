@@ -34,11 +34,11 @@ namespace libkernel
 				return ERROR_SUCCESS;
 			}
 
-			for (auto node = this->first; node != nullptr; node = node->next)
+			for (auto node = this->first; node != nullptr; node = node->head)
 			{
-				if (node->next == child)
+				if (node->head == child)
 				{
-					node->next = static_cast<TPtr>(child->next);
+					node->head = static_cast<TPtr>(child->next);
 					child->next = nullptr;
 					return ERROR_SUCCESS;
 				}

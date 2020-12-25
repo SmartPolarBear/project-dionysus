@@ -19,7 +19,7 @@ namespace file_system
 		// Means the node has no physical storage and resides only in memory
 		VNF_MEMORY = (1u << 0u),
 
-		// Means the link has different meanings depending on resolving process ID - use target_func instead
+		// Means the link has different meanings depending on resolving task ID - use target_func instead
 		VNF_PER_PROCESS = (1u << 1u)
 	};
 

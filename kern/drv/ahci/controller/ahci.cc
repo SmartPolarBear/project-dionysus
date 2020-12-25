@@ -280,7 +280,7 @@ static inline error_code ahci_initialize_controller(ahci_controller* ctl)
 	return ret;
 }
 
-// TODO: better error process
+// TODO: better error task
 error_code ahci::ahci_init()
 {
 	auto find_pred = [](const pci_device* dev)

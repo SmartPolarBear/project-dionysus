@@ -14,8 +14,8 @@ using lock::spinlock_acquire;
 using lock::spinlock_initialize_lock;
 using lock::spinlock_release;
 
-//extern __thread process::process_dispatcher *current;
-extern CLSItem<process::process_dispatcher*, CLS_PROC_STRUCT_PTR> cur_proc;
+//extern __thread task::process_dispatcher *current;
+extern CLSItem<task::process_dispatcher*, CLS_PROC_STRUCT_PTR> cur_proc;
 
 struct process_list_struct
 {
@@ -24,7 +24,8 @@ struct process_list_struct
 
 	size_t proc_count;
 	list_head active_head;
-	libkernel::queue<process::process_dispatcher*> zombie_queue;
+	task::process_dispatcher *head;
+	libkernel::queue<task::process_dispatcher*> zombie_queue;
 };
 
 extern process_list_struct proc_list;
@@ -33,7 +34,7 @@ extern "C" [[noreturn]] void user_proc_entry();
 
 extern "C" void context_switch(context** oldcontext, context* newcontext);
 
-// process.cc
-process::process_dispatcher* find_process(process_id pid);
+// task.cc
+task::process_dispatcher* find_process(process_id pid);
 
 

@@ -44,14 +44,14 @@ static inline void run(char* name)
 
 	KDEBUG_ASSERT(ret == ERROR_SUCCESS);
 
-	process::process_dispatcher* proc_he = nullptr;
-	process::create_process(name, 0, false, &proc_he);
+	task::process_dispatcher* proc_he = nullptr;
+	task::create_process(name, 0, false, &proc_he);
 
 	KDEBUG_ASSERT(proc_he != nullptr);
 
-	process::process_load_binary(proc_he, bin, size,
-		process::BINARY_ELF,
-		process::LOAD_BINARY_RUN_IMMEDIATELY);
+	task::process_load_binary(proc_he, bin, size,
+		task::BINARY_ELF,
+		task::LOAD_BINARY_RUN_IMMEDIATELY);
 
 	write_format("[cpu %d]load binary: %s, pid %d\n", cpu()->id, name, proc_he->id);
 }
@@ -65,7 +65,7 @@ static inline void init_servers()
 // global entry of the kernel
 extern "C" [[noreturn]] void kmain()
 {
-	// process the multiboot information
+	// task the multiboot information
 	multiboot::init_mbi();
 
 	// initialize physical memory
@@ -104,8 +104,8 @@ extern "C" [[noreturn]] void kmain()
 	// initialize the file system
 	file_system::fs_init();
 
-	// initialize user process manager
-	process::process_init();
+	// initialize user task manager
+	task::process_init();
 
 	// boot other CPU cores
 	ap::init_ap();

@@ -28,7 +28,7 @@ using namespace vmm;
 using namespace ktl::mutex;
 using namespace task;
 
-using namespace process;
+using namespace task;
 
 
 error_code process_dispatcher::setup_kernel_stack()

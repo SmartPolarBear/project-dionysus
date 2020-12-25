@@ -7,6 +7,7 @@
 #include "system/vmm.h"
 #include "system/syscall.h"
 #include "system/messaging.hpp"
+#include "system/cls.hpp"
 
 #include "drivers/apic/traps.h"
 #include "drivers/lock/spinlock.h"
@@ -19,20 +20,14 @@
 #include "task/job.hpp"
 #include "task/thread.hpp"
 
-
 #include <cstring>
 #include <algorithm>
 #include <span>
 
-namespace process
+namespace task
 {
 
-
-
-
-
-
-// Per-process state
+// Per-task state
 //	struct process_dispatcher
 //	{
 //		static constexpr size_t KERNSTACK_PAGES = 2;
@@ -96,12 +91,16 @@ namespace process
 //		}
 //	};
 
-/// the beginning of new process. Barely return to user_proc_entry
+/// the beginning of new task. Barely return to user_proc_entry
 	void new_proc_begin();
 
-	void process_init(void);
+	void process_init();
 
-// create a process
+	// FIXME
+	using task::process_dispatcher;
+	using task::binary_types;
+
+// create a task
 	error_code create_process(IN const char* name,
 		IN size_t flags,
 		IN bool inherit_parent,
@@ -113,10 +112,10 @@ namespace process
 		IN binary_types type,
 		IN size_t flags);
 
-	// handle process cleanup when exiting
+	// handle task cleanup when exiting
 	void process_exit(IN process_dispatcher* proc);
 
-	// terminate current process
+	// terminate current task
 	error_code process_terminate(error_code error_code);
 
 	// sleep on certain channel
@@ -136,7 +135,7 @@ namespace process
 	// allocate more memory
 	error_code process_heap_change_size(IN process_dispatcher* proc, IN OUT uintptr_t* heap_ptr);
 
-} // namespace process
+} // namespace task
 
-//extern __thread process::process_dispatcher* current;
-extern CLSItem<process::process_dispatcher*, CLS_PROC_STRUCT_PTR> cur_proc;
+//extern __thread task::process_dispatcher* current;
+extern CLSItem<task::process_dispatcher*, CLS_PROC_STRUCT_PTR> cur_proc;

@@ -31,13 +31,13 @@ using lock::spinlock_initialize_lock;
 using lock::spinlock_release;
 using lock::spinlock_holding;
 
-using process::process_dispatcher;
+using task::process_dispatcher;
 
 using namespace memory;
 using namespace vmm;
 
 // send and receive message
-error_code process::process_ipc_send(process_id pid, IN const void* message, size_t size)
+error_code task::process_ipc_send(process_id pid, IN const void* message, size_t size)
 {
 	auto target = find_process(pid);
 	if (target == nullptr)
@@ -71,7 +71,7 @@ error_code process::process_ipc_send(process_id pid, IN const void* message, siz
 	return ERROR_SUCCESS;
 }
 
-error_code process::process_ipc_receive(OUT void* message_out)
+error_code task::process_ipc_receive(OUT void* message_out)
 {
 	spinlock_acquire(&cur_proc->messaging_data.lock);
 
@@ -95,7 +95,7 @@ error_code process::process_ipc_receive(OUT void* message_out)
 	return ERROR_SUCCESS;
 }
 
-error_code process::process_ipc_send_page(process_id pid, uint64_t unique_val, const void* page, size_t perm)
+error_code task::process_ipc_send_page(process_id pid, uint64_t unique_val, const void* page, size_t perm)
 {
 	auto target = find_process(pid);
 	if (target == nullptr)
@@ -167,7 +167,7 @@ error_code process::process_ipc_send_page(process_id pid, uint64_t unique_val, c
 	return ERROR_SUCCESS;
 }
 
-error_code process::process_ipc_receive_page(void* out_page)
+error_code task::process_ipc_receive_page(void* out_page)
 {
 	if (out_page < (void*)USER_TOP && ((uintptr_t)out_page) % PAGE_SIZE)
 	{
