@@ -84,14 +84,13 @@ namespace task
 		std::optional<policy_item> action[POLICY_CONDITION_MAX];
 	};
 
-	class job
+	class job final
 		: object::kernel_object
 	{
 	 public:
 		using job_list_type = libkernel::single_linked_list_base<job*>;
 		using process_list_type = libkernel::single_linked_list_base<process_dispatcher*>;
 	 public:
-
 
 	 private:
 
