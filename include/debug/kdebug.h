@@ -4,9 +4,11 @@
 
 #include "drivers/lock/spinlock.h"
 
-#include "drivers/debug/kerror.h"
+#include "kerror.h"
 
 #include "drivers/acpi/cpu.h"
+
+#include "debug/thread_annotations.hpp"
 
 #define DEBUG
 //#define RELEASE

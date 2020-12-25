@@ -28,7 +28,7 @@
 #include "drivers/apic/traps.h"
 #include "drivers/apic/timer.h"
 #include "drivers/console/console.h"
-#include "drivers/debug/kdebug.h"
+#include "debug/kdebug.h"
 
 #include "system/kmalloc.hpp"
 #include "system/memlayout.h"

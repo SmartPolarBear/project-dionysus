@@ -24,7 +24,7 @@
 #include "system/pmm.h"
 
 #include "drivers/console/console.h"
-#include "drivers/debug/kdebug.h"
+#include "debug/kdebug.h"
 
 #include "../../libs/basic_io/include/maths.hpp"
 

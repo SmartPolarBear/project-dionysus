@@ -35,7 +35,7 @@
 
 #include "drivers/apic/traps.h"
 #include "drivers/console/console.h"
-#include "drivers/debug/kdebug.h"
+#include "debug/kdebug.h"
 
 #include "../../libs/basic_io/include/builtin_text_io.hpp"
 

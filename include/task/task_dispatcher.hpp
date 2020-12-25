@@ -1,5 +1,7 @@
 #pragma once
 
+#include "object/kernel_object.hpp"
+
 #include "arch/amd64/regs.h"
 
 #include "system/mmu.h"

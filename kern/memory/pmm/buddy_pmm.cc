@@ -3,7 +3,7 @@
 #include "system/memlayout.h"
 #include "system/pmm.h"
 
-#include "drivers/debug/kdebug.h"
+#include "debug/kdebug.h"
 
 #include "kbl/pod_list.h"
 

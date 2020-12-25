@@ -1,7 +1,7 @@
 #include "system/types.h"
 #include "system/kmalloc.hpp"
 
-#include "drivers/debug/kdebug.h"
+#include "debug/kdebug.h"
 #include "drivers/cmos/rtc.hpp"
 #include "drivers/apic/timer.h"
 

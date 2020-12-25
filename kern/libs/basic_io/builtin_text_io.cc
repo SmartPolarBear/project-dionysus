@@ -1,7 +1,7 @@
 #include "include/builtin_text_io.hpp"
 
 #include "drivers/console/console.h"
-#include "drivers/debug/kdebug.h"
+#include "debug/kdebug.h"
 #include "drivers/lock/spinlock.h"
 
 #include "include/maths.hpp"
