@@ -17,7 +17,9 @@
 #include "drivers/apic/traps.h"
 #include "drivers/lock/spinlock.h"
 
+#include "ktl/mutex/lock_guard.hpp"
 #include "kbl/pod_list.h"
+
 #include "../../libs/basic_io/include/builtin_text_io.hpp"
 
 using libkernel::list_add;
@@ -39,16 +41,22 @@ using lock::spinlock_holding;
 		// enable interrupt
 		sti();
 
+		if (proc_list.head == nullptr)
+			continue;
+
 		spinlock_acquire(&proc_list.lock);
+//		ktl::mutex::lock_guard guard{ proc_list.lockable };
 
 		// find runnable ones, we may do exiting works and therefore may remove entries, so
 		// we use list_for_safe
 //		list_head* iter = nullptr, * tmp = nullptr;
 //		list_for_safe(iter, tmp, &proc_list.active_head)
+
 		for (task::process_dispatcher* iter_proc = proc_list.head, * tmp =
 			static_cast<task::process_dispatcher*>(iter_proc->get_next());
 			 iter_proc != nullptr;
-			 iter_proc = tmp, tmp = static_cast<task::process_dispatcher*>(iter_proc->get_next()))
+			 iter_proc = tmp, tmp = static_cast<task::process_dispatcher*>(iter_proc == nullptr ? nullptr
+																								: iter_proc->get_next()))
 		{
 //			auto iter_proc = list_entry(iter, task::process_dispatcher, link);
 			if (iter_proc->state == task::PROC_STATE_RUNNABLE)
@@ -100,7 +108,7 @@ using lock::spinlock_holding;
 			}
 		}
 
-		spinlock_release(&proc_list.lock);
+//		spinlock_release(&proc_list.lock);
 
 	}
 }

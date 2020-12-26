@@ -40,7 +40,6 @@ CLSItem<process_dispatcher*, CLS_PROC_STRUCT_PTR> cur_proc;
 
 process_list_struct proc_list;
 
-
 // precondition: the lock must be held
 static inline process_id alloc_pid(void)
 {
@@ -141,14 +140,13 @@ error_code task::create_process(IN const char* name,
 	IN bool inherit_parent,
 	OUT process_dispatcher** retproc)
 {
-	spinlock_acquire(&proc_list.lock);
 
 	if (proc_list.proc_count >= task::PROC_MAX_COUNT)
 	{
 		return -ERROR_TOO_MANY_PROC;
 	}
 
-	auto proc = new(std::nothrow)process_dispatcher({ (char*)name, std::dynamic_extent },
+	auto proc = new(std::nothrow)process_dispatcher({ (char*)name, strlen(name) },
 		alloc_pid(),
 		cur_proc == nullptr ? 0 : cur_proc->get_id(),
 		flags);
@@ -157,10 +155,16 @@ error_code task::create_process(IN const char* name,
 		return -ERROR_MEMORY_ALLOC;
 	}
 
+	if (auto ret = proc->initialize();ret != ERROR_SUCCESS)
+	{
+		return ret;
+	}
+
 	if (inherit_parent)
 	{
 		// TODO: copy kbl from parent task
 	}
+	spinlock_acquire(&proc_list.lock);
 
 	if (proc_list.head == nullptr)
 	{

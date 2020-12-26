@@ -72,6 +72,8 @@ error_code process_dispatcher::setup_registers()
 	{
 		tf->rflags |= trap::EFLAG_IOPL_MASK;
 	}
+
+	return ERROR_SUCCESS;
 }
 
 task::process_dispatcher::process_dispatcher(std::span<char> name, process_id id, process_id parent_id, size_t flags)
@@ -105,7 +107,25 @@ error_code process_dispatcher::initialize()
 
 error_code process_dispatcher::setup_mm()
 {
-	return 0;
+	this->mm = vmm::mm_create();
+	if (this->mm == nullptr)
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
+
+	vmm::pde_ptr_t pgdir = vmm::pgdir_entry_alloc();
+
+	if (pgdir == nullptr)
+	{
+		vmm::mm_destroy(this->mm);
+		return -ERROR_MEMORY_ALLOC;
+	}
+
+	vmm::duplicate_kernel_pml4t(pgdir);
+
+	this->mm->pgdir = pgdir;
+
+	return ERROR_SUCCESS;
 }
 error_code process_dispatcher::load_binary(uint8_t* bin, size_t binary_size, binary_types type, size_t flags)
 {
