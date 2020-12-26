@@ -108,7 +108,7 @@ using lock::spinlock_holding;
 			}
 		}
 
-//		spinlock_release(&proc_list.lock);
+		spinlock_release(&proc_list.lock);
 
 	}
 }
