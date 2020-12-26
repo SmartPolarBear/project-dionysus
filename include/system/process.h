@@ -91,9 +91,6 @@ namespace task
 //		}
 //	};
 
-/// the beginning of new task. Barely return to user_proc_entry
-	void new_proc_begin();
-
 	void process_init();
 
 	// FIXME

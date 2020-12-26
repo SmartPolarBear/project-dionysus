@@ -40,12 +40,6 @@ CLSItem<process_dispatcher*, CLS_PROC_STRUCT_PTR> cur_proc;
 
 process_list_struct proc_list;
 
-void new_proc_begin()
-{
-	spinlock_release(&proc_list.lock);
-
-	// "return" to user_proc_entry
-}
 
 // precondition: the lock must be held
 static inline process_id alloc_pid(void)

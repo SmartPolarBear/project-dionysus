@@ -4,7 +4,7 @@
 #include "system/process.h"
 #include "system/syscall.h"
 
-#include "drivers/debug/kdebug.h"
+#include "debug/kdebug.h"
 #include "drivers/apic/traps.h"
 #include "drivers/lock/spinlock.h"
 
@@ -54,16 +54,16 @@ extern "C" [[clang::optnone]] error_code syscall_body(const syscall_regs* regs)
 		KDEBUG_FOLLOWPANIC("Syscall number out of range.");
 	}
 
-	if (cur_proc->flags & process::PROC_EXITING)
+	if (cur_proc->get_flags() & task::PROC_EXITING)
 	{
-		process::process_exit(cur_proc());
+		task::process_exit(cur_proc());
 	}
 
 	auto ret = syscall_table[syscall_no](regs);
 
-	if (cur_proc->flags & process::PROC_EXITING)
+	if (cur_proc->get_flags() & task::PROC_EXITING)
 	{
-		process::process_exit(cur_proc());
+		task::process_exit(cur_proc());
 	}
 
 	return ret;

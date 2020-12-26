@@ -4,7 +4,7 @@
 #include "system/process.h"
 #include "system/syscall.h"
 
-#include "drivers/debug/kdebug.h"
+#include "debug/kdebug.h"
 #include "drivers/apic/traps.h"
 
 #include "arch/amd64/cpuid.h"

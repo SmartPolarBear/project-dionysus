@@ -30,6 +30,12 @@ using namespace task;
 
 using namespace task;
 
+void new_proc_begin()
+{
+	spinlock_release(&proc_list.lock);
+
+	// "return" to user_proc_entry
+}
 
 error_code process_dispatcher::setup_kernel_stack()
 {

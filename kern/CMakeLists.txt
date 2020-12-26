@@ -89,6 +89,7 @@ add_subdirectory(task)
 add_subdirectory(drv)
 add_subdirectory(object)
 add_subdirectory(servers)
+add_subdirectory(user)
 
 # custom targets
 

@@ -4,7 +4,7 @@
 #include "system/process.h"
 #include "system/syscall.h"
 
-#include "drivers/debug/kdebug.h"
+#include "debug/kdebug.h"
 #include "drivers/apic/traps.h"
 
 #include "arch/amd64/cpuid.h"
@@ -17,7 +17,7 @@ error_code sys_hello(const syscall_regs* regs)
 {
 
 	write_format("[pid %d]hello ! %lld %lld %lld %lld\n",
-		cur_proc->id,
+		cur_proc->get_id(),
 		get_nth_arg(regs, 0),
 		get_nth_arg(regs, 1),
 		get_nth_arg(regs, 2),
