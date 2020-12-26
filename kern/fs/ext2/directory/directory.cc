@@ -7,7 +7,7 @@
 
 #include "system/kmalloc.hpp"
 
-#include "drivers/debug/kdebug.h"
+#include "debug/kdebug.h"
 
 using namespace file_system;
 

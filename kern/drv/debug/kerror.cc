@@ -2,8 +2,8 @@
 #include "arch/amd64/x86.h"
 
 #include "drivers/console/console.h"
-#include "drivers/debug/kdebug.h"
-#include "drivers/debug/kerror.h"
+#include "debug/kdebug.h"
+#include "debug/kerror.h"
 
 #include "system/error.hpp"
 #include "system/memlayout.h"

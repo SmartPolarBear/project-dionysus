@@ -43,10 +43,14 @@ using lock::spinlock_holding;
 
 		// find runnable ones, we may do exiting works and therefore may remove entries, so
 		// we use list_for_safe
-		list_head* iter = nullptr, * tmp = nullptr;
-		list_for_safe(iter, tmp, &proc_list.active_head)
+//		list_head* iter = nullptr, * tmp = nullptr;
+//		list_for_safe(iter, tmp, &proc_list.active_head)
+		for (task::process_dispatcher* iter_proc = proc_list.head, * tmp =
+			static_cast<task::process_dispatcher*>(iter_proc->get_next());
+			 iter_proc != nullptr;
+			 iter_proc = tmp, tmp = static_cast<task::process_dispatcher*>(iter_proc->get_next()))
 		{
-			auto iter_proc = list_entry(iter, task::process_dispatcher, link);
+//			auto iter_proc = list_entry(iter, task::process_dispatcher, link);
 			if (iter_proc->state == task::PROC_STATE_RUNNABLE)
 			{
 
@@ -62,14 +66,17 @@ using lock::spinlock_holding;
 
 				lcr3(V2P((uintptr_t)cur_proc->mm->pgdir));
 
-				cpu()->tss.rsp0 = cur_proc->kstack + task::process_dispatcher::KERNSTACK_SIZE;
+				auto raw_kstack = cur_proc->kstack.get();
+				uintptr_t kstack_addr = (uintptr_t)raw_kstack;
+
+				cpu()->tss.rsp0 = kstack_addr + task::process_dispatcher::KERNSTACK_SIZE;
 
 //				swap_gs();
 //				gs_put(KERNEL_GS_KSTACK, (void*)cur_proc->kstack);
 //				swap_gs();
 
 				uintptr_t* kstack_gs = (uintptr_t*)(((uint8_t*)cpu->kernel_gs) + KERNEL_GS_KSTACK);
-				*kstack_gs = cur_proc->kstack;
+				*kstack_gs = kstack_addr;
 
 				trap::popcli();
 
@@ -81,16 +88,15 @@ using lock::spinlock_holding;
 			// In scheduler, we check if there's task to be killed
 			while (proc_list.zombie_queue.size())
 			{
-				auto zombie = proc_list.zombie_queue.front();
-				proc_list.zombie_queue.pop();
-
-				delete[] (uint8_t*)zombie->kstack;
-
-				list_remove(&zombie->link);
-
-				zombie->state = task::PROC_STATE_UNUSED;
-
-				delete zombie;
+				//FIXME
+//				auto zombie = proc_list.zombie_queue.front();
+//				proc_list.zombie_queue.pop();
+//
+//				list_remove(&zombie->link);
+//
+//				zombie->state = task::PROC_STATE_UNUSED;
+//
+//				delete zombie;
 			}
 		}
 
@@ -123,7 +129,9 @@ void scheduler::scheduler_enter()
 
 	auto intr_enable = cpu->intr_enable;
 
+//	context_switch(&cur_proc->context, cpu->scheduler);
 	context_switch(&cur_proc->context, cpu->scheduler);
+
 	cpu->intr_enable = intr_enable;
 }
 

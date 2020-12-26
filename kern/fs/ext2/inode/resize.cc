@@ -8,7 +8,7 @@
 
 #include "system/kmalloc.hpp"
 
-#include "drivers/debug/kdebug.h"
+#include "debug/kdebug.h"
 
 #include <cstring>
 

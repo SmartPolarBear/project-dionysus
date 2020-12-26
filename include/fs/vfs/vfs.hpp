@@ -2,7 +2,7 @@
 
 #include "system/error.hpp"
 
-#include "drivers/debug/kdebug.h"
+#include "debug/kdebug.h"
 
 #include "kbl/pod_list.h"
 #include "kbl/list_base.hpp"

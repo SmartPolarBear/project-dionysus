@@ -1,6 +1,6 @@
 #pragma once
 
-#include "drivers/debug/kdebug.h"
+#include "debug/kdebug.h"
 #include "drivers/lock/spinlock.h"
 #include "drivers/apic/traps.h"
 

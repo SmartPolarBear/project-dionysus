@@ -1,4 +1,4 @@
-#include "drivers/debug/kdebug.h"
+#include "debug/kdebug.h"
 #include "system/types.h"
 
 extern "C"

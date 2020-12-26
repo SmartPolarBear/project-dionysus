@@ -1,6 +1,6 @@
 #include "arch/amd64/x86.h"
 
-#include "drivers/debug/kdebug.h"
+#include "debug/kdebug.h"
 #include "drivers/monitor/monitor.hpp"
 #include "drivers/monitor/vbe.hpp"
 #include "drivers/console/console.h"
@@ -18,10 +18,10 @@ task::process_dispatcher* g_monitor_proc = nullptr;
 
 static inline error_code map_framebuffer(multiboot_tag_framebuffer* framebuffer_tag)
 {
-	vmm::mm_map(g_monitor_proc->mm, framebuffer_tag->common.framebuffer_addr,
+	vmm::mm_map(g_monitor_proc->get_mm(), framebuffer_tag->common.framebuffer_addr,
 		PAGE_SIZE, vmm::VM_WRITE, nullptr);
 
-	auto error = vmm::map_range(g_monitor_proc->mm->pgdir,
+	auto error = vmm::map_range(g_monitor_proc->get_mm()->pgdir,
 		framebuffer_tag->common.framebuffer_addr,
 		framebuffer_tag->common.framebuffer_addr,
 		PAGE_SIZE);
@@ -75,10 +75,10 @@ static inline error_code load_server_info()
 	// allocate more program heap memory
 	size_t page_count = PAGE_ROUNDUP(info_size) / PAGE_SIZE;
 	page_info* pages = nullptr;
-	auto ret = pmm::pgdir_alloc_pages(g_monitor_proc->mm->pgdir,
+	auto ret = pmm::pgdir_alloc_pages(g_monitor_proc->get_mm()->pgdir,
 		true,
 		page_count,
-		g_monitor_proc->mm->brk_start,
+		g_monitor_proc->get_mm()->brk_start,
 		PG_U | PG_P,
 		&pages);
 
@@ -117,8 +117,8 @@ static inline error_code load_server_info()
 
 	heap_addr = argv_ptr;
 
-	g_monitor_proc->tf->rdi = 2; // argc
-	g_monitor_proc->tf->rsi = argv_start; // argv
+	g_monitor_proc->get_tf()->rdi = 2; // argc
+	g_monitor_proc->get_tf()->rsi = argv_start; // argv
 
 	return ERROR_SUCCESS;
 }
@@ -141,8 +141,8 @@ error_code monitor::monitor_init()
 	}
 
 	// task is ready to run
-	g_monitor_proc->mm->brk_start = g_monitor_proc->mm->brk = PAGE_ROUNDUP(g_monitor_proc->mm->brk_start);
-	g_monitor_proc->state = task::PROC_STATE_RUNNABLE;
+	g_monitor_proc->get_mm()->brk_start = g_monitor_proc->get_mm()->brk = PAGE_ROUNDUP(g_monitor_proc->get_mm()->brk_start);
+	g_monitor_proc->set_state(task::PROC_STATE_RUNNABLE);
 
 	return ERROR_SUCCESS;
 }

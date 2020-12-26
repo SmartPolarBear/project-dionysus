@@ -2,7 +2,7 @@
 #include "drivers/apic/apic.h"
 #include "drivers/apic/traps.h"
 #include "drivers/console/console.h"
-#include "drivers/debug/kdebug.h"
+#include "debug/kdebug.h"
 #include "drivers/apic/timer.h"
 
 #include "system/memlayout.h"

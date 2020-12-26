@@ -47,21 +47,23 @@ static error_code load_ph(IN const Elf64_Phdr& prog_header,
 
 	auto[vm_flags, perms] = parse_ph_flags(prog_header);
 
-	if ((ret = vmm::mm_map(proc->mm, prog_header.p_vaddr, prog_header.p_memsz, vm_flags, nullptr)) != ERROR_SUCCESS)
+	auto proc_mm = proc->get_mm();
+
+	if ((ret = vmm::mm_map(proc_mm, prog_header.p_vaddr, prog_header.p_memsz, vm_flags, nullptr)) != ERROR_SUCCESS)
 	{
 		//TODO do clean-ups
 		return ret;
 	}
 
-	if (proc->mm->brk_start < prog_header.p_vaddr + prog_header.p_memsz)
+	if (proc_mm->brk_start < prog_header.p_vaddr + prog_header.p_memsz)
 	{
-		proc->mm->brk_start = prog_header.p_vaddr + prog_header.p_memsz;
+		proc_mm->brk_start = prog_header.p_vaddr + prog_header.p_memsz;
 	}
 
 	// ph->p_filesz <= ph->p_memsz
 	size_t page_count = PAGE_ROUNDUP(prog_header.p_memsz) / PAGE_SIZE;
 	page_info* pages = nullptr;
-	auto error = pmm::pgdir_alloc_pages(proc->mm->pgdir, false, page_count, prog_header.p_vaddr, perms, &pages);
+	auto error = pmm::pgdir_alloc_pages(proc_mm->pgdir, false, page_count, prog_header.p_vaddr, perms, &pages);
 
 	if (error != ERROR_SUCCESS)
 	{
@@ -99,21 +101,22 @@ static error_code alloc_sh(IN const Elf64_Shdr& shdr,
 	error_code ret = ERROR_SUCCESS;
 
 	auto[vm_flags, perms] = parse_sh_flags(shdr);
+	auto proc_mm = proc->get_mm();
 
-	if ((ret = vmm::mm_map(proc->mm, shdr.sh_addr, shdr.sh_size, vm_flags, nullptr)) != ERROR_SUCCESS)
+	if ((ret = vmm::mm_map(proc_mm, shdr.sh_addr, shdr.sh_size, vm_flags, nullptr)) != ERROR_SUCCESS)
 	{
 		//TODO do clean-ups
 		return ret;
 	}
 
-	if (proc->mm->brk_start < shdr.sh_addr + shdr.sh_size)
+	if (proc_mm->brk_start < shdr.sh_addr + shdr.sh_size)
 	{
-		proc->mm->brk_start = shdr.sh_addr + shdr.sh_size;
+		proc_mm->brk_start = shdr.sh_addr + shdr.sh_size;
 	}
 
 	size_t page_count = PAGE_ROUNDUP(shdr.sh_size) / PAGE_SIZE;
 	page_info* pages = nullptr;
-	auto error = pmm::pgdir_alloc_pages(proc->mm->pgdir, true, page_count, shdr.sh_addr, perms, &pages);
+	auto error = pmm::pgdir_alloc_pages(proc_mm->pgdir, true, page_count, shdr.sh_addr, perms, &pages);
 
 	if (error != ERROR_SUCCESS)
 	{
@@ -131,6 +134,7 @@ error_code load_elf_binary(IN task::process_dispatcher* proc,
 {
 	Elf64_Phdr* prog_header = nullptr;
 	size_t count = 0;
+	auto proc_mm = proc->get_mm();
 
 	auto ret = elf.get_program_headers(&prog_header, &count);
 
@@ -170,7 +174,7 @@ error_code load_elf_binary(IN task::process_dispatcher* proc,
 		}
 	}
 
-	proc->mm->brk_start = proc->mm->brk = PAGE_ROUNDUP(proc->mm->brk_start);
+	proc_mm->brk_start = proc_mm->brk = PAGE_ROUNDUP(proc_mm->brk_start);
 
 	return ERROR_SUCCESS;
 }

@@ -2,7 +2,7 @@
 
 #include "system/types.h"
 
-#include "drivers/debug/kdebug.h"
+#include "debug/kdebug.h"
 
 // Intel's advanced configuration and power interface
 namespace acpi

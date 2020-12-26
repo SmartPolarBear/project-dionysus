@@ -1,6 +1,10 @@
 #pragma once
 #include "task/task_dispatcher.hpp"
 
+//FIXME
+
+#include "system/scheduler.h"
+
 namespace task
 {
 	class process_dispatcher
@@ -63,5 +67,11 @@ namespace task
 			error_code err);
 
 		friend error_code alloc_ustack(task::process_dispatcher* proc);
+
+		friend void scheduler::scheduler_enter();
+
+		friend void scheduler::scheduler_loop();
+
+		friend void scheduler::scheduler_yield();
 	};
 }

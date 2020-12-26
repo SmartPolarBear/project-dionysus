@@ -2,7 +2,7 @@
 
 #include "arch/amd64/cpu.h"
 
-#include "drivers/debug/kdebug.h"
+#include "debug/kdebug.h"
 #include "drivers/lock/spinlock.h"
 
 #include "kbl/pod_list.h"

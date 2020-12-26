@@ -2,7 +2,7 @@
 
 #include "fs/ext2/ext2.hpp"
 
-#include "drivers/debug/kdebug.h"
+#include "debug/kdebug.h"
 
 #include "system/types.h"
 #include "system/error.hpp"

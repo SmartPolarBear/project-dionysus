@@ -8,7 +8,7 @@
 #include "kbl/pod_list.h"
 
 #include "drivers/console/console.h"
-#include "drivers/debug/kdebug.h"
+#include "debug/kdebug.h"
 
 using namespace multiboot;
 

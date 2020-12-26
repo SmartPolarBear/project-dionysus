@@ -7,8 +7,8 @@
 #include "drivers/apic/traps.h"
 #include "drivers/apic/timer.h"
 #include "drivers/console/console.h"
-#include "drivers/debug/kdebug.h"
-#include "drivers/debug/kerror.h"
+#include "debug/kdebug.h"
+#include "debug/kerror.h"
 #include "drivers/monitor/monitor.hpp"
 #include "drivers/simd/simd.hpp"
 #include "drivers/pci/pci.hpp"
@@ -53,7 +53,7 @@ static inline void run(char* name)
 		task::BINARY_ELF,
 		task::LOAD_BINARY_RUN_IMMEDIATELY);
 
-	write_format("[cpu %d]load binary: %s, pid %d\n", cpu()->id, name, proc_he->id);
+	write_format("[cpu %d]load binary: %s, pid %d\n", cpu()->id, name, proc_he->get_id());
 }
 
 static inline void init_servers()

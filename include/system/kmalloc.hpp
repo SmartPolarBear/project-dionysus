@@ -7,7 +7,7 @@
 #include "system/multiboot.h"
 #include "system/vmm.h"
 
-#include "drivers/debug/kdebug.h"
+#include "debug/kdebug.h"
 
 namespace memory
 {

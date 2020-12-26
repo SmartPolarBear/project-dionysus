@@ -6,6 +6,7 @@
 
 #include "drivers/lock/spinlock.h"
 #include "drivers/apic/traps.h"
+#include "drivers/acpi/cpu.h"
 
 #include "kbl/queue.hpp"
 
@@ -24,7 +25,7 @@ struct process_list_struct
 
 	size_t proc_count;
 	list_head active_head;
-	task::process_dispatcher *head;
+	task::process_dispatcher* head;
 	libkernel::queue<task::process_dispatcher*> zombie_queue;
 };
 

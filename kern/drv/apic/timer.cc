@@ -10,7 +10,7 @@
 #include "drivers/acpi/cpu.h"
 #include "drivers/apic/apic.h"
 #include "drivers/apic/traps.h"
-#include "drivers/debug/kdebug.h"
+#include "debug/kdebug.h"
 #include "drivers/lock/spinlock.h"
 #include "drivers/acpi/cpu.h"
 
@@ -86,7 +86,7 @@ error_code trap_handle_tick([[maybe_unused]] trap::trap_frame info)
 
 		local_apic::write_eoi();
 
-		if (cur_proc != nullptr && cur_proc->state == task::PROC_STATE_RUNNING)
+		if (cur_proc != nullptr && cur_proc->get_state() == task::PROC_STATE_RUNNING)
 		{
 			scheduler::scheduler_yield();
 		}

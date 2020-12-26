@@ -11,6 +11,7 @@
 #include "system/messaging.hpp"
 
 #include "drivers/apic/traps.h"
+#include "drivers/acpi/cpu.h"
 #include "drivers/lock/spinlock.h"
 
 #include "kbl/pod_list.h"
@@ -75,7 +76,7 @@ namespace task
 
 		task_dispatcher(std::span<char> name, process_id id, process_id parent_id, size_t flags)
 			: single_linked_list_base(), name_length(0), state(PROC_STATE_EMBRYO), id(id), parent_id(parent_id),
-			  runs(0), kstack(0), mm(nullptr), flags(flags), wating_state(PROC_WAITING_NONE),
+			  runs(0), mm(nullptr), flags(flags), wating_state(PROC_WAITING_NONE),
 			  exit_code(ERROR_SUCCESS), tf(nullptr), context(nullptr)
 		{
 			for (auto c:name)
@@ -123,6 +124,27 @@ namespace task
 			task_dispatcher::id = _id;
 		}
 
+		// FIXME: remove first
+		vmm::mm_struct* get_mm() const
+		{
+			return mm;
+		}
+
+		size_t get_flags() const
+		{
+			return flags;
+		}
+
+		void set_flags(size_t flags)
+		{
+			task_dispatcher::flags = flags;
+		}
+
+		trap::trap_frame* get_tf() const
+		{
+			return tf;
+		}
+
 	 protected:
 
 		char name[PROC_NAME_LEN]{};
@@ -141,10 +163,12 @@ namespace task
 		vmm::mm_struct* mm;
 
 		size_t flags;
+
 		size_t wating_state;
 		error_code exit_code;
 
 		trap::trap_frame* tf;
+
 		context* context;
 
 		struct sleep_data_struct

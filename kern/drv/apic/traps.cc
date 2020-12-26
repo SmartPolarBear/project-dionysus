@@ -186,7 +186,7 @@ extern "C" void trap_body(trap::trap_frame info)
 
 	// If in the user space, directly kill it
 	if (cur_proc() != nullptr
-		&& (cur_proc->flags & task::PROC_EXITING)
+		&& (cur_proc->get_flags() & task::PROC_EXITING)
 		&& ((info.cs & 0b11) == DPL_USER))
 	{
 		task::process_exit(cur_proc());

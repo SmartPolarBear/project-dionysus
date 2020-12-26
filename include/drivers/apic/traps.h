@@ -2,7 +2,7 @@
 
 #include "arch/amd64/regs.h"
 
-#include "drivers/debug/kdebug.h"
+#include "debug/kdebug.h"
 
 // defined in trapentry_asm.S
 extern "C" void trap_entry();
