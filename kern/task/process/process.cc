@@ -140,6 +140,7 @@ error_code task::create_process(IN const char* name,
 	IN bool inherit_parent,
 	OUT process_dispatcher** retproc)
 {
+	spinlock_acquire(&proc_list.lock);
 
 	if (proc_list.proc_count >= task::PROC_MAX_COUNT)
 	{
@@ -164,7 +165,6 @@ error_code task::create_process(IN const char* name,
 	{
 		// TODO: copy kbl from parent task
 	}
-	spinlock_acquire(&proc_list.lock);
 
 	if (proc_list.head == nullptr)
 	{
