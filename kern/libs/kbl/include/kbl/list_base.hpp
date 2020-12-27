@@ -14,6 +14,7 @@ namespace libkernel
 	 public:
 		template<typename T>
 		using pred_type = bool (*)(TPtr, T&& key);
+		using head_type = linked_list_base;
 
 	 private:
 		TPtr next{ nullptr };
@@ -67,11 +68,20 @@ namespace libkernel
 			return next;
 		}
 
+		[[nodiscard]]TPtr get_element() const
+		{
+			return (TPtr)this;
+		}
+
+		template<Pointer NewT>
+		[[nodiscard]]NewT get_element_as() const
+		{
+			return (NewT)(TPtr)this;
+		}
 	};
 
 #define llb_for(pos, head) \
     for ((pos) = (head)->get_next(); (pos) != (head); (pos) = (pos)->get_next())
-
 
 #define llb_for_safe(pos, n, head) \
     for (pos = (head)->get_next(), n = pos->get_next(); pos != (head); pos = n, n = pos->get_next())

@@ -120,7 +120,7 @@ task::process_dispatcher* find_process(process_id pid)
 	decltype(&proc_list.head) iter;
 	llb_for(iter, &proc_list.head)
 	{
-		auto iter_proc = static_cast<task::process_dispatcher*>(iter);
+		auto iter_proc = iter->get_element_as<process_dispatcher*>();
 		if (iter_proc->get_id() == pid)
 		{
 			return (task::process_dispatcher*)iter;
@@ -331,7 +331,7 @@ error_code task::process_wakeup_nolock(size_t channel)
 	decltype(&proc_list.head) iter;
 	llb_for(iter, &proc_list.head)
 	{
-		auto iter_proc = static_cast<task::process_dispatcher*>(iter);
+		auto iter_proc = iter->get_element_as<process_dispatcher*>();
 		if (iter_proc->state == PROC_STATE_SLEEPING && iter_proc->sleep_data.channel == channel)
 		{
 			iter_proc->state = PROC_STATE_RUNNABLE;

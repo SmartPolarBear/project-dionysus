@@ -25,7 +25,7 @@ struct process_list_struct
 
 	size_t proc_count;
 	list_head active_head;
-	libkernel::linked_list_base<task::task_dispatcher*> head;
+	task::task_dispatcher::head_type head;
 	libkernel::queue<task::process_dispatcher*> zombie_queue;
 };
 

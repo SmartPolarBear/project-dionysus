@@ -54,7 +54,7 @@ using lock::spinlock_holding;
 		decltype(&proc_list.head) iter = nullptr, tmp = nullptr;
 		llb_for_safe(iter, tmp, &proc_list.head)
 		{
-			auto iter_proc = static_cast<task::process_dispatcher*>(iter);
+			auto iter_proc = iter->get_element_as<task::process_dispatcher*>();
 
 			if (iter_proc->state == task::PROC_STATE_RUNNABLE)
 			{
