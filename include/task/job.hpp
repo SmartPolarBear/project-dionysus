@@ -17,6 +17,7 @@
 #include "kbl/data/list_base.hpp"
 
 #include "ktl/mutex/lock_guard.hpp"
+#include "process.hpp"
 
 #include <cstring>
 #include <algorithm>
@@ -84,25 +85,69 @@ namespace task
 		std::optional<policy_item> action[POLICY_CONDITION_MAX];
 	};
 
+	using right_type = uint64_t;
+
+	class job;
+
+	class job_enumerator
+	{
+	 public:
+		virtual bool on_job(job* jb)
+		{
+			return true;
+		}
+
+		virtual bool on_process(process_dispatcher* pr)
+		{
+			return true;
+		}
+	 protected:
+		virtual ~job_enumerator() = default;
+	};
+
+	enum class job_status
+	{
+		JS_READY,
+		JS_KILLING,
+		JS_DEAD
+	};
+
 	class job final
 		: object::kernel_object
 	{
 	 public:
 		using job_list_type = libkernel::single_linked_child_list_base<job*>;
 		using process_list_type = libkernel::single_linked_child_list_base<process_dispatcher*>;
+		static constexpr size_t JOB_NAME_MAX = 64;
 	 public:
+		[[nodiscard]]bool kill(error_code terminate_code) noexcept;
 
+		[[nodiscard]]error_code apply_basic_policy(uint64_t mode, std::span<policy_item> policies) noexcept;
+
+		[[nodiscard]]job_policy&& get_policy() const;
+
+		[[nodiscard]]error_code enumerate_children(job_enumerator* enumerator, bool recurse);
+
+		static std::unique_ptr<job> create_root();
+
+		static error_code_with_result<job> create(uint64_t flags, std::shared_ptr<job> parent, right_type right);
+
+		~job() final;
 	 private:
 
-		lock::spinlock_struct lock;
-		lock::spinlock_lockable lockable{ lock };
+		lock::spinlock lock;
 
 		job_list_type child_jobs;
 		process_list_type processes;
 
 		job_policy policy;
 
+		job* parent;
+
+		char name[JOB_NAME_MAX];
+
 		bool killed;
 
+		job_status status;
 	};
 }
