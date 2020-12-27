@@ -5,16 +5,16 @@
 #include "debug/kdebug.h"
 #include "drivers/lock/spinlock.h"
 
-using lock::spinlock;
+using lock::spinlock_struct;
 
-void lock::arch_spinlock_initialize_lock(spinlock* lk, const char* name)
+void lock::arch_spinlock_initialize_lock(spinlock_struct* lk, const char* name)
 {
 	lk->name = name;
 	lk->locked = 0u;
 	lk->cpu = nullptr;
 }
 
-void lock::arch_spinlock_acquire(spinlock* lock)
+void lock::arch_spinlock_acquire(spinlock_struct* lock)
 {
 	trap::pushcli();
 	if (spinlock_holding(lock))
@@ -29,11 +29,11 @@ void lock::arch_spinlock_acquire(spinlock* lock)
 	kdebug::kdebug_get_caller_pcs(16, lock->pcs);
 }
 
-void lock::arch_spinlock_release(spinlock* lock)
+void lock::arch_spinlock_release(spinlock_struct* lock)
 {
 	if (!spinlock_holding(lock))
 	{
-		KDEBUG_RICHPANIC("Release a not-held spinlock.\n",
+		KDEBUG_RICHPANIC("Release a not-held spinlock_struct.\n",
 			"KERNEL PANIC",
 			false,
 			"Lock's name: %s", lock->name);
@@ -47,7 +47,7 @@ void lock::arch_spinlock_release(spinlock* lock)
 	trap::popcli();
 }
 
-bool lock::arch_spinlock_holding(spinlock* lock)
+bool lock::arch_spinlock_holding(spinlock_struct* lock)
 {
 	return lock->locked && lock->cpu == cpu();
 }

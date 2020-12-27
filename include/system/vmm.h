@@ -42,7 +42,7 @@ namespace vmm
 		size_t map_count;
 		uintptr_t brk_start, brk;
 
-		lock::spinlock lock;
+		lock::spinlock_struct lock;
 	};
 
 	struct vma_struct

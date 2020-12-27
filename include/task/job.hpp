@@ -94,7 +94,7 @@ namespace task
 
 	 private:
 
-		lock::spinlock lock;
+		lock::spinlock_struct lock;
 		lock::spinlock_lockable lockable{ lock };
 
 		job_list_type child_jobs;

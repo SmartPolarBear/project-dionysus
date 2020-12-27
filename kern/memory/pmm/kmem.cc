@@ -48,8 +48,8 @@ using libkernel::list_init;
 using libkernel::list_remove;
 
 //ATTENTION: IF ANY WEIRD BUG OCCURS IN THIS FILE, CONSIDER RACE CONDITION FIRST!
-// spinlock
-using lock::spinlock;
+// spinlock_struct
+using lock::spinlock_struct;
 using lock::spinlock_acquire;
 using lock::spinlock_holding;
 using lock::spinlock_initialize_lock;
@@ -66,7 +66,7 @@ struct slab
 };
 
 list_head cache_head;
-spinlock cache_head_lock;
+spinlock_struct cache_head_lock;
 kmem_cache *sized_caches[KMEM_SIZED_CACHE_COUNT];
 
 kmem_cache cache_cache;

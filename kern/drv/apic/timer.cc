@@ -25,7 +25,7 @@ using local_apic::TIMER_FLAG_X1;
 
 using local_apic::write_lapic;
 
-using lock::spinlock;
+using lock::spinlock_struct;
 using lock::spinlock_acquire;
 using lock::spinlock_initialize_lock;
 using lock::spinlock_release;
@@ -35,11 +35,11 @@ using trap::TRAP_IRQ0;
 
 uint64_t ticks[CPU_COUNT_LIMIT] = { 0 };
 
-spinlock tickslocks[CPU_COUNT_LIMIT] = {};
+spinlock_struct tickslocks[CPU_COUNT_LIMIT] = {};
 
 bool enable_irq[CPU_COUNT_LIMIT] = { false };
 
-static inline spinlock* ticks_lock()
+static inline spinlock_struct* ticks_lock()
 {
 	return &tickslocks[cpu()->id];
 }

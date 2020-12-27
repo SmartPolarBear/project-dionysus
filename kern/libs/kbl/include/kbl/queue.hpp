@@ -17,7 +17,7 @@ namespace libkernel
 		};
 
 		list_head head;
-		lock::spinlock queue_lock;
+		lock::spinlock_struct queue_lock;
 
 		size_t m_size;
 	 public:

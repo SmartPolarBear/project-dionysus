@@ -16,7 +16,7 @@
 using namespace syscall;
 using namespace trap;
 
-using lock::spinlock;
+using lock::spinlock_struct;
 using lock::spinlock_acquire;
 using lock::spinlock_initialize_lock;
 using lock::spinlock_release;

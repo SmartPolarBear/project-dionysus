@@ -39,7 +39,7 @@ struct kmem_cache
     char name[KMEM_CACHE_NAME_MAXLEN];
     list_head cache_link;
 
-    lock::spinlock lock;
+    lock::spinlock_struct lock;
 };
 
 void kmem_init(void);

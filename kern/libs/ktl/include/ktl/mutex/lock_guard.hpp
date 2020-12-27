@@ -5,7 +5,7 @@ namespace ktl
 {
 	namespace mutex
 	{
-		/// \brief Automatically lock and unlock spinlock
+		/// \brief Automatically lock and unlock spinlock_struct
 		/// \tparam TMutex which satisfies BasicLockable
 		template<BasicLockable TMutex>
 		class lock_guard

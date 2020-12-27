@@ -99,7 +99,7 @@ namespace task
 		virtual error_code terminate(error_code terminate_error) = 0;
 		virtual error_code exit() = 0;
 
-		virtual error_code sleep(sleep_channel_type channel, lock::spinlock* lk) = 0;
+		virtual error_code sleep(sleep_channel_type channel, lock::spinlock_struct* lk) = 0;
 		virtual error_code wakeup(sleep_channel_type channel) = 0;
 		virtual error_code wakeup_no_lock(sleep_channel_type channel) = 0;
 		virtual error_code change_heap_ptr(IN OUT uintptr_t* heap_ptr) = 0;
@@ -180,7 +180,7 @@ namespace task
 		{
 			static constexpr size_t INTERNAL_BUF_SIZE = 64;
 
-			lock::spinlock lock;
+			lock::spinlock_struct lock;
 
 			// message passing
 			void* data;

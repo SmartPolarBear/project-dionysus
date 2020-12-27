@@ -50,7 +50,7 @@ namespace pmm
                            size_t n);  // free >=n pages with "base" addr of Page descriptor structures(memlayout.h)
         size_t (*get_free_pages_count)(void);           // return the number of free pages
 
-        lock::spinlock lock;
+        lock::spinlock_struct lock;
         bool enable_lock;
     };
 
@@ -137,7 +137,7 @@ namespace pmm
             // popcli&pushcli can neither be used because unprepared cpu local storage
             KDEBUG_ASSERT(!(read_eflags() & trap::EFLAG_IF));
 
-            // we don't reuse alloc_page() because spinlock may not be prepared.
+            // we don't reuse alloc_page() because spinlock_struct may not be prepared.
             auto page = pmm_entity->alloc_pages(1);
             KDEBUG_ASSERT(page != nullptr);
 

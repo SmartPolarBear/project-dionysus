@@ -10,7 +10,7 @@
 
 #include "kbl/queue.hpp"
 
-using lock::spinlock;
+using lock::spinlock_struct;
 using lock::spinlock_acquire;
 using lock::spinlock_initialize_lock;
 using lock::spinlock_release;
@@ -20,7 +20,7 @@ extern CLSItem<task::process_dispatcher*, CLS_PROC_STRUCT_PTR> cur_proc;
 
 struct process_list_struct
 {
-	spinlock lock;
+	spinlock_struct lock;
 	lock::spinlock_lockable lockable{ lock };
 
 	size_t proc_count;

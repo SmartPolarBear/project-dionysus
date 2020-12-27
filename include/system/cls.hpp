@@ -74,7 +74,7 @@ requires Pointer<T>
 class CLSItem
 {
  private:
-	lock::spinlock lk;
+	lock::spinlock_struct lk;
 	bool use_lock;
  public:
 	CLSItem() : use_lock(true)

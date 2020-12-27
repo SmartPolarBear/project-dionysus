@@ -10,14 +10,14 @@
 
 #include "system/types.h"
 
-// spinlock
-using lock::spinlock;
+// spinlock_struct
+using lock::spinlock_struct;
 using lock::spinlock_acquire;
 using lock::spinlock_holding;
 using lock::spinlock_initialize_lock;
 using lock::spinlock_release;
 
-spinlock printf_lock;
+spinlock_struct printf_lock;
 
 __attribute__((constructor)) void printf_init()
 {

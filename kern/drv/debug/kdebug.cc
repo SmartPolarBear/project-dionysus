@@ -117,7 +117,7 @@ void kdebug::kdebug_log(const char* fmt, ...)
 #endif
 }
 
-void kdebug::kdebug_dump_lock_panic(lock::spinlock* lock)
+void kdebug::kdebug_dump_lock_panic(lock::spinlock_struct* lock)
 {
 	// disable the lock of console
 	console::console_set_lock(false);

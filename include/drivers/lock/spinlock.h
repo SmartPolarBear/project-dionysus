@@ -13,24 +13,25 @@ struct cpu_struct;
 
 namespace lock
 {
-	using spinlock = arch_spinlock;
+	using spinlock_struct = arch_spinlock;
 
-	void spinlock_acquire(spinlock* lock);
-	bool spinlock_holding(spinlock* lock);
-	void spinlock_initialize_lock(spinlock* lk, const char* name);
-	void spinlock_release(spinlock* lock);
+	void spinlock_acquire(spinlock_struct* lock);
+	bool spinlock_holding(spinlock_struct* lock);
+	void spinlock_initialize_lock(spinlock_struct* lk, const char* name);
+	void spinlock_release(spinlock_struct* lock);
+
 
 	class TA_CAP("mutex") spinlock_lockable final
 		: public lockable
 	{
 	 private:
-		spinlock* lk;
+		spinlock_struct* lk;
 
-		spinlock internal_lock{};
+		spinlock_struct internal_lock{};
 	 public:
 		spinlock_lockable() = delete;
 
-		[[maybe_unused]] explicit spinlock_lockable(spinlock& _lk) : lk(&_lk)
+		[[maybe_unused]] explicit spinlock_lockable(spinlock_struct& _lk) : lk(&_lk)
 		{
 		}
 

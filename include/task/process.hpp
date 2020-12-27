@@ -18,7 +18,7 @@ namespace task
 		error_code load_binary(uint8_t* bin, size_t binary_size, binary_types type, size_t flags) override;
 		error_code terminate(error_code terminate_error) override;
 		error_code exit() override;
-		error_code sleep(sleep_channel_type channel, lock::spinlock* lk) override;
+		error_code sleep(sleep_channel_type channel, lock::spinlock_struct* lk) override;
 		error_code wakeup(sleep_channel_type channel) override;
 		error_code wakeup_no_lock(sleep_channel_type channel) override;
 		error_code change_heap_ptr(uintptr_t* heap_ptr) override;
@@ -47,7 +47,7 @@ namespace task
 		friend error_code process_terminate(error_code error_code);
 
 		// sleep on certain channel
-		friend error_code process_sleep(size_t channel, lock::spinlock* lock);
+		friend error_code process_sleep(size_t channel, lock::spinlock_struct* lock);
 
 		// wake up processes sleeping on certain channel
 		friend error_code process_wakeup(size_t channel);

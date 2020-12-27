@@ -17,7 +17,7 @@ namespace libkernel
 		};
 
 		list_head head;
-		lock::spinlock stack_lock;
+		lock::spinlock_struct stack_lock;
 
 		size_t m_size;
 	 public:

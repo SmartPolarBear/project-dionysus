@@ -304,7 +304,7 @@ namespace file_system
 
 		void* private_data{};
 
-		lock::spinlock lock;
+		lock::spinlock_struct lock;
 		lock::spinlock_lockable lockable;
 
 	 public:

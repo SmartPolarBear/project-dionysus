@@ -22,7 +22,7 @@ namespace kdebug
 // use uint32_t for the bool value to make va_args happy.
 	[[noreturn]] void kdebug_panic(const char* fmt, uint32_t topleft, ...);
 
-	[[noreturn]] void kdebug_dump_lock_panic(lock::spinlock* lock);
+	[[noreturn]] void kdebug_dump_lock_panic(lock::spinlock_struct* lock);
 
 	void kdebug_warning(const char* fmt, ...);
 

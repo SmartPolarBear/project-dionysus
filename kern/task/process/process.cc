@@ -25,7 +25,7 @@ using libkernel::list_for_each;
 using libkernel::list_init;
 using libkernel::list_remove;
 
-using lock::spinlock;
+using lock::spinlock_struct;
 using lock::spinlock_acquire;
 using lock::spinlock_initialize_lock;
 using lock::spinlock_release;
@@ -272,7 +272,7 @@ void task::process_exit(IN process_dispatcher* proc)
 }
 
 // let current task sleep on certain channel
-error_code task::process_sleep(size_t channel, lock::spinlock* lock)
+error_code task::process_sleep(size_t channel, lock::spinlock_struct* lock)
 {
 	if (cur_proc == nullptr)
 	{

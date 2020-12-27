@@ -62,7 +62,7 @@ namespace task
 //		{
 //			static constexpr size_t INTERNAL_BUF_SIZE = 64;
 //
-//			lock::spinlock lock;
+//			lock::spinlock_struct lock;
 //
 //			// message passing
 //			void* kbl;
@@ -116,7 +116,7 @@ namespace task
 	error_code process_terminate(error_code error_code);
 
 	// sleep on certain channel
-	error_code process_sleep(size_t channel, lock::spinlock* lock);
+	error_code process_sleep(size_t channel, lock::spinlock_struct* lock);
 
 	// wake up processes sleeping on certain channel
 	error_code process_wakeup(size_t channel);

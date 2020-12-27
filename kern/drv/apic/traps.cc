@@ -22,7 +22,7 @@
 using trap::trap_handle;
 using trap::TRAP_NUMBERMAX;
 
-using lock::spinlock;
+using lock::spinlock_struct;
 using lock::spinlock_acquire;
 using lock::spinlock_initialize_lock;
 using lock::spinlock_release;
@@ -36,7 +36,7 @@ constexpr size_t IDT_SIZE = 4_KB;
 
 struct handle_table_struct
 {
-	lock::spinlock lock{};
+	lock::spinlock_struct lock{};
 
 	trap::trap_handle trap_handles[trap::TRAP_NUMBERMAX] =
 		{

@@ -12,8 +12,8 @@ using libkernel::list_for_each;
 using libkernel::list_init;
 using libkernel::list_remove;
 
-// spinlock
-using lock::spinlock;
+// spinlock_struct
+using lock::spinlock_struct;
 using lock::spinlock_acquire;
 using lock::spinlock_holding;
 using lock::spinlock_initialize_lock;
@@ -24,7 +24,7 @@ using namespace console;
 struct kconsole
 {
 	list_head devs_head;
-	spinlock cons_lock;
+	spinlock_struct cons_lock;
 	bool lock_enable;
 
 	console_colors background;

@@ -137,7 +137,7 @@ error_code process_dispatcher::exit()
 {
 	return 0;
 }
-error_code process_dispatcher::sleep(sleep_channel_type channel, lock::spinlock* lk)
+error_code process_dispatcher::sleep(sleep_channel_type channel, lock::spinlock_struct* lk)
 {
 	return 0;
 }

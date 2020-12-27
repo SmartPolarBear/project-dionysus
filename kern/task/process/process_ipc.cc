@@ -25,7 +25,7 @@ using libkernel::list_for_each;
 using libkernel::list_init;
 using libkernel::list_remove;
 
-using lock::spinlock;
+using lock::spinlock_struct;
 using lock::spinlock_acquire;
 using lock::spinlock_initialize_lock;
 using lock::spinlock_release;
