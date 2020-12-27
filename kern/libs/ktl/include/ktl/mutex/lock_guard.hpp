@@ -1,6 +1,8 @@
 #pragma once
 #include "ktl/mutex/mutex_concepts.hpp"
 
+#include "debug/thread_annotations.hpp"
+
 namespace ktl
 {
 	namespace mutex
@@ -8,18 +10,23 @@ namespace ktl
 		/// \brief Automatically lock and unlock spinlock_struct
 		/// \tparam TMutex which satisfies BasicLockable
 		template<BasicLockable TMutex>
-		class lock_guard
+		class TA_SCOPED_CAP lock_guard
 		{
 		 public:
 			typedef TMutex mutex_type;
 
-			explicit lock_guard(mutex_type& _m) noexcept
+			[[nodiscard]]explicit lock_guard(mutex_type& _m) noexcept TA_ACQ(_m)
 				: m(&_m)
 			{
 				m->lock();
 			}
 
-			~lock_guard() noexcept
+			~lock_guard() noexcept TA_REL()
+			{
+				m->unlock();
+			}
+
+			void unlock() noexcept TA_REL()
 			{
 				m->unlock();
 			}
