@@ -9,45 +9,20 @@ using lock::spinlock;
 
 void lock::spinlock_initialize_lock(spinlock* lk, const char* name)
 {
-	lk->name = name;
-	lk->locked = 0u;
-	lk->cpu = nullptr;
+	arch_spinlock_initialize_lock(lk, name);
 }
 
 void lock::spinlock_acquire(spinlock* lock)
 {
-	trap::pushcli();
-	if (spinlock_holding(lock))
-	{
-		kdebug::kdebug_dump_lock_panic(lock);
-	}
-
-	while (xchg(&lock->locked, 1u) != 0);
-
-	lock->cpu = cpu();
-
-	kdebug::kdebug_get_caller_pcs(16, lock->pcs);
+	arch_spinlock_acquire(lock);
 }
 
 void lock::spinlock_release(spinlock* lock)
 {
-	if (!spinlock_holding(lock))
-	{
-		KDEBUG_RICHPANIC("Release a not-held spinlock.\n",
-			"KERNEL PANIC",
-			false,
-			"Lock's name: %s", lock->name);
-	}
-
-	lock->pcs[0] = 0;
-	lock->cpu = nullptr;
-
-	xchg(&lock->locked, 0u);
-
-	trap::popcli();
+	arch_spinlock_release(lock);
 }
 
 bool lock::spinlock_holding(spinlock* lock)
 {
-	return lock->locked && lock->cpu == cpu();
+	return arch_spinlock_holding(lock);
 }

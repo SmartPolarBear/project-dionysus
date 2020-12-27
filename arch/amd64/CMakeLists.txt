@@ -8,6 +8,8 @@ set_property(SOURCE cpu.S PROPERTY LANGUAGE C)
 
 target_sources(arch_amd64 PRIVATE cpu.S)
 
+add_subdirectory(lock)
+
 target_include_directories(arch_amd64 PUBLIC "include")
 target_include_directories(arch_amd64 PRIVATE "${CMAKE_SOURCE_DIR}/include")
 
