@@ -41,8 +41,8 @@ using lock::spinlock_holding;
 		// enable interrupt
 		sti();
 
-		spinlock_acquire(&proc_list.lock);
-//		ktl::mutex::lock_guard guard{ proc_list.lockable };
+//		spinlock_acquire(&proc_list.lock);
+		ktl::mutex::lock_guard guard{ proc_list.lockable };
 
 		// find runnable ones, we may do exiting works and therefore may remove entries, so
 		// we use list_for_safe
@@ -102,7 +102,7 @@ using lock::spinlock_holding;
 			}
 		}
 
-		spinlock_release(&proc_list.lock);
+//		spinlock_release(&proc_list.lock);
 
 	}
 }

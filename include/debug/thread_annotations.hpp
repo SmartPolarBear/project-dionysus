@@ -34,6 +34,8 @@
 // represents a scoped or RAII-style wrapper around a capability TA_NO_THREAD_SAFETY_ANALYSIS
 // function is excluded entirely from thread safety analysis
 
+#define THREAD_ANNOTATION(x) __attribute__((x))
+
 #define TA_CAP(x) THREAD_ANNOTATION(capability(x))
 #define TA_GUARDED(x) THREAD_ANNOTATION(guarded_by(x))
 #define TA_ACQ(...) THREAD_ANNOTATION(acquire_capability(__VA_ARGS__))

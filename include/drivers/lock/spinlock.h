@@ -7,6 +7,8 @@ struct cpu_struct;
 
 #include "drivers/lock/lockable.hpp"
 
+#include "debug/thread_annotations.hpp"
+
 namespace lock
 {
 	struct spinlock
@@ -23,7 +25,7 @@ namespace lock
 	void spinlock_initialize_lock(spinlock* lk, const char* name);
 	void spinlock_release(spinlock* lock);
 
-	class spinlock_lockable
+	class spinlock_lockable final
 		: public lockable
 	{
 	 private:
@@ -37,9 +39,9 @@ namespace lock
 		{
 		}
 
-		void lock() noexcept override;
-		void unlock() noexcept override;
-		bool try_lock() noexcept override;
-	};
+		void lock() noexcept final ;
+		void unlock() noexcept final;
+		bool try_lock() noexcept final;
+	}TA_CAP("mutex");
 
 } // namespace lock

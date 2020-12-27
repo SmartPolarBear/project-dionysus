@@ -142,7 +142,8 @@ error_code task::create_process(IN const char* name,
 	IN bool inherit_parent,
 	OUT process_dispatcher** retproc)
 {
-	spinlock_acquire(&proc_list.lock);
+//	spinlock_acquire(&proc_list.lock);
+	ktl::mutex::lock_guard guard{ proc_list.lockable };
 
 	if (proc_list.proc_count >= task::PROC_MAX_COUNT)
 	{
@@ -172,7 +173,7 @@ error_code task::create_process(IN const char* name,
 
 //	list_add(&proc->link, &proc_list.active_head);
 
-	spinlock_release(&proc_list.lock);
+//	spinlock_release(&proc_list.lock);
 
 	*retproc = proc;
 	return ERROR_SUCCESS;
@@ -185,9 +186,9 @@ error_code task::process_load_binary(IN process_dispatcher* proc,
 	IN size_t flags
 )
 {
-	spinlock_acquire(&proc_list.lock);
+//	spinlock_acquire(&proc_list.lock);
 
-//	ktl::mutex::lock_guard guard{ proc_list.lockable };
+	ktl::mutex::lock_guard guard{ proc_list.lockable };
 	error_code ret = ERROR_SUCCESS;
 
 	uintptr_t entry_addr = 0;
@@ -219,7 +220,7 @@ error_code task::process_load_binary(IN process_dispatcher* proc,
 		}
 	}
 
-	spinlock_release(&proc_list.lock);
+//	spinlock_release(&proc_list.lock);
 
 	return ret;
 }
@@ -355,7 +356,9 @@ error_code task::process_heap_change_size(IN process_dispatcher* proc, IN OUT ui
 		return -ERROR_INVALID;
 	}
 
-	spinlock_acquire(&mm->lock);
+	ktl::mutex::lock_guard guard{ proc_list.lockable };
+
+//	spinlock_acquire(&mm->lock);
 
 	uintptr_t heap = 0;
 	memmove(&heap, heap_ptr, sizeof(heap));
@@ -400,7 +403,7 @@ error_code task::process_heap_change_size(IN process_dispatcher* proc, IN OUT ui
 		}
 	}
 
-	spinlock_release(&mm->lock);
+//	spinlock_release(&mm->lock);
 
 	return ERROR_SUCCESS;
 }

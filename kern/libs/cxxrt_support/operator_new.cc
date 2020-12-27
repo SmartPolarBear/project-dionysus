@@ -31,12 +31,12 @@ using nothrow_t = std::nothrow_t;
 
 // non-exception versions
 
-[[nodiscard]]void* operator new(size_t count, const nothrow_t& tag) noexcept
+[[nodiscard]]void* operator new(size_t count, [[maybe_unused]]const nothrow_t& tag) noexcept
 {
 	return memory::kmalloc(count, 0);
 }
 
-[[nodiscard]]void* operator new[](size_t count, const nothrow_t& tag) noexcept
+[[nodiscard]]void* operator new[](size_t count,  [[maybe_unused]]const nothrow_t& tag) noexcept
 {
 	return ::operator new(count, tag);
 }
