@@ -47,3 +47,30 @@ bool lock::spinlock_holding(spinlock_struct* lock)
 {
 	return lock->locked && lock->cpu == cpu();
 }
+
+void lock::spinlock::lock() noexcept
+{
+	spinlock_acquire(&this->_spinlock);
+}
+
+void lock::spinlock::unlock() noexcept
+{
+	spinlock_release(&this->_spinlock);
+}
+
+bool lock::spinlock::try_lock() noexcept
+{
+	if (spinlock_holding(&this->_spinlock))
+	{
+		return false;
+	}
+	else
+	{
+		this->lock();
+		return true;
+	}
+}
+bool lock::spinlock::holding() noexcept
+{
+	return spinlock_holding(&this->_spinlock);
+}

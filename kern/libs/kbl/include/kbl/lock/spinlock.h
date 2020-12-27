@@ -7,9 +7,12 @@ struct cpu_struct;
 
 #include "system/types.h"
 
-#include "lockable.hpp"
+#include "kbl/lock/lockable.hpp"
+#include "kbl/lock/mutex.hpp"
 
 #include "debug/thread_annotations.hpp"
+
+#include <span>
 
 namespace lock
 {
@@ -20,6 +23,30 @@ namespace lock
 	void spinlock_initialize_lock(spinlock_struct* lk, const char* name);
 	void spinlock_release(spinlock_struct* lock);
 
+	class TA_CAP("mutex") spinlock final
+		: public mutex
+	{
+	 public:
+		constexpr spinlock() = default;
+		constexpr explicit spinlock(const char* name)
+		{
+			_spinlock.name = name;
+		}
+
+		void lock() noexcept final
+		TA_ACQ();
+
+		void unlock() noexcept final
+		TA_TRY_ACQ(false);
+
+		bool try_lock() noexcept final
+		TA_REL();
+
+		bool holding() noexcept final;
+
+	 private:
+		spinlock_struct _spinlock{};
+	};
 
 	class TA_CAP("mutex") spinlock_lockable final
 		: public lockable
@@ -27,7 +54,6 @@ namespace lock
 	 private:
 		spinlock_struct* lk;
 
-		spinlock_struct internal_lock{};
 	 public:
 		spinlock_lockable() = delete;
 
