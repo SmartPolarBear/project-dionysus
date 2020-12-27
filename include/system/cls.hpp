@@ -4,7 +4,7 @@
 #include "system/types.h"
 #include "system/segmentation.hpp"
 
-#include "drivers/lock/spinlock.h"
+#include "kbl/lock/spinlock.h"
 
 static_assert(sizeof(uintptr_t) == 0x08);
 

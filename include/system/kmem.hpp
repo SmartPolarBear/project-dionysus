@@ -3,9 +3,9 @@
 #include "system/error.hpp"
 #include "system/types.h"
 
-#include "kbl/pod_list.h"
+#include "kbl/data/pod_list.h"
 
-#include "drivers/lock/spinlock.h"
+#include "kbl/lock/spinlock.h"
 
 namespace memory
 {

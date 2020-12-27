@@ -3,9 +3,9 @@
 #include "arch/amd64/cpu/cpu.h"
 
 #include "debug/kdebug.h"
-#include "drivers/lock/spinlock.h"
+#include "kbl/lock/spinlock.h"
 
-#include "kbl/pod_list.h"
+#include "kbl/data/pod_list.h"
 
 using libkernel::list_add;
 using libkernel::list_for_each;

@@ -2,6 +2,9 @@
 
 #include "../../../../../../include/system/types.h"
 
+
+struct cpu_struct;
+
 namespace lock
 {
 	struct arch_spinlock
@@ -14,7 +17,6 @@ namespace lock
 	};
 
 	void arch_spinlock_acquire(arch_spinlock* lock);
-	bool arch_spinlock_holding(arch_spinlock* lock);
 	void arch_spinlock_initialize_lock(arch_spinlock* lk, const char* name);
 	void arch_spinlock_release(arch_spinlock* lock);
 }

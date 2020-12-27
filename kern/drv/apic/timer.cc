@@ -11,7 +11,7 @@
 #include "drivers/apic/apic.h"
 #include "drivers/apic/traps.h"
 #include "debug/kdebug.h"
-#include "drivers/lock/spinlock.h"
+#include "kbl/lock/spinlock.h"
 #include "drivers/acpi/cpu.h"
 
 #include "../../libs/basic_io/include/builtin_text_io.hpp"

@@ -2,7 +2,7 @@
 
 #include "system/types.h"
 
-#include "drivers/lock/spinlock.h"
+#include "kbl/lock/spinlock.h"
 
 #include "kerror.h"
 

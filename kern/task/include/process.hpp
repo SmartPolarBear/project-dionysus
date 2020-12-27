@@ -4,11 +4,11 @@
 
 #include "system/process.h"
 
-#include "drivers/lock/spinlock.h"
+#include "kbl/lock/spinlock.h"
 #include "drivers/apic/traps.h"
 #include "drivers/acpi/cpu.h"
 
-#include "kbl/queue.hpp"
+#include "kbl/data/queue.hpp"
 
 using lock::spinlock_struct;
 using lock::spinlock_acquire;

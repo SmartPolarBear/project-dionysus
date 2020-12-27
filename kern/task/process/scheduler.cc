@@ -15,10 +15,10 @@
 #include "system/cls.hpp"
 
 #include "drivers/apic/traps.h"
-#include "drivers/lock/spinlock.h"
+#include "kbl/lock/spinlock.h"
 
 #include "ktl/mutex/lock_guard.hpp"
-#include "kbl/pod_list.h"
+#include "kbl/data/pod_list.h"
 
 #include "../../libs/basic_io/include/builtin_text_io.hpp"
 

@@ -7,7 +7,7 @@ struct cpu_struct;
 
 #include "system/types.h"
 
-#include "drivers/lock/lockable.hpp"
+#include "lockable.hpp"
 
 #include "debug/thread_annotations.hpp"
 

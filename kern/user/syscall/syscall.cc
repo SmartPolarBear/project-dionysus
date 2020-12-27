@@ -5,7 +5,7 @@
 #include "system/syscall.h"
 
 #include "debug/kdebug.h"
-#include "drivers/lock/spinlock.h"
+#include "kbl/lock/spinlock.h"
 
 #include "arch/amd64/cpu/cpuid.h"
 #include "arch/amd64/cpu/msr.h"

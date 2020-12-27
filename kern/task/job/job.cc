@@ -14,8 +14,8 @@
 #include "system/scheduler.h"
 
 #include "drivers/apic/traps.h"
-#include "drivers/lock/spinlock.h"
+#include "kbl/lock/spinlock.h"
 
-#include "kbl/pod_list.h"
+#include "kbl/data/pod_list.h"
 #include "../../libs/basic_io/include/builtin_text_io.hpp"
 

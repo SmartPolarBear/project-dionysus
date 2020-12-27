@@ -2,7 +2,7 @@
 
 #include "drivers/console/console.h"
 #include "debug/kdebug.h"
-#include "drivers/lock/spinlock.h"
+#include "kbl/lock/spinlock.h"
 
 #include "include/maths.hpp"
 

@@ -3,7 +3,6 @@
 #include "system/concepts.hpp"
 #include "system/types.h"
 
-#include "drivers/lock/spinlock.h"
 
 struct pseudo_descriptor
 {

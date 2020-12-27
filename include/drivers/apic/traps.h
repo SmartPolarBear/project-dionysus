@@ -2,7 +2,9 @@
 
 #include "arch/amd64/cpu/regs.h"
 
+#if !defined(ARCH_SPINLOCK)
 #include "debug/kdebug.h"
+#endif
 
 // defined in trapentry_asm.S
 extern "C" void trap_entry();

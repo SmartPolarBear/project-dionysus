@@ -10,10 +10,10 @@
 #include "system/cls.hpp"
 
 #include "drivers/apic/traps.h"
-#include "drivers/lock/spinlock.h"
+#include "kbl/lock/spinlock.h"
 
-#include "kbl/pod_list.h"
-#include "kbl/list_base.hpp"
+#include "kbl/data/pod_list.h"
+#include "kbl/data/list_base.hpp"
 
 #include "task/task_dispatcher.hpp"
 #include "task/process.hpp"

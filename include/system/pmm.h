@@ -27,7 +27,7 @@
 #include "system/vmm.h"
 
 #include "debug/kdebug.h"
-#include "drivers/lock/spinlock.h"
+#include "kbl/lock/spinlock.h"
 #include "drivers/apic/traps.h"
 
 
