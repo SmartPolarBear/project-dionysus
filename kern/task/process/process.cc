@@ -190,6 +190,9 @@ error_code task::process_load_binary(IN process_dispatcher* proc,
 	IN size_t flags
 )
 {
+	spinlock_acquire(&proc_list.lock);
+
+//	ktl::mutex::lock_guard guard{ proc_list.lockable };
 	error_code ret = ERROR_SUCCESS;
 
 	uintptr_t entry_addr = 0;
@@ -220,6 +223,8 @@ error_code task::process_load_binary(IN process_dispatcher* proc,
 			return ret;
 		}
 	}
+
+	spinlock_release(&proc_list.lock);
 
 	return ret;
 }

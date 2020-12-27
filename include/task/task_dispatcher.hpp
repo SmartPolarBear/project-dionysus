@@ -169,7 +169,7 @@ namespace task
 
 		trap::trap_frame* tf;
 
-		context* context;
+		::context* context;
 
 		struct sleep_data_struct
 		{

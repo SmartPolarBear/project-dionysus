@@ -34,7 +34,7 @@ struct cpu_struct
 	void* kernel_gs;
 
 	// scheduler context
-	context* scheduler;
+	::context* scheduler;
 
 	task_state_segment tss{};
 	gdt_table gdt_table{};
