@@ -84,8 +84,7 @@ task::process_dispatcher::process_dispatcher(std::span<char> name, process_id id
 
 error_code process_dispatcher::initialize()
 {
-
-	this->kstack = std::make_unique<uint8_t>(KERNSTACK_SIZE);
+	this->kstack = std::make_unique<uint8_t[]>(KERNSTACK_SIZE);
 	if (auto ret = this->setup_kernel_stack();ret != ERROR_SUCCESS)
 	{
 		return ret;

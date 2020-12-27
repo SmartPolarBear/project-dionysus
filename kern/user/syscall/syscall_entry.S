@@ -8,7 +8,6 @@
 .global syscall_x64_entry
 syscall_x64_entry:
 
-
     swapgs
 
     movq %rsp, %gs:(KERNEL_GS_USTACK)

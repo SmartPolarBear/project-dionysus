@@ -158,7 +158,7 @@ namespace task
 
 		size_t runs;
 
-		std::unique_ptr<uint8_t> kstack;
+		std::unique_ptr<uint8_t[]> kstack;
 
 		vmm::mm_struct* mm;
 

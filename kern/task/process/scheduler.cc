@@ -86,17 +86,9 @@ using lock::spinlock_holding;
 
 				if (cur_proc != nullptr && cur_proc->context)
 				{
-					if (cur_proc->context->rip != 0)
+					if (cur_proc->context->rip == 0)
 					{
 						KDEBUG_GENERALPANIC("scheduler_loop: cur_proc rip 0");
-					}
-				}
-
-				if (cpu != nullptr && cpu->scheduler != nullptr)
-				{
-					if (cpu->scheduler->rip != 0)
-					{
-						KDEBUG_GENERALPANIC("scheduler_loop: cpu context rip 0");
 					}
 				}
 
@@ -149,19 +141,11 @@ void scheduler::scheduler_enter()
 
 	auto intr_enable = cpu->intr_enable;
 
-	if (cur_proc != nullptr && cur_proc->context)
-	{
-		if (cur_proc->context->rip != 0)
-		{
-			KDEBUG_GENERALPANIC("scheduler_loop: cur_proc rip 0");
-		}
-	}
-
 	if (cpu != nullptr && cpu->scheduler != nullptr)
 	{
-		if (cpu->scheduler->rip != 0)
+		if (cpu->scheduler->rip == 0)
 		{
-			KDEBUG_GENERALPANIC("scheduler_loop: cpu context rip 0");
+			KDEBUG_GENERALPANIC("scheduler_enter: cpu context rip 0");
 		}
 	}
 
