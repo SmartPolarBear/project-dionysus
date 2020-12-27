@@ -3,22 +3,22 @@
 #include "system/types.h"
 
 // cpuid and corrosponding enumerations
-#include "arch/amd64/cpuid.h"
+#include "cpuid.h"
 
 // read and write specific registers
-#include "arch/amd64/regs.h"
+#include "regs.h"
 
 // read and write msr
-#include "arch/amd64/msr.h"
+#include "msr.h"
 
 // cpu features like halt and interrupt enability
-#include "arch/amd64/cpu.h"
+#include "cpu.h"
 
 // atomic
-#include "arch/amd64/atomic.h"
+#include "atomic.h"
 
 // port io
-#include "arch/amd64/port_io.h"
+#include "port_io.h"
 
 
 static inline void outsl(int port, const void *addr, int cnt)

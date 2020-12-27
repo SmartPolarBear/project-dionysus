@@ -1,6 +1,6 @@
 #include "cga.h"
 
-#include "arch/amd64/x86.h"
+#include "arch/amd64/cpu/x86.h"
 #include "debug/kdebug.h"
 
 #include "system/memlayout.h"

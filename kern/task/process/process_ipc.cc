@@ -2,8 +2,8 @@
 #include "load_code.hpp"
 #include "syscall.h"
 
-#include "arch/amd64/cpu.h"
-#include "arch/amd64/msr.h"
+#include "arch/amd64/cpu/cpu.h"
+#include "arch/amd64/cpu/msr.h"
 
 #include "system/error.hpp"
 #include "system/kmalloc.hpp"

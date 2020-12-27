@@ -1,8 +1,8 @@
 #include "process.hpp"
 #include "syscall.h"
 
-#include "arch/amd64/atomic.h"
-#include "arch/amd64/cpu.h"
+#include "arch/amd64/cpu/atomic.h"
+#include "arch/amd64/cpu/cpu.h"
 
 #include "debug/kdebug.h"
 

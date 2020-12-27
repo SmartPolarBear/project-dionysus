@@ -29,7 +29,7 @@
 #include "system/pmm.h"
 #include "system/vmm.h"
 
-#include "arch/amd64/x86.h"
+#include "arch/amd64/cpu/x86.h"
 
 #include "drivers/acpi/cpu.h"
 #include "drivers/apic/apic.h"

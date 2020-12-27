@@ -1,6 +1,6 @@
-#include "arch/amd64/cpuid.h"
-#include "arch/amd64/regs.h"
-#include "arch/amd64/cpu.h"
+#include "arch/amd64/cpu/cpuid.h"
+#include "arch/amd64/cpu/regs.h"
+#include "arch/amd64/cpu/cpu.h"
 
 #include "drivers/simd/simd.hpp"
 

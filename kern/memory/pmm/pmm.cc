@@ -22,7 +22,7 @@
 #include "./pmm.h"
 #include "./buddy_pmm.h"
 
-#include "arch/amd64/x86.h"
+#include "arch/amd64/cpu/x86.h"
 
 #include "system/error.hpp"
 #include "system/kmem.hpp"

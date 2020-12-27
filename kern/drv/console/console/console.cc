@@ -1,6 +1,6 @@
 #include "../cga/cga.h"
 
-#include "arch/amd64/cpu.h"
+#include "arch/amd64/cpu/cpu.h"
 
 #include "debug/kdebug.h"
 #include "drivers/lock/spinlock.h"

@@ -8,7 +8,7 @@
 #include "system/memlayout.h"
 #include "system/mmu.h"
 
-#include "arch/amd64/x86.h"
+#include "arch/amd64/cpu/x86.h"
 
 using trap::IRQ_ERROR;
 using trap::IRQ_SPURIOUS;

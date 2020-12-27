@@ -1,4 +1,4 @@
-#include "arch/amd64/x86.h"
+#include "arch/amd64/cpu/x86.h"
 #include "boot/multiboot2.h"
 
 #include "drivers/acpi/acpi.h"

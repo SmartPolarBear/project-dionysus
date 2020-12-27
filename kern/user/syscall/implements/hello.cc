@@ -7,9 +7,9 @@
 #include "debug/kdebug.h"
 #include "drivers/apic/traps.h"
 
-#include "arch/amd64/cpuid.h"
-#include "arch/amd64/msr.h"
-#include "arch/amd64/regs.h"
+#include "arch/amd64/cpu/cpuid.h"
+#include "arch/amd64/cpu/msr.h"
+#include "arch/amd64/cpu/regs.h"
 
 #include "builtin_text_io.hpp"
 

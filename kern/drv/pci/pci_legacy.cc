@@ -1,4 +1,4 @@
-#include "arch/amd64/port_io.h"
+#include "arch/amd64/cpu/port_io.h"
 
 #include "system/types.h"
 

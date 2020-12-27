@@ -1,4 +1,4 @@
-#include "arch/amd64/x86.h"
+#include "arch/amd64/cpu/x86.h"
 
 #include "drivers/apic/apic.h"
 #include "drivers/apic/traps.h"

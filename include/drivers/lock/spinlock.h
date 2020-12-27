@@ -3,7 +3,7 @@
 //#include "drivers/acpi/cpu.h"
 struct cpu_struct;
 
-#include "arch/amd64/arch_spinlock.hpp"
+#include "arch/amd64/lock/arch_spinlock.hpp"
 
 #include "system/types.h"
 

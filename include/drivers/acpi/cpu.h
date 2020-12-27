@@ -1,6 +1,6 @@
 #pragma once
 
-#include "arch/amd64/cpu.h"
+#include "arch/amd64/cpu/cpu.h"
 
 #include "system/mmu.h"
 #include "system/types.h"
