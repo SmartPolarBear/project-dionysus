@@ -68,14 +68,14 @@ namespace task
 	constexpr process_id PID_MAX = INT64_MAX;
 
 	class task_dispatcher
-		: public libkernel::single_linked_list_base<task_dispatcher*>
+		: public libkernel::linked_list_base<task_dispatcher*>
 	{
 	 public:
 		static constexpr size_t KERNSTACK_PAGES = 2;
 		static constexpr size_t KERNSTACK_SIZE = KERNSTACK_PAGES * PAGE_SIZE;
 
 		task_dispatcher(std::span<char> name, process_id id, process_id parent_id, size_t flags)
-			: single_linked_list_base(), name_length(0), state(PROC_STATE_EMBRYO), id(id), parent_id(parent_id),
+			: linked_list_base(), name_length(0), state(PROC_STATE_EMBRYO), id(id), parent_id(parent_id),
 			  runs(0), mm(nullptr), flags(flags), wating_state(PROC_WAITING_NONE),
 			  exit_code(ERROR_SUCCESS), tf(nullptr), context(nullptr)
 		{

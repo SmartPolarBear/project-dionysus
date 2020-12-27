@@ -117,11 +117,13 @@ task::process_dispatcher* find_process(process_id pid)
 //		}
 //	}
 
-	for (auto iter = proc_list.head; iter != nullptr; iter = static_cast<process_dispatcher*>(iter->get_next()))
+	decltype(&proc_list.head) iter;
+	llb_for(iter, &proc_list.head)
 	{
-		if (iter->get_id() == pid)
+		auto iter_proc = static_cast<task::process_dispatcher*>(iter);
+		if (iter_proc->get_id() == pid)
 		{
-			return iter;
+			return (task::process_dispatcher*)iter;
 		}
 	}
 
@@ -166,14 +168,7 @@ error_code task::create_process(IN const char* name,
 		// TODO: copy kbl from parent task
 	}
 
-	if (proc_list.head == nullptr)
-	{
-		proc_list.head = proc;
-	}
-	else
-	{
-		proc_list.head->add_node(proc);
-	}
+	proc_list.head.insert_after(proc);
 
 //	list_add(&proc->link, &proc_list.active_head);
 
@@ -333,13 +328,16 @@ error_code task::process_wakeup_nolock(size_t channel)
 //		}
 //	}
 
-	for (auto iter = proc_list.head; iter != nullptr; iter = static_cast<process_dispatcher*>(iter->get_next()))
+	decltype(&proc_list.head) iter;
+	llb_for(iter, &proc_list.head)
 	{
-		if (iter->state == PROC_STATE_SLEEPING && iter->sleep_data.channel == channel)
+		auto iter_proc = static_cast<task::process_dispatcher*>(iter);
+		if (iter_proc->state == PROC_STATE_SLEEPING && iter_proc->sleep_data.channel == channel)
 		{
-			iter->state = PROC_STATE_RUNNABLE;
+			iter_proc->state = PROC_STATE_RUNNABLE;
 		}
 	}
+
 	return ERROR_SUCCESS;
 }
 

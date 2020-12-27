@@ -88,8 +88,8 @@ namespace task
 		: object::kernel_object
 	{
 	 public:
-		using job_list_type = libkernel::single_linked_list_base<job*>;
-		using process_list_type = libkernel::single_linked_list_base<process_dispatcher*>;
+		using job_list_type = libkernel::single_linked_child_list_base<job*>;
+		using process_list_type = libkernel::single_linked_child_list_base<process_dispatcher*>;
 	 public:
 
 	 private:

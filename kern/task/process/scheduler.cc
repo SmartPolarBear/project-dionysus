@@ -49,15 +49,13 @@ using lock::spinlock_holding;
 
 //		list_head* iter = nullptr, * tmp = nullptr;
 //		list_for_safe(iter, tmp, &proc_list.active_head)
+//		{}
 
-		for (task::process_dispatcher* iter_proc = proc_list.head, * tmp =
-			static_cast<task::process_dispatcher*>(iter_proc == nullptr ? nullptr
-																		: iter_proc->get_next());
-			 iter_proc != nullptr;
-			 iter_proc = tmp, tmp = static_cast<task::process_dispatcher*>(iter_proc == nullptr ? nullptr
-																								: iter_proc->get_next()))
+		decltype(&proc_list.head) iter = nullptr, tmp = nullptr;
+		llb_for_safe(iter, tmp, &proc_list.head)
 		{
-//			auto iter_proc = list_entry(iter, task::process_dispatcher, link);
+			auto iter_proc = static_cast<task::process_dispatcher*>(iter);
+
 			if (iter_proc->state == task::PROC_STATE_RUNNABLE)
 			{
 
@@ -84,14 +82,6 @@ using lock::spinlock_holding;
 
 				trap::popcli();
 
-				if (cur_proc != nullptr && cur_proc->context)
-				{
-					if (cur_proc->context->rip == 0)
-					{
-						KDEBUG_GENERALPANIC("scheduler_loop: cur_proc rip 0");
-					}
-				}
-
 				context_switch(&cpu->scheduler, cur_proc()->context);
 
 				cur_proc = nullptr;
@@ -104,7 +94,7 @@ using lock::spinlock_holding;
 				proc_list.zombie_queue.pop();
 
 //				list_remove(&zombie->link);
-				proc_list.head->remove_node(zombie);
+				zombie->remove();
 
 				zombie->state = task::PROC_STATE_UNUSED;
 
@@ -140,14 +130,6 @@ void scheduler::scheduler_enter()
 	}
 
 	auto intr_enable = cpu->intr_enable;
-
-	if (cpu != nullptr && cpu->scheduler != nullptr)
-	{
-		if (cpu->scheduler->rip == 0)
-		{
-			KDEBUG_GENERALPANIC("scheduler_enter: cpu context rip 0");
-		}
-	}
 
 	context_switch(&cur_proc->context, cpu->scheduler);
 
