@@ -42,7 +42,7 @@ using lock::spinlock_holding;
 		sti();
 
 //		spinlock_acquire(&proc_list.lock);
-		ktl::mutex::lock_guard guard{ proc_list.lockable };
+		ktl::mutex::lock_guard guard{ proc_list.lock };
 
 		// find runnable ones, we may do exiting works and therefore may remove entries, so
 		// we use list_for_safe
@@ -109,7 +109,7 @@ using lock::spinlock_holding;
 
 void scheduler::scheduler_enter()
 {
-	if (!spinlock_holding(&proc_list.lock))
+	if (!proc_list.lock.holding())
 	{
 		KDEBUG_GENERALPANIC("scheduler_enter should hold proc_list.lock");
 	}
@@ -138,12 +138,13 @@ void scheduler::scheduler_enter()
 
 void scheduler::scheduler_yield()
 {
-	spinlock_acquire(&proc_list.lock);
+//	spinlock_acquire(&proc_list.lock);
+	ktl::mutex::lock_guard guard{ proc_list.lock };
 
 	cur_proc->state = task::PROC_STATE_RUNNABLE;
 
 	scheduler_enter();
 
-	spinlock_release(&proc_list.lock);
+//	spinlock_release(&proc_list.lock);
 }
 

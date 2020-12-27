@@ -133,8 +133,8 @@ task::process_dispatcher* find_process(process_id pid)
 void task::process_init(void)
 {
 	proc_list.proc_count = 0;
-	spinlock_initialize_lock(&proc_list.lock, "task");
-	list_init(&proc_list.active_head);
+//	spinlock_initialize_lock(&proc_list.lock, "task");
+//	list_init(&proc_list.active_head);
 }
 
 error_code task::create_process(IN const char* name,
@@ -143,7 +143,7 @@ error_code task::create_process(IN const char* name,
 	OUT process_dispatcher** retproc)
 {
 //	spinlock_acquire(&proc_list.lock);
-	ktl::mutex::lock_guard guard{ proc_list.lockable };
+	ktl::mutex::lock_guard guard{ proc_list.lock };
 
 	if (proc_list.proc_count >= task::PROC_MAX_COUNT)
 	{
@@ -188,7 +188,7 @@ error_code task::process_load_binary(IN process_dispatcher* proc,
 {
 //	spinlock_acquire(&proc_list.lock);
 
-	ktl::mutex::lock_guard guard{ proc_list.lockable };
+	ktl::mutex::lock_guard guard{ proc_list.lock };
 	error_code ret = ERROR_SUCCESS;
 
 	uintptr_t entry_addr = 0;
@@ -232,7 +232,8 @@ error_code task::process_terminate(error_code err)
 
 void task::process_exit(IN process_dispatcher* proc)
 {
-	spinlock_acquire(&proc_list.lock);
+//	spinlock_acquire(&proc_list.lock);
+	proc_list.lock.lock();
 
 	// TODO: close all files
 
@@ -285,11 +286,13 @@ error_code task::process_sleep(size_t channel, lock::spinlock_struct* lock)
 	}
 
 	// we always only hold proc_list.lock no matter what the lock is
-	if (lock != &proc_list.lock)
-	{
-		spinlock_acquire(&proc_list.lock);
-		spinlock_release(lock);
-	}
+	// FIXME
+	KDEBUG_NOT_IMPLEMENTED;
+//	if (lock != &proc_list.lock)
+//	{
+//		spinlock_acquire(&proc_list.lock);
+//		spinlock_release(lock);
+//	}
 
 	cur_proc->sleep_data.channel = channel;
 	cur_proc->state = PROC_STATE_SLEEPING;
@@ -299,11 +302,13 @@ error_code task::process_sleep(size_t channel, lock::spinlock_struct* lock)
 	cur_proc->sleep_data.channel = 0;
 
 	// restore the lock
-	if (lock != &proc_list.lock)
-	{
-		spinlock_release(&proc_list.lock);
-		spinlock_acquire(lock);
-	}
+	// FIXME
+	KDEBUG_NOT_IMPLEMENTED;
+//	if (lock != &proc_list.lock)
+//	{
+//		spinlock_release(&proc_list.lock);
+//		spinlock_acquire(lock);
+//	}
 
 	return ERROR_SUCCESS;
 }
@@ -311,9 +316,10 @@ error_code task::process_sleep(size_t channel, lock::spinlock_struct* lock)
 // wake up processes sleeping on certain channel
 error_code task::process_wakeup(size_t channel)
 {
-	spinlock_acquire(&proc_list.lock);
+//	spinlock_acquire(&proc_list.lock);
+	ktl::mutex::lock_guard guard{ proc_list.lock };
 	auto ret = process_wakeup_nolock(channel);
-	spinlock_release(&proc_list.lock);
+//	spinlock_release(&proc_list.lock);
 	return ret;
 }
 
@@ -356,7 +362,7 @@ error_code task::process_heap_change_size(IN process_dispatcher* proc, IN OUT ui
 		return -ERROR_INVALID;
 	}
 
-	ktl::mutex::lock_guard guard{ proc_list.lockable };
+	ktl::mutex::lock_guard guard{ proc_list.lock };
 
 //	spinlock_acquire(&mm->lock);
 

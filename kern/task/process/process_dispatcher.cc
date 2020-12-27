@@ -32,7 +32,8 @@ using namespace task;
 
 void new_proc_begin()
 {
-	spinlock_release(&proc_list.lock);
+//	spinlock_release(&proc_list.lock);
+	proc_list.lock.unlock();
 
 	// "return" to user_proc_entry
 }

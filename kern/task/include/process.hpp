@@ -20,13 +20,13 @@ extern CLSItem<task::process_dispatcher*, CLS_PROC_STRUCT_PTR> cur_proc;
 
 struct process_list_struct
 {
-	spinlock_struct lock;
-	lock::spinlock_lockable lockable{ lock };
+	lock::spinlock lock{"TaskLock"};
 
-	size_t proc_count;
-	list_head active_head;
-	task::task_dispatcher::head_type head;
-	libkernel::queue<task::process_dispatcher*> zombie_queue;
+	[[deprecated("use new head")]] list_head active_head;
+
+	size_t proc_count  TA_GUARDED(lock);
+	task::task_dispatcher::head_type head TA_GUARDED(lock);
+	libkernel::queue<task::process_dispatcher*> zombie_queue TA_GUARDED(lock);
 };
 
 extern process_list_struct proc_list;
