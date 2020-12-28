@@ -17,6 +17,9 @@
 #include "kbl/data/list_base.hpp"
 
 #include "ktl/mutex/lock_guard.hpp"
+#include "kbl/atomic/atomic_ref.hpp"
+#include "kbl/ref_count/ref_count_base.hpp"
+
 #include "process.hpp"
 
 #include <cstring>
@@ -142,7 +145,7 @@ namespace task
 
 		job_policy policy;
 
-		job* parent;
+		std::shared_ptr<job> parent;
 
 		char name[JOB_NAME_MAX];
 
