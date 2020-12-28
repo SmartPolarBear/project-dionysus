@@ -12,11 +12,13 @@ set(CLANGXX /usr/bin/clang++)
 set(LDLLD /usr/bin/ld.lld)
 set(RANLIB /usr/bin/ranlib)
 
+set(LIBCXXABI_THREADING_INCLUDE ${CMAKE_SOURCE_DIR}/kern/libs/cxxrt_support/include)
+set(LIBCXX_THREADING_INCLUDE ${CMAKE_SOURCE_DIR}/kern/libs/cxxrt_support/include)
+
+
 #libcxxabi
 
-set(LIBCXXABI_THREADING_INCLUDE ${CMAKE_SOURCE_DIR}/kern/libs/cxxrt_support/include)
-
-set(LIBCXXABI_CFLAGS "-g -nostdlibinc -msoft-float -mno-sse -mno-avx -I${LIBCXXABI_THREADING_INCLUDE} -I${NEWLIB_INC_PATH} -fdeclspec -mcmodel=large -D__ELF__ -U__APPLE__ -D_LDBL_EQ_DBL -D_LIBCPP_HAS_THREAD_API_EXTERNAL -D_LIBCPP_BUILDING_THREAD_LIBRARY_EXTERNAL -D_LIBCPP_HAS_NO_LIBRARY_ALIGNED_ALLOCATION")
+set(LIBCXXABI_CFLAGS "-ffreestanding -g -nostdlibinc -msoft-float -mno-sse -mno-avx -I${LIBCXXABI_THREADING_INCLUDE} -I${NEWLIB_INC_PATH} -fdeclspec -mcmodel=large -D__ELF__ -U__APPLE__ -D_LDBL_EQ_DBL -D_LIBCPP_HAS_THREAD_API_EXTERNAL -D_LIBCPP_BUILDING_THREAD_LIBRARY_EXTERNAL -D_LIBCPP_HAS_NO_LIBRARY_ALIGNED_ALLOCATION")
 
 list(APPEND LIBCXXABI_CMAKE_ARGS
         -DCMAKE_AR=${AR}
@@ -57,8 +59,8 @@ add_dependencies(libcxxabi_build newlib_build)
 #libcxx
 
 
-set(LIBCXX_CXXFLAGS "-g -nostdlibinc -mcmodel=large -msoft-float -mno-avx -v -I${INSTALL_PREFIX}/src/libcxx_build-build/include/c++/v1/ -I${NEWLIB_INC_PATH} -D__ELF__ -D_LIBUNWIND_IS_BAREMETAL=1 -D_LDBL_EQ_DBL -U__APPLE__ -D_LIBCPP_HAS_NO_LIBRARY_ALIGNED_ALLOCATION -D_GNU_SOURCE -D_POSIX_TIMERS")
-set(LIBCXX_CFLAGS "-g -nostdlibinc -mcmodel=large -msoft-float -mno-avx -fdeclspec -I${INSTALL_PREFIX}/src/libcxx_build-build/include/c++/v1/  -I${NEWLIB_INC_PATH} -D__ELF__ -D_LIBUNWIND_IS_BAREMETAL=1 -D_LDBL_EQ_DBL -U__APPLE__ -D_LIBCPP_HAS_NO_LIBRARY_ALIGNED_ALLOCATION -D_GNU_SOURCE -D_POSIX_TIMERS")
+set(LIBCXX_CXXFLAGS "-ffreestanding -g -nostdlibinc -mcmodel=large -msoft-float -mno-avx -v -I${INSTALL_PREFIX}/src/libcxx_build-build/include/c++/v1/ -I${NEWLIB_INC_PATH} -I${LIBCXX_THREADING_INCLUDE}  -D__ELF__ -D_LIBUNWIND_IS_BAREMETAL=1 -D_LDBL_EQ_DBL -U__APPLE__ -D_LIBCPP_HAS_NO_LIBRARY_ALIGNED_ALLOCATION -D_GNU_SOURCE -D_POSIX_TIMERS")
+set(LIBCXX_CFLAGS "-ffreestanding -g -nostdlibinc -mcmodel=large -msoft-float -mno-avx -fdeclspec -I${INSTALL_PREFIX}/src/libcxx_build-build/include/c++/v1/  -I${NEWLIB_INC_PATH} -I${LIBCXX_THREADING_INCLUDE}  -D__ELF__ -D_LIBUNWIND_IS_BAREMETAL=1 -D_LDBL_EQ_DBL -U__APPLE__ -D_LIBCPP_HAS_NO_LIBRARY_ALIGNED_ALLOCATION -D_GNU_SOURCE -D_POSIX_TIMERS")
 
 list(APPEND LIBCXX_CMAKE_ARGS
         -DCMAKE_AR=${AR}
