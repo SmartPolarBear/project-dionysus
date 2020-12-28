@@ -57,8 +57,7 @@ target_compile_options(kernel BEFORE
         PRIVATE -D_GNU_SOURCE
         PRIVATE -D_POSIX_TIMERS)
 
-# FIXME: needs further inspect on PRIVATE -nostdlib
-#       which has been removed to enable shared_ptr
+# FIXME: needs further inspect on PRIVATE -nostdlib which has been removed to enable shared_ptr
 target_link_options(kernel
         PRIVATE -fuse-ld=gold
         PRIVATE -ffreestanding

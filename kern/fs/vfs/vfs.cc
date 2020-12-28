@@ -45,9 +45,33 @@ static constexpr size_t get_open_mode(size_t opt)
 	return r;
 }
 
+// FIXME: weird page fault caused by library function.
+char*
+strrchr2(const char* s,
+	int i)
+{
+	const char* last = NULL;
+
+	if (i)
+	{
+		while ((s = strchr(s, i)))
+		{
+			last = s;
+			s++;
+		}
+	}
+	else
+	{
+		last = strchr(s, i);
+	}
+
+	return (char*)last;
+}
+
 error_code_with_result<const char*> vfs_io_context::separate_parent_name(const char* full_path, OUT char* path)
 {
-	auto sep = strrchr(full_path, '/');
+//	auto sep = strrchr(full_path, '/');
+	auto sep = strrchr2(full_path, '/');
 
 	if (strlen(full_path) >= VFS_MAX_PATH_LEN || strlen(full_path) <= 0)
 	{
