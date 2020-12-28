@@ -46,9 +46,7 @@ static constexpr size_t get_open_mode(size_t opt)
 }
 
 // FIXME: weird page fault caused by library function.
-char*
-strrchr2(const char* s,
-	int i)
+char* strrchr2(const char* s, int i)
 {
 	const char* last = NULL;
 

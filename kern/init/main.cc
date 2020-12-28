@@ -38,8 +38,6 @@
 
 static inline void run(char* name)
 {
-	std::shared_ptr<int> a;
-
 	uint8_t* bin = nullptr;
 	size_t size = 0;
 
