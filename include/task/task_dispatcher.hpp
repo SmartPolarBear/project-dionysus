@@ -17,6 +17,8 @@
 #include "kbl/data/pod_list.h"
 #include "kbl/data/list_base.hpp"
 
+#include "task/dispatcher.hpp"
+
 #include <cstring>
 #include <algorithm>
 #include <span>
@@ -66,21 +68,6 @@ namespace task
 	constexpr size_t PROC_MAX_COUNT = INT32_MAX;
 
 	constexpr process_id PID_MAX = INT64_MAX;
-
-	template<typename TDispatcher, right_type default_rights>
-	class dispatcher
-		: public object::kernel_object
-	{
-	 public:
-		virtual ~dispatcher() = default;
-
-	 protected:
-		[[nodiscard]]lock::spinlock* get_lock()
-		{
-			return &lock;
-		}
-		mutable lock::spinlock lock;
-	};
 
 	class task_dispatcher
 		: public dispatcher<task_dispatcher, 0>,

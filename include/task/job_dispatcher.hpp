@@ -20,7 +20,8 @@
 #include "kbl/atomic/atomic_ref.hpp"
 #include "kbl/ref_count/ref_count_base.hpp"
 
-#include "process.hpp"
+#include "task/process_dispatcher.hpp"
+#include "task/dispatcher.hpp"
 
 #include <cstring>
 #include <algorithm>
@@ -131,7 +132,9 @@ namespace task
 
 		static std::unique_ptr<job_dispatcher> create_root();
 
-		static error_code_with_result<job_dispatcher> create(uint64_t flags, std::shared_ptr<job_dispatcher> parent, right_type right);
+		static error_code_with_result<job_dispatcher> create(uint64_t flags,
+			std::shared_ptr<job_dispatcher> parent,
+			right_type right);
 
 		~job_dispatcher() final;
 	 private:
