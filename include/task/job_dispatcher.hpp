@@ -4,6 +4,8 @@
 
 #include "arch/amd64/cpu/regs.h"
 
+#include "debug/thread_annotations.hpp"
+
 #include "system/mmu.h"
 #include "system/types.h"
 #include "system/vmm.h"
@@ -11,14 +13,14 @@
 #include "system/messaging.hpp"
 
 #include "drivers/apic/traps.h"
-#include "kbl/lock/spinlock.h"
 
+#include "kbl/lock/spinlock.h"
 #include "kbl/data/pod_list.h"
 #include "kbl/data/list_base.hpp"
-
-#include "ktl/mutex/lock_guard.hpp"
 #include "kbl/atomic/atomic_ref.hpp"
 #include "kbl/ref_count/ref_count_base.hpp"
+
+#include "ktl/mutex/lock_guard.hpp"
 
 #include "task/process_dispatcher.hpp"
 #include "task/dispatcher.hpp"
@@ -128,26 +130,40 @@ namespace task
 		using process_list_type = libkernel::single_linked_child_list_base<process_dispatcher*>;
 
 		static constexpr size_t JOB_NAME_MAX = 64;
+		static constexpr size_t JOB_MAX_HEIGHT = 32;
 	 public:
+
+		[[nodiscard]]bool kill(error_code terminate_code) noexcept;
+
+		[[nodiscard]]void apply_basic_policy(uint64_t mode, std::span<policy_item> policies) noexcept;
+
+		[[nodiscard]]job_policy get_policy() const;
+
+		[[nodiscard]]error_code enumerate_children(job_enumerator* enumerator, bool recurse);
+
+		static error_code_with_result<std::shared_ptr<task::job_dispatcher>> create_root();
+
+		static error_code_with_result<std::shared_ptr<task::job_dispatcher>> create(uint64_t flags,
+			std::shared_ptr<job_dispatcher> parent);
+
+		~job_dispatcher() final;
+
+		[[nodiscard]]size_t get_max_height() const
+		{
+			return max_height;
+		}
+	 private:
 		job_dispatcher(uint64_t flags,
 			std::shared_ptr<job_dispatcher> parent,
 			job_policy policy);
 
-		[[nodiscard]]bool kill(error_code terminate_code) noexcept;
+		void remove_from_job_tree() TA_EXCL(lock);
 
-		[[nodiscard]]error_code apply_basic_policy(uint64_t mode, std::span<policy_item> policies) noexcept;
+		bool add_child_job(std::shared_ptr<task::job_dispatcher> child);
+		void remove_child_job(job_dispatcher* j);
 
-		[[nodiscard]]job_policy&& get_policy() const;
-
-		[[nodiscard]]error_code enumerate_children(job_enumerator* enumerator, bool recurse);
-
-		static error_code_with_result<std::shared_ptr<task::job_dispatcher>>  create_root();
-
-		static error_code_with_result<job_dispatcher> create(uint64_t flags,
-			std::shared_ptr<job_dispatcher> parent,
-			right_type right);
-
-		~job_dispatcher() final;
+		bool is_ready_for_dead_transition()TA_REQ(lock);
+		bool finish_dead_transition()TA_EXCL(lock);
 	 private:
 		job_list_type child_jobs;
 		process_list_type processes;
@@ -159,6 +175,10 @@ namespace task
 		char name[JOB_NAME_MAX];
 
 		bool killed;
+
+		size_t max_height;
+
+		error_code exit_code;
 
 		job_status status;
 

@@ -4,6 +4,7 @@
 #include "system/concepts.hpp"
 
 #include <any>
+#include <concepts>
 
 namespace libkernel
 {
@@ -92,12 +93,6 @@ namespace libkernel
 	 public:
 		using pred_type = bool (*)(TPtr p, const void* key);
 
-	 private:
-		TPtr next;
-		TPtr first;
-
-	 protected:
-
 		error_code add_node(single_linked_child_list_base* child)
 		{
 			child->next = static_cast<TPtr>(this->first);
@@ -156,6 +151,9 @@ namespace libkernel
 			return next;
 		}
 
+	 private:
+		TPtr next;
+		TPtr first;
 	};
 
 }

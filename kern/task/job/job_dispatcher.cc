@@ -24,6 +24,12 @@
 #include "../../libs/basic_io/include/builtin_text_io.hpp"
 
 task::job_dispatcher::job_dispatcher(uint64_t flags, std::shared_ptr<job_dispatcher> parent, job_policy policy)
+	: dispatcher<job_dispatcher, 0>(),
+	  parent(std::move(parent)),
+	  max_height(parent == nullptr ? JOB_MAX_HEIGHT : parent->max_height - 1),
+	  status(job_status::JS_READY),
+	  exit_code(ERROR_SUCCESS),
+	  policy(policy)
 {
 
 }
@@ -33,11 +39,22 @@ bool task::job_dispatcher::kill(error_code terminate_code) noexcept
 	return false;
 }
 
-error_code_with_result<task::job_dispatcher> task::job_dispatcher::create(uint64_t flags,
-	std::shared_ptr<job_dispatcher> parent,
-	task::right_type right)
+error_code_with_result<std::shared_ptr<task::job_dispatcher>> task::job_dispatcher::create(uint64_t flags,
+	std::shared_ptr<job_dispatcher> parent)
 {
-	return error_code_with_result<task::job_dispatcher>();
+	if (parent != nullptr && parent->get_max_height() == 0)
+	{
+		return -ERROR_OUT_OF_BOUND;
+	}
+
+	kbl::allocate_checker ck{};
+	std::shared_ptr<task::job_dispatcher> ret{ new(&ck) job_dispatcher{ flags, parent, parent->get_policy() }};
+	if (!ck.check())
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
+
+	return ret;
 }
 
 error_code_with_result<std::shared_ptr<task::job_dispatcher>> task::job_dispatcher::create_root()
@@ -56,20 +73,56 @@ error_code_with_result<std::shared_ptr<task::job_dispatcher>> task::job_dispatch
 
 task::job_dispatcher::~job_dispatcher()
 {
-
+	remove_from_job_tree();
 }
 
-error_code task::job_dispatcher::apply_basic_policy(uint64_t mode, std::span<policy_item> policies) noexcept
+void task::job_dispatcher::remove_from_job_tree() TA_EXCL(this->lock)
 {
-	return 0;
+	parent->remove_child_job(this);
 }
 
-task::job_policy&& task::job_dispatcher::get_policy() const
+void task::job_dispatcher::apply_basic_policy(uint64_t mode, std::span<policy_item> policies) noexcept
 {
-	return job_policy();
+	for (auto&& p:policies)
+	{
+		this->policy.apply(p);
+	}
+}
+
+task::job_policy task::job_dispatcher::get_policy() const
+{
+	ktl::mutex::lock_guard guard{ lock };
+	return policy;
 }
 
 error_code task::job_dispatcher::enumerate_children(task::job_enumerator* enumerator, bool recurse)
 {
 	return 0;
 }
+
+void task::job_dispatcher::remove_child_job(task::job_dispatcher* j)
+{
+	bool suicide = false;
+
+	// lock scope
+	{
+		ktl::mutex::lock_guard guard{ lock };
+
+
+	}
+}
+
+bool task::job_dispatcher::add_child_job(std::shared_ptr<task::job_dispatcher> child)
+{
+	return false;
+}
+bool task::job_dispatcher::is_ready_for_dead_transition() TA_REQ(lock)
+{
+	return false;
+}
+bool task::job_dispatcher::finish_dead_transition() TA_EXCL(lock)
+{
+	return false;
+}
+
+
