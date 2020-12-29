@@ -88,14 +88,12 @@ namespace task
 		std::optional<policy_item> action[POLICY_CONDITION_MAX];
 	};
 
-	using right_type = uint64_t;
-
-	class job;
+	class job_dispatcher;
 
 	class job_enumerator
 	{
 	 public:
-		virtual bool on_job(job* jb)
+		virtual bool on_job(job_dispatcher* jb)
 		{
 			return true;
 		}
@@ -115,11 +113,11 @@ namespace task
 		JS_DEAD
 	};
 
-	class job final
-		: object::kernel_object
+	class job_dispatcher final
+		: public dispatcher<job_dispatcher, 0>
 	{
 	 public:
-		using job_list_type = libkernel::single_linked_child_list_base<job*>;
+		using job_list_type = libkernel::single_linked_child_list_base<job_dispatcher*>;
 		using process_list_type = libkernel::single_linked_child_list_base<process_dispatcher*>;
 		static constexpr size_t JOB_NAME_MAX = 64;
 	 public:
@@ -131,26 +129,24 @@ namespace task
 
 		[[nodiscard]]error_code enumerate_children(job_enumerator* enumerator, bool recurse);
 
-		static std::unique_ptr<job> create_root();
+		static std::unique_ptr<job_dispatcher> create_root();
 
-		static error_code_with_result<job> create(uint64_t flags, std::shared_ptr<job> parent, right_type right);
+		static error_code_with_result<job_dispatcher> create(uint64_t flags, std::shared_ptr<job_dispatcher> parent, right_type right);
 
-		~job() final;
+		~job_dispatcher() final;
 	 private:
-
-		lock::spinlock lock;
-
 		job_list_type child_jobs;
 		process_list_type processes;
 
 		job_policy policy;
 
-		std::shared_ptr<job> parent;
+		std::shared_ptr<job_dispatcher> parent;
 
 		char name[JOB_NAME_MAX];
 
 		bool killed;
 
 		job_status status;
+
 	};
 }

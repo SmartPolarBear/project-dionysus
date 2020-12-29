@@ -17,7 +17,7 @@
 
 #include "task/task_dispatcher.hpp"
 #include "task/process.hpp"
-#include "task/job.hpp"
+#include "task/job_dispatcher.hpp"
 #include "task/thread.hpp"
 
 #include <cstring>
