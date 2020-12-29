@@ -59,6 +59,12 @@ namespace task
 	 public:
 		static constexpr size_t POLICY_CONDITION_MAX = static_cast<size_t >(policy_condition::kPolicyConditionMax);
 
+		static job_policy creat_root_policy()
+		{
+			//TODO
+			return job_policy();
+		}
+
 		[[nodiscard]]std::span<std::optional<policy_item>, POLICY_CONDITION_MAX> get_policies()
 		{
 			return { action };
@@ -120,8 +126,13 @@ namespace task
 	 public:
 		using job_list_type = libkernel::single_linked_child_list_base<job_dispatcher*>;
 		using process_list_type = libkernel::single_linked_child_list_base<process_dispatcher*>;
+
 		static constexpr size_t JOB_NAME_MAX = 64;
 	 public:
+		job_dispatcher(uint64_t flags,
+			std::shared_ptr<job_dispatcher> parent,
+			job_policy policy);
+
 		[[nodiscard]]bool kill(error_code terminate_code) noexcept;
 
 		[[nodiscard]]error_code apply_basic_policy(uint64_t mode, std::span<policy_item> policies) noexcept;
@@ -130,7 +141,7 @@ namespace task
 
 		[[nodiscard]]error_code enumerate_children(job_enumerator* enumerator, bool recurse);
 
-		static std::unique_ptr<job_dispatcher> create_root();
+		static error_code_with_result<std::shared_ptr<task::job_dispatcher>>  create_root();
 
 		static error_code_with_result<job_dispatcher> create(uint64_t flags,
 			std::shared_ptr<job_dispatcher> parent,

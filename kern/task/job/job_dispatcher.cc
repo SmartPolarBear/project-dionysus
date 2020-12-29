@@ -17,24 +17,41 @@
 #include "system/scheduler.h"
 
 #include "drivers/apic/traps.h"
-#include "kbl/lock/spinlock.h"
 
+#include "kbl/lock/spinlock.h"
+#include "kbl/checker/allocate_checker.hpp"
 #include "kbl/data/pod_list.h"
 #include "../../libs/basic_io/include/builtin_text_io.hpp"
+
+task::job_dispatcher::job_dispatcher(uint64_t flags, std::shared_ptr<job_dispatcher> parent, job_policy policy)
+{
+
+}
 
 bool task::job_dispatcher::kill(error_code terminate_code) noexcept
 {
 	return false;
 }
 
-error_code_with_result<task::job_dispatcher> task::job_dispatcher::create(uint64_t flags, std::shared_ptr<job_dispatcher> parent, task::right_type right)
+error_code_with_result<task::job_dispatcher> task::job_dispatcher::create(uint64_t flags,
+	std::shared_ptr<job_dispatcher> parent,
+	task::right_type right)
 {
 	return error_code_with_result<task::job_dispatcher>();
 }
 
-std::unique_ptr<task::job_dispatcher> task::job_dispatcher::create_root()
+error_code_with_result<std::shared_ptr<task::job_dispatcher>> task::job_dispatcher::create_root()
 {
-	return std::unique_ptr<job_dispatcher>();
+	kbl::allocate_checker ck{};
+	auto root = std::shared_ptr<job_dispatcher>{
+		new(&ck) job_dispatcher{ 0, nullptr, job_policy::creat_root_policy() }};
+
+	if (!ck.check())
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
+
+	return root;
 }
 
 task::job_dispatcher::~job_dispatcher()
