@@ -22,7 +22,7 @@
 //
 
 template<typename T>
-using k_queue = libkernel::queue<T>;
+using k_queue = kbl::queue<T>;
 
 template<typename T>
-using k_stack = libkernel::stack<T>;
+using k_stack = kbl::stack<T>;

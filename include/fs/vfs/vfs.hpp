@@ -271,7 +271,7 @@ namespace file_system
 	}
 
 	class vnode_base
-		: public libkernel::single_linked_child_list_base<vnode_base*>
+		: public kbl::single_linked_child_list_base<vnode_base*>
 	{
 	 protected:
 		static constexpr size_t VNODE_NAME_MAX = 64;

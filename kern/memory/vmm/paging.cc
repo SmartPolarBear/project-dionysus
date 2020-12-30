@@ -47,11 +47,11 @@ using vmm::pde_t;
 using vmm::vma_struct;
 
 // linked list
-using libkernel::list_add;
-using libkernel::list_empty;
-using libkernel::list_for_each;
-using libkernel::list_init;
-using libkernel::list_remove;
+using kbl::list_add;
+using kbl::list_empty;
+using kbl::list_for_each;
+using kbl::list_init;
+using kbl::list_remove;
 
 // global variable for the sake of access and dynamically mapping
 pde_ptr_t vmm::g_kpml4t;

@@ -41,11 +41,11 @@ using pmm::alloc_page;
 using pmm::free_page;
 
 // linked list
-using libkernel::list_add;
-using libkernel::list_empty;
-using libkernel::list_for_each;
-using libkernel::list_init;
-using libkernel::list_remove;
+using kbl::list_add;
+using kbl::list_empty;
+using kbl::list_for_each;
+using kbl::list_init;
+using kbl::list_remove;
 
 //ATTENTION: IF ANY WEIRD BUG OCCURS IN THIS FILE, CONSIDER RACE CONDITION FIRST!
 // spinlock_struct

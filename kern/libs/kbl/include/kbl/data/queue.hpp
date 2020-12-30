@@ -4,7 +4,7 @@
 #include "kbl/lock/spinlock.h"
 #include "system/kmalloc.hpp"
 
-namespace libkernel
+namespace kbl
 {
 	template<typename T>
 	class queue

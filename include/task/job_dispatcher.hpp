@@ -21,6 +21,7 @@
 #include "kbl/ref_count/ref_count_base.hpp"
 
 #include "ktl/mutex/lock_guard.hpp"
+#include "ktl/unique_ptr.hpp"
 
 #include "task/process_dispatcher.hpp"
 #include "task/dispatcher.hpp"
@@ -123,11 +124,15 @@ namespace task
 	};
 
 	class job_dispatcher final
-		: public dispatcher<job_dispatcher, 0>
+		: public dispatcher<job_dispatcher, 0>,
+		  public kbl::single_linked_child_list_base<job_dispatcher*>
 	{
 	 public:
-		using job_list_type = libkernel::single_linked_child_list_base<job_dispatcher*>;
-		using process_list_type = libkernel::single_linked_child_list_base<process_dispatcher*>;
+		using job_list_type = kbl::single_linked_child_list_base<job_dispatcher*>;
+		using process_list_type = kbl::single_linked_child_list_base<process_dispatcher*>;
+
+		template<typename T>
+		using array_of_child = ktl::unique_ptr<T[]>();
 
 		static constexpr size_t JOB_NAME_MAX = 64;
 		static constexpr size_t JOB_MAX_HEIGHT = 32;
@@ -158,6 +163,7 @@ namespace task
 			ktl::mutex::lock_guard g{ this->lock };
 			return status;
 		}
+
 	 private:
 		job_dispatcher(uint64_t flags,
 			std::shared_ptr<job_dispatcher> parent,
@@ -170,6 +176,9 @@ namespace task
 
 		bool is_ready_for_dead_transition()TA_REQ(lock);
 		bool finish_dead_transition()TA_EXCL(lock);
+
+		template<typename T>
+		[[nodiscard]]size_t get_count() TA_REQ(lock);
 	 private:
 		job_list_type child_jobs;
 		process_list_type child_processes;

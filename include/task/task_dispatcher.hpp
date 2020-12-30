@@ -71,7 +71,7 @@ namespace task
 
 	class task_dispatcher
 		: public dispatcher<task_dispatcher, 0>,
-		  public libkernel::linked_list_base<task_dispatcher*>
+		  public kbl::linked_list_base<task_dispatcher*>
 	{
 	 public:
 		static constexpr size_t KERNSTACK_PAGES = 2;

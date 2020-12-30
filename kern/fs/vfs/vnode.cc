@@ -27,7 +27,7 @@
 //};
 
 using namespace memory::kmem;
-using namespace libkernel;
+using namespace kbl;
 
 //memory::kmem::kmem_cache* vnode_child_node_cache = nullptr;
 

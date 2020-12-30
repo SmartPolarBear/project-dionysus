@@ -7,10 +7,10 @@
 
 #include "kbl/data/pod_list.h"
 
-using libkernel::list_add;
-using libkernel::list_for_each;
-using libkernel::list_init;
-using libkernel::list_remove;
+using kbl::list_add;
+using kbl::list_for_each;
+using kbl::list_init;
+using kbl::list_remove;
 
 // spinlock_struct
 using lock::spinlock_struct;

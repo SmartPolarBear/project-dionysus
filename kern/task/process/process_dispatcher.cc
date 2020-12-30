@@ -21,7 +21,7 @@
 
 #include "ktl/mutex/lock_guard.hpp"
 
-using namespace libkernel;
+using namespace kbl;
 using namespace lock;
 using namespace memory;
 using namespace vmm;

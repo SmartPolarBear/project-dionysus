@@ -6,7 +6,7 @@
 #include <any>
 #include <concepts>
 
-namespace libkernel
+namespace kbl
 {
 
 	template<Pointer TPtr>
@@ -92,6 +92,11 @@ namespace libkernel
 		{
 			return !_list_size;
 		}
+
+		[[nodiscard]] size_type size() const
+		{
+			return _list_size;
+		}
 	};
 
 #define llb_for(pos, head) \
@@ -143,7 +148,7 @@ namespace libkernel
 			return find_next(this->first, pred, key);
 		}
 
-		TPtr find_next(single_linked_child_list_base* from, pred_type pred, const void* key)
+		TPtr find_next(TPtr from, pred_type pred, const void* key)
 		{
 			for (auto node = from; node != nullptr; node = node->next)
 			{
@@ -171,6 +176,11 @@ namespace libkernel
 		[[nodiscard]] bool empty() const
 		{
 			return !_list_size;
+		}
+
+		[[nodiscard]] size_type size() const
+		{
+			return _list_size;
 		}
 
 	 private:

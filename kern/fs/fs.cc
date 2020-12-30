@@ -17,7 +17,7 @@
 
 #include "../libs/basic_io/include/builtin_text_io.hpp"
 
-using namespace libkernel;
+using namespace kbl;
 using namespace file_system;
 
 list_head fs_class_head;

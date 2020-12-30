@@ -9,12 +9,12 @@
 
 #include <cstring>
 
-using libkernel::list_add;
-using libkernel::list_add_tail;
-using libkernel::list_empty;
-using libkernel::list_for_each;
-using libkernel::list_init;
-using libkernel::list_remove;
+using kbl::list_add;
+using kbl::list_add_tail;
+using kbl::list_empty;
+using kbl::list_for_each;
+using kbl::list_init;
+using kbl::list_remove;
 
 using pmm::buddy_pmm::buddy_alloc_pages;
 using pmm::buddy_pmm::buddy_free_pages;

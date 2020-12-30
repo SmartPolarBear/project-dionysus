@@ -111,7 +111,7 @@ void task::job_dispatcher::remove_child_job(task::job_dispatcher* j)
 			return;
 		}
 
-		child_jobs.remove_node(static_cast<libkernel::single_linked_child_list_base<job_dispatcher*>*>(j));
+		child_jobs.remove_node(static_cast<kbl::single_linked_child_list_base<job_dispatcher*>*>(j));
 		suicide = is_ready_for_dead_transition();
 	}
 

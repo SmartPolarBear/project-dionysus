@@ -47,11 +47,11 @@ using vmm::vma_struct;
 using pmm::boot_mem::boot_alloc_page;
 
 // linked list
-using libkernel::list_add;
-using libkernel::list_empty;
-using libkernel::list_for_each;
-using libkernel::list_init;
-using libkernel::list_remove;
+using kbl::list_add;
+using kbl::list_empty;
+using kbl::list_for_each;
+using kbl::list_init;
+using kbl::list_remove;
 
 // cpu-individual variable containing info about current CPU
 CLSItem<cpu_struct*, CLS_CPU_STRUCT_PTR> cpu{ false };

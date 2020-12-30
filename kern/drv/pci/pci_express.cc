@@ -18,7 +18,7 @@ using std::make_pair;
 using namespace pci;
 using namespace pci::express;
 
-using namespace libkernel;
+using namespace kbl;
 
 struct dev_list
 {
