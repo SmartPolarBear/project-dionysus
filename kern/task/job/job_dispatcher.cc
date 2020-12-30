@@ -34,11 +34,6 @@ task::job_dispatcher::job_dispatcher(uint64_t flags, std::shared_ptr<job_dispatc
 
 }
 
-bool task::job_dispatcher::kill(error_code terminate_code) noexcept
-{
-	return false;
-}
-
 error_code_with_result<std::shared_ptr<task::job_dispatcher>> task::job_dispatcher::create(uint64_t flags,
 	std::shared_ptr<job_dispatcher> parent)
 {
@@ -73,10 +68,10 @@ error_code_with_result<std::shared_ptr<task::job_dispatcher>> task::job_dispatch
 
 task::job_dispatcher::~job_dispatcher()
 {
-	remove_from_job_tree();
+	remove_from_job_trees();
 }
 
-void task::job_dispatcher::remove_from_job_tree() TA_EXCL(this->lock)
+void task::job_dispatcher::remove_from_job_trees() TA_EXCL(this->lock)
 {
 	parent->remove_child_job(this);
 }
@@ -108,7 +103,21 @@ void task::job_dispatcher::remove_child_job(task::job_dispatcher* j)
 	{
 		ktl::mutex::lock_guard guard{ lock };
 
+		if (child_jobs.find_first([](job_dispatcher* jb, const void* key)
+		{
+		  return jb->get_koid() == reinterpret_cast<const job_dispatcher*>(key)->get_koid();
+		}, j) == nullptr)
+		{
+			return;
+		}
 
+		child_jobs.remove_node(reinterpret_cast<libkernel::single_linked_child_list_base<job_dispatcher*>*>(j));
+		suicide = is_ready_for_dead_transition();
+	}
+
+	if (suicide)
+	{
+		finish_dead_transition();
 	}
 }
 
@@ -116,13 +125,30 @@ bool task::job_dispatcher::add_child_job(std::shared_ptr<task::job_dispatcher> c
 {
 	return false;
 }
+
 bool task::job_dispatcher::is_ready_for_dead_transition() TA_REQ(lock)
 {
-	return false;
+	return status == job_status::JS_KILLING && child_jobs.empty() && child_processes.empty();
 }
+
 bool task::job_dispatcher::finish_dead_transition() TA_EXCL(lock)
 {
+	// there must be big problem is parent die before its successor jobs
+	KDEBUG_ASSERT(parent == nullptr || parent->get_status() != job_status::JS_DEAD);
+
+	// locked scope
+	{
+		ktl::mutex::lock_guard guard{ lock };
+		status = job_status::JS_DEAD;
+	}
+
+	remove_from_job_trees();
+
 	return false;
 }
 
+bool task::job_dispatcher::kill(error_code terminate_code) noexcept
+{
+	return false;
+}
 

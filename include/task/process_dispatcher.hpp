@@ -49,7 +49,7 @@ namespace task
 		// sleep on certain channel
 		friend error_code process_sleep(size_t channel, lock::spinlock_struct* lock);
 
-		// wake up processes sleeping on certain channel
+		// wake up child_processes sleeping on certain channel
 		friend error_code process_wakeup(size_t channel);
 		friend error_code process_wakeup_nolock(size_t channel);
 

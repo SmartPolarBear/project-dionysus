@@ -152,12 +152,18 @@ namespace task
 		{
 			return max_height;
 		}
+
+		[[nodiscard]] job_status get_status() const
+		{
+			ktl::mutex::lock_guard g{ this->lock };
+			return status;
+		}
 	 private:
 		job_dispatcher(uint64_t flags,
 			std::shared_ptr<job_dispatcher> parent,
 			job_policy policy);
 
-		void remove_from_job_tree() TA_EXCL(lock);
+		void remove_from_job_trees() TA_EXCL(lock);
 
 		bool add_child_job(std::shared_ptr<task::job_dispatcher> child);
 		void remove_child_job(job_dispatcher* j);
@@ -166,7 +172,7 @@ namespace task
 		bool finish_dead_transition()TA_EXCL(lock);
 	 private:
 		job_list_type child_jobs;
-		process_list_type processes;
+		process_list_type child_processes;
 
 		job_policy policy;
 
@@ -176,11 +182,10 @@ namespace task
 
 		bool killed;
 
-		size_t max_height;
-
 		error_code exit_code;
 
-		job_status status;
+		job_status status TA_GUARDED(lock);
 
+		const size_t max_height;
 	};
 }

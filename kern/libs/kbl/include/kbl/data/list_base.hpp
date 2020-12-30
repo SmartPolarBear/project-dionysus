@@ -16,14 +16,16 @@ namespace libkernel
 		template<typename T>
 		using pred_type = bool (*)(TPtr, T&& key);
 		using head_type = linked_list_base;
+		using size_type = size_t;
 
 	 private:
 		TPtr next{ nullptr };
 		TPtr prev{ nullptr };
+		size_type _list_size{ 0 };
 
 	 public:
 		linked_list_base()
-			: next{ static_cast<TPtr>(this) }, prev{ static_cast<TPtr>(this) }
+			: next{ static_cast<TPtr>(this) }, prev{ static_cast<TPtr>(this) }, _list_size{ 0 }
 		{
 		}
 
@@ -34,6 +36,8 @@ namespace libkernel
 
 			newnode->prev = static_cast<TPtr>(this);
 			this->next = static_cast<TPtr>(newnode);
+
+			_list_size++;
 		}
 
 		void remove()
@@ -43,6 +47,9 @@ namespace libkernel
 
 			this->prev = nullptr;
 			this->next = nullptr;
+
+			_list_size--;
+
 		}
 
 		template<typename T>
@@ -55,6 +62,7 @@ namespace libkernel
 					return iter;
 				}
 			}
+			return nullptr;
 		}
 
 	 public:
@@ -79,6 +87,11 @@ namespace libkernel
 		{
 			return (NewT)(TPtr)this;
 		}
+
+		[[nodiscard]]bool empty() const
+		{
+			return !_list_size;
+		}
 	};
 
 #define llb_for(pos, head) \
@@ -92,11 +105,13 @@ namespace libkernel
 	{
 	 public:
 		using pred_type = bool (*)(TPtr p, const void* key);
+		using size_type = size_t;
 
 		error_code add_node(single_linked_child_list_base* child)
 		{
 			child->next = static_cast<TPtr>(this->first);
 			this->first = static_cast<TPtr>(child);
+			_list_size++;
 			return ERROR_SUCCESS;
 		}
 
@@ -106,6 +121,7 @@ namespace libkernel
 			{
 				this->first = child->next;
 				child->next = NULL;
+				_list_size--;
 				return ERROR_SUCCESS;
 			}
 
@@ -115,6 +131,7 @@ namespace libkernel
 				{
 					node->next = static_cast<TPtr>(child->next);
 					child->next = nullptr;
+					_list_size--;
 					return ERROR_SUCCESS;
 				}
 			}
@@ -151,9 +168,15 @@ namespace libkernel
 			return next;
 		}
 
+		[[nodiscard]] bool empty() const
+		{
+			return !_list_size;
+		}
+
 	 private:
 		TPtr next;
 		TPtr first;
+		size_type _list_size{ 0 };
 	};
 
 }

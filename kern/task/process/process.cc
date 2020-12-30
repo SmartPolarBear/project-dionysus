@@ -313,7 +313,7 @@ error_code task::process_sleep(size_t channel, lock::spinlock_struct* lock)
 	return ERROR_SUCCESS;
 }
 
-// wake up processes sleeping on certain channel
+// wake up child_processes sleeping on certain channel
 error_code task::process_wakeup(size_t channel)
 {
 //	spinlock_acquire(&proc_list.lock);
