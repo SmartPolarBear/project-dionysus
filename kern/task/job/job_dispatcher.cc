@@ -111,7 +111,7 @@ void task::job_dispatcher::remove_child_job(task::job_dispatcher* j)
 			return;
 		}
 
-		child_jobs.remove_node(reinterpret_cast<libkernel::single_linked_child_list_base<job_dispatcher*>*>(j));
+		child_jobs.remove_node(static_cast<libkernel::single_linked_child_list_base<job_dispatcher*>*>(j));
 		suicide = is_ready_for_dead_transition();
 	}
 
@@ -152,3 +152,14 @@ bool task::job_dispatcher::kill(error_code terminate_code) noexcept
 	return false;
 }
 
+template<>
+size_t task::job_dispatcher::get_count<task::job_dispatcher()>() TA_REQ(lock)
+{
+	return this->child_jobs.size();
+}
+
+template<>
+size_t task::job_dispatcher::get_count<task::process_dispatcher()>() TA_REQ(lock)
+{
+	return this->child_processes.size();
+}
