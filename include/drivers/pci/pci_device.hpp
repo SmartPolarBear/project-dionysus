@@ -1,7 +1,7 @@
 #pragma once
 
 #include "system/types.h"
-#include "system/concepts.hpp"
+#include "ktl/concepts.hpp"
 
 #include "drivers/acpi/acpi.h"
 #include "drivers/pci/pci_header.hpp"
@@ -33,7 +33,7 @@ struct pci_device
 	}
 
 	template<typename TRegPtr>
-	requires Pointer<TRegPtr>
+	requires ktl::Pointer<TRegPtr>
 	[[nodiscard, maybe_unused]]
 	TRegPtr read_dword_as(size_t off) const
 	{

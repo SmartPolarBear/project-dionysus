@@ -77,7 +77,7 @@ extern CLSItem<cpu_struct*, CLS_CPU_STRUCT_PTR> cpu;
 
 template<typename T>
 static inline T gs_get_cpu_dependent(uintptr_t n)
-requires Pointer<T>
+requires ktl::Pointer<T>
 {
 	uintptr_t* target_gs_ptr = (uintptr_t*)(((uint8_t*)cpu->kernel_gs) + n);
 	uintptr_t ret = *target_gs_ptr;
@@ -86,7 +86,7 @@ requires Pointer<T>
 
 template<typename T>
 static inline void gs_put_cpu_dependent(uintptr_t n, T v)
-requires Pointer<T>
+requires ktl::Pointer<T>
 {
 	uintptr_t val = (uintptr_t)v;
 	uintptr_t* target_gs_ptr = (uintptr_t*)(((uint8_t*)cpu->kernel_gs) + n);

@@ -1,6 +1,6 @@
 #pragma once
 #include "system/types.h"
-#include "system/concepts.hpp"
+#include "ktl/concepts.hpp"
 
 #include "drivers/acpi/acpi.h"
 #include "drivers/pci/pci_device.hpp"

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "system/types.h"
-#include "system/concepts.hpp"
+#include "ktl/concepts.hpp"
 
 #include <any>
 #include <concepts>
@@ -9,7 +9,7 @@
 namespace kbl
 {
 
-	template<Pointer TPtr>
+	template<ktl::Pointer TPtr>
 	class linked_list_base
 	{
 	 public:
@@ -82,7 +82,7 @@ namespace kbl
 			return (TPtr)this;
 		}
 
-		template<Pointer NewT>
+		template<ktl::Pointer NewT>
 		[[nodiscard]]NewT get_element_as() const
 		{
 			return (NewT)(TPtr)this;
@@ -105,7 +105,7 @@ namespace kbl
 #define llb_for_safe(pos, n, head) \
     for (pos = (head)->get_next(), n = pos->get_next(); pos != (head); pos = n, n = pos->get_next())
 
-	template<Pointer TPtr>
+	template<ktl::Pointer TPtr>
 	class single_linked_child_list_base
 	{
 	 public:

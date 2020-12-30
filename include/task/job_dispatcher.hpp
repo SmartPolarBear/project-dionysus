@@ -10,6 +10,7 @@
 #include "system/types.h"
 #include "system/vmm.h"
 #include "system/syscall.h"
+#include "ktl/concepts.hpp"
 #include "system/messaging.hpp"
 
 #include "drivers/apic/traps.h"
@@ -179,6 +180,10 @@ namespace task
 
 		template<typename T>
 		[[nodiscard]]size_t get_count() TA_REQ(lock);
+
+		template<typename TChildrenList, typename TChild, typename TFunc>
+		requires ktl::ListOfTWithBound<TChildrenList, TChild>
+		error_code_with_result<ktl::unique_ptr<TChild* []>> for_each_job(TChildrenList& children, TFunc func);
 	 private:
 		job_list_type child_jobs;
 		process_list_type child_processes;

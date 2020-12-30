@@ -1,6 +1,6 @@
 #pragma once
 
-#include "system/concepts.hpp"
+#include "ktl/concepts.hpp"
 #include "system/types.h"
 #include "system/segmentation.hpp"
 
@@ -27,7 +27,7 @@ enum CLS_ADDRESS : uintptr_t
 
 template<typename T>
 static inline T cls_get(uintptr_t n)
-requires Pointer<T>
+requires ktl::Pointer<T>
 {
 	uintptr_t ret = 0;
 	asm("mov %%fs:(%%rax),%0"
@@ -38,7 +38,7 @@ requires Pointer<T>
 
 template<typename T>
 static inline void cls_put(uintptr_t n, T v)
-requires Pointer<T>
+requires ktl::Pointer<T>
 {
 	uintptr_t val = (uintptr_t)v;
 	asm("mov %0, %%fs:(%%rax)"
@@ -48,7 +48,7 @@ requires Pointer<T>
 
 template<typename T>
 static inline T gs_get(uintptr_t n)
-requires Pointer<T>
+requires ktl::Pointer<T>
 {
 	uintptr_t ret = 0;
 	asm("mov %%gs:(%%rax),%0"
@@ -59,7 +59,7 @@ requires Pointer<T>
 
 template<typename T>
 static inline void gs_put(uintptr_t n, T v)
-requires Pointer<T>
+requires ktl::Pointer<T>
 {
 	uintptr_t val = (uintptr_t)v;
 	asm("mov %0, %%gs:(%%rax)"
@@ -70,7 +70,7 @@ requires Pointer<T>
 #pragma clang diagnostic pop
 
 template<typename T, CLS_ADDRESS addr>
-requires Pointer<T>
+requires ktl::Pointer<T>
 class CLSItem
 {
  private:
@@ -125,70 +125,70 @@ class CLSItem
 };
 
 template<typename T, CLS_ADDRESS addr>
-requires Pointer<T>
+requires ktl::Pointer<T>
 static inline bool operator==(CLSItem<T, addr> lhs, CLSItem<T, addr> rhs)
 {
 	return lhs() == rhs();
 }
 
 template<typename T, CLS_ADDRESS addr>
-requires Pointer<T>
+requires ktl::Pointer<T>
 static inline bool operator!=(CLSItem<T, addr> lhs, CLSItem<T, addr> rhs)
 {
 	return !(lhs() == rhs());
 }
 
 template<typename T, CLS_ADDRESS addr>
-requires Pointer<T>
+requires ktl::Pointer<T>
 static inline bool operator==(T lhs, CLSItem<T, addr> rhs)
 {
 	return lhs == rhs();
 }
 
 template<typename T, CLS_ADDRESS addr>
-requires Pointer<T>
+requires ktl::Pointer<T>
 static inline bool operator!=(T lhs, CLSItem<T, addr> rhs)
 {
 	return !(lhs == rhs());
 }
 
 template<typename T, CLS_ADDRESS addr>
-requires Pointer<T>
+requires ktl::Pointer<T>
 static inline bool operator==(CLSItem<T, addr> lhs, T rhs)
 {
 	return lhs() == rhs;
 }
 
 template<typename T, CLS_ADDRESS addr>
-requires Pointer<T>
+requires ktl::Pointer<T>
 static inline bool operator!=(CLSItem<T, addr> lhs, T rhs)
 {
 	return !(lhs() == rhs);
 }
 
 template<typename T, CLS_ADDRESS addr>
-requires Pointer<T>
+requires ktl::Pointer<T>
 static inline bool operator==(CLSItem<T, addr> lhs, [[maybe_unused]] nullptr_t rhs)
 {
 	return lhs() == nullptr;
 }
 
 template<typename T, CLS_ADDRESS addr>
-requires Pointer<T>
+requires ktl::Pointer<T>
 static inline bool operator!=(CLSItem<T, addr> lhs, [[maybe_unused]]nullptr_t rhs)
 {
 	return !(lhs() == nullptr);
 }
 
 template<typename T, CLS_ADDRESS addr>
-requires Pointer<T>
+requires ktl::Pointer<T>
 static inline bool operator==([[maybe_unused]]nullptr_t lhs, CLSItem<T, addr> rhs)
 {
 	return nullptr == rhs();
 }
 
 template<typename T, CLS_ADDRESS addr>
-requires Pointer<T>
+requires ktl::Pointer<T>
 static inline bool operator!=([[maybe_unused]]nullptr_t lhs, CLSItem<T, addr> rhs)
 {
 	return !(nullptr == rhs());
