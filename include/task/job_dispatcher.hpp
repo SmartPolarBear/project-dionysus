@@ -183,7 +183,7 @@ namespace task
 
 		template<typename TChildrenList, typename TChild, typename TFunc>
 		requires ktl::ListOfTWithBound<TChildrenList, TChild> && (!ktl::Pointer<TChild>)
-		[[nodiscard]]error_code_with_result<ktl::unique_ptr<TChild* []>> for_each_job(TChildrenList& children,
+		[[nodiscard]]error_code_with_result<ktl::unique_ptr<TChild* []>> for_each_child(TChildrenList& children,
 			TFunc func);
 	 private:
 		job_list_type child_jobs;
