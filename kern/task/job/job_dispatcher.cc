@@ -21,6 +21,7 @@
 #include "kbl/lock/spinlock.h"
 #include "kbl/checker/allocate_checker.hpp"
 #include "kbl/data/pod_list.h"
+
 #include "../../libs/basic_io/include/builtin_text_io.hpp"
 
 task::job_dispatcher::job_dispatcher(uint64_t flags, std::shared_ptr<job_dispatcher> parent, job_policy policy)
@@ -156,6 +157,28 @@ template<>
 size_t task::job_dispatcher::get_count<task::job_dispatcher()>() TA_REQ(lock)
 {
 	return this->child_jobs.size();
+}
+
+template<typename TChildrenList, typename TChild, typename TFunc>
+requires ktl::ListOfTWithBound<TChildrenList, TChild> && (!ktl::Pointer<TChild>)
+error_code_with_result<ktl::unique_ptr<TChild* []>> task::job_dispatcher::for_each_job(TChildrenList& children,
+	TFunc func)
+{
+	const size_t count = get_count<TChild>();
+
+	if (count == 0)
+	{
+		return nullptr;
+	}
+
+	kbl::allocate_checker ck{};
+	ktl::unique_ptr<TChild* []> ret = ktl::make_unique<TChild* []>(&ck, count);
+	if (!ck.check())
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
+
+	return error_code_with_result<ktl::unique_ptr<TChild* []>>();
 }
 
 template<>
