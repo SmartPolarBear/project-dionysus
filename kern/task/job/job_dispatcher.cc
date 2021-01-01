@@ -93,7 +93,7 @@ task::job_policy task::job_dispatcher::get_policy() const
 
 error_code task::job_dispatcher::enumerate_children(task::job_enumerator* enumerator, bool recurse)
 {
-	return 0;
+	ktl::mutex::lock_guard guard{ lock };
 }
 
 void task::job_dispatcher::remove_child_job(task::job_dispatcher* j)
