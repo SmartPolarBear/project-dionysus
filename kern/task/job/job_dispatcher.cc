@@ -162,7 +162,7 @@ size_t task::job_dispatcher::get_count<task::job_dispatcher()>() TA_REQ(lock)
 template<typename TChildrenList, typename TChild, typename TFunc>
 requires ktl::ListOfTWithBound<TChildrenList, TChild> && (!ktl::Pointer<TChild>)
 error_code_with_result<ktl::unique_ptr<TChild* []>> task::job_dispatcher::for_each_child(TChildrenList& children,
-	TFunc func)
+	TFunc func) TA_REQ(lock)
 {
 	const size_t count = get_count<TChild>();
 
