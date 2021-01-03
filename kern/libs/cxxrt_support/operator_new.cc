@@ -65,38 +65,5 @@ using nothrow_t = std::nothrow_t;
 // User-defined, they don't throw
 
 
-[[nodiscard]]void* operator new(size_t count, size_t flags, kbl::allocate_checker* ck)
-{
-	auto ret = memory::kmalloc(count, flags);
-	ck->arm(count, ret != nullptr);
-	return ck;
-}
-
-[[nodiscard]]void* operator new(size_t count, kbl::allocate_checker* ck)
-{
-	return ::operator new(count, 0, ck);
-}
-
-[[nodiscard]]void* operator new[](size_t count, size_t flags, kbl::allocate_checker* ck)
-{
-	return ::operator new(count, flags, ck);
-}
-
-[[nodiscard]]void* operator new(size_t count,
-	align_val_t al, size_t flags, kbl::allocate_checker* ck)
-{
-	count = roundup(count, (size_t)al);
-	return ::operator new(count, flags, ck);
-}
-
-void* operator new[](size_t count,
-	align_val_t al, size_t flags, kbl::allocate_checker* ck)
-{
-	count = roundup(count, (size_t)al);
-	return ::operator new(count, flags, ck);
-}
-
-
-
 // We use default placement new in the std library
 

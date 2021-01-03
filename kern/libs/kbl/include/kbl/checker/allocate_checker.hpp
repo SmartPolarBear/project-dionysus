@@ -1,4 +1,7 @@
 #pragma once
+#include "system/kmalloc.hpp"
+#include "system/types.h"
+
 #include "debug/kdebug.h"
 
 #include "compiler/compiler_extensions.hpp"
@@ -49,4 +52,36 @@ namespace kbl
 			KDEBUG_GENERALPANIC("allocate_checker::arm() is called twice");
 		}
 	};
+}
+
+
+[[nodiscard]] inline void* operator new(size_t count, size_t flags, kbl::allocate_checker* ck) noexcept
+{
+	auto ret = memory::kmalloc(count, flags);
+	ck->arm(count, ret != nullptr);
+	return ret;
+}
+
+[[nodiscard]] inline void* operator new(size_t count, kbl::allocate_checker* ck) noexcept
+{
+	return ::operator new(count, 0, ck);
+}
+
+[[nodiscard]] inline void* operator new[](size_t count, size_t flags, kbl::allocate_checker* ck) noexcept
+{
+	return ::operator new(count, flags, ck);
+}
+
+[[nodiscard]] inline void* operator new(size_t count,
+	std::align_val_t al, size_t flags, kbl::allocate_checker* ck) noexcept
+{
+	count = roundup(count, (size_t)al);
+	return ::operator new(count, flags, ck);
+}
+
+[[nodiscard]] inline void* operator new[](size_t count,
+	std::align_val_t al, size_t flags, kbl::allocate_checker* ck) noexcept
+{
+	count = roundup(count, (size_t)al);
+	return ::operator new(count, flags, ck);
 }

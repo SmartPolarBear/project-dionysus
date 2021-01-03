@@ -40,6 +40,8 @@ CLSItem<process_dispatcher*, CLS_PROC_STRUCT_PTR> cur_proc;
 
 process_list_struct proc_list;
 
+std::shared_ptr<job_dispatcher> root_job;
+
 // precondition: the lock must be held
 static inline pid_type alloc_pid(void)
 {
@@ -133,50 +135,20 @@ task::process_dispatcher* find_process(pid_type pid)
 void task::process_init(void)
 {
 	proc_list.proc_count = 0;
+
+	auto create_ret = task::job_dispatcher::create_root();
+	int a;
+	if (has_error(create_ret))
+	{
+		KDEBUG_GERNERALPANIC_CODE(get_error_code(create_ret));
+	}
+	else
+	{
+		root_job = get_result(create_ret);
+	}
+	
 //	spinlock_initialize_lock(&proc_list.lock, "task");
 //	list_init(&proc_list.active_head);
-}
-
-error_code task::create_process(IN const char* name,
-	IN size_t flags,
-	IN bool inherit_parent,
-	OUT process_dispatcher** retproc)
-{
-//	spinlock_acquire(&proc_list.lock);
-	ktl::mutex::lock_guard guard{ proc_list.lock };
-
-	if (proc_list.proc_count >= task::PROC_MAX_COUNT)
-	{
-		return -ERROR_TOO_MANY_PROC;
-	}
-
-	auto proc = new(std::nothrow)process_dispatcher({ (char*)name, strlen(name) },
-		alloc_pid(),
-		cur_proc == nullptr ? 0 : cur_proc->get_id(),
-		flags);
-	if (proc == nullptr)
-	{
-		return -ERROR_MEMORY_ALLOC;
-	}
-
-	if (auto ret = proc->initialize();ret != ERROR_SUCCESS)
-	{
-		return ret;
-	}
-
-	if (inherit_parent)
-	{
-		// TODO: copy kbl from parent task
-	}
-
-	proc_list.head.insert_after(proc);
-
-//	list_add(&proc->link, &proc_list.active_head);
-
-//	spinlock_release(&proc_list.lock);
-
-	*retproc = proc;
-	return ERROR_SUCCESS;
 }
 
 error_code task::process_load_binary(IN process_dispatcher* proc,

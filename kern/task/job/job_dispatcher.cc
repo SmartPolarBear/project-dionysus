@@ -22,6 +22,8 @@
 #include "kbl/checker/allocate_checker.hpp"
 #include "kbl/data/pod_list.h"
 
+#include "ktl/algorithm.hpp"
+
 #include "../../libs/basic_io/include/builtin_text_io.hpp"
 
 task::job_dispatcher::job_dispatcher(uint64_t flags, std::shared_ptr<job_dispatcher> parent, job_policy policy)
@@ -56,12 +58,11 @@ error_code_with_result<std::shared_ptr<task::job_dispatcher>> task::job_dispatch
 error_code_with_result<std::shared_ptr<task::job_dispatcher>> task::job_dispatcher::create_root()
 {
 	kbl::allocate_checker ck{};
-	auto root = std::shared_ptr<job_dispatcher>{
-		new(&ck) job_dispatcher{ 0, nullptr, job_policy::creat_root_policy() }};
 
+	std::shared_ptr<job_dispatcher> root{ new(&ck) job_dispatcher{ 0, nullptr, job_policy::creat_root_policy() }};
 	if (!ck.check())
 	{
-		return -ERROR_MEMORY_ALLOC;
+		KDEBUG_GERNERALPANIC_CODE(-ERROR_MEMORY_ALLOC);
 	}
 
 	return root;
@@ -91,8 +92,7 @@ task::job_policy task::job_dispatcher::get_policy() const
 	return policy;
 }
 
-
-void task::job_dispatcher::remove_child_job(task::job_dispatcher* j)
+void task::job_dispatcher::remove_child_job(task::job_dispatcher* jb)
 {
 	bool suicide = false;
 
@@ -100,15 +100,16 @@ void task::job_dispatcher::remove_child_job(task::job_dispatcher* j)
 	{
 		ktl::mutex::lock_guard guard{ lock };
 
-		if (child_jobs.find_first([](job_dispatcher* jb, const void* key)
+		auto iter = ktl::find_if(child_jobs.begin(), child_jobs.end(), [jb](auto ele)
 		{
-		  return jb->get_koid() == reinterpret_cast<const job_dispatcher*>(key)->get_koid();
-		}, j) == nullptr)
+		  return ele->get_koid() == jb->get_koid();
+		});
+		if (iter == child_jobs.end())
 		{
 			return;
 		}
 
-		child_jobs.remove_node(static_cast<kbl::single_linked_child_list_base<job_dispatcher*>*>(j));
+		child_jobs.erase(iter);
 		suicide = is_ready_for_dead_transition();
 	}
 
@@ -118,7 +119,7 @@ void task::job_dispatcher::remove_child_job(task::job_dispatcher* j)
 	}
 }
 
-bool task::job_dispatcher::add_child_job(std::shared_ptr<task::job_dispatcher> child)
+bool task::job_dispatcher::add_child_job(std::shared_ptr<job_dispatcher> child)
 {
 	return false;
 }
@@ -189,6 +190,26 @@ error_code_with_result<ktl::unique_ptr<TChild* []>> task::job_dispatcher::for_ea
 	}
 
 	return ret;
+}
+void task::job_dispatcher::remove_child_process(std::shared_ptr<process_dispatcher> proc)
+{
+
+}
+void task::job_dispatcher::add_child_process(std::shared_ptr<process_dispatcher> proc)
+{
+	ktl::mutex::lock_guard guard{ lock };
+
+	this->child_processes.insert(child_processes.begin(), proc);
+}
+
+void task::job_dispatcher::remove_child_job(std::shared_ptr<job_dispatcher> proc)
+{
+
+}
+
+void task::job_dispatcher::remove_child_process(task::process_dispatcher* proc)
+{
+
 }
 
 template<>

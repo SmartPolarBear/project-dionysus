@@ -45,7 +45,7 @@ kbl::integral_atomic<pid_type> pid_counter;
 static_assert(kbl::integral_atomic<pid_type>::is_always_lock_free);
 
 error_code_with_result<std::shared_ptr<process_dispatcher>> process_dispatcher::create(const char* name,
-	job_dispatcher* parent)
+ 	std::shared_ptr<job_dispatcher> parent)
 {
 	ktl::span<char> name_span{ (char*)name, (size_t)strnlen(name, PROC_MAX_NAME_LEN) };
 	kbl::allocate_checker ck;
@@ -73,6 +73,11 @@ error_code_with_result<std::shared_ptr<process_dispatcher>> process_dispatcher::
 		return ret;
 	}
 
+	parent->add_child_process(proc);
+
+	// FIXME process should no longer be minimal execution unit
+	ktl::mutex::lock_guard guard{ proc_list.lock };
+	proc_list.head.insert_after(proc.get());
 	return proc;
 }
 
@@ -124,7 +129,6 @@ task::process_dispatcher::process_dispatcher(std::span<char> name, pid_type id, 
 
 	lock::spinlock_initialize_lock(&messaging_data.lock, this->name);
 }
-
 
 error_code process_dispatcher::setup_mm()
 {

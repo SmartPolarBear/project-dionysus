@@ -23,6 +23,7 @@
 
 #include "ktl/mutex/lock_guard.hpp"
 #include "ktl/unique_ptr.hpp"
+#include "ktl/list.hpp"
 
 #include "task/process_dispatcher.hpp"
 #include "task/dispatcher.hpp"
@@ -99,7 +100,6 @@ namespace task
 		std::optional<policy_item> action[POLICY_CONDITION_MAX];
 	};
 
-
 	class job_dispatcher final
 		: public dispatcher<job_dispatcher, 0>,
 		  public kbl::single_linked_child_list_base<job_dispatcher*>
@@ -115,14 +115,14 @@ namespace task
 		friend class process_dispatcher;
 		friend class thread_dispatcher;
 
-		using job_list_type = kbl::single_linked_child_list_base<job_dispatcher*>;
-		using process_list_type = kbl::single_linked_child_list_base<process_dispatcher*>;
+		using job_list_type = ktl::list<std::shared_ptr<job_dispatcher>>;
+		using process_list_type = ktl::list<std::shared_ptr<process_dispatcher>>;
 
 		template<typename T>
 		using array_of_child = ktl::unique_ptr<T[]>();
 
 		static constexpr size_t JOB_NAME_MAX = 64;
-		static constexpr size_t JOB_MAX_HEIGHT = 32;
+		static constexpr size_t JOB_MAX_HEIGHT = 16;
 	 public:
 
 		[[nodiscard]]bool kill(error_code terminate_code) noexcept;
@@ -156,8 +156,13 @@ namespace task
 
 		void remove_from_job_trees() TA_EXCL(lock);
 
-		bool add_child_job(std::shared_ptr<task::job_dispatcher> child);
-		void remove_child_job(job_dispatcher* j);
+		bool add_child_job(std::shared_ptr<job_dispatcher> child);
+		void remove_child_job(job_dispatcher* job);
+		void remove_child_job(std::shared_ptr<job_dispatcher> proc);
+
+		void add_child_process(std::shared_ptr<process_dispatcher> proc);
+		void remove_child_process(process_dispatcher* proc);
+		void remove_child_process(std::shared_ptr<process_dispatcher> proc);
 
 		bool is_ready_for_dead_transition()TA_REQ(lock);
 		bool finish_dead_transition()TA_EXCL(lock);

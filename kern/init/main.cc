@@ -35,7 +35,7 @@
 // std::variant is usable with the pseudo-syscalls
 // std::span is usable unconditionally
 
-
+extern std::shared_ptr<task::job_dispatcher> root_job;
 static inline void run(char* name)
 {
 	uint8_t* bin = nullptr;
@@ -45,16 +45,18 @@ static inline void run(char* name)
 
 	KDEBUG_ASSERT(ret == ERROR_SUCCESS);
 
-	task::process_dispatcher* proc_he = nullptr;
-	task::create_process(name, task::PROC_USER, false, &proc_he);
+	auto create_ret = task::process_dispatcher::create(name, root_job);
+	if (has_error(create_ret))
+	{
+		KDEBUG_GERNERALPANIC_CODE(get_error_code(create_ret));
+	}
+	auto proc = get_result(create_ret);
 
-	KDEBUG_ASSERT(proc_he != nullptr);
-
-	task::process_load_binary(proc_he, bin, size,
+	task::process_load_binary(proc.get(), bin, size,
 		task::BINARY_ELF,
 		task::LOAD_BINARY_RUN_IMMEDIATELY);
 
-	write_format("[cpu %d]load binary: %s, pid %d\n", cpu()->id, name, proc_he->get_id());
+	write_format("[cpu %d]load binary: %s, pid %d\n", cpu->id, name, proc->get_id());
 }
 
 static inline void init_servers()

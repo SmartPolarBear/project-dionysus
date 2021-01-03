@@ -97,12 +97,6 @@ namespace task
 	using task::process_dispatcher;
 	using task::binary_types;
 
-// create a task
-	error_code create_process(IN const char* name,
-		IN size_t flags,
-		IN bool inherit_parent,
-		OUT process_dispatcher** ret);
-
 	error_code process_load_binary(IN process_dispatcher* porc,
 		IN uint8_t* bin,
 		IN size_t binary_size,

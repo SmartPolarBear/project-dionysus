@@ -32,7 +32,7 @@ namespace task
 		friend class job_dispatcher;
 
 		static error_code_with_result<std::shared_ptr<process_dispatcher>> create(const char* name,
-			job_dispatcher* parent);
+			std::shared_ptr<job_dispatcher> parent);
 
 		process_dispatcher() = delete;
 		process_dispatcher(const process_dispatcher&) = delete;

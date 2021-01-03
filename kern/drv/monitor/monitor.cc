@@ -48,19 +48,20 @@ static inline error_code load_monitor_executable()
 		return ret;
 	}
 
-	ret = task::create_process(name, task::PROC_SYS_SERVER, false, &g_monitor_proc);
-
-	if (ret != ERROR_SUCCESS)
-	{
-		return ret;
-	}
-
-	// load the task, but not run
-	ret = task::process_load_binary(g_monitor_proc, bin, size, task::BINARY_ELF, 0);
-	if (ret != ERROR_SUCCESS)
-	{
-		return ret;
-	}
+	// FIXME
+//	ret = task::create_process(name, task::PROC_SYS_SERVER, false, &g_monitor_proc);
+//
+//	if (ret != ERROR_SUCCESS)
+//	{
+//		return ret;
+//	}
+//
+//	// load the task, but not run
+//	ret = task::process_load_binary(g_monitor_proc, bin, size, task::BINARY_ELF, 0);
+//	if (ret != ERROR_SUCCESS)
+//	{
+//		return ret;
+//	}
 
 	return ERROR_SUCCESS;
 }
