@@ -46,7 +46,7 @@ static inline void run(char* name)
 	KDEBUG_ASSERT(ret == ERROR_SUCCESS);
 
 	task::process_dispatcher* proc_he = nullptr;
-	task::create_process(name, 0, false, &proc_he);
+	task::create_process(name, task::PROC_USER, false, &proc_he);
 
 	KDEBUG_ASSERT(proc_he != nullptr);
 

@@ -18,7 +18,7 @@
 #include "task/task_dispatcher.hpp"
 #include "task/process_dispatcher.hpp"
 #include "task/job_dispatcher.hpp"
-#include "task/thread.hpp"
+#include "task/thread_dispatcher.hpp"
 
 #include <cstring>
 #include <algorithm>
@@ -37,8 +37,8 @@ namespace task
 //
 //		process_state state;
 //
-//		process_id id;
-//		process_id parent_id;
+//		pid_type id;
+//		pid_type parent_id;
 //
 //		size_t runs;
 //
@@ -73,14 +73,14 @@ namespace task
 //			bool can_receive;
 //			void* dst;
 //			size_t unique_value;
-//			process_id from;
+//			pid_type from;
 //			uint64_t perms;
 //
 //		} messaging_data{};
 //
 //		list_head link;
 //
-//		process_dispatcher(const char* name, process_id id, process_id parent_id, size_t flags)
+//		process_dispatcher(const char* name, pid_type id, pid_type parent_id, size_t flags)
 //			: state(PROC_STATE_EMBRYO), id(id), parent_id(parent_id),
 //			  runs(0), kstack(0), memory(nullptr), flags(flags), wating_state(PROC_WAITING_NONE),
 //			  exit_code(ERROR_SUCCESS), tf(nullptr), context(nullptr)
@@ -123,10 +123,10 @@ namespace task
 	error_code process_wakeup_nolock(size_t channel);
 
 	// send and receive message
-	error_code process_ipc_send(process_id pid, IN const void* message, size_t size);
+	error_code process_ipc_send(pid_type pid, IN const void* message, size_t size);
 	error_code process_ipc_receive(OUT void* message_out);
 	// send and receive a page
-	error_code process_ipc_send_page(process_id pid, uint64_t unique_val, IN const void* page, size_t perm);
+	error_code process_ipc_send_page(pid_type pid, uint64_t unique_val, IN const void* page, size_t perm);
 	error_code process_ipc_receive_page(OUT void* out_page);
 
 	// allocate more memory

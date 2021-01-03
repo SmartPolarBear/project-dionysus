@@ -1,3 +1,6 @@
+
+#include <task/process_dispatcher.hpp>
+
 #include "process.hpp"
 #include "load_code.hpp"
 #include "syscall.h"
@@ -36,6 +39,41 @@ void new_proc_begin()
 	proc_list.lock.unlock();
 
 	// "return" to user_proc_entry
+}
+
+kbl::integral_atomic<pid_type> pid_counter;
+static_assert(kbl::integral_atomic<pid_type>::is_always_lock_free);
+
+error_code_with_result<std::shared_ptr<process_dispatcher>> process_dispatcher::create(const char* name,
+	job_dispatcher* parent)
+{
+	ktl::span<char> name_span{ (char*)name, (size_t)strnlen(name, PROC_MAX_NAME_LEN) };
+	kbl::allocate_checker ck;
+	std::shared_ptr<process_dispatcher>
+		proc{ new(&ck) process_dispatcher{ name_span, pid_counter++, 0, 0 }};
+
+	if (!ck.check())
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
+
+	proc->kstack = std::make_unique<uint8_t[]>(KERNSTACK_SIZE);
+	if (auto ret = proc->setup_kernel_stack();ret != ERROR_SUCCESS)
+	{
+		return ret;
+	}
+
+	if (auto ret = proc->setup_mm();ret != ERROR_SUCCESS)
+	{
+		return ret;
+	}
+
+	if (auto ret = proc->setup_registers();ret != ERROR_SUCCESS)
+	{
+		return ret;
+	}
+
+	return proc;
 }
 
 error_code process_dispatcher::setup_kernel_stack()
@@ -77,32 +115,16 @@ error_code process_dispatcher::setup_registers()
 	return ERROR_SUCCESS;
 }
 
-task::process_dispatcher::process_dispatcher(std::span<char> name, process_id id, process_id parent_id, size_t flags)
-	: task_dispatcher(name, id, parent_id, flags)
+task::process_dispatcher::process_dispatcher(std::span<char> name, pid_type id, pid_type parent_id, size_t flags)
 {
+	for (auto c:name)
+	{
+		this->name[name_length++] = c;
+	}
 
+	lock::spinlock_initialize_lock(&messaging_data.lock, this->name);
 }
 
-error_code process_dispatcher::initialize()
-{
-	this->kstack = std::make_unique<uint8_t[]>(KERNSTACK_SIZE);
-	if (auto ret = this->setup_kernel_stack();ret != ERROR_SUCCESS)
-	{
-		return ret;
-	}
-
-	if (auto ret = setup_mm();ret != ERROR_SUCCESS)
-	{
-		return ret;
-	}
-
-	if (auto ret = setup_registers();ret != ERROR_SUCCESS)
-	{
-		return ret;
-	}
-
-	return 0;
-}
 
 error_code process_dispatcher::setup_mm()
 {

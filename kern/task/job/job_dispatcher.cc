@@ -28,7 +28,7 @@ task::job_dispatcher::job_dispatcher(uint64_t flags, std::shared_ptr<job_dispatc
 	: dispatcher<job_dispatcher, 0>(),
 	  parent(std::move(parent)),
 	  max_height(parent == nullptr ? JOB_MAX_HEIGHT : parent->max_height - 1),
-	  status(job_status::JS_READY),
+	  status(job_status::READY),
 	  exit_code(ERROR_SUCCESS),
 	  policy(policy)
 {
@@ -91,10 +91,6 @@ task::job_policy task::job_dispatcher::get_policy() const
 	return policy;
 }
 
-error_code task::job_dispatcher::enumerate_children(task::job_enumerator* enumerator, bool recurse)
-{
-	ktl::mutex::lock_guard guard{ lock };
-}
 
 void task::job_dispatcher::remove_child_job(task::job_dispatcher* j)
 {
@@ -129,18 +125,18 @@ bool task::job_dispatcher::add_child_job(std::shared_ptr<task::job_dispatcher> c
 
 bool task::job_dispatcher::is_ready_for_dead_transition() TA_REQ(lock)
 {
-	return status == job_status::JS_KILLING && child_jobs.empty() && child_processes.empty();
+	return status == job_status::KILLING && child_jobs.empty() && child_processes.empty();
 }
 
 bool task::job_dispatcher::finish_dead_transition() TA_EXCL(lock)
 {
 	// there must be big problem is parent die before its successor jobs
-	KDEBUG_ASSERT(parent == nullptr || parent->get_status() != job_status::JS_DEAD);
+	KDEBUG_ASSERT(parent == nullptr || parent->get_status() != job_status::DEAD);
 
 	// locked scope
 	{
 		ktl::mutex::lock_guard guard{ lock };
-		status = job_status::JS_DEAD;
+		status = job_status::DEAD;
 	}
 
 	remove_from_job_trees();

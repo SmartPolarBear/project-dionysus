@@ -1,31 +1,152 @@
 #pragma once
 #include "task/task_dispatcher.hpp"
 
+#include "ktl/span.hpp"
+
+#include "kbl/atomic/atomic.hpp"
+
 //FIXME
 
 #include "system/scheduler.h"
 
 namespace task
 {
-	class process_dispatcher
-		: public task_dispatcher
+	class job_dispatcher;
+
+	class process_dispatcher final
+		: public dispatcher<process_dispatcher, 0>,
+		  public kbl::linked_list_base<process_dispatcher*>
 	{
 	 public:
-		process_dispatcher(std::span<char> name, process_id id, process_id parent_id, size_t flags);
+		static constexpr size_t PROC_MAX_NAME_LEN = 64;
+
+		enum class Status
+		{
+			INITIAL,
+			RUNNING,
+			DYING,
+			DEAD,
+		};
+
+	 public:
+		friend class job_dispatcher;
+
+		static error_code_with_result<std::shared_ptr<process_dispatcher>> create(const char* name,
+			job_dispatcher* parent);
+
+		process_dispatcher() = delete;
+		process_dispatcher(const process_dispatcher&) = delete;
+
 		~process_dispatcher() override = default;
-		error_code initialize() override;
-		error_code setup_mm() override;
-		error_code load_binary(uint8_t* bin, size_t binary_size, binary_types type, size_t flags) override;
-		error_code terminate(error_code terminate_error) override;
-		error_code exit() override;
-		error_code sleep(sleep_channel_type channel, lock::spinlock_struct* lk) override;
-		error_code wakeup(sleep_channel_type channel) override;
-		error_code wakeup_no_lock(sleep_channel_type channel) override;
-		error_code change_heap_ptr(uintptr_t* heap_ptr) override;
+
+		error_code setup_mm();
+		error_code load_binary(uint8_t* bin, size_t binary_size, binary_types type, size_t flags);
+		error_code terminate(error_code terminate_error);
+		error_code exit();
+		error_code sleep(sleep_channel_type channel, lock::spinlock_struct* lk);
+		error_code wakeup(sleep_channel_type channel);
+		error_code wakeup_no_lock(sleep_channel_type channel);
+		error_code change_heap_ptr(uintptr_t* heap_ptr);
+
+		static constexpr size_t KERNSTACK_PAGES = 2;
+		static constexpr size_t KERNSTACK_SIZE = KERNSTACK_PAGES * PAGE_SIZE;
+
+		[[nodiscard]] process_state get_state() const
+		{
+			return state;
+		}
+
+		void set_state(process_state _state)
+		{
+			state = _state;
+		}
+
+		[[nodiscard]] pid_type get_id() const
+		{
+			return id;
+		}
+
+		void set_id(pid_type _id)
+		{
+			id = _id;
+		}
+
+		// FIXME: remove first
+		vmm::mm_struct* get_mm() const
+		{
+			return mm;
+		}
+
+		size_t get_flags() const
+		{
+			return flags;
+		}
+
+		void set_flags(size_t flags)
+		{
+			flags = flags;
+		}
+
+		trap::trap_frame* get_tf() const
+		{
+			return tf;
+		}
 
 	 private:
+		process_dispatcher(std::span<char> name, pid_type id, pid_type parent_id, size_t flags);
+
 		error_code setup_kernel_stack();
 		error_code setup_registers();
+
+		char name[PROC_NAME_LEN]{};
+		size_t name_length;
+
+		process_state state;
+
+		pid_type id;
+
+		pid_type parent_id;
+
+		size_t runs;
+
+		std::unique_ptr<uint8_t[]> kstack;
+
+		vmm::mm_struct* mm;
+
+		size_t flags;
+
+		size_t wating_state;
+		error_code exit_code;
+
+		trap::trap_frame* tf;
+
+		::context* context;
+
+		struct sleep_data_struct
+		{
+			size_t channel;
+		} sleep_data{};
+
+		struct messaging_data_struct
+		{
+			static constexpr size_t INTERNAL_BUF_SIZE = 64;
+
+			lock::spinlock_struct lock;
+
+			// message passing
+			void* data;
+			size_t data_size;
+			uint8_t internal_buf[INTERNAL_BUF_SIZE];
+
+			// page passing
+			bool can_receive;
+			void* dst;
+			size_t unique_value;
+			pid_type from;
+			uint64_t perms;
+
+		} messaging_data{};
+
 
 		//FIXME
 	 public:
@@ -54,10 +175,10 @@ namespace task
 		friend error_code process_wakeup_nolock(size_t channel);
 
 		// send and receive message
-		friend error_code process_ipc_send(process_id pid, IN const void* message, size_t size);
+		friend error_code process_ipc_send(pid_type pid, IN const void* message, size_t size);
 		friend error_code process_ipc_receive(OUT void* message_out);
 		// send and receive a page
-		friend error_code process_ipc_send_page(process_id pid, uint64_t unique_val, IN const void* page, size_t perm);
+		friend error_code process_ipc_send_page(pid_type pid, uint64_t unique_val, IN const void* page, size_t perm);
 		friend error_code process_ipc_receive_page(OUT void* out_page);
 
 		// allocate more memory

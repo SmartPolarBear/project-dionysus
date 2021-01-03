@@ -10,7 +10,7 @@ int main()
 	while (true);
 	while (true)
 	{
-		process_id pid = 0;
+		pid_type pid = 0;
 		size_t perms = 0;
 		uint64_t unique = 0;
 		ipc_receive_page(buf, &unique, &pid, &perms);

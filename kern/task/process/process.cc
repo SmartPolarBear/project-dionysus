@@ -41,7 +41,7 @@ CLSItem<process_dispatcher*, CLS_PROC_STRUCT_PTR> cur_proc;
 process_list_struct proc_list;
 
 // precondition: the lock must be held
-static inline process_id alloc_pid(void)
+static inline pid_type alloc_pid(void)
 {
 	return proc_list.proc_count++;
 }
@@ -104,7 +104,7 @@ size_t task::process_terminate_impl(task::process_dispatcher* proc,
 	return -ERROR_HAS_KILLED;
 }
 
-task::process_dispatcher* find_process(process_id pid)
+task::process_dispatcher* find_process(pid_type pid)
 {
 //	list_head* iter = nullptr;
 //	list_for(iter, &proc_list.active_head)

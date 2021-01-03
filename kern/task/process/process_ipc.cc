@@ -37,7 +37,7 @@ using namespace memory;
 using namespace vmm;
 
 // send and receive message
-error_code task::process_ipc_send(process_id pid, IN const void* message, size_t size)
+error_code task::process_ipc_send(pid_type pid, IN const void* message, size_t size)
 {
 	auto target = find_process(pid);
 	if (target == nullptr)
@@ -95,7 +95,7 @@ error_code task::process_ipc_receive(OUT void* message_out)
 	return ERROR_SUCCESS;
 }
 
-error_code task::process_ipc_send_page(process_id pid, uint64_t unique_val, const void* page, size_t perm)
+error_code task::process_ipc_send_page(pid_type pid, uint64_t unique_val, const void* page, size_t perm)
 {
 	auto target = find_process(pid);
 	if (target == nullptr)

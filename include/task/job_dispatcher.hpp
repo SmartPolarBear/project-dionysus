@@ -99,36 +99,22 @@ namespace task
 		std::optional<policy_item> action[POLICY_CONDITION_MAX];
 	};
 
-	class job_dispatcher;
-
-	class job_enumerator
-	{
-	 public:
-		virtual bool on_job(job_dispatcher* jb)
-		{
-			return true;
-		}
-
-		virtual bool on_process(process_dispatcher* pr)
-		{
-			return true;
-		}
-	 protected:
-		virtual ~job_enumerator() = default;
-	};
-
-	enum class job_status
-	{
-		JS_READY,
-		JS_KILLING,
-		JS_DEAD
-	};
 
 	class job_dispatcher final
 		: public dispatcher<job_dispatcher, 0>,
 		  public kbl::single_linked_child_list_base<job_dispatcher*>
 	{
 	 public:
+		enum class job_status
+		{
+			READY,
+			KILLING,
+			DEAD
+		};
+	 public:
+		friend class process_dispatcher;
+		friend class thread_dispatcher;
+
 		using job_list_type = kbl::single_linked_child_list_base<job_dispatcher*>;
 		using process_list_type = kbl::single_linked_child_list_base<process_dispatcher*>;
 
@@ -144,8 +130,6 @@ namespace task
 		[[nodiscard]]void apply_basic_policy(uint64_t mode, std::span<policy_item> policies) noexcept;
 
 		[[nodiscard]]job_policy get_policy() const;
-
-		[[nodiscard]]error_code enumerate_children(job_enumerator* enumerator, bool recurse);
 
 		static error_code_with_result<std::shared_ptr<task::job_dispatcher>> create_root();
 
@@ -185,7 +169,6 @@ namespace task
 		requires ktl::ListOfTWithBound<TChildrenList, TChild> && (!ktl::Pointer<TChild>)
 		[[nodiscard]]error_code_with_result<ktl::unique_ptr<TChild* []>> for_each_child(TChildrenList& children,
 			TFunc func) TA_REQ(lock);
-
 
 	 private:
 		job_list_type child_jobs;
