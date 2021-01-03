@@ -137,16 +137,17 @@ void task::process_init(void)
 	proc_list.proc_count = 0;
 
 	auto create_ret = task::job_dispatcher::create_root();
-	int a;
-	if (has_error(create_ret))
-	{
-		KDEBUG_GERNERALPANIC_CODE(get_error_code(create_ret));
-	}
-	else
-	{
-		root_job = get_result(create_ret);
-	}
-	
+
+//	if (has_error(create_ret))
+//	{
+//		KDEBUG_GERNERALPANIC_CODE(get_error_code(create_ret));
+//	}
+//	else
+//	{
+//		root_job = get_result(create_ret);
+//	}
+	root_job = create_ret;
+
 //	spinlock_initialize_lock(&proc_list.lock, "task");
 //	list_init(&proc_list.active_head);
 }

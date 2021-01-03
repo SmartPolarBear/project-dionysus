@@ -55,7 +55,7 @@ error_code_with_result<std::shared_ptr<task::job_dispatcher>> task::job_dispatch
 	return ret;
 }
 
-error_code_with_result<std::shared_ptr<task::job_dispatcher>> task::job_dispatcher::create_root()
+std::shared_ptr<task::job_dispatcher> task::job_dispatcher::create_root()
 {
 	kbl::allocate_checker ck{};
 

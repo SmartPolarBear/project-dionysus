@@ -131,7 +131,7 @@ namespace task
 
 		[[nodiscard]]job_policy get_policy() const;
 
-		static error_code_with_result<std::shared_ptr<task::job_dispatcher>> create_root();
+		static std::shared_ptr<task::job_dispatcher> create_root();
 
 		static error_code_with_result<std::shared_ptr<task::job_dispatcher>> create(uint64_t flags,
 			std::shared_ptr<job_dispatcher> parent);
