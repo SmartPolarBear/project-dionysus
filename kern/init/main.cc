@@ -62,7 +62,7 @@ static inline void run(char* name)
 static inline void init_servers()
 {
 	// start monitor servers
-	monitor::monitor_init();
+//	monitor::monitor_init(); //FIXME
 }
 
 // global entry of the kernel
