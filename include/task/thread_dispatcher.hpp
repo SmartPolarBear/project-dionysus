@@ -19,7 +19,7 @@ namespace task
 		thread_context_type context TA_GUARDED(lock);
 		uintptr_t stack;
 
-		process_dispatcher parent TA_GUARDED(lock);
+		std::shared_ptr<process_dispatcher> parent TA_GUARDED(lock);
 
 		lock::spinlock lock;
 	};

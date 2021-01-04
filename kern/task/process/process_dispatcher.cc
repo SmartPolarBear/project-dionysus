@@ -1,5 +1,6 @@
 
 #include <task/process_dispatcher.hpp>
+#include <utility>
 
 #include "process.hpp"
 #include "load_code.hpp"
@@ -7,6 +8,8 @@
 
 #include "arch/amd64/cpu/cpu.h"
 #include "arch/amd64/cpu/msr.h"
+
+#include "compiler/compiler_extensions.hpp"
 
 #include "system/error.hpp"
 #include "system/kmalloc.hpp"
@@ -41,16 +44,15 @@ void new_proc_begin()
 	// "return" to user_proc_entry
 }
 
-kbl::integral_atomic<pid_type> pid_counter;
-static_assert(kbl::integral_atomic<pid_type>::is_always_lock_free);
+kbl::integral_atomic<pid_type> process_dispatcher::pid_counter;
 
 error_code_with_result<std::shared_ptr<process_dispatcher>> process_dispatcher::create(const char* name,
- 	std::shared_ptr<job_dispatcher> parent)
+	std::shared_ptr<job_dispatcher> parent)
 {
 	ktl::span<char> name_span{ (char*)name, (size_t)strnlen(name, PROC_MAX_NAME_LEN) };
 	kbl::allocate_checker ck;
 	std::shared_ptr<process_dispatcher>
-		proc{ new(&ck) process_dispatcher{ name_span, pid_counter++, 0, 0 }};
+		proc{ new(&ck) process_dispatcher{ name_span, process_dispatcher::pid_counter++, parent, nullptr }};
 
 	if (!ck.check())
 	{
@@ -120,7 +122,11 @@ error_code process_dispatcher::setup_registers()
 	return ERROR_SUCCESS;
 }
 
-task::process_dispatcher::process_dispatcher(std::span<char> name, pid_type id, pid_type parent_id, size_t flags)
+task::process_dispatcher::process_dispatcher(std::span<char> name,
+	pid_type id,
+	std::shared_ptr<job_dispatcher> parent,
+	std::shared_ptr<job_dispatcher> critical_to)
+	: parent(std::move(parent)), critical_to(std::move(critical_to))
 {
 	for (auto c:name)
 	{
@@ -160,10 +166,7 @@ error_code process_dispatcher::terminate(error_code terminate_error)
 {
 	return 0;
 }
-error_code process_dispatcher::exit()
-{
-	return 0;
-}
+
 error_code process_dispatcher::sleep(sleep_channel_type channel, lock::spinlock_struct* lk)
 {
 	return 0;
@@ -179,4 +182,95 @@ error_code process_dispatcher::wakeup_no_lock(sleep_channel_type channel)
 error_code process_dispatcher::change_heap_ptr(uintptr_t* heap_ptr)
 {
 	return 0;
+}
+
+void process_dispatcher::finish_dead_transition() noexcept
+{
+
+}
+
+void process_dispatcher::exit(error_code code) noexcept
+{
+	KDEBUG_ASSERT(cur_proc == this);
+
+	{
+		ktl::mutex::lock_guard guard{ this->lock };
+
+		if (this->status == Status::DYING)
+		{
+			return;
+		}
+
+		this->exit_code = code;
+
+		set_status_locked(Status::DYING);
+	}
+
+	// TODO: Exit all threads
+
+
+	KDEBUG_NOT_IMPLEMENTED;
+
+	__UNREACHABLE;
+}
+void process_dispatcher::kill(error_code code) noexcept
+{
+	bool finish_dying = false;
+
+	{
+		lock_guard guard{ lock };
+
+		if (status == Status::DEAD)
+		{
+			return;
+		}
+
+		if (status != Status::DYING)
+		{
+			exit_code = code;
+		}
+
+		if (threads.empty())
+		{
+			set_status_locked(Status::DEAD);
+			finish_dying = true;
+		}
+		else
+		{
+			set_status_locked(Status::DYING);
+
+		}
+	}
+
+	if (finish_dying)
+	{
+		finish_dead_transition();
+	}
+}
+
+void process_dispatcher::set_status_locked(process_dispatcher::Status st) noexcept TA_REQ(lock)
+{
+	KDEBUG_ASSERT(lock.holding());
+
+	if (status == Status::DEAD && st != Status::DEAD)
+	{
+		KDEBUG_GENERALPANIC("Bad transition from dead to other status.");
+		return;
+	}
+
+	if (status == st)
+	{
+		return;
+	}
+
+	status = st;
+	if (st == Status::DYING)
+	{
+		kill_all_threads_locked();
+	}
+}
+
+void process_dispatcher::kill_all_threads_locked() noexcept TA_REQ(lock)
+{
+	KDEBUG_NOT_IMPLEMENTED;
 }

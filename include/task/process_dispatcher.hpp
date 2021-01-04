@@ -1,7 +1,10 @@
 #pragma once
 #include "task/task_dispatcher.hpp"
 
+#include "debug/thread_annotations.hpp"
+
 #include "ktl/span.hpp"
+#include "ktl/list.hpp"
 
 #include "kbl/atomic/atomic.hpp"
 
@@ -12,6 +15,7 @@
 namespace task
 {
 	class job_dispatcher;
+	class thread_dispatcher;
 
 	class process_dispatcher final
 		: public dispatcher<process_dispatcher, 0>,
@@ -31,6 +35,9 @@ namespace task
 	 public:
 		friend class job_dispatcher;
 
+		static kbl::integral_atomic<pid_type> pid_counter;
+		static_assert(kbl::integral_atomic<pid_type>::is_always_lock_free);
+
 		static error_code_with_result<std::shared_ptr<process_dispatcher>> create(const char* name,
 			std::shared_ptr<job_dispatcher> parent);
 
@@ -39,10 +46,13 @@ namespace task
 
 		~process_dispatcher() override = default;
 
-		error_code setup_mm();
 		error_code load_binary(uint8_t* bin, size_t binary_size, binary_types type, size_t flags);
 		error_code terminate(error_code terminate_error);
-		error_code exit();
+
+		void exit(error_code code) noexcept;
+		void kill(error_code code) noexcept;
+		void finish_dead_transition() noexcept;
+
 		error_code sleep(sleep_channel_type channel, lock::spinlock_struct* lk);
 		error_code wakeup(sleep_channel_type channel);
 		error_code wakeup_no_lock(sleep_channel_type channel);
@@ -92,11 +102,34 @@ namespace task
 			return tf;
 		}
 
+		/// \brief Get status of this process
+		/// \return the status
+		[[nodiscard]] Status get_status() const
+		{
+			return status;
+		}
+
+		/// \brief  status transition, must be called with held lock
+		/// \param st the new status
+		void set_status_locked(Status st) noexcept TA_REQ(lock);
+
+		void kill_all_threads_locked() noexcept TA_REQ(lock);
 	 private:
-		process_dispatcher(std::span<char> name, pid_type id, pid_type parent_id, size_t flags);
+		process_dispatcher(std::span<char> name,
+			pid_type id,
+			std::shared_ptr<job_dispatcher> parent,
+			std::shared_ptr<job_dispatcher> critical_to);
 
 		error_code setup_kernel_stack();
 		error_code setup_registers();
+		error_code setup_mm();
+
+		Status status;
+
+		ktl::list<std::shared_ptr<thread_dispatcher>> threads;
+
+		std::shared_ptr<job_dispatcher> parent;
+		std::shared_ptr<job_dispatcher> critical_to;
 
 		char name[PROC_NAME_LEN]{};
 		size_t name_length;
@@ -150,10 +183,6 @@ namespace task
 
 		//FIXME
 	 public:
-		friend error_code create_process(IN const char* name,
-			IN size_t flags,
-			IN bool inherit_parent,
-			OUT process_dispatcher** ret);
 
 		friend error_code process_load_binary(IN process_dispatcher* porc,
 			IN uint8_t* bin,
