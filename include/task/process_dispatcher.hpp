@@ -131,8 +131,9 @@ namespace task
 		std::shared_ptr<job_dispatcher> parent;
 		std::shared_ptr<job_dispatcher> critical_to;
 
-		char name[PROC_NAME_LEN]{};
-		size_t name_length;
+		char _name_buf[PROC_NAME_LEN]{};
+		ktl::span<char> name;
+
 
 		process_state state;
 

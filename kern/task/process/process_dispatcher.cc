@@ -20,12 +20,14 @@
 #include "system/scheduler.h"
 
 #include "drivers/apic/traps.h"
-#include "kbl/lock/spinlock.h"
 
+#include "kbl/lock/spinlock.h"
 #include "kbl/data/pod_list.h"
+
 #include "../../libs/basic_io/include/builtin_text_io.hpp"
 
 #include "ktl/mutex/lock_guard.hpp"
+#include "ktl/algorithm.hpp"
 
 using namespace kbl;
 using namespace lock;
@@ -50,7 +52,9 @@ error_code_with_result<std::shared_ptr<process_dispatcher>> process_dispatcher::
 	std::shared_ptr<job_dispatcher> parent)
 {
 	ktl::span<char> name_span{ (char*)name, (size_t)strnlen(name, PROC_MAX_NAME_LEN) };
+
 	kbl::allocate_checker ck;
+
 	std::shared_ptr<process_dispatcher>
 		proc{ new(&ck) process_dispatcher{ name_span, process_dispatcher::pid_counter++, parent, nullptr }};
 
@@ -128,12 +132,11 @@ task::process_dispatcher::process_dispatcher(std::span<char> name,
 	std::shared_ptr<job_dispatcher> critical_to)
 	: parent(std::move(parent)), critical_to(std::move(critical_to))
 {
-	for (auto c:name)
-	{
-		this->name[name_length++] = c;
-	}
+	this->name = ktl::span<char>{ _name_buf, name.size() };
 
-	lock::spinlock_initialize_lock(&messaging_data.lock, this->name);
+	ktl::copy(name.begin(), name.end(), this->name.begin());
+
+	lock::spinlock_initialize_lock(&messaging_data.lock, this->name.data());
 }
 
 error_code process_dispatcher::setup_mm()
