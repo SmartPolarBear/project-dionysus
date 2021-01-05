@@ -1,5 +1,6 @@
 
 #include <task/job_dispatcher.hpp>
+#include <utility>
 
 #include "process.hpp"
 #include "load_code.hpp"
@@ -26,13 +27,13 @@
 
 #include "../../libs/basic_io/include/builtin_text_io.hpp"
 
-task::job_dispatcher::job_dispatcher(uint64_t flags, std::shared_ptr<job_dispatcher> parent, job_policy policy)
+task::job_dispatcher::job_dispatcher(uint64_t flags, std::shared_ptr<job_dispatcher> parent, job_policy _policy)
 	: dispatcher<job_dispatcher, 0>(),
+	  policy(std::move(_policy)),
 	  parent(std::move(parent)),
-	  max_height(parent == nullptr ? JOB_MAX_HEIGHT : parent->max_height - 1),
-	  status(job_status::READY),
 	  exit_code(ERROR_SUCCESS),
-	  policy(policy)
+	  status(job_status::READY),
+	  max_height(parent == nullptr ? JOB_MAX_HEIGHT : parent->max_height - 1)
 {
 
 }

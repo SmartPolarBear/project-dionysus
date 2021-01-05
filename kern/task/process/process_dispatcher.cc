@@ -28,6 +28,7 @@
 
 #include "ktl/mutex/lock_guard.hpp"
 #include "ktl/algorithm.hpp"
+#include "ktl/shared_ptr.hpp"
 
 using namespace kbl;
 using namespace lock;
@@ -48,14 +49,14 @@ void new_proc_begin()
 
 kbl::integral_atomic<pid_type> process_dispatcher::pid_counter;
 
-error_code_with_result<std::shared_ptr<process_dispatcher>> process_dispatcher::create(const char* name,
-	std::shared_ptr<job_dispatcher> parent)
+error_code_with_result<ktl::shared_ptr<process_dispatcher>> process_dispatcher::create(const char* name,
+	ktl::shared_ptr<job_dispatcher> parent)
 {
 	ktl::span<char> name_span{ (char*)name, (size_t)strnlen(name, PROC_MAX_NAME_LEN) };
 
 	kbl::allocate_checker ck;
 
-	std::shared_ptr<process_dispatcher>
+	ktl::shared_ptr<process_dispatcher>
 		proc{ new(&ck) process_dispatcher{ name_span, process_dispatcher::pid_counter++, parent, nullptr }};
 
 	if (!ck.check())
@@ -128,8 +129,8 @@ error_code process_dispatcher::setup_registers()
 
 task::process_dispatcher::process_dispatcher(std::span<char> name,
 	pid_type id,
-	std::shared_ptr<job_dispatcher> parent,
-	std::shared_ptr<job_dispatcher> critical_to)
+	ktl::shared_ptr<job_dispatcher> parent,
+	ktl::shared_ptr<job_dispatcher> critical_to)
 	: parent(std::move(parent)), critical_to(std::move(critical_to))
 {
 	this->name = ktl::span<char>{ _name_buf, name.size() };

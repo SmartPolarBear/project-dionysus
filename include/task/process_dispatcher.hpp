@@ -92,9 +92,9 @@ namespace task
 			return flags;
 		}
 
-		void set_flags(size_t flags)
+		void set_flags(size_t _flags)
 		{
-			flags = flags;
+			flags = _flags;
 		}
 
 		trap::trap_frame* get_tf() const

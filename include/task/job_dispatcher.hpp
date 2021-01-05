@@ -105,7 +105,7 @@ namespace task
 		  public kbl::single_linked_child_list_base<job_dispatcher*>
 	{
 	 public:
-		enum class job_status
+		enum class [[clang::enum_extensibility(closed)]] job_status
 		{
 			READY,
 			KILLING,
@@ -127,13 +127,13 @@ namespace task
 
 		[[nodiscard]]bool kill(error_code terminate_code) noexcept;
 
-		[[nodiscard]]void apply_basic_policy(uint64_t mode, std::span<policy_item> policies) noexcept;
+		void apply_basic_policy(uint64_t mode, std::span<policy_item> policies) noexcept;
 
 		[[nodiscard]]job_policy get_policy() const;
 
-		static error_code_with_result<std::shared_ptr<task::job_dispatcher>> create_root();
+		[[nodiscard]]static error_code_with_result<std::shared_ptr<task::job_dispatcher>> create_root();
 
-		static error_code_with_result<std::shared_ptr<task::job_dispatcher>> create(uint64_t flags,
+		[[nodiscard]]static error_code_with_result<std::shared_ptr<task::job_dispatcher>> create(uint64_t flags,
 			std::shared_ptr<job_dispatcher> parent);
 
 		~job_dispatcher() final;
@@ -183,9 +183,9 @@ namespace task
 
 		std::shared_ptr<job_dispatcher> parent;
 
-		char name[JOB_NAME_MAX];
+		char name[JOB_NAME_MAX]{0};
 
-		bool killed;
+		bool killed{ false};
 
 		error_code exit_code;
 
