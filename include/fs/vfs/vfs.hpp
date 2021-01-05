@@ -14,7 +14,7 @@
 namespace file_system
 {
 
-	enum vnode_flags : uint64_t
+	enum [[clang::flag_enum]] vnode_flags : uint64_t
 	{
 		// Means the node has no physical storage and resides only in memory
 		VNF_MEMORY = (1u << 0u),
@@ -23,7 +23,7 @@ namespace file_system
 		VNF_PER_PROCESS = (1u << 1u)
 	};
 
-	enum class vnode_types : uint64_t
+	enum class [[clang::enum_extensibility(closed)]] vnode_types : uint64_t
 	{
 		// same as ext2 directory entry type definition
 		VNT_UNKNOWN,

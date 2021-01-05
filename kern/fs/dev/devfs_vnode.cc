@@ -29,7 +29,8 @@ error_code_with_result<file_system::vnode_base*> file_system::dev_fs_node::find(
 	return -ERROR_UNSUPPORTED;
 }
 
-error_code_with_result<size_t> file_system::dev_fs_node::read_directory(file_object* fd, file_system::directory_entry* entry)
+error_code_with_result<size_t> file_system::dev_fs_node::read_directory(file_object* fd,
+	file_system::directory_entry* entry)
 {
 	return -ERROR_UNSUPPORTED;
 }
@@ -125,12 +126,13 @@ error_code file_system::dev_fs_node::stat(file_system::file_status* st)
 	return ERROR_SUCCESS;
 }
 
-error_code_with_result<file_system::vnode_base*> file_system::dev_fs_node::allocate_new(const char* name,
-	gid_type gid,
-	uid_type uid,
-	mode_type mode)
+error_code_with_result<file_system::vnode_base*> file_system::dev_fs_node::allocate_new([[maybe_unused]]const char* name,
+	[[maybe_unused]]gid_type gid,
+	[[maybe_unused]]uid_type uid,
+	[[maybe_unused]]mode_type mode)
 {
-	return 0;
+	KDEBUG_NOT_IMPLEMENTED;
+	return nullptr;
 }
 
 

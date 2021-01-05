@@ -9,7 +9,6 @@
 #define OUT
 #define IN
 #define OPTIONAL
-#define NULLABLE
 #define MUST_SUPPORT
 #define OPTIONAL_SUPPORT
 

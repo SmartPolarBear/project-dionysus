@@ -3,6 +3,8 @@
 #include "system/types.h"
 #include "system/error.hpp"
 
+#include "debug/nullability.hpp"
+
 #include "system/process.h"
 
 #include <cstring>
@@ -68,7 +70,7 @@ namespace file_system
 
 	error_code init_devfs_root();
 
-	error_code device_add(device_class_id cls, size_t subcls, IN device_class& dev, NULLABLE const char* name);
+	error_code device_add(device_class_id cls, size_t subcls, IN device_class& dev, const char* name);
 	error_code device_add_link(const char* name, vnode_base* to);
 	error_code device_add_live_link(const char* name, vnode_link_getter_type getter);
 	error_code_with_result<vnode_base*> device_find_first(device_class_id cls, const char* name);

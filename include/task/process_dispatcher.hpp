@@ -24,7 +24,7 @@ namespace task
 	 public:
 		static constexpr size_t PROC_MAX_NAME_LEN = 64;
 
-		enum class Status
+		enum class [[clang::enum_extensibility(closed)]]Status
 		{
 			INITIAL,
 			RUNNING,
