@@ -17,7 +17,7 @@
 #include "kbl/data/pod_list.h"
 #include "kbl/data/list_base.hpp"
 
-#include "task/dispatcher.hpp"
+#include "object/dispatcher.hpp"
 
 #include <cstring>
 #include <algorithm>

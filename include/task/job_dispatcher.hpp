@@ -26,7 +26,7 @@
 #include "ktl/list.hpp"
 
 #include "task/process_dispatcher.hpp"
-#include "task/dispatcher.hpp"
+#include "object/dispatcher.hpp"
 
 #include <cstring>
 #include <algorithm>

@@ -27,6 +27,8 @@
 
 #include "../../libs/basic_io/include/builtin_text_io.hpp"
 
+using namespace ktl::mutex;
+
 task::job_dispatcher::job_dispatcher(uint64_t flags, std::shared_ptr<job_dispatcher> parent, job_policy _policy)
 	: dispatcher<job_dispatcher, 0>(),
 	  policy(std::move(_policy)),
@@ -110,6 +112,7 @@ void task::job_dispatcher::remove_child_job(task::job_dispatcher* jb)
 		{
 		  return ele->get_koid() == jb->get_koid();
 		});
+
 		if (iter == child_jobs.end())
 		{
 			return;
@@ -127,7 +130,7 @@ void task::job_dispatcher::remove_child_job(task::job_dispatcher* jb)
 
 void task::job_dispatcher::remove_child_job(std::shared_ptr<job_dispatcher> jb)
 {
-
+	remove_child_job(jb.get());
 }
 
 bool task::job_dispatcher::is_ready_for_dead_transition() TA_REQ(lock)
@@ -171,12 +174,34 @@ void task::job_dispatcher::add_child_process(std::shared_ptr<process_dispatcher>
 
 void task::job_dispatcher::remove_child_process(std::shared_ptr<process_dispatcher> proc)
 {
-	child_processes.erase(ktl::find(child_processes.begin(), child_processes.end(), proc));
+	remove_child_process(proc.get());
 }
 
 void task::job_dispatcher::remove_child_process(task::process_dispatcher* proc)
 {
+	bool should_die = false;
+	{
+		lock_guard guard{ lock };
 
+		auto iter = ktl::find_if(child_processes.begin(), child_processes.end(), [proc](auto p)
+		{
+		  return p->id == proc->id;
+		});
+
+		if (iter == child_processes.end())
+		{
+			return;
+		}
+
+		child_processes.erase(iter);
+
+		should_die = is_ready_for_dead_transition();
+	}
+
+	if (should_die)
+	{
+		finish_dead_transition();
+	}
 }
 
 template<>
