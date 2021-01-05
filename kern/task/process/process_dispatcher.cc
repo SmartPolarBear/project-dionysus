@@ -59,6 +59,8 @@ error_code_with_result<ktl::shared_ptr<process_dispatcher>> process_dispatcher::
 	ktl::shared_ptr<process_dispatcher>
 		proc{ new(&ck) process_dispatcher{ name_span, process_dispatcher::pid_counter++, parent, nullptr }};
 
+	lock_guard g1{ proc->lock };
+
 	if (!ck.check())
 	{
 		return -ERROR_MEMORY_ALLOC;
@@ -190,10 +192,52 @@ error_code process_dispatcher::change_heap_ptr(uintptr_t* heap_ptr)
 
 void process_dispatcher::finish_dead_transition() noexcept
 {
+	if (mm != nullptr)
+	{
+		if ((--mm->map_count) == 0)
+		{
+			// restore to kernel page table
+			vmm::install_kernel_pml4t();
 
+			// free memory
+			vmm::mm_free(mm);
+
+			vmm::pgdir_entry_free(mm->pgdir);
+
+			trap::pushcli();
+
+			trap::popcli();
+
+			vmm::mm_destroy(mm);
+		}
+	}
+
+	mm = nullptr;
+
+	set_status_locked(Status::DEAD);
+
+	parent->remove_child_process(this);
+
+	ktl::shared_ptr<job_dispatcher> kill_job{ nullptr };
+	{
+		lock_guard guard{ lock };
+
+		if (critical_to != nullptr)
+		{
+			if (!kill_critical_when_nonzero_code || ret_code != 0)
+			{
+				kill_job = critical_to;
+			}
+		}
+	}
+
+	if (kill_job)
+	{
+		kill_job->kill(TASK_RETCODE_CRITICAL_PROCESS_KILL);
+	}
 }
 
-void process_dispatcher::exit(error_code code) noexcept
+void process_dispatcher::exit(task_return_code code) noexcept
 {
 	KDEBUG_ASSERT(cur_proc == this);
 
@@ -205,7 +249,7 @@ void process_dispatcher::exit(error_code code) noexcept
 			return;
 		}
 
-		this->exit_code = code;
+		this->ret_code = code;
 
 		set_status_locked(Status::DYING);
 	}
@@ -217,7 +261,7 @@ void process_dispatcher::exit(error_code code) noexcept
 
 	__UNREACHABLE;
 }
-void process_dispatcher::kill(error_code code) noexcept
+void process_dispatcher::kill(task_return_code code) noexcept
 {
 	bool finish_dying = false;
 
@@ -231,7 +275,7 @@ void process_dispatcher::kill(error_code code) noexcept
 
 		if (status != Status::DYING)
 		{
-			exit_code = code;
+			ret_code = code;
 		}
 
 		if (threads.empty())

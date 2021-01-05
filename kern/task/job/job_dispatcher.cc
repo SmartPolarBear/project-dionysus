@@ -31,7 +31,7 @@ task::job_dispatcher::job_dispatcher(uint64_t flags, std::shared_ptr<job_dispatc
 	: dispatcher<job_dispatcher, 0>(),
 	  policy(std::move(_policy)),
 	  parent(std::move(parent)),
-	  exit_code(ERROR_SUCCESS),
+	  ret_code(TASK_RETCODE_NORMAL),
 	  status(job_status::READY),
 	  max_height(parent == nullptr ? JOB_MAX_HEIGHT : parent->max_height - 1)
 {
@@ -93,6 +93,11 @@ task::job_policy task::job_dispatcher::get_policy() const
 	return policy;
 }
 
+bool task::job_dispatcher::add_child_job(std::shared_ptr<job_dispatcher> child)
+{
+	return false;
+}
+
 void task::job_dispatcher::remove_child_job(task::job_dispatcher* jb)
 {
 	bool suicide = false;
@@ -120,9 +125,9 @@ void task::job_dispatcher::remove_child_job(task::job_dispatcher* jb)
 	}
 }
 
-bool task::job_dispatcher::add_child_job(std::shared_ptr<job_dispatcher> child)
+void task::job_dispatcher::remove_child_job(std::shared_ptr<job_dispatcher> jb)
 {
-	return false;
+
 }
 
 bool task::job_dispatcher::is_ready_for_dead_transition() TA_REQ(lock)
@@ -146,7 +151,7 @@ bool task::job_dispatcher::finish_dead_transition() TA_EXCL(lock)
 	return false;
 }
 
-bool task::job_dispatcher::kill(error_code terminate_code) noexcept
+bool task::job_dispatcher::kill(task_return_code terminate_code) noexcept
 {
 	return false;
 }
@@ -157,45 +162,6 @@ size_t task::job_dispatcher::get_count<task::job_dispatcher()>() TA_REQ(lock)
 	return this->child_jobs.size();
 }
 
-template<typename TChildrenList, typename TChild, typename TFunc>
-requires ktl::ListOfTWithBound<TChildrenList, TChild> && (!ktl::Pointer<TChild>)
-error_code_with_result<ktl::unique_ptr<TChild* []>> task::job_dispatcher::for_each_child(TChildrenList& children,
-	TFunc func) TA_REQ(lock)
-{
-	const size_t count = get_count<TChild>();
-
-	if (count == 0)
-	{
-		return nullptr;
-	}
-
-	kbl::allocate_checker ck{};
-	ktl::unique_ptr<TChild* []> ret = ktl::make_unique<TChild* []>(&ck, count);
-	if (!ck.check())
-	{
-		return -ERROR_MEMORY_ALLOC;
-	}
-
-	size_t idx = 0;
-
-	TChild* iter;
-	llb_for(iter, children.head)
-	{
-		auto err = func(*iter);
-		if (err != ERROR_SUCCESS)
-		{
-			return err;
-		}
-
-		ret[idx++] = iter;
-	}
-
-	return ret;
-}
-void task::job_dispatcher::remove_child_process(std::shared_ptr<process_dispatcher> proc)
-{
-
-}
 void task::job_dispatcher::add_child_process(std::shared_ptr<process_dispatcher> proc)
 {
 	ktl::mutex::lock_guard guard{ lock };
@@ -203,9 +169,9 @@ void task::job_dispatcher::add_child_process(std::shared_ptr<process_dispatcher>
 	this->child_processes.insert(child_processes.begin(), proc);
 }
 
-void task::job_dispatcher::remove_child_job(std::shared_ptr<job_dispatcher> proc)
+void task::job_dispatcher::remove_child_process(std::shared_ptr<process_dispatcher> proc)
 {
-
+	child_processes.erase(ktl::find(child_processes.begin(), child_processes.end(), proc));
 }
 
 void task::job_dispatcher::remove_child_process(task::process_dispatcher* proc)

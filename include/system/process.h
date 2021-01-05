@@ -48,7 +48,7 @@ namespace task
 //
 //		size_t flags;
 //		size_t wating_state;
-//		error_code exit_code;
+//		error_code ret_code;
 //
 //		trap::trap_frame* tf;
 //		context* context;
@@ -83,7 +83,7 @@ namespace task
 //		process_dispatcher(const char* name, pid_type id, pid_type parent_id, size_t flags)
 //			: state(PROC_STATE_EMBRYO), id(id), parent_id(parent_id),
 //			  runs(0), kstack(0), memory(nullptr), flags(flags), wating_state(PROC_WAITING_NONE),
-//			  exit_code(ERROR_SUCCESS), tf(nullptr), context(nullptr)
+//			  ret_code(ERROR_SUCCESS), tf(nullptr), context(nullptr)
 //		{
 //			memmove(this->name, name, std::min((size_t)strlen(name), PROC_NAME_LEN));
 //

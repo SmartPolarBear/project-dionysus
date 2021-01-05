@@ -125,7 +125,7 @@ namespace task
 		static constexpr size_t JOB_MAX_HEIGHT = 16;
 	 public:
 
-		[[nodiscard]]bool kill(error_code terminate_code) noexcept;
+		[[nodiscard]]bool kill(task_return_code terminate_code) noexcept;
 
 		void apply_basic_policy(uint64_t mode, std::span<policy_item> policies) noexcept;
 
@@ -170,10 +170,10 @@ namespace task
 		template<typename T>
 		[[nodiscard]]size_t get_count() TA_REQ(lock);
 
-		template<typename TChildrenList, typename TChild, typename TFunc>
-		requires ktl::ListOfTWithBound<TChildrenList, TChild> && (!ktl::Pointer<TChild>)
-		[[nodiscard]]error_code_with_result<ktl::unique_ptr<TChild* []>> for_each_child(TChildrenList& children,
-			TFunc func) TA_REQ(lock);
+//		template<typename TChildrenList, typename TChild, typename TFunc>
+//		requires ktl::ListOfTWithBound<TChildrenList, TChild> && (!ktl::Pointer<TChild>)
+//		[[nodiscard]]error_code_with_result<ktl::unique_ptr<TChild* []>> for_each_child(TChildrenList& children,
+//			TFunc func) TA_REQ(lock);
 
 	 private:
 		job_list_type child_jobs;
@@ -187,7 +187,7 @@ namespace task
 
 		bool killed{ false};
 
-		error_code exit_code;
+		task_return_code ret_code;
 
 		job_status status TA_GUARDED(lock);
 

@@ -5,6 +5,7 @@
 
 #include "ktl/span.hpp"
 #include "ktl/list.hpp"
+#include "ktl/shared_ptr.hpp"
 
 #include "kbl/atomic/atomic.hpp"
 
@@ -24,7 +25,10 @@ namespace task
 	 public:
 		static constexpr size_t PROC_MAX_NAME_LEN = 64;
 
-		enum class [[clang::enum_extensibility(closed)]]Status
+		static constexpr size_t KERNSTACK_PAGES = 2;
+		static constexpr size_t KERNSTACK_SIZE = KERNSTACK_PAGES * PAGE_SIZE;
+
+		enum class [[clang::enum_extensibility(closed)]] Status
 		{
 			INITIAL,
 			RUNNING,
@@ -38,28 +42,25 @@ namespace task
 		static kbl::integral_atomic<pid_type> pid_counter;
 		static_assert(kbl::integral_atomic<pid_type>::is_always_lock_free);
 
-		static error_code_with_result<std::shared_ptr<process_dispatcher>> create(const char* name,
-			std::shared_ptr<job_dispatcher> parent);
+		static error_code_with_result<ktl::shared_ptr<process_dispatcher>> create(const char* name,
+			ktl::shared_ptr<job_dispatcher> parent);
 
 		process_dispatcher() = delete;
 		process_dispatcher(const process_dispatcher&) = delete;
 
 		~process_dispatcher() override = default;
 
+		void exit(task_return_code code) noexcept;
+		void kill(task_return_code code) noexcept;
+		void finish_dead_transition() noexcept;
+
 		error_code load_binary(uint8_t* bin, size_t binary_size, binary_types type, size_t flags);
 		error_code terminate(error_code terminate_error);
-
-		void exit(error_code code) noexcept;
-		void kill(error_code code) noexcept;
-		void finish_dead_transition() noexcept;
 
 		error_code sleep(sleep_channel_type channel, lock::spinlock_struct* lk);
 		error_code wakeup(sleep_channel_type channel);
 		error_code wakeup_no_lock(sleep_channel_type channel);
 		error_code change_heap_ptr(uintptr_t* heap_ptr);
-
-		static constexpr size_t KERNSTACK_PAGES = 2;
-		static constexpr size_t KERNSTACK_SIZE = KERNSTACK_PAGES * PAGE_SIZE;
 
 		[[nodiscard]] process_state get_state() const
 		{
@@ -109,31 +110,34 @@ namespace task
 			return status;
 		}
 
+	 private:
+		process_dispatcher(std::span<char> name,
+			pid_type id,
+			ktl::shared_ptr<job_dispatcher> parent,
+			ktl::shared_ptr<job_dispatcher> critical_to);
+
+		error_code setup_kernel_stack() TA_REQ(lock);
+		error_code setup_registers() TA_REQ(lock);
+		error_code setup_mm() TA_REQ(lock);
+
 		/// \brief  status transition, must be called with held lock
 		/// \param st the new status
 		void set_status_locked(Status st) noexcept TA_REQ(lock);
 
 		void kill_all_threads_locked() noexcept TA_REQ(lock);
-	 private:
-		process_dispatcher(std::span<char> name,
-			pid_type id,
-			std::shared_ptr<job_dispatcher> parent,
-			std::shared_ptr<job_dispatcher> critical_to);
-
-		error_code setup_kernel_stack();
-		error_code setup_registers();
-		error_code setup_mm();
 
 		Status status;
 
-		ktl::list<std::shared_ptr<thread_dispatcher>> threads;
+		ktl::list<ktl::shared_ptr<thread_dispatcher>> threads;
 
-		std::shared_ptr<job_dispatcher> parent;
-		std::shared_ptr<job_dispatcher> critical_to;
+		ktl::shared_ptr<job_dispatcher> parent;
+		ktl::shared_ptr<job_dispatcher> critical_to;
+		bool kill_critical_when_nonzero_code{ false };
 
 		char _name_buf[PROC_NAME_LEN]{};
 		ktl::span<char> name;
 
+		task_return_code ret_code;
 
 		process_state state;
 

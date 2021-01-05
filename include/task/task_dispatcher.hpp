@@ -25,6 +25,15 @@
 
 namespace task
 {
+	enum [[clang::enum_extensibility(closed)]]task_return_code : int64_t
+	{
+		TASK_RETCODE_NORMAL = 0,
+		TASK_RETCODE_SYSCALL_KILL,
+		TASK_RETCODE_POLICY_KILL,
+		TASK_RETCODE_EXCEPTION_KILL,
+		TASK_RETCODE_CRITICAL_PROCESS_KILL
+	};
+
 	using sleep_channel_type = size_t;
 	enum process_state
 	{
@@ -68,6 +77,5 @@ namespace task
 	constexpr size_t PROC_MAX_COUNT = INT32_MAX;
 
 	constexpr pid_type PID_MAX = INT64_MAX;
-
 
 }
