@@ -79,12 +79,12 @@ namespace task
 		bool is_dying_or_dead() const TA_EXCL(lock);
 		bool has_started() const TA_EXCL(lock);
 
-		thread_dispatcher(const thread_dispatcher&) = delete;
-		thread_dispatcher& operator=(const thread_dispatcher&) = delete;
-
 		void suspending();
 		void resuming();
 		void exiting_current();
+
+		thread_dispatcher(const thread_dispatcher&) = delete;
+		thread_dispatcher& operator=(const thread_dispatcher&) = delete;
 
 	 private:
 		thread_dispatcher(ktl::shared_ptr<process_dispatcher> proc, uint32_t flags);

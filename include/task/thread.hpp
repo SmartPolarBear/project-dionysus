@@ -3,6 +3,9 @@
 #include "task/task_dispatcher.hpp"
 #include "task/thread_state.hpp"
 
+#include "debug/nullability.hpp"
+#include "debug/thread_annotations.hpp"
+
 #include "kbl/lock/spinlock.h"
 
 #include "ktl/shared_ptr.hpp"
@@ -18,11 +21,51 @@ namespace task
 	 public:
 		static thread* create_idle_thread(cpu_num_type cpuid);
 
-		static thread* create(ktl::string_view name,thread_start_routine entry,void *arg,)
+		static thread* create(ktl::string_view name, thread_start_routine entry, void* arg, int priority);
+		static thread* create_etc(thread* t,
+			const char* name,
+			thread_start_routine entry,
+			void* agr,
+			int priority,
+			thread_trampoline_routine trampoline);
 
 	 public:
 		thread();
 		~thread();
 
+		void resume();
+		error_code suspend();
+		void forget();
+
+		error_code detach();
+		error_code detach_and_resume();
+
+		error_code join(int* NONNULL retcode, time_t deadline);
+
+		void kill();
+
+		void erase_from_all_lists() TA_REQ(lock);
+
+		void set_priority(int priority);
+
+		ktl::string_view get_owner_name();
+
+		struct current
+		{
+			static inline thread* get();
+
+			static void yield();
+			static void preempt();
+			static void reschedule();
+			[[noreturn]]static void exit(int retcode);
+			[[noreturn]]static void exit_locked(int retcode) TA_REQ(lock);
+			[[noreturn]]static void becomde_idle();
+
+			static void do_suspend();
+			static void set_name(const char* name);
+		};
+
+	 private:
+		lock::spinlock lock;
 	};
 }
