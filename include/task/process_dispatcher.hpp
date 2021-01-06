@@ -19,7 +19,7 @@ namespace task
 	class thread_dispatcher;
 
 	class process_dispatcher final
-		: public dispatcher<process_dispatcher, 0>,
+		: public object::dispatcher<process_dispatcher, 0>,
 		  public kbl::linked_list_base<process_dispatcher*>
 	{
 	 public:

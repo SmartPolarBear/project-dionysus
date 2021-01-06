@@ -101,7 +101,7 @@ namespace task
 	};
 
 	class job_dispatcher final
-		: public dispatcher<job_dispatcher, 0>,
+		: public object::dispatcher<job_dispatcher, 0>,
 		  public kbl::single_linked_child_list_base<job_dispatcher*>
 	{
 	 public:
@@ -183,9 +183,9 @@ namespace task
 
 		std::shared_ptr<job_dispatcher> parent;
 
-		char name[JOB_NAME_MAX]{0};
+		char name[JOB_NAME_MAX]{ 0 };
 
-		bool killed{ false};
+		bool killed{ false };
 
 		task_return_code ret_code;
 

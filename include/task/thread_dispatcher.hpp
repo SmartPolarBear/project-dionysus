@@ -11,7 +11,7 @@ namespace task
 	// thread is minimal execution unit
 	// has its own stack and context (register values)
 	class thread_dispatcher
-		: public dispatcher<thread_dispatcher, 0>
+		: public object::dispatcher<thread_dispatcher, 0>
 	{
 	 public:
 		using thread_context_type = arch_context_registers;
@@ -42,14 +42,12 @@ namespace task
 	 private:
 		thread_dispatcher(ktl::shared_ptr<process_dispatcher> proc, uint32_t flags);
 
-
 		thread_context_type context TA_GUARDED(lock);
 		uintptr_t stack TA_GUARDED(lock);
 
 		ktl::shared_ptr<process_dispatcher> parent TA_GUARDED(lock);
 
 		entry_status user_entry;
-
 
 		lock::spinlock lock;
 	};

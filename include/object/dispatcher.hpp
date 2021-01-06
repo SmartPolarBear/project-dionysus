@@ -25,7 +25,7 @@
 #include "../../build/external/third_party_root/include/c++/v1/span"
 #include "../../build/external/third_party_root/include/c++/v1/optional"
 
-namespace task
+namespace object
 {
 	using right_type = uint64_t;
 
@@ -41,6 +41,7 @@ namespace task
 		{
 			return &lock;
 		}
+
 		mutable lock::spinlock lock;
 	};
 }

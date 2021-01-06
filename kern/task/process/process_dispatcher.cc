@@ -233,7 +233,7 @@ void process_dispatcher::finish_dead_transition() noexcept
 
 	if (kill_job)
 	{
-		kill_job->kill(TASK_RETCODE_CRITICAL_PROCESS_KILL);
+		[[maybe_unused]]auto ret = kill_job->kill(TASK_RETCODE_CRITICAL_PROCESS_KILL);
 	}
 }
 
