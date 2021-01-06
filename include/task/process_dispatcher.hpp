@@ -12,11 +12,11 @@
 //FIXME
 
 #include "system/scheduler.h"
+#include "thread_dispatcher.hpp"
 
 namespace task
 {
 	class job_dispatcher;
-	class thread_dispatcher;
 
 	class process_dispatcher final
 		: public object::dispatcher<process_dispatcher, 0>,
@@ -229,4 +229,5 @@ namespace task
 
 		friend void scheduler::scheduler_yield();
 	};
+
 }

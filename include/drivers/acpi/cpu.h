@@ -20,6 +20,8 @@ struct context
 	uint64_t rip; //rip will be pop automatically by ret instruction
 }__attribute__((packed));
 
+using cpu_num_type = uint8_t;
+
 struct cpu_struct
 {
 	uint8_t id;                // index into cpus[] below
@@ -58,7 +60,6 @@ struct cpu_struct
 		load_tr(SEGMENTSEL_TSSLOW);
 	}
 };
-
 
 constexpr size_t CPU_COUNT_LIMIT = 8;
 
