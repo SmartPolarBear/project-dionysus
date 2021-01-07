@@ -2,6 +2,8 @@
 
 #include "ktl/pair.hpp"
 
+#include "debug/kdebug.h"
+
 namespace task
 {
 	class thread_status final

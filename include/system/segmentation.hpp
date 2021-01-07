@@ -1,15 +1,10 @@
 #pragma once
+#include "arch/amd64/cpu/cpu.h"
 
 #include "system/types.h"
 
-
-struct pseudo_descriptor
-{
-	uint16_t limit;
-	uint64_t base;
-} __attribute__((__packed__));
-
-using gdt_table_desc = pseudo_descriptor;
+using gdt_table_desc = arch_pseudo_descriptor;
+using idt_table_desc = arch_pseudo_descriptor;
 
 struct idt_entry
 {
@@ -45,18 +40,6 @@ struct gdt_flags_struct
 	uint64_t gr: 1;
 }__attribute__((__packed__));
 
-static inline uint8_t gdt_flags_to_int(gdt_flags_struct flags)
-{
-	uint8_t access_byte = *((uint8_t*)(&flags));
-	return access_byte;
-}
-
-static inline uint8_t gdt_access_byte_to_int(gdt_access_byte_struct ab)
-{
-	uint8_t flags = *((uint8_t*)(&ab));
-	return flags;
-}
-
 struct gdt_entry
 {
 	uint64_t limit_low: 16;
@@ -67,9 +50,6 @@ struct gdt_entry
 	uint64_t flags: 4;
 	uint64_t base_high: 8;
 } __attribute__((__packed__));
-
-
-using idt_table_desc = pseudo_descriptor;
 
 struct task_state_segment
 {
@@ -118,10 +98,11 @@ enum GDT_SEGMENTS : uint64_t
 	SEGMENTSEL_TSSHIGH = 0x48
 };
 
-constexpr size_t SEGMENT_VAL(GDT_SEGMENTS seg, dpl_values dpl)
+enum dpl_values
 {
-	return ((size_t)seg) | ((size_t)dpl);
-}
+	DPL_KERNEL = 0x0,
+	DPL_USER = 0x3
+};
 
 enum SEGMENT_TYPE
 {
@@ -145,5 +126,20 @@ enum SEGMENT_TYPE
 	STS_TG32 = 0xF,                 // 32-bit Trap Gate
 };
 
+constexpr size_t SEGMENT_VAL(GDT_SEGMENTS seg, dpl_values dpl)
+{
+	return ((size_t)seg) | ((size_t)dpl);
+}
 
+static inline uint8_t gdt_flags_to_int(gdt_flags_struct flags)
+{
+	uint8_t access_byte = *((uint8_t*)(&flags));
+	return access_byte;
+}
+
+static inline uint8_t gdt_access_byte_to_int(gdt_access_byte_struct ab)
+{
+	uint8_t flags = *((uint8_t*)(&ab));
+	return flags;
+}
 

@@ -24,6 +24,7 @@
 
 #include "drivers/acpi/acpi.h"
 #include "drivers/acpi/cpu.h"
+#include "drivers/acpi/ap.hpp"
 #include "drivers/apic/apic.h"
 #include "drivers/apic/traps.h"
 #include "drivers/apic/timer.h"
@@ -47,7 +48,7 @@ extern "C" void entry32mp(void);
 
 constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
 
-[[clang::optnone]] void ap::init_ap(void)
+[[clang::optnone]] void ap::init_ap()
 {
 
 	auto tag = multiboot::acquire_tag_ptr<multiboot_tag_module>(MULTIBOOT_TAG_TYPE_MODULE, [](auto ptr) -> bool

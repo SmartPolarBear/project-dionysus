@@ -1,6 +1,7 @@
 #pragma once
 
 #include "arch/amd64/cpu/regs.h"
+#include "arch/amd64/cpu/cpu.h"
 
 #if !defined(ARCH_SPINLOCK)
 #include "debug/kdebug.h"

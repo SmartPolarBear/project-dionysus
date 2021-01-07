@@ -18,7 +18,7 @@ namespace task
 		: public object::dispatcher<thread_dispatcher, 0>
 	{
 	 public:
-		using thread_context_type = arch_context_registers;
+		using thread_context_type = arch_task_context_registers;
 
 		enum class [[clang::enum_extensibility(open), clang::flag_enum]] block_reasons
 		{

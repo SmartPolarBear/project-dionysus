@@ -2,11 +2,7 @@
 
 #include "system/types.h"
 
-#include "kbl/lock/spinlock.h"
-
 #include "kerror.h"
-
-#include "drivers/acpi/cpu.h"
 
 #include "debug/thread_annotations.hpp"
 
@@ -22,20 +18,18 @@ namespace kdebug
 // use uint32_t for the bool value to make va_args happy.
 	[[noreturn]] void kdebug_panic(const char* fmt, uint32_t topleft, ...);
 
-	[[noreturn]] void kdebug_dump_lock_panic(lock::spinlock_struct* lock);
-
 	void kdebug_warning(const char* fmt, ...);
 
-	void kdebug_log(const char *fmt,...);
+	void kdebug_log(const char* fmt, ...);
 
 // panic with line number and file name
 // to make __FILE__ and __LINE__ macros works right, this must be a macro as well.
 
 #define KDEBUG_RICHPANIC(msg, title, topleft, add_fmt, args...) \
-    kdebug::kdebug_panic("[CPU%d]%s:\nIn file: %s, line: %d\nIn scope: %s\nMessage:\n%s\n" add_fmt, topleft, cpu->id, title, __FILE__, __LINE__, __PRETTY_FUNCTION__, msg, ##args)
+    kdebug::kdebug_panic("%s:\nIn file: %s, line: %d\nIn scope: %s\nMessage:\n%s\n" add_fmt, topleft,  title, __FILE__, __LINE__, __PRETTY_FUNCTION__, msg, ##args)
 
 #define KDEBUG_RICHPANIC_CODE(code, topleft, add_fmt, args...) \
-    kdebug::kdebug_panic("[CPU%d]%s:\nIn file: %s, line: %d\nIn scope: %s\nMessage:\n%s\n" add_fmt, topleft, cpu->id, kdebug::error_title(code), __FILE__, __LINE__, __PRETTY_FUNCTION__, kdebug::error_message(code), ##args)
+    kdebug::kdebug_panic("%s:\nIn file: %s, line: %d\nIn scope: %s\nMessage:\n%s\n" add_fmt, topleft, kdebug::error_title(code), __FILE__, __LINE__, __PRETTY_FUNCTION__, kdebug::error_message(code), ##args)
 
 #define KDEBUG_GERNERALPANIC_CODE(code) \
     KDEBUG_GENERALPANIC(kdebug::error_message(code))

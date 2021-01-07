@@ -1,10 +1,7 @@
 #pragma once
-#include "system/mmu.h"
 #include "system/types.h"
 
-#include "system/segmentation.hpp"
-
-struct arch_context_registers
+struct arch_task_context_registers
 {
 	uint64_t r15;
 	uint64_t r14;
@@ -16,9 +13,15 @@ struct arch_context_registers
 	uint64_t rip; //rip will be pop automatically by ret instruction
 }__attribute__((packed));
 
+struct arch_pseudo_descriptor
+{
+	uint16_t limit;
+	uint64_t base;
+} __attribute__((__packed__));
 
-extern "C" void load_gdt(gdt_table_desc *gdt_ptr);
-extern "C" void load_idt(idt_table_desc *idt_ptr);
+
+extern "C" void load_gdt(arch_pseudo_descriptor* gdt_ptr);
+extern "C" void load_idt(arch_pseudo_descriptor* idt_ptr);
 extern "C" void load_tr(size_t seg);
 
 extern "C" void swap_gs();

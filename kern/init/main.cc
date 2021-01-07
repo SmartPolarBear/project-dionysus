@@ -3,6 +3,7 @@
 
 #include "drivers/acpi/acpi.h"
 #include "drivers/acpi/cpu.h"
+#include "drivers/acpi/ap.hpp"
 #include "drivers/apic/apic.h"
 #include "drivers/apic/traps.h"
 #include "drivers/apic/timer.h"

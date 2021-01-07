@@ -67,8 +67,3 @@ enum exception_type : uint32_t
 	IT_INTERRUPT = 0XE
 };
 
-enum dpl_values
-{
-	DPL_KERNEL = 0x0,
-	DPL_USER = 0x3
-};

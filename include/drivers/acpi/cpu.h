@@ -2,24 +2,14 @@
 
 #include "arch/amd64/cpu/cpu.h"
 
-#include "system/mmu.h"
 #include "system/types.h"
 #include "system/segmentation.hpp"
 
 #include "system/cls.hpp"
 
-struct context
-{
-	uint64_t r15;
-	uint64_t r14;
-	uint64_t r13;
-	uint64_t r12;
-	uint64_t r11;
-	uint64_t rbx;
-	uint64_t rbp;
-	uint64_t rip; //rip will be pop automatically by ret instruction
-}__attribute__((packed));
+#include "task/thread.hpp"
 
+using context = arch_task_context_registers;
 using cpu_num_type = uint8_t;
 
 struct cpu_struct
@@ -40,6 +30,8 @@ struct cpu_struct
 
 	task_state_segment tss{};
 	gdt_table gdt_table{};
+
+//	task::thread idle;
 
 	cpu_struct()
 		: id(0), apicid(0),
@@ -96,12 +88,5 @@ requires ktl::Pointer<T>
 
 #pragma clang diagnostic pop
 
-namespace ap
-{
-	void init_ap(void);
-
-	// in main.cc
-	void all_processor_main();
-} // namespace ap
 
 // #endif // __INCLUDE_DRIVERS_ACPI_CPU_H

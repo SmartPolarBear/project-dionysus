@@ -3,6 +3,8 @@
 #include "drivers/console/console.h"
 #include "debug/kdebug.h"
 
+#include "drivers/acpi/cpu.h"
+
 #include "system/memlayout.h"
 #include "system/types.h"
 
@@ -24,6 +26,7 @@ using namespace kdebug;
 
 static inline void kdebug_print_impl_v(const char* fmt, bool topleft, color_scheme clr, va_list ap)
 {
+	console::console_set_lock(false);
 	// change cga color to draw attention
 	console::console_set_color(clr.first, clr.second);
 
@@ -31,6 +34,8 @@ static inline void kdebug_print_impl_v(const char* fmt, bool topleft, color_sche
 	{
 		console::console_set_pos(0);
 	}
+
+	write_format("[CPU%d] ", cpu->id);
 
 	valist_write_format(fmt, ap);
 
@@ -117,22 +122,3 @@ void kdebug::kdebug_log(const char* fmt, ...)
 #endif
 }
 
-void kdebug::kdebug_dump_lock_panic(lock::spinlock_struct* lock)
-{
-	// disable the lock of console
-	console::console_set_lock(false);
-	console::console_set_pos(0);
-
-	console::console_set_color(cs_panic.first, cs_panic.second);
-
-	write_format("lock %s has been held.\nCall stack:\n", lock->name);
-
-	for (auto cs : lock->pcs)
-	{
-		write_format("%p ", cs);
-	}
-
-	write_format("\n");
-
-	KDEBUG_FOLLOWPANIC("acquire");
-}
