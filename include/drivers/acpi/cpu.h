@@ -10,7 +10,6 @@
 #include "task/thread.hpp"
 
 using context = arch_task_context_registers;
-using cpu_num_type = uint8_t;
 
 struct cpu_struct
 {
@@ -26,12 +25,12 @@ struct cpu_struct
 	void* kernel_gs;
 
 	// scheduler context
-	::context* scheduler;
+	context* scheduler;
 
 	task_state_segment tss{};
 	gdt_table gdt_table{};
 
-//	task::thread idle;
+	task::thread idle;
 
 	cpu_struct()
 		: id(0), apicid(0),

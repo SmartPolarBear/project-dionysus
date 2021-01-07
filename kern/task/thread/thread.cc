@@ -11,15 +11,17 @@ task::thread::thread() = default;
 
 task::thread::~thread() = default;
 
-//task::thread* task::thread::create_idle_thread(cpu_num_type cpuid)
-//{
-//	KDEBUG_ASSERT(cpuid != 0); // not boot cpu
-//
-//	char name[16] = { 0 };
-//	sniprintf(name, sizeof(name), "idle %u", cpuid);
-//
-//	return nullptr;
-//}
+task::thread* task::thread::create_idle_thread(cpu_num_type cpuid)
+{
+	KDEBUG_ASSERT(cpuid != 0); // not boot cpu
+
+	char name[16] = { 0 };
+	sniprintf(name, sizeof(name), "idle %u", cpuid);
+
+
+
+	return nullptr;
+}
 
 task::thread* task::thread::create_etc(task::thread* t,
 	const char* name,

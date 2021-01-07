@@ -1,6 +1,7 @@
 #pragma once
 
 #include "object/kernel_object.hpp"
+#include "object/dispatcher.hpp"
 
 #include "arch/amd64/cpu/regs.h"
 
@@ -16,8 +17,6 @@
 
 #include "kbl/data/pod_list.h"
 #include "kbl/data/list_base.hpp"
-
-#include "object/dispatcher.hpp"
 
 #include <cstring>
 #include <algorithm>

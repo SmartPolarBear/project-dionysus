@@ -1,6 +1,8 @@
 #pragma once
 
-#include "task/task_dispatcher.hpp"
+// FIXME!
+//#include "task/task_dispatcher.hpp"
+
 #include "task/thread_state.hpp"
 
 #include "debug/nullability.hpp"
@@ -56,7 +58,7 @@ namespace task
 	class thread final
 	{
 	 public:
-//		static thread* create_idle_thread(cpu_num_type cpuid);
+		static thread* create_idle_thread(cpu_num_type cpuid);
 
 		static thread* create(ktl::string_view name, thread_start_routine entry, void* arg, int priority);
 		static thread* create_etc(thread* t,
