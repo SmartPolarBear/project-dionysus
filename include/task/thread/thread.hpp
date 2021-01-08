@@ -121,6 +121,7 @@ class thread final
 	static thread* create_idle_thread(cpu_num_type cpuid);
 
 	static thread* create(ktl::string_view name, thread_start_routine_type entry, void* arg, int priority);
+
 	static thread* create_etc(thread* t,
 		ktl::string_view name,
 		thread_start_routine_type entry,
@@ -132,6 +133,11 @@ class thread final
 	thread();
 	explicit thread(ktl::string_view name);
 	~thread();
+
+	[[nodiscard]]bool is_idle() const
+	{
+		return flags & THREAD_FLAG_IDLE;
+	}
 
 	void resume();
 	error_code suspend();

@@ -47,6 +47,7 @@ enum error_code_values : error_code
 	ERROR_ALREADY_EXIST,
 	ERROR_NOT_FILE,
 	ERROR_PERMISSION,
+	ERROR_THREAD_STATE,
 
 	// max element index
 	ERROR_CODE_COUNT,

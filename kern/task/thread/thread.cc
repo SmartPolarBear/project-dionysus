@@ -2,6 +2,7 @@
 
 #include "drivers/apic/traps.h"
 
+#include "task/scheduler/scheduler.hpp"
 #include "task/thread/thread.hpp"
 #include "task/thread/thread_dispatcher.hpp"
 #include "task/process/process_dispatcher.hpp"
@@ -14,6 +15,7 @@
 
 using namespace lock;
 using namespace task;
+using namespace task::scheduler2;
 
 using ktl::mutex::lock_guard;
 
@@ -92,6 +94,7 @@ task::thread* task::thread::create_etc(task::thread* t,
 	}
 
 	t->task_state_.init(entry, arg);
+	scheduler2::scheduler::initialize_thread(t, priority);
 
 	if (likely(trampoline == nullptr))
 	{
@@ -140,13 +143,33 @@ void task::thread::resume()
 		if (auto st = scheduler_state_.get_status();st == scheduler_state::THREAD_INITIAL
 			|| st == scheduler_state::THREAD_SUSPENDED)
 		{
-
+			bool local_resched = scheduler2::scheduler::unblock(this);
+			if (resched && local_resched)
+			{
+				scheduler2::scheduler::reschedule();
+			}
 		}
 	}
 }
 
 error_code task::thread::suspend()
 {
+	if (is_idle())
+	{
+		return -ERROR_INVALID;
+	}
+
+	lock_guard g{ master_thread_lock };
+
+	if (scheduler_state_.get_status() == scheduler_state::THREAD_DEATH)
+	{
+		return -ERROR_THREAD_STATE;
+	}
+
+	signals.fetch_or(THREAD_SIGNAL_SUSPEND, kbl::memory_order_relaxed);
+
+
+
 	return 0;
 }
 
@@ -162,7 +185,12 @@ error_code task::thread::detach()
 
 error_code task::thread::detach_and_resume()
 {
-	return 0;
+	if (auto err = detach();err != ERROR_SUCCESS)
+	{
+		return err;
+	}
+	resume();
+	return ERROR_SUCCESS;
 }
 
 error_code task::thread::join(int* ret_code, time_t deadline)

@@ -22,9 +22,12 @@ class scheduler
 	scheduler(const scheduler&) = delete;
 	scheduler& operator=(const scheduler&) = delete;
 
-	size_type get_runnable_tasks() const TA_EXCL(master_thread_lock);
+	[[nodiscard]] size_type get_runnable_tasks() const TA_EXCL(master_thread_lock);
 
-	cpu_num_type get_cpu() const;
+	[[nodiscard]] cpu_num_type get_cpu() const
+	{
+		return this_cpu;
+	}
 
 	// Public entry points.
 
@@ -43,6 +46,8 @@ class scheduler
 
  private:
 	friend struct cpu_struct;
+
+	cpu_num_type this_cpu{CPU_NUM_INVALID};
 };
 
 }

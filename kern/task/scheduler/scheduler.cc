@@ -3,12 +3,8 @@
 using namespace task;
 using namespace task::scheduler2;
 
-task::scheduler2::scheduler::size_type task::scheduler2::scheduler::get_runnable_tasks() const TA_EXCL(master_thread_lock)
-{
-	return 0;
-}
-
-cpu_num_type task::scheduler2::scheduler::get_cpu() const
+[[nodiscard]] task::scheduler2::scheduler::size_type task::scheduler2::scheduler::get_runnable_tasks() const
+TA_EXCL(master_thread_lock)
 {
 	return 0;
 }
