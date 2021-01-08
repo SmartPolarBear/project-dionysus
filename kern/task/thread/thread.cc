@@ -1,15 +1,43 @@
+#include "process.hpp"
+
 #include "task/thread.hpp"
 #include "task/thread_dispatcher.hpp"
+#include "task/process_dispatcher.hpp"
+
+#include "system/process.h"
 
 #include "kbl/lock/spinlock.h"
 
+#include "ktl/mutex/lock_guard.hpp"
+
 using namespace lock;
+using namespace task;
 
 spinlock task::master_thread_lock;
+ktl::list<task::thread*> task::thread_list TA_GUARDED(master_thread_lock);
 
 task::thread::thread() = default;
 
 task::thread::~thread() = default;
+
+// TODO: arch dependent
+int idle_thread_start_routine(void* arg)
+{
+	hlt();
+}
+
+void thread_initialize(thread* t, thread_trampoline_routine trampoline)
+{
+
+}
+
+// TODO: end arch dependent
+
+void task::thread::default_trampoline()
+{
+	proc_list.lock.unlock();
+	master_thread_lock.unlock();
+}
 
 task::thread* task::thread::create_idle_thread(cpu_num_type cpuid)
 {
@@ -18,18 +46,56 @@ task::thread* task::thread::create_idle_thread(cpu_num_type cpuid)
 	char name[16] = { 0 };
 	sniprintf(name, sizeof(name), "idle %u", cpuid);
 
+	auto th = thread::create_etc(&cpus[cpuid].idle, name, idle_thread_start_routine, nullptr, 0, nullptr);
 
+	if (th == nullptr)
+	{
+		return th;
+	}
 
-	return nullptr;
+	th->flags = static_cast<thread_flag>(THREAD_FLAG_IDLE | THREAD_FLAG_DETACHED);
+
+	// TODO: these should be scheduler's job?
+	th->status = THREAD_INITIAL;
+	th->cpuid = cpuid;
+
+	return th;
 }
 
 task::thread* task::thread::create_etc(task::thread* t,
 	const char* name,
 	task::thread_start_routine entry,
-	void* agr,
-	int priority,
+	void* arg,
+	[[maybe_unused]]int priority,
 	task::thread_trampoline_routine trampoline)
 {
+	size_t flags{ 0 };
+	kbl::allocate_checker ck{};
+	if (t)
+	{
+		t = new(&ck) thread;
+		if (!ck.check())
+		{
+			return nullptr;
+		}
+
+		flags |= THREAD_FLAG_FREE_STRUCT;
+	}
+
+	t->task_state_.init(entry, arg);
+
+	if (likely(trampoline == nullptr))
+	{
+		trampoline = &thread::default_trampoline;
+	}
+
+	thread_initialize(t, trampoline);
+
+	{
+		ktl::mutex::lock_guard g{ master_thread_lock };
+		thread_list.push_back(t);
+	}
+
 	return nullptr;
 }
 
@@ -85,7 +151,12 @@ void task::thread::set_priority(int priority)
 
 ktl::string_view task::thread::get_owner_name()
 {
-	return std::string_view();
+	if (owner != nullptr)
+	{
+		return owner->get_parent()->get_name();
+	}
+
+	return "kernel";
 }
 
 void task::task_state::init(task::thread_start_routine entry, void* arg)

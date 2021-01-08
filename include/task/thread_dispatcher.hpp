@@ -86,6 +86,13 @@ namespace task
 		thread_dispatcher(const thread_dispatcher&) = delete;
 		thread_dispatcher& operator=(const thread_dispatcher&) = delete;
 
+	 public:
+		[[nodiscard]] ktl::shared_ptr<process_dispatcher> get_parent() const
+		{
+			ktl::mutex::lock_guard g{ lock };
+			return this->parent;
+		}
+
 	 private:
 		thread_dispatcher(ktl::shared_ptr<process_dispatcher> proc, uint32_t flags);
 
@@ -106,7 +113,7 @@ namespace task
 
 		thread* core_thread TA_GUARDED(lock){ nullptr };
 
-		lock::spinlock lock;
+		mutable lock::spinlock lock;
 	};
 
 }

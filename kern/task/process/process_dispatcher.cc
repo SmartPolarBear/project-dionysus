@@ -39,7 +39,7 @@ using namespace task;
 
 using namespace task;
 
-void new_proc_begin()
+void default_trampoline()
 {
 //	spinlock_release(&proc_list.lock);
 	proc_list.lock.unlock();
@@ -109,7 +109,7 @@ error_code process_dispatcher::setup_kernel_stack()
 	this->context = reinterpret_cast<decltype(this->context)>(sp);
 	memset(this->context, 0, sizeof(*this->context));
 
-	this->context->rip = (uintptr_t)new_proc_begin;
+	this->context->rip = (uintptr_t)default_trampoline;
 
 	return ERROR_SUCCESS;
 }

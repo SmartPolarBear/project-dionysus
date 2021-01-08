@@ -42,11 +42,6 @@ process_list_struct proc_list;
 
 std::shared_ptr<job_dispatcher> root_job;
 
-// precondition: the lock must be held
-static inline pid_type alloc_pid(void)
-{
-	return proc_list.proc_count++;
-}
 
 //static inline FIXME
 error_code task::alloc_ustack(task::process_dispatcher* proc)

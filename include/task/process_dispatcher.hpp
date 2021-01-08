@@ -54,6 +54,11 @@ namespace task
 		void kill(task_return_code code) noexcept;
 		void finish_dead_transition() noexcept;
 
+		[[nodiscard]] ktl::string_view get_name() const
+		{
+			return name.data();
+		}
+
 		error_code load_binary(uint8_t* bin, size_t binary_size, binary_types type, size_t flags);
 		error_code terminate(error_code terminate_error);
 

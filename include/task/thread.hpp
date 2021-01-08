@@ -12,10 +12,13 @@
 
 #include "ktl/shared_ptr.hpp"
 #include "ktl/string_view.hpp"
+#include "ktl/list.hpp"
 
 namespace task
 {
 	extern lock::spinlock master_thread_lock;
+
+	class thread_dispatcher;
 
 	using thread_start_routine = int (*)(void* arg);
 	using thread_trampoline_routine = void (*)();
@@ -55,9 +58,31 @@ namespace task
 
 	};
 
+	enum [[clang::flag_enum, clang::enum_extensibility(open)]] thread_flag
+	{
+		THREAD_FLAG_DETACHED = (1 << 0),
+		THREAD_FLAG_FREE_STRUCT = (1 << 1),
+		THREAD_FLAG_IDLE = (1 << 2),
+		THREAD_FLAG_VCPU = (1 << 3),
+	};
+
 	class thread final
 	{
 	 public:
+		enum [[clang::enum_extensibility(closed)]] Status : uint8_t
+		{
+			THREAD_INITIAL = 0,
+			THREAD_READY,
+			THREAD_RUNNING,
+			THREAD_BLOCKED,
+			THREAD_BLOCKED_READ_LOCK,
+			THREAD_SLEEPING,
+			THREAD_SUSPENDED,
+			THREAD_DEATH,
+		};
+
+		static void default_trampoline();
+
 		static thread* create_idle_thread(cpu_num_type cpuid);
 
 		static thread* create(ktl::string_view name, thread_start_routine entry, void* arg, int priority);
@@ -79,7 +104,7 @@ namespace task
 		error_code detach();
 		error_code detach_and_resume();
 
-		error_code join(int* NONNULL retcode, time_t deadline);
+		error_code join(int* retcode, time_t deadline);
 
 		void kill();
 
@@ -107,6 +132,16 @@ namespace task
 	 private:
 		task_state task_state_;
 
+		thread_flag flags;
+
+		Status status;
+
+		cpu_num_type cpuid;
+
+		ktl::shared_ptr<thread_dispatcher> owner; // kernel thread has no owner
+
 		lock::spinlock lock;
 	};
+
+	extern ktl::list<task::thread*> thread_list;
 }

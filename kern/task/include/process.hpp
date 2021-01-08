@@ -4,11 +4,15 @@
 
 #include "system/process.h"
 
-#include "kbl/lock/spinlock.h"
+#include "task/thread.hpp"
+
 #include "drivers/apic/traps.h"
 #include "drivers/acpi/cpu.h"
 
 #include "kbl/data/queue.hpp"
+#include "kbl/lock/spinlock.h"
+
+#include "ktl/list.hpp"
 
 using lock::spinlock_struct;
 using lock::spinlock_acquire;
@@ -27,6 +31,7 @@ struct process_list_struct
 	size_t proc_count  TA_GUARDED(lock);
 	task::process_dispatcher::head_type head TA_GUARDED(lock);
 	kbl::queue<task::process_dispatcher*> zombie_queue TA_GUARDED(lock);
+
 };
 
 extern process_list_struct proc_list;
