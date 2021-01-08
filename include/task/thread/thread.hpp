@@ -224,7 +224,7 @@ class thread final
 	error_code detach();
 	error_code detach_and_resume();
 
-	error_code join(int* retcode, time_t deadline);
+	error_code join(int* retcode, time_type deadline);
 
 	void kill();
 

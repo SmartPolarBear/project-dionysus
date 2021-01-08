@@ -210,6 +210,9 @@ void task::thread::forget()
 
 	this->erase_from_all_lists();
 
+	KDEBUG_ASSERT(!wait_queue_state_.in_wait_queue());
+
+	// TODO: free all of this
 }
 
 error_code task::thread::detach()
@@ -244,8 +247,35 @@ error_code task::thread::detach_and_resume()
 	return ERROR_SUCCESS;
 }
 
-error_code task::thread::join(int* ret_code, time_t deadline)
+error_code task::thread::join(int* out_code, time_type deadline)
 {
+	{
+		lock_guard g{ master_thread_lock };
+
+		if (flags & THREAD_FLAG_DETACHED)
+		{
+			return -ERROR_THREAD_STATE;
+		}
+
+		if (scheduler_state_.get_status() != scheduler_state::THREAD_DEATH)
+		{
+			if (auto err = task_state_.join(deadline);err != ERROR_SUCCESS)
+			{
+				return err;
+			}
+		}
+
+		KDEBUG_ASSERT(scheduler_state_.get_status() != scheduler_state::THREAD_DEATH);
+
+		if (out_code)
+		{
+			*out_code = task_state_.get_ret_code();
+		}
+
+		erase_from_all_lists();
+	}
+
+	// TODO: free all of this
 	return 0;
 }
 
@@ -324,6 +354,7 @@ void task::thread::current::set_name(const char* name)
 {
 
 }
+
 wait_queue_state::~wait_queue_state()
 {
 
