@@ -16,10 +16,6 @@ using namespace task;
 spinlock task::master_thread_lock;
 ktl::list<task::thread*> task::thread_list TA_GUARDED(master_thread_lock);
 
-task::thread::thread() = default;
-
-task::thread::~thread() = default;
-
 // TODO: arch dependent
 int idle_thread_start_routine(void* arg)
 {
@@ -37,6 +33,17 @@ void task::thread::default_trampoline()
 {
 	proc_list.lock.unlock();
 	master_thread_lock.unlock();
+}
+
+task::thread::thread() = default;
+
+thread::thread(ktl::string_view n)
+	: name{ n }
+{
+}
+
+task::thread::~thread()
+{
 }
 
 task::thread* task::thread::create_idle_thread(cpu_num_type cpuid)
@@ -63,7 +70,7 @@ task::thread* task::thread::create_idle_thread(cpu_num_type cpuid)
 }
 
 task::thread* task::thread::create_etc(task::thread* t,
-	const char* name,
+	ktl::string_view name,
 	task::thread_start_routine entry,
 	void* arg,
 	[[maybe_unused]]int priority,
@@ -73,7 +80,7 @@ task::thread* task::thread::create_etc(task::thread* t,
 	kbl::allocate_checker ck{};
 	if (t)
 	{
-		t = new(&ck) thread;
+		t = new(&ck) thread{ name };
 		if (!ck.check())
 		{
 			return nullptr;
@@ -101,7 +108,7 @@ task::thread* task::thread::create_etc(task::thread* t,
 
 task::thread* task::thread::create(ktl::string_view name, task::thread_start_routine entry, void* arg, int priority)
 {
-	return nullptr;
+	return create_etc(nullptr, name, entry, arg, priority, nullptr);
 }
 
 void task::thread::resume()
@@ -129,7 +136,7 @@ error_code task::thread::detach_and_resume()
 	return 0;
 }
 
-error_code task::thread::join(int* retcode, time_t deadline)
+error_code task::thread::join(int* ret_code, time_t deadline)
 {
 	return 0;
 }

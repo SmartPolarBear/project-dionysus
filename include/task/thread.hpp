@@ -87,7 +87,7 @@ namespace task
 
 		static thread* create(ktl::string_view name, thread_start_routine entry, void* arg, int priority);
 		static thread* create_etc(thread* t,
-			const char* name,
+			ktl::string_view name,
 			thread_start_routine entry,
 			void* agr,
 			int priority,
@@ -95,6 +95,7 @@ namespace task
 
 	 public:
 		thread();
+		explicit thread(ktl::string_view name);
 		~thread();
 
 		void resume();
@@ -141,6 +142,8 @@ namespace task
 		ktl::shared_ptr<thread_dispatcher> owner; // kernel thread has no owner
 
 		lock::spinlock lock;
+
+		ktl::string_view name;
 	};
 
 	extern ktl::list<task::thread*> thread_list;
