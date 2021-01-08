@@ -1,6 +1,7 @@
 <component name="ProjectCodeStyleConfiguration">
   <code_scheme name="Project" version="173">
     <Objective-C>
+      <option name="INDENT_NAMESPACE_MEMBERS" value="0" />
       <option name="INDENT_VISIBILITY_KEYWORDS" value="1" />
       <option name="INDENT_INSIDE_CODE_BLOCK" value="2" />
       <option name="NAMESPACE_BRACE_PLACEMENT" value="2" />
@@ -66,6 +67,7 @@
       <indentOptions>
         <option name="CONTINUATION_INDENT_SIZE" value="4" />
         <option name="USE_TAB_CHARACTER" value="true" />
+        <option name="SMART_TABS" value="true" />
         <option name="LABEL_INDENT_SIZE" value="-4" />
       </indentOptions>
     </codeStyleSettings>

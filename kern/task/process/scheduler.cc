@@ -1,3 +1,6 @@
+
+#include <task/scheduler/scheduler.hpp>
+
 #include "process.hpp"
 #include "syscall.h"
 
@@ -147,4 +150,3 @@ void scheduler::scheduler_yield()
 
 //	spinlock_release(&proc_list.lock);
 }
-
