@@ -168,19 +168,70 @@ error_code task::thread::suspend()
 
 	signals.fetch_or(THREAD_SIGNAL_SUSPEND, kbl::memory_order_relaxed);
 
+	bool local_resched = false;
+	switch (scheduler_state_.get_status())
+	{
 
+	case scheduler_state::THREAD_INITIAL:
+		local_resched = scheduler2::scheduler::unblock(this);
+		break;
+	case scheduler_state::THREAD_READY:
+		// do nothing
+		break;
+	case scheduler_state::THREAD_RUNNING:
+		// do nothing. it will happen sooner
+		break;
+	case scheduler_state::THREAD_BLOCKED:
+	case scheduler_state::THREAD_BLOCKED_READ_LOCK:
+		break;
+	case scheduler_state::THREAD_SLEEPING:
+		break;
+	case scheduler_state::THREAD_SUSPENDED:
+		// already suspended, do nothing
+		break;
+	case scheduler_state::THREAD_DEATH:
+		KDEBUG_GERNERALPANIC_CODE(-ERROR_INVALID);
+		break;
+	}
 
-	return 0;
+	if (local_resched)
+	{
+		scheduler2::scheduler::reschedule();
+	}
+
+	return ERROR_SUCCESS;
 }
 
 void task::thread::forget()
 {
+	lock_guard g{ master_thread_lock };
+
+	KDEBUG_ASSERT(thread::current::get() != this);
+
+	this->erase_from_all_lists();
 
 }
 
 error_code task::thread::detach()
 {
-	return 0;
+	lock_guard g{ master_thread_lock };
+
+	// other threads can't be blocked insider join() on this thread
+	task_state_.wake_joiners(ERROR_THREAD_STATE);
+
+	if (scheduler_state_.get_status() == scheduler_state::THREAD_DEATH)
+	{
+		flags &= ~THREAD_FLAG_DETACHED;
+		g.unlock();
+		return join(nullptr, 0);
+	}
+	else
+	{
+		flags |= THREAD_FLAG_DETACHED;
+		return ERROR_SUCCESS;
+	}
+
+	return -ERROR_SHOULD_NOT_REACH_HERE;
 }
 
 error_code task::thread::detach_and_resume()
@@ -270,6 +321,30 @@ void task::thread::current::do_suspend()
 
 }
 void task::thread::current::set_name(const char* name)
+{
+
+}
+wait_queue_state::~wait_queue_state()
+{
+
+}
+void wait_queue_state::block(interruptible intr, error_code block_code) TA_REQ(master_thread_lock)
+{
+
+}
+error_code wait_queue_state::try_unblock(thread* t, error_code block_code) TA_REQ(master_thread_lock)
+{
+	return 0;
+}
+bool wait_queue_state::wakeup(thread* t, error_code st) TA_REQ(master_thread_lock)
+{
+	return false;
+}
+error_code_with_result<bool> wait_queue_state::try_wakeup(thread* t, error_code st) TA_REQ(master_thread_lock)
+{
+	return error_code_with_result<bool>();
+}
+void wait_queue_state::update_priority_when_blocking(thread* t, int prio, propagating prop) TA_REQ(master_thread_lock)
 {
 
 }

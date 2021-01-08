@@ -20,6 +20,7 @@ namespace task
 extern lock::spinlock master_thread_lock;
 
 class thread_dispatcher;
+class thread;
 
 using thread_start_routine_type = int (*)(void* arg);
 using thread_trampoline_routine_type = void (*)();
@@ -111,6 +112,80 @@ class scheduler_state final
 
 };
 
+enum class [[clang::enum_extensibility(closed)]] interruptible : bool
+{
+	NO, YES
+};
+
+enum class [[clang::enum_extensibility(closed)]] propagating : bool
+{
+	NO, YES
+};
+
+enum class [[clang::enum_extensibility(closed)]] resource_ownership
+{
+	NORMAL, READER
+};
+
+class wait_queue_state final
+{
+ public:
+
+	wait_queue_state() = default;
+	~wait_queue_state();
+
+	// no copy construct or assign
+	wait_queue_state(const wait_queue_state&) = delete;
+	wait_queue_state& operator=(const wait_queue_state&) = delete;
+
+	[[nodiscard]] bool is_head() const
+	{
+		return is_head_node;
+	}
+
+	[[nodiscard]] bool in_wait_queue() const
+	{
+		return is_head() || is_in_sublist;
+	}
+
+	[[nodiscard]] error_code get_block_status() const TA_REQ(master_thread_lock)
+	{
+		return block_status;
+	}
+
+	void block(interruptible intr, error_code block_code) TA_REQ(master_thread_lock);
+	[[nodiscard]] error_code try_unblock(thread* t, error_code block_code) TA_REQ(master_thread_lock);
+
+	[[nodiscard]] bool wakeup(thread* t, error_code st) TA_REQ(master_thread_lock);
+	[[nodiscard]] error_code_with_result<bool> try_wakeup(thread* t, error_code st)TA_REQ(master_thread_lock);
+
+	void update_priority_when_blocking(thread* t, int prio, propagating prop)TA_REQ(master_thread_lock);
+
+	[[nodiscard]] bool has_owned_queues() const TA_REQ(master_thread_lock)
+	{
+		return wait_queues.empty();
+	}
+
+	[[nodiscard]] bool has_blocked() const TA_REQ(master_thread_lock)
+	{
+		return in_wait_queue() && blocking_queue == nullptr;
+	}
+
+ private:
+	wait_queue* blocking_queue TA_GUARDED(master_thread_lock){ nullptr };
+	ktl::list<wait_queue*> wait_queues TA_GUARDED(master_thread_lock){};
+
+	ktl::list<thread*> sublist;
+
+	error_code block_status{ ERROR_SUCCESS };
+
+	bool is_head_node{ false };
+
+	bool is_in_sublist{ false };
+
+	interruptible interruptible_{ interruptible::NO };
+};
+
 class thread final
 {
  public:
@@ -141,7 +216,10 @@ class thread final
 
 	void resume();
 	error_code suspend();
-	void forget();
+
+	/// \brief remove from scheduler and discarding everything with it. EXTREMELY UNSAFE
+	///	THIS CAN'T BE DONE FOR CURRENT THREAD. WILL PANIC IF DO SO
+	[[maybe_unused]] PANIC void forget();
 
 	error_code detach();
 	error_code detach_and_resume();
@@ -174,19 +252,19 @@ class thread final
  private:
 	kbl::integral_atomic<uint64_t> signals{};
 
-	wait_queue wait_queue_{};
-
-	task_state task_state_{};
-
 	int64_t flags{ 0 };
-
-	scheduler_state scheduler_state_{};
 
 	cpu_num_type cpuid{ CPU_NUM_INVALID };
 
 	ktl::shared_ptr<thread_dispatcher> owner{ nullptr }; // kernel thread has no owner
 
 	ktl::string_view name{ "" };
+
+	task_state task_state_{};
+
+	scheduler_state scheduler_state_{};
+
+	wait_queue_state wait_queue_state_{};
 
 	mutable lock::spinlock lock{ "thread_own_lock" };
 };
