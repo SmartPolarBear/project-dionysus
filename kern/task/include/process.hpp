@@ -4,7 +4,7 @@
 
 #include "system/process.h"
 
-#include "task/thread.hpp"
+#include "task/thread/thread.hpp"
 
 #include "drivers/apic/traps.h"
 #include "drivers/acpi/cpu.h"

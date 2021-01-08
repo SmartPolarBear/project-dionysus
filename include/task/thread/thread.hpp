@@ -3,12 +3,13 @@
 // FIXME!
 //#include "task/task_dispatcher.hpp"
 
-#include "task/thread_state.hpp"
+#include "thread_state.hpp"
 
 #include "debug/nullability.hpp"
 #include "debug/thread_annotations.hpp"
 
 #include "kbl/lock/spinlock.h"
+#include "kbl/atomic/atomic.hpp"
 
 #include "ktl/shared_ptr.hpp"
 #include "ktl/string_view.hpp"
@@ -20,18 +21,39 @@ namespace task
 
 	class thread_dispatcher;
 
-	using thread_start_routine = int (*)(void* arg);
-	using thread_trampoline_routine = void (*)();
+	using thread_start_routine_type = int (*)(void* arg);
+	using thread_trampoline_routine_type = void (*)();
+
+	enum [[clang::flag_enum, clang::enum_extensibility(open)]] thread_flags
+	{
+		THREAD_FLAG_DETACHED = (1 << 0),
+		THREAD_FLAG_FREE_STRUCT = (1 << 1),
+		THREAD_FLAG_IDLE = (1 << 2),
+		THREAD_FLAG_VCPU = (1 << 3),
+	};
+
+	enum [[clang::flag_enum, clang::enum_extensibility(open)]] thread_signals
+	{
+		THREAD_SIGNAL_KILL = (1 << 0),
+		THREAD_SIGNAL_SUSPEND = (1 << 1),
+		THREAD_SIGNAL_POLICY_EXCEPTION = (1 << 2),
+	};
+
+	class wait_queue final
+	{
+	 public:
+	 private:
+	};
 
 	class task_state final
 	{
 	 public:
 		task_state() = default;
-		void init(thread_start_routine entry, void* arg);
+		void init(thread_start_routine_type entry, void* arg);
 		error_code join(time_t deadline) TA_REQ(master_thread_lock);
 		error_code wake_joiners(error_code status) TA_REQ(master_thread_lock);
 
-		[[nodiscard]] thread_start_routine get_entry() const
+		[[nodiscard]] thread_start_routine_type get_entry() const
 		{
 			return entry;
 		}
@@ -51,25 +73,17 @@ namespace task
 			task_state::ret_code = rc;
 		}
 	 private:
-		thread_start_routine entry{ nullptr };
+		thread_start_routine_type entry{ nullptr };
 
 		void* arg{ nullptr };
 		int ret_code{ 0 };
 
 	};
 
-	enum [[clang::flag_enum, clang::enum_extensibility(open)]] thread_flag
-	{
-		THREAD_FLAG_DETACHED = (1 << 0),
-		THREAD_FLAG_FREE_STRUCT = (1 << 1),
-		THREAD_FLAG_IDLE = (1 << 2),
-		THREAD_FLAG_VCPU = (1 << 3),
-	};
-
-	class thread final
+	class scheduler_state final
 	{
 	 public:
-		enum [[clang::enum_extensibility(closed)]] Status : uint8_t
+		enum [[clang::enum_extensibility(closed)]] thread_status : uint8_t
 		{
 			THREAD_INITIAL = 0,
 			THREAD_READY,
@@ -81,17 +95,37 @@ namespace task
 			THREAD_DEATH,
 		};
 
+	 public:
+		[[nodiscard]] thread_status get_status() const
+		{
+			return status;
+		}
+
+		void set_status(thread_status s)
+		{
+			scheduler_state::status = s;
+		}
+
+	 private:
+		thread_status status;
+
+	};
+
+	class thread final
+	{
+	 public:
+
 		static void default_trampoline();
 
 		static thread* create_idle_thread(cpu_num_type cpuid);
 
-		static thread* create(ktl::string_view name, thread_start_routine entry, void* arg, int priority);
+		static thread* create(ktl::string_view name, thread_start_routine_type entry, void* arg, int priority);
 		static thread* create_etc(thread* t,
 			ktl::string_view name,
-			thread_start_routine entry,
+			thread_start_routine_type entry,
 			void* agr,
 			int priority,
-			thread_trampoline_routine trampoline);
+			thread_trampoline_routine_type trampoline);
 
 	 public:
 		thread();
@@ -131,19 +165,23 @@ namespace task
 		};
 
 	 private:
-		task_state task_state_;
+		kbl::integral_atomic<uint64_t> signals{};
 
-		thread_flag flags;
+		wait_queue wait_queue_{};
 
-		Status status;
+		task_state task_state_{};
 
-		cpu_num_type cpuid;
+		int64_t flags{ 0 };
 
-		ktl::shared_ptr<thread_dispatcher> owner; // kernel thread has no owner
+		scheduler_state scheduler_state_{};
 
-		lock::spinlock lock;
+		cpu_num_type cpuid{ CPU_NUM_INVALID };
 
-		ktl::string_view name;
+		ktl::shared_ptr<thread_dispatcher> owner{ nullptr }; // kernel thread has no owner
+
+		ktl::string_view name{ "" };
+
+		mutable lock::spinlock lock{ "thread_own_lock" };
 	};
 
 	extern ktl::list<task::thread*> thread_list;

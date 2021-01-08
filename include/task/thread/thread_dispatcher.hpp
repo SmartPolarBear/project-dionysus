@@ -1,8 +1,8 @@
 #pragma once
 
 #include "task/task_dispatcher.hpp"
-#include "task/thread_state.hpp"
-#include "task/thread.hpp"
+#include "thread_state.hpp"
+#include "task/thread/thread.hpp"
 
 #include "kbl/lock/spinlock.h"
 

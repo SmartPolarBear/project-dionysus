@@ -16,9 +16,9 @@
 #include "kbl/data/list_base.hpp"
 
 #include "task/task_dispatcher.hpp"
-#include "task/process_dispatcher.hpp"
-#include "task/job_dispatcher.hpp"
-#include "task/thread_dispatcher.hpp"
+#include "task/process/process_dispatcher.hpp"
+#include "task/job/job_dispatcher.hpp"
+#include "task/thread/thread_dispatcher.hpp"
 
 #include <cstring>
 #include <algorithm>

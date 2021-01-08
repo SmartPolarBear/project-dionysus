@@ -7,7 +7,7 @@
 
 #include "system/cls.hpp"
 
-#include "task/thread.hpp"
+#include "task/thread/thread.hpp"
 
 using context = arch_task_context_registers;
 

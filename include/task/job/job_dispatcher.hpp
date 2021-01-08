@@ -25,7 +25,7 @@
 #include "ktl/unique_ptr.hpp"
 #include "ktl/list.hpp"
 
-#include "task/process_dispatcher.hpp"
+#include "task/process/process_dispatcher.hpp"
 #include "object/dispatcher.hpp"
 
 #include <cstring>

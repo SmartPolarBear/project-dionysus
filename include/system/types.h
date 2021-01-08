@@ -126,7 +126,10 @@ using dword_t = uint32_t;
 using timestamp_t = uint64_t;
 
 using time_type = int64_t;
-using cpu_num_type = uint8_t;
+
+// FIXME
+using cpu_num_type = uint16_t;
+constexpr cpu_num_type CPU_NUM_INVALID = -1;
 
 using offset_t = uintptr_t;
 

@@ -49,7 +49,7 @@ namespace trap
 		TRAP_IRQ0 = 32, // IRQ 0 corresponds to int T_IRQ
 	};
 
-	enum rflags_value
+	enum [[clang::flag_enum, clang::enum_extensibility(open)]] rflags_value
 	{
 		// Eflags register
 		EFLAG_CF = 0x00000001,        // Carry Flag

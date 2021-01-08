@@ -1,8 +1,10 @@
 #include "process.hpp"
 
-#include "task/thread.hpp"
-#include "task/thread_dispatcher.hpp"
-#include "task/process_dispatcher.hpp"
+#include "drivers/apic/traps.h"
+
+#include "task/thread/thread.hpp"
+#include "task/thread/thread_dispatcher.hpp"
+#include "task/process/process_dispatcher.hpp"
 
 #include "system/process.h"
 
@@ -13,7 +15,9 @@
 using namespace lock;
 using namespace task;
 
-spinlock task::master_thread_lock;
+using ktl::mutex::lock_guard;
+
+spinlock task::master_thread_lock{ "thread master lock" };
 ktl::list<task::thread*> task::thread_list TA_GUARDED(master_thread_lock);
 
 // TODO: arch dependent
@@ -22,7 +26,7 @@ int idle_thread_start_routine(void* arg)
 	hlt();
 }
 
-void thread_initialize(thread* t, thread_trampoline_routine trampoline)
+void thread_initialize(thread* t, thread_trampoline_routine_type trampoline)
 {
 
 }
@@ -37,14 +41,12 @@ void task::thread::default_trampoline()
 
 task::thread::thread() = default;
 
-thread::thread(ktl::string_view n)
-	: name{ n }
+thread::thread(ktl::string_view n) :
+	name{ n }
 {
 }
 
-task::thread::~thread()
-{
-}
+task::thread::~thread() = default;
 
 task::thread* task::thread::create_idle_thread(cpu_num_type cpuid)
 {
@@ -60,10 +62,10 @@ task::thread* task::thread::create_idle_thread(cpu_num_type cpuid)
 		return th;
 	}
 
-	th->flags = static_cast<thread_flag>(THREAD_FLAG_IDLE | THREAD_FLAG_DETACHED);
+	th->flags = static_cast<thread_flags>(THREAD_FLAG_IDLE | THREAD_FLAG_DETACHED);
 
 	// TODO: these should be scheduler's job?
-	th->status = THREAD_INITIAL;
+	th->scheduler_state_.set_status(scheduler_state::THREAD_INITIAL);
 	th->cpuid = cpuid;
 
 	return th;
@@ -71,10 +73,10 @@ task::thread* task::thread::create_idle_thread(cpu_num_type cpuid)
 
 task::thread* task::thread::create_etc(task::thread* t,
 	ktl::string_view name,
-	task::thread_start_routine entry,
+	task::thread_start_routine_type entry,
 	void* arg,
 	[[maybe_unused]]int priority,
-	task::thread_trampoline_routine trampoline)
+	task::thread_trampoline_routine_type trampoline)
 {
 	size_t flags{ 0 };
 	kbl::allocate_checker ck{};
@@ -106,14 +108,41 @@ task::thread* task::thread::create_etc(task::thread* t,
 	return nullptr;
 }
 
-task::thread* task::thread::create(ktl::string_view name, task::thread_start_routine entry, void* arg, int priority)
+task::thread* task::thread::create(ktl::string_view name,
+	task::thread_start_routine_type entry,
+	void* arg,
+	int priority)
 {
 	return create_etc(nullptr, name, entry, arg, priority, nullptr);
 }
 
 void task::thread::resume()
 {
+	auto rflags = read_rflags();
+	bool if_flag = (rflags & trap::EFLAG_IF), resched = false;
 
+	// never reschedule into boot thread before idle thread set up
+	if (if_flag)
+	{
+		resched = true;
+	}
+
+	{
+		lock_guard g{ master_thread_lock };
+
+		if (this->scheduler_state_.get_status() == scheduler_state::THREAD_DEATH)
+		{
+			return;
+		}
+
+		signals.fetch_and(~THREAD_SIGNAL_SUSPEND, kbl::memory_order_relaxed);
+
+		if (auto st = scheduler_state_.get_status();st == scheduler_state::THREAD_INITIAL
+			|| st == scheduler_state::THREAD_SUSPENDED)
+		{
+
+		}
+	}
 }
 
 error_code task::thread::suspend()
@@ -166,7 +195,7 @@ ktl::string_view task::thread::get_owner_name()
 	return "kernel";
 }
 
-void task::task_state::init(task::thread_start_routine entry, void* arg)
+void task::task_state::init(task::thread_start_routine_type entry, void* arg)
 {
 
 }
