@@ -49,7 +49,13 @@ bool task::scheduler2::scheduler::unblock(task::thread::list_type thread_list) T
 	return false;
 }
 
-void task::scheduler2::scheduler::unblock_idle(task::thread* idle_thread) TA_REQ(master_thread_lock)
+void task::scheduler2::scheduler::unblock_idle(task::thread* th) TA_REQ(master_thread_lock)
+{
+	KDEBUG_ASSERT(th->is_idle());
+	th->set_ready();
+}
+
+void scheduler::change_priority(thread* t, int pri) TA_REQ(master_thread_lock)
 {
 
 }

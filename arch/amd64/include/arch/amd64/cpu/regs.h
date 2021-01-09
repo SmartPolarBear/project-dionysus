@@ -68,3 +68,9 @@ static inline uint64_t read_rflags()
 	: "=r"(rflags));
 	return rflags;
 }
+
+static inline bool arch_ints_disabled()
+{
+	auto rflags = read_rflags();
+	return !(rflags & (1 << 9));
+}

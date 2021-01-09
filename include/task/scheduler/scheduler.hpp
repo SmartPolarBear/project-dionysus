@@ -44,10 +44,11 @@ class scheduler
 	[[nodiscard]]static bool unblock(thread::list_type thread_list)  TA_REQ(master_thread_lock);
 	static void unblock_idle(thread* idle_thread) TA_REQ(master_thread_lock);
 
+	static void change_priority(thread* t, int pri) TA_REQ(master_thread_lock);
  private:
 	friend struct cpu_struct;
 
-	cpu_num_type this_cpu{CPU_NUM_INVALID};
+	cpu_num_type this_cpu{ CPU_NUM_INVALID };
 };
 
 }

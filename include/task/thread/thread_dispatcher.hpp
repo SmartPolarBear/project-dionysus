@@ -105,7 +105,7 @@ namespace task
 
 		entry_status user_entry;
 
-		thread_status status TA_GUARDED(lock);
+		thread_state status TA_GUARDED(lock);
 
 		volatile block_reasons block_reason;
 

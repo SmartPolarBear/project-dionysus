@@ -232,7 +232,24 @@ class thread final
 
 	void set_priority(int priority);
 
+	bool check_kill_signal() TA_REQ(master_thread_lock);
+
 	ktl::string_view get_owner_name();
+
+	[[nodiscard]] scheduler_state::thread_status get_status() const
+	{
+		return scheduler_state_.get_status();
+	}
+
+	[[nodiscard]] uint64_t get_signals()
+	{
+		return signals_.load(kbl::memory_order_relaxed);
+	}
+
+	void set_ready()
+	{
+		scheduler_state_.set_status(scheduler_state::THREAD_READY);
+	}
 
 	struct current
 	{
@@ -250,7 +267,7 @@ class thread final
 	};
 
  private:
-	kbl::integral_atomic<uint64_t> signals{};
+	kbl::integral_atomic<uint64_t> signals_{};
 
 	int64_t flags{ 0 };
 

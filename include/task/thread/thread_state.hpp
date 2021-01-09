@@ -6,7 +6,7 @@
 
 namespace task
 {
-	class thread_status final
+	class thread_state final
 	{
 	 public:
 		enum class [[clang::enum_extensibility(closed)]] lifecycle : uint32_t

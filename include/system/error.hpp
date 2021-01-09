@@ -48,6 +48,7 @@ enum error_code_values : error_code
 	ERROR_NOT_FILE,
 	ERROR_PERMISSION,
 	ERROR_THREAD_STATE,
+	ERROR_INTERNAL_INTR_KILLED,
 
 	// max element index
 	ERROR_CODE_COUNT,
