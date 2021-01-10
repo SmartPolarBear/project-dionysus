@@ -21,7 +21,10 @@ using namespace task::scheduler2;
 using ktl::mutex::lock_guard;
 
 spinlock task::master_thread_lock{ "thread master lock" };
+
 ktl::list<task::thread*> task::thread_list TA_GUARDED(master_thread_lock);
+
+cls_item<thread*, CLS_CUR_THREAD_PTR> task::thread::current::cur_thread;
 
 // TODO: arch dependent
 int idle_thread_start_routine(void* arg)
@@ -125,11 +128,10 @@ task::thread* task::thread::create(ktl::string_view name,
 
 void task::thread::resume()
 {
-	auto rflags = read_rflags();
-	bool if_flag = (rflags & trap::EFLAG_IF), resched = false;
+	bool resched = false;
 
 	// never reschedule into boot thread before idle thread set up
-	if (if_flag)
+	if (!arch_ints_disabled())
 	{
 		resched = true;
 	}
@@ -381,24 +383,9 @@ bool thread::check_kill_signal() TA_REQ(master_thread_lock)
 	}
 }
 
-void task::task_state::init(task::thread_start_routine_type entry, void* arg)
-{
-
-}
-
-error_code task::task_state::join(time_t deadline) TA_REQ(master_thread_lock)
-{
-	return 0;
-}
-
-error_code task::task_state::wake_joiners(error_code status) TA_REQ(master_thread_lock)
-{
-	return 0;
-}
-
 task::thread* task::thread::current::get()
 {
-	return nullptr;
+	return task::thread::current::cur_thread();
 }
 
 void task::thread::current::yield()
@@ -439,6 +426,21 @@ void task::thread::current::do_suspend()
 void task::thread::current::set_name(const char* name)
 {
 
+}
+
+void task::task_state::init(task::thread_start_routine_type entry, void* arg)
+{
+
+}
+
+error_code task::task_state::join(time_t deadline) TA_REQ(master_thread_lock)
+{
+	return 0;
+}
+
+error_code task::task_state::wake_joiners(error_code status) TA_REQ(master_thread_lock)
+{
+	return 0;
 }
 
 wait_queue_state::~wait_queue_state()

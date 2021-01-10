@@ -90,7 +90,7 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
 	}
 
 	// after all cpu cores started, we can enable that damn lock.
-	cpu.set_lock(true);
+	cpu.set_use_lock(true);
 }
 
 extern "C" [[clang::optnone]] void ap_enter(void)

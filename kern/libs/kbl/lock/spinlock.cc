@@ -46,7 +46,7 @@ void lock::spinlock_acquire(spinlock_struct* lock)
 
 	arch_spinlock_acquire(lock);
 
-	lock->cpu = cpu();
+	lock->cpu = cpu.get();
 
 }
 
@@ -68,7 +68,7 @@ void lock::spinlock_release(spinlock_struct* lock)
 
 bool lock::spinlock_holding(spinlock_struct* lock)
 {
-	return lock->locked && lock->cpu == cpu();
+	return lock->locked && lock->cpu == cpu.get();
 }
 
 void lock::spinlock::lock() noexcept

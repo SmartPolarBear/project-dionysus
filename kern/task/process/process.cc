@@ -36,7 +36,7 @@ using namespace task;
 using namespace memory;
 using namespace vmm;
 
-CLSItem<process_dispatcher*, CLS_PROC_STRUCT_PTR> cur_proc;
+cls_item<process_dispatcher*, CLS_PROC_STRUCT_PTR> cur_proc;
 
 process_list_struct proc_list;
 

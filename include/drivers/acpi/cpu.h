@@ -57,7 +57,7 @@ constexpr size_t CPU_COUNT_LIMIT = 8;
 extern cpu_struct cpus[CPU_COUNT_LIMIT];
 extern uint8_t cpu_count;
 
-extern CLSItem<cpu_struct*, CLS_CPU_STRUCT_PTR> cpu;
+extern cls_item<cpu_struct*, CLS_CPU_STRUCT_PTR> cpu;
 
 #pragma clang diagnostic push
 

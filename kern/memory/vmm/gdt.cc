@@ -54,7 +54,7 @@ using kbl::list_init;
 using kbl::list_remove;
 
 // cpu-individual variable containing info about current CPU
-CLSItem<cpu_struct*, CLS_CPU_STRUCT_PTR> cpu{ false };
+cls_item<cpu_struct*, CLS_CPU_STRUCT_PTR> cpu{ false };
 
 static inline void set_gdt_entry(OUT
 	gdt_entry* entry,

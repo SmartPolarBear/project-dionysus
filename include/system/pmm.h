@@ -47,7 +47,7 @@ namespace pmm
         // the initial free physical memory space
         page_info *(*alloc_pages)(size_t n);            // allocate >=n pages, depend on the allocation algorithm
         void (*free_pages)(page_info *base,
-                           size_t n);  // free >=n pages with "base" addr of Page descriptor structures(memlayout.h)
+                           size_t n);  // free >=n pages with "base" Addr of Page descriptor structures(memlayout.h)
         size_t (*get_free_pages_count)(void);           // return the number of free pages
 
         lock::spinlock_struct lock;

@@ -20,7 +20,7 @@ using lock::spinlock_initialize_lock;
 using lock::spinlock_release;
 
 //extern __thread task::process_dispatcher *current;
-extern CLSItem<task::process_dispatcher*, CLS_PROC_STRUCT_PTR> cur_proc;
+extern cls_item<task::process_dispatcher*, CLS_PROC_STRUCT_PTR> cur_proc;
 
 struct process_list_struct
 {

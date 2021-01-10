@@ -15,6 +15,8 @@
 #include "ktl/string_view.hpp"
 #include "ktl/list.hpp"
 
+#include "system/cls.hpp"
+
 namespace task
 {
 extern lock::spinlock master_thread_lock;
@@ -251,8 +253,9 @@ class thread final
 		scheduler_state_.set_status(scheduler_state::THREAD_READY);
 	}
 
-	struct current
+	class current
 	{
+	 public:
 		static inline thread* get();
 
 		static void yield();
@@ -264,6 +267,8 @@ class thread final
 
 		static void do_suspend();
 		static void set_name(const char* name);
+	 private:
+		static cls_item<thread*, CLS_CUR_THREAD_PTR> cur_thread;
 	};
 
  private:

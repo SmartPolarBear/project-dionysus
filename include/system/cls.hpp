@@ -10,7 +10,8 @@ static_assert(sizeof(uintptr_t) == 0x08);
 enum CLS_ADDRESS : uintptr_t
 {
 	CLS_CPU_STRUCT_PTR = 0,
-	CLS_PROC_STRUCT_PTR = 0x8
+	CLS_PROC_STRUCT_PTR = 0x8,
+	CLS_CUR_THREAD_PTR = 0x16,
 };
 
 #pragma clang diagnostic push
@@ -70,35 +71,40 @@ requires ktl::Pointer<T>
 
 template<typename T, CLS_ADDRESS addr>
 requires ktl::Pointer<T>
-class CLSItem
+class cls_item
 {
  private:
 	lock::spinlock_struct lk;
 	bool use_lock;
  public:
-	CLSItem() : use_lock(true)
+	cls_item() : use_lock(true)
 	{
 		lock::spinlock_initialize_lock(&lk, "clslock");
 	}
 
-	CLSItem(bool _use_lock) : use_lock(_use_lock)
+	cls_item(bool _use_lock) : use_lock(_use_lock)
 	{
 		lock::spinlock_initialize_lock(&lk, "clslock");
 	}
 
-	void set_lock(bool _use_lock)
+	void set_use_lock(bool _use_lock)
 	{
 		use_lock = _use_lock;
 	}
 
-	bool get_lock()
+	bool get_use_lock()
 	{
 		return use_lock;
 	}
 
-	T operator()()
+	T get()
 	{
 		return cls_get<T>(addr);
+	}
+
+	T operator()()
+	{
+		return get();
 	}
 
 	T operator->()
@@ -125,70 +131,70 @@ class CLSItem
 
 template<typename T, CLS_ADDRESS addr>
 requires ktl::Pointer<T>
-static inline bool operator==(CLSItem<T, addr> lhs, CLSItem<T, addr> rhs)
+static inline bool operator==(cls_item<T, addr> lhs, cls_item<T, addr> rhs)
 {
 	return lhs() == rhs();
 }
 
 template<typename T, CLS_ADDRESS addr>
 requires ktl::Pointer<T>
-static inline bool operator!=(CLSItem<T, addr> lhs, CLSItem<T, addr> rhs)
+static inline bool operator!=(cls_item<T, addr> lhs, cls_item<T, addr> rhs)
 {
 	return !(lhs() == rhs());
 }
 
 template<typename T, CLS_ADDRESS addr>
 requires ktl::Pointer<T>
-static inline bool operator==(T lhs, CLSItem<T, addr> rhs)
+static inline bool operator==(T lhs, cls_item<T, addr> rhs)
 {
 	return lhs == rhs();
 }
 
 template<typename T, CLS_ADDRESS addr>
 requires ktl::Pointer<T>
-static inline bool operator!=(T lhs, CLSItem<T, addr> rhs)
+static inline bool operator!=(T lhs, cls_item<T, addr> rhs)
 {
 	return !(lhs == rhs());
 }
 
 template<typename T, CLS_ADDRESS addr>
 requires ktl::Pointer<T>
-static inline bool operator==(CLSItem<T, addr> lhs, T rhs)
+static inline bool operator==(cls_item<T, addr> lhs, T rhs)
 {
 	return lhs() == rhs;
 }
 
 template<typename T, CLS_ADDRESS addr>
 requires ktl::Pointer<T>
-static inline bool operator!=(CLSItem<T, addr> lhs, T rhs)
+static inline bool operator!=(cls_item<T, addr> lhs, T rhs)
 {
 	return !(lhs() == rhs);
 }
 
 template<typename T, CLS_ADDRESS addr>
 requires ktl::Pointer<T>
-static inline bool operator==(CLSItem<T, addr> lhs, [[maybe_unused]] nullptr_t rhs)
+static inline bool operator==(cls_item<T, addr> lhs, [[maybe_unused]] nullptr_t rhs)
 {
 	return lhs() == nullptr;
 }
 
 template<typename T, CLS_ADDRESS addr>
 requires ktl::Pointer<T>
-static inline bool operator!=(CLSItem<T, addr> lhs, [[maybe_unused]]nullptr_t rhs)
+static inline bool operator!=(cls_item<T, addr> lhs, [[maybe_unused]]nullptr_t rhs)
 {
 	return !(lhs() == nullptr);
 }
 
 template<typename T, CLS_ADDRESS addr>
 requires ktl::Pointer<T>
-static inline bool operator==([[maybe_unused]]nullptr_t lhs, CLSItem<T, addr> rhs)
+static inline bool operator==([[maybe_unused]]nullptr_t lhs, cls_item<T, addr> rhs)
 {
 	return nullptr == rhs();
 }
 
 template<typename T, CLS_ADDRESS addr>
 requires ktl::Pointer<T>
-static inline bool operator!=([[maybe_unused]]nullptr_t lhs, CLSItem<T, addr> rhs)
+static inline bool operator!=([[maybe_unused]]nullptr_t lhs, cls_item<T, addr> rhs)
 {
 	return !(nullptr == rhs());
 }

@@ -129,4 +129,4 @@ namespace task
 } // namespace task
 
 //extern __thread task::process_dispatcher* current;
-extern CLSItem<task::process_dispatcher*, CLS_PROC_STRUCT_PTR> cur_proc;
+extern cls_item<task::process_dispatcher*, CLS_PROC_STRUCT_PTR> cur_proc;

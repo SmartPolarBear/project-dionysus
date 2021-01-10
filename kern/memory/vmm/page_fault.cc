@@ -121,7 +121,7 @@ error_code handle_pgfault([[maybe_unused]] trap::trap_frame info)
 
 	if (ret == -ERROR_VMA_NOT_FOUND)
 	{
-		KDEBUG_RICHPANIC("The addr isn't found in th MM structure.",
+		KDEBUG_RICHPANIC("The Addr isn't found in th MM structure.",
 			"KERNEL PANIC: PAGE FAULT",
 			false,
 			"Address: 0x%p\n", addr);
