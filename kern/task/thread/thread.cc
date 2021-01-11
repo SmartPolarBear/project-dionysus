@@ -24,7 +24,7 @@ using ktl::mutex::lock_guard;
 
 spinlock task::master_thread_lock{ "thread master lock" };
 
-ktl::list<task::thread*> task::thread_list TA_GUARDED(master_thread_lock);
+task::thread::list_type task::thread_list TA_GUARDED(master_thread_lock);
 
 cls_item<thread*, CLS_CUR_THREAD_PTR> task::thread::current::cur_thread;
 
