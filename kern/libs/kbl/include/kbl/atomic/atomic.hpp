@@ -135,12 +135,12 @@ class integral_atomic
 	T* const ptr_{ &value };
 };
 
-void atomic_thread_fence(kbl::memory_order_type __m) noexcept
+static inline void atomic_thread_fence(kbl::memory_order_type __m) noexcept
 {
 	__atomic_thread_fence(int(__m));
 }
 
-void atomic_signal_fence(kbl::memory_order_type __m) noexcept
+static inline void atomic_signal_fence(kbl::memory_order_type __m) noexcept
 {
 	__atomic_signal_fence(int(__m));
 }
