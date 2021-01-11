@@ -57,7 +57,7 @@ using lock::spinlock_holding;
 		decltype(&proc_list.head) iter = nullptr, tmp = nullptr;
 		llb_for_safe(iter, tmp, &proc_list.head)
 		{
-			auto iter_proc = iter->get_element_as<task::process_dispatcher*>();
+			auto iter_proc = iter->get_element_as<task::process*>();
 
 			if (iter_proc->state == task::PROC_STATE_RUNNABLE)
 			{
@@ -77,7 +77,7 @@ using lock::spinlock_holding;
 				auto raw_kstack = cur_proc->kstack.get();
 				uintptr_t kstack_addr = (uintptr_t)raw_kstack;
 
-				cpu()->tss.rsp0 = kstack_addr + task::process_dispatcher::KERNSTACK_SIZE;
+				cpu()->tss.rsp0 = kstack_addr + task::process::KERNSTACK_SIZE;
 
 				// Set gs. without calling swapgs to ensure atomic
 				uintptr_t* kstack_gs = (uintptr_t*)(((uint8_t*)cpu->kernel_gs) + KERNEL_GS_KSTACK);

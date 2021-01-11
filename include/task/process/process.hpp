@@ -15,11 +15,11 @@
 
 namespace task
 {
-	class job_dispatcher;
+	class job;
 
-	class process_dispatcher final
-		: public object::dispatcher<process_dispatcher, 0>,
-		  public kbl::linked_list_base<process_dispatcher*>
+	class process final
+		: public object::dispatcher<process, 0>,
+		  public kbl::linked_list_base<process*>
 	{
 	 public:
 		static constexpr size_t PROC_MAX_NAME_LEN = 64;
@@ -36,18 +36,18 @@ namespace task
 		};
 
 	 public:
-		friend class job_dispatcher;
+		friend class job;
 
 		static kbl::integral_atomic<pid_type> pid_counter;
 		static_assert(kbl::integral_atomic<pid_type>::is_always_lock_free);
 
-		static error_code_with_result<ktl::shared_ptr<process_dispatcher>> create(const char* name,
-			ktl::shared_ptr<job_dispatcher> parent);
+		static error_code_with_result<ktl::shared_ptr<process>> create(const char* name,
+			ktl::shared_ptr<job> parent);
 
-		process_dispatcher() = delete;
-		process_dispatcher(const process_dispatcher&) = delete;
+		process() = delete;
+		process(const process&) = delete;
 
-		~process_dispatcher() override = default;
+		~process() override = default;
 
 		void exit(task_return_code code) noexcept;
 		void kill(task_return_code code) noexcept;
@@ -57,14 +57,6 @@ namespace task
 		{
 			return name.data();
 		}
-
-		error_code load_binary(uint8_t* bin, size_t binary_size, binary_types type, size_t flags);
-		error_code terminate(error_code terminate_error);
-
-		error_code sleep(sleep_channel_type channel, lock::spinlock_struct* lk);
-		error_code wakeup(sleep_channel_type channel);
-		error_code wakeup_no_lock(sleep_channel_type channel);
-		error_code change_heap_ptr(uintptr_t* heap_ptr);
 
 		[[nodiscard]] process_state get_state() const
 		{
@@ -115,10 +107,10 @@ namespace task
 		}
 
 	 private:
-		process_dispatcher(std::span<char> name,
+		process(std::span<char> name,
 			pid_type id,
-			ktl::shared_ptr<job_dispatcher> parent,
-			ktl::shared_ptr<job_dispatcher> critical_to);
+			ktl::shared_ptr<job> parent,
+			ktl::shared_ptr<job> critical_to);
 
 		error_code setup_kernel_stack() TA_REQ(lock);
 		error_code setup_registers() TA_REQ(lock);
@@ -132,8 +124,8 @@ namespace task
 
 		Status status;
 
-		ktl::shared_ptr<job_dispatcher> parent;
-		ktl::shared_ptr<job_dispatcher> critical_to;
+		ktl::shared_ptr<job> parent;
+		ktl::shared_ptr<job> critical_to;
 		bool kill_critical_when_nonzero_code{ false };
 
 		char _name_buf[PROC_NAME_LEN]{};
@@ -191,14 +183,14 @@ namespace task
 		//FIXME
 	 public:
 
-		friend error_code process_load_binary(IN process_dispatcher* porc,
+		friend error_code process_load_binary(IN process* porc,
 			IN uint8_t* bin,
 			IN size_t binary_size,
 			IN binary_types type,
 			IN size_t flags);
 
 		// handle task cleanup when exiting
-		friend void process_exit(IN process_dispatcher* proc);
+		friend void process_exit(IN process* proc);
 
 		// terminate current task
 		friend error_code process_terminate(error_code error_code);
@@ -218,12 +210,12 @@ namespace task
 		friend error_code process_ipc_receive_page(OUT void* out_page);
 
 		// allocate more memory
-		friend error_code process_heap_change_size(IN process_dispatcher* proc, IN OUT uintptr_t* heap_ptr);
+		friend error_code process_heap_change_size(IN process* proc, IN OUT uintptr_t* heap_ptr);
 
-		friend size_t process_terminate_impl(task::process_dispatcher* proc,
+		friend size_t process_terminate_impl(task::process* proc,
 			error_code err);
 
-		friend error_code alloc_ustack(task::process_dispatcher* proc);
+		friend error_code alloc_ustack(task::process* proc);
 
 		friend void scheduler::scheduler_enter();
 

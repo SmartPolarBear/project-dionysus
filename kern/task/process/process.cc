@@ -36,19 +36,19 @@ using namespace task;
 using namespace memory;
 using namespace vmm;
 
-cls_item<process_dispatcher*, CLS_PROC_STRUCT_PTR> cur_proc;
+cls_item<process*, CLS_PROC_STRUCT_PTR> cur_proc;
 
 process_list_struct proc_list;
 
-std::shared_ptr<job_dispatcher> root_job;
+std::shared_ptr<job> root_job;
 
 
 //static inline FIXME
-error_code task::alloc_ustack(task::process_dispatcher* proc)
+error_code task::alloc_ustack(task::process* proc)
 {
 	auto ret = vmm::mm_map(proc->mm,
-		USER_TOP - task::process_dispatcher::KERNSTACK_SIZE - 1,
-		task::process_dispatcher::KERNSTACK_PAGES * PAGE_SIZE,
+		USER_TOP - task::process::KERNSTACK_SIZE - 1,
+		task::process::KERNSTACK_PAGES * PAGE_SIZE,
 		vmm::VM_STACK, nullptr);
 	if (ret != ERROR_SUCCESS)
 	{
@@ -57,10 +57,10 @@ error_code task::alloc_ustack(task::process_dispatcher* proc)
 
 	// allocate an stack
 	for (size_t i = 0;
-		 i < task::process_dispatcher::KERNSTACK_PAGES;
+		 i < task::process::KERNSTACK_PAGES;
 		 i++)
 	{
-		uintptr_t va = USER_TOP - task::process_dispatcher::KERNSTACK_SIZE + i * PAGE_SIZE;
+		uintptr_t va = USER_TOP - task::process::KERNSTACK_SIZE + i * PAGE_SIZE;
 		page_info* page_ret = nullptr;
 
 		ret = pmm::pgdir_alloc_page(proc->mm->pgdir,
@@ -79,7 +79,7 @@ error_code task::alloc_ustack(task::process_dispatcher* proc)
 }
 
 //static inline FIXME
-size_t task::process_terminate_impl(task::process_dispatcher* proc,
+size_t task::process_terminate_impl(task::process* proc,
 	error_code err)
 {
 	if ((proc->flags & task::PROC_EXITING) == 0)
@@ -101,12 +101,12 @@ size_t task::process_terminate_impl(task::process_dispatcher* proc,
 	return -ERROR_HAS_KILLED;
 }
 
-task::process_dispatcher* find_process(pid_type pid)
+task::process* find_process(pid_type pid)
 {
 //	list_head* iter = nullptr;
 //	list_for(iter, &proc_list.active_head)
 //	{
-//		auto proc_item = container_of(iter, task::process_dispatcher, link);
+//		auto proc_item = container_of(iter, task::process, link);
 //
 //		if (proc_item->id == pid)
 //		{
@@ -117,10 +117,10 @@ task::process_dispatcher* find_process(pid_type pid)
 	decltype(&proc_list.head) iter;
 	llb_for(iter, &proc_list.head)
 	{
-		auto iter_proc = iter->get_element_as<process_dispatcher*>();
+		auto iter_proc = iter->get_element_as<process*>();
 		if (iter_proc->get_id() == pid)
 		{
-			return (task::process_dispatcher*)iter;
+			return (task::process*)iter;
 		}
 	}
 
@@ -131,7 +131,7 @@ void task::process_init(void)
 {
 	proc_list.proc_count = 0;
 
-	auto create_ret = task::job_dispatcher::create_root();
+	auto create_ret = task::job::create_root();
 
 	if (has_error(create_ret))
 	{
@@ -146,7 +146,7 @@ void task::process_init(void)
 //	list_init(&proc_list.active_head);
 }
 
-error_code task::process_load_binary(IN process_dispatcher* proc,
+error_code task::process_load_binary(IN process* proc,
 	IN uint8_t* bin,
 	[[maybe_unused]] IN size_t binary_size OPTIONAL,
 	IN binary_types type,
@@ -197,7 +197,7 @@ error_code task::process_terminate(error_code err)
 	return process_terminate_impl(cur_proc(), err);
 }
 
-void task::process_exit(IN process_dispatcher* proc)
+void task::process_exit(IN process* proc)
 {
 //	spinlock_acquire(&proc_list.lock);
 	proc_list.lock.lock();
@@ -295,7 +295,7 @@ error_code task::process_wakeup_nolock(size_t channel)
 //	list_head* iter = nullptr;
 //	list_for(iter, &proc_list.active_head)
 //	{
-//		auto iter_proc = list_entry(iter, task::process_dispatcher, link);
+//		auto iter_proc = list_entry(iter, task::process, link);
 //		if (iter_proc->state == PROC_STATE_SLEEPING && iter_proc->sleep_data.channel == channel)
 //		{
 //			iter_proc->state = PROC_STATE_RUNNABLE;
@@ -305,7 +305,7 @@ error_code task::process_wakeup_nolock(size_t channel)
 	decltype(&proc_list.head) iter;
 	llb_for(iter, &proc_list.head)
 	{
-		auto iter_proc = iter->get_element_as<process_dispatcher*>();
+		auto iter_proc = iter->get_element_as<process*>();
 		if (iter_proc->state == PROC_STATE_SLEEPING && iter_proc->sleep_data.channel == channel)
 		{
 			iter_proc->state = PROC_STATE_RUNNABLE;
@@ -315,7 +315,7 @@ error_code task::process_wakeup_nolock(size_t channel)
 	return ERROR_SUCCESS;
 }
 
-error_code task::process_heap_change_size(IN process_dispatcher* proc, IN OUT uintptr_t* heap_ptr)
+error_code task::process_heap_change_size(IN process* proc, IN OUT uintptr_t* heap_ptr)
 {
 	auto mm = proc->mm;
 

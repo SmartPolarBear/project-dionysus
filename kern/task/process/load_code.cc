@@ -41,7 +41,7 @@ static inline auto parse_ph_flags(const Elf64_Phdr& prog_header)
 
 static error_code load_ph(IN const Elf64_Phdr& prog_header,
 	IN const uint8_t* bin,
-	IN task::process_dispatcher* proc)
+	IN task::process* proc)
 {
 	error_code ret = ERROR_SUCCESS;
 
@@ -96,7 +96,7 @@ static inline auto parse_sh_flags(const Elf64_Shdr& shdr)
 
 static error_code alloc_sh(IN const Elf64_Shdr& shdr,
 	IN  [[maybe_unused]] uint8_t* bin,
-	IN task::process_dispatcher* proc)
+	IN task::process* proc)
 {
 	error_code ret = ERROR_SUCCESS;
 
@@ -129,7 +129,7 @@ static error_code alloc_sh(IN const Elf64_Shdr& shdr,
 	return ret;
 }
 
-error_code load_elf_binary(IN task::process_dispatcher* proc,
+error_code load_elf_binary(IN task::process* proc,
 	const elf_executable& elf)
 {
 	Elf64_Phdr* prog_header = nullptr;
@@ -179,7 +179,7 @@ error_code load_elf_binary(IN task::process_dispatcher* proc,
 	return ERROR_SUCCESS;
 }
 
-error_code load_binary(IN task::process_dispatcher* proc,
+error_code load_binary(IN task::process* proc,
 	IN uint8_t* bin,
 	IN size_t bin_sz,
 	OUT uintptr_t* entry_addr)

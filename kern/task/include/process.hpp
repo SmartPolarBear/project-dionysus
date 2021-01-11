@@ -19,8 +19,8 @@ using lock::spinlock_acquire;
 using lock::spinlock_initialize_lock;
 using lock::spinlock_release;
 
-//extern __thread task::process_dispatcher *current;
-extern cls_item<task::process_dispatcher*, CLS_PROC_STRUCT_PTR> cur_proc;
+//extern __thread task::process *current;
+extern cls_item<task::process*, CLS_PROC_STRUCT_PTR> cur_proc;
 
 struct process_list_struct
 {
@@ -29,8 +29,8 @@ struct process_list_struct
 	[[deprecated("use new head")]] list_head active_head;
 
 	size_t proc_count  TA_GUARDED(lock);
-	task::process_dispatcher::head_type head TA_GUARDED(lock);
-	kbl::queue<task::process_dispatcher*> zombie_queue TA_GUARDED(lock);
+	task::process::head_type head TA_GUARDED(lock);
+	kbl::queue<task::process*> zombie_queue TA_GUARDED(lock);
 
 };
 
@@ -41,6 +41,6 @@ extern "C" [[noreturn]] void user_proc_entry();
 extern "C" void context_switch(context** oldcontext, context* newcontext);
 
 // task.cc
-task::process_dispatcher* find_process(pid_type pid);
+task::process* find_process(pid_type pid);
 
 

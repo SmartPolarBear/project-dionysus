@@ -16,8 +16,8 @@
 #include "kbl/data/list_base.hpp"
 
 #include "task/task_dispatcher.hpp"
-#include "task/process/process_dispatcher.hpp"
-#include "task/job/job_dispatcher.hpp"
+#include "task/process/process.hpp"
+#include "task/job/job.hpp"
 
 #include <cstring>
 #include <algorithm>
@@ -27,7 +27,7 @@ namespace task
 {
 
 // Per-task state
-//	struct process_dispatcher
+//	struct process
 //	{
 //		static constexpr size_t KERNSTACK_PAGES = 2;
 //		static constexpr size_t KERNSTACK_SIZE = KERNSTACK_PAGES * PAGE_SIZE;
@@ -79,7 +79,7 @@ namespace task
 //
 //		list_head link;
 //
-//		process_dispatcher(const char* name, pid_type id, pid_type parent_id, size_t flags)
+//		process(const char* name, pid_type id, pid_type parent_id, size_t flags)
 //			: state(PROC_STATE_EMBRYO), id(id), parent_id(parent_id),
 //			  runs(0), kstack(0), memory(nullptr), flags(flags), wating_state(PROC_WAITING_NONE),
 //			  ret_code(ERROR_SUCCESS), tf(nullptr), context(nullptr)
@@ -93,17 +93,17 @@ namespace task
 	void process_init();
 
 	// FIXME
-	using task::process_dispatcher;
+	using task::process;
 	using task::binary_types;
 
-	error_code process_load_binary(IN process_dispatcher* porc,
+	error_code process_load_binary(IN process* porc,
 		IN uint8_t* bin,
 		IN size_t binary_size,
 		IN binary_types type,
 		IN size_t flags);
 
 	// handle task cleanup when exiting
-	void process_exit(IN process_dispatcher* proc);
+	void process_exit(IN process* proc);
 
 	// terminate current task
 	error_code process_terminate(error_code error_code);
@@ -123,9 +123,9 @@ namespace task
 	error_code process_ipc_receive_page(OUT void* out_page);
 
 	// allocate more memory
-	error_code process_heap_change_size(IN process_dispatcher* proc, IN OUT uintptr_t* heap_ptr);
+	error_code process_heap_change_size(IN process* proc, IN OUT uintptr_t* heap_ptr);
 
 } // namespace task
 
-//extern __thread task::process_dispatcher* current;
-extern cls_item<task::process_dispatcher*, CLS_PROC_STRUCT_PTR> cur_proc;
+//extern __thread task::process* current;
+extern cls_item<task::process*, CLS_PROC_STRUCT_PTR> cur_proc;

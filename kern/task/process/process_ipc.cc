@@ -31,7 +31,7 @@ using lock::spinlock_initialize_lock;
 using lock::spinlock_release;
 using lock::spinlock_holding;
 
-using task::process_dispatcher;
+using task::process;
 
 using namespace memory;
 using namespace vmm;

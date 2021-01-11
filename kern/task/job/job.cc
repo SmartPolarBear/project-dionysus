@@ -1,5 +1,5 @@
 
-#include <task/job/job_dispatcher.hpp>
+#include <task/job/job.hpp>
 #include <utility>
 
 #include "process.hpp"
@@ -29,8 +29,8 @@
 
 using namespace ktl::mutex;
 
-task::job_dispatcher::job_dispatcher(uint64_t flags, std::shared_ptr<job_dispatcher> parent, job_policy _policy)
-	: dispatcher<job_dispatcher, 0>(),
+task::job::job(uint64_t flags, std::shared_ptr<job> parent, job_policy _policy)
+	: dispatcher<job, 0>(),
 	  policy(std::move(_policy)),
 	  parent(std::move(parent)),
 	  ret_code(TASK_RETCODE_NORMAL),
@@ -40,8 +40,8 @@ task::job_dispatcher::job_dispatcher(uint64_t flags, std::shared_ptr<job_dispatc
 
 }
 
-error_code_with_result<std::shared_ptr<task::job_dispatcher>> task::job_dispatcher::create(uint64_t flags,
-	std::shared_ptr<job_dispatcher> parent)
+error_code_with_result<std::shared_ptr<task::job>> task::job::create(uint64_t flags,
+	std::shared_ptr<job> parent)
 {
 	if (parent != nullptr && parent->get_max_height() == 0)
 	{
@@ -49,7 +49,7 @@ error_code_with_result<std::shared_ptr<task::job_dispatcher>> task::job_dispatch
 	}
 
 	kbl::allocate_checker ck{};
-	std::shared_ptr<task::job_dispatcher> ret{ new(&ck) job_dispatcher{ flags, parent, parent->get_policy() }};
+	std::shared_ptr<task::job> ret{ new(&ck) job{ flags, parent, parent->get_policy() }};
 	if (!ck.check())
 	{
 		return -ERROR_MEMORY_ALLOC;
@@ -58,11 +58,11 @@ error_code_with_result<std::shared_ptr<task::job_dispatcher>> task::job_dispatch
 	return ret;
 }
 
-error_code_with_result<std::shared_ptr<task::job_dispatcher>> task::job_dispatcher::create_root()
+error_code_with_result<std::shared_ptr<task::job>> task::job::create_root()
 {
 	kbl::allocate_checker ck{};
 
-	std::shared_ptr<job_dispatcher> root{ new(&ck) job_dispatcher{ 0, nullptr, job_policy::creat_root_policy() }};
+	std::shared_ptr<job> root{ new(&ck) job{ 0, nullptr, job_policy::creat_root_policy() }};
 	if (!ck.check())
 	{
 		KDEBUG_GERNERALPANIC_CODE(-ERROR_MEMORY_ALLOC);
@@ -71,17 +71,17 @@ error_code_with_result<std::shared_ptr<task::job_dispatcher>> task::job_dispatch
 	return root;
 }
 
-task::job_dispatcher::~job_dispatcher()
+task::job::~job()
 {
 	remove_from_job_trees();
 }
 
-void task::job_dispatcher::remove_from_job_trees() TA_EXCL(this->lock)
+void task::job::remove_from_job_trees() TA_EXCL(this->lock)
 {
 	parent->remove_child_job(this);
 }
 
-void task::job_dispatcher::apply_basic_policy(uint64_t mode, std::span<policy_item> policies) noexcept
+void task::job::apply_basic_policy(uint64_t mode, std::span<policy_item> policies) noexcept
 {
 	for (auto&& p:policies)
 	{
@@ -89,18 +89,18 @@ void task::job_dispatcher::apply_basic_policy(uint64_t mode, std::span<policy_it
 	}
 }
 
-task::job_policy task::job_dispatcher::get_policy() const
+task::job_policy task::job::get_policy() const
 {
 	ktl::mutex::lock_guard guard{ lock };
 	return policy;
 }
 
-bool task::job_dispatcher::add_child_job(std::shared_ptr<job_dispatcher> child)
+bool task::job::add_child_job(std::shared_ptr<job> child)
 {
 	return false;
 }
 
-void task::job_dispatcher::remove_child_job(task::job_dispatcher* jb)
+void task::job::remove_child_job(task::job* jb)
 {
 	bool suicide = false;
 
@@ -128,17 +128,17 @@ void task::job_dispatcher::remove_child_job(task::job_dispatcher* jb)
 	}
 }
 
-void task::job_dispatcher::remove_child_job(std::shared_ptr<job_dispatcher> jb)
+void task::job::remove_child_job(std::shared_ptr<job> jb)
 {
 	remove_child_job(jb.get());
 }
 
-bool task::job_dispatcher::is_ready_for_dead_transition() TA_REQ(lock)
+bool task::job::is_ready_for_dead_transition() TA_REQ(lock)
 {
 	return status == job_status::KILLING && child_jobs.empty() && child_processes.empty();
 }
 
-bool task::job_dispatcher::finish_dead_transition() TA_EXCL(lock)
+bool task::job::finish_dead_transition() TA_EXCL(lock)
 {
 	// there must be big problem is parent die before its successor jobs
 	KDEBUG_ASSERT(parent == nullptr || parent->get_status() != job_status::DEAD);
@@ -154,30 +154,30 @@ bool task::job_dispatcher::finish_dead_transition() TA_EXCL(lock)
 	return false;
 }
 
-bool task::job_dispatcher::kill(task_return_code terminate_code) noexcept
+bool task::job::kill(task_return_code terminate_code) noexcept
 {
 	return false;
 }
 
 template<>
-size_t task::job_dispatcher::get_count<task::job_dispatcher()>() TA_REQ(lock)
+size_t task::job::get_count<task::job()>() TA_REQ(lock)
 {
 	return this->child_jobs.size();
 }
 
-void task::job_dispatcher::add_child_process(std::shared_ptr<process_dispatcher> proc)
+void task::job::add_child_process(std::shared_ptr<process> proc)
 {
 	ktl::mutex::lock_guard guard{ lock };
 
 	this->child_processes.insert(child_processes.begin(), proc);
 }
 
-void task::job_dispatcher::remove_child_process(std::shared_ptr<process_dispatcher> proc)
+void task::job::remove_child_process(std::shared_ptr<process> proc)
 {
 	remove_child_process(proc.get());
 }
 
-void task::job_dispatcher::remove_child_process(task::process_dispatcher* proc)
+void task::job::remove_child_process(task::process* proc)
 {
 	bool should_die = false;
 	{
@@ -205,7 +205,7 @@ void task::job_dispatcher::remove_child_process(task::process_dispatcher* proc)
 }
 
 template<>
-size_t task::job_dispatcher::get_count<task::process_dispatcher()>() TA_REQ(lock)
+size_t task::job::get_count<task::process()>() TA_REQ(lock)
 {
 	return this->child_processes.size();
 }

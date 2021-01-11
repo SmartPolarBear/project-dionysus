@@ -1,5 +1,5 @@
 
-#include <task/process/process_dispatcher.hpp>
+#include <task/process/process.hpp>
 #include <utility>
 
 #include "process.hpp"
@@ -47,17 +47,17 @@ void default_trampoline()
 	// "return" to user_proc_entry
 }
 
-kbl::integral_atomic<pid_type> process_dispatcher::pid_counter;
+kbl::integral_atomic<pid_type> process::pid_counter;
 
-error_code_with_result<ktl::shared_ptr<process_dispatcher>> process_dispatcher::create(const char* name,
-	ktl::shared_ptr<job_dispatcher> parent)
+error_code_with_result<ktl::shared_ptr<process>> process::create(const char* name,
+	ktl::shared_ptr<job> parent)
 {
 	ktl::span<char> name_span{ (char*)name, (size_t)strnlen(name, PROC_MAX_NAME_LEN) };
 
 	kbl::allocate_checker ck;
 
-	ktl::shared_ptr<process_dispatcher>
-		proc{ new(&ck) process_dispatcher{ name_span, process_dispatcher::pid_counter++, parent, nullptr }};
+	ktl::shared_ptr<process>
+		proc{ new(&ck) process{ name_span, process::pid_counter++, parent, nullptr }};
 
 	lock_guard g1{ proc->lock };
 
@@ -90,11 +90,11 @@ error_code_with_result<ktl::shared_ptr<process_dispatcher>> process_dispatcher::
 	return proc;
 }
 
-error_code process_dispatcher::setup_kernel_stack()
+error_code process::setup_kernel_stack()
 {
 	auto raw_stack = this->kstack.get();
 
-	auto sp = reinterpret_cast<uintptr_t>(raw_stack + task::process_dispatcher::KERNSTACK_SIZE);
+	auto sp = reinterpret_cast<uintptr_t>(raw_stack + task::process::KERNSTACK_SIZE);
 
 	sp -= sizeof(*this->tf);
 	this->tf = reinterpret_cast<decltype(this->tf)>(sp);
@@ -114,7 +114,7 @@ error_code process_dispatcher::setup_kernel_stack()
 	return ERROR_SUCCESS;
 }
 
-error_code process_dispatcher::setup_registers()
+error_code process::setup_registers()
 {
 	tf->cs = SEGMENT_VAL(SEGMENTSEL_UCODE, DPL_USER);
 	tf->ss = SEGMENT_VAL(SEGMENTSEL_UDATA, DPL_USER);
@@ -129,10 +129,10 @@ error_code process_dispatcher::setup_registers()
 	return ERROR_SUCCESS;
 }
 
-task::process_dispatcher::process_dispatcher(std::span<char> name,
+task::process::process(std::span<char> name,
 	pid_type id,
-	ktl::shared_ptr<job_dispatcher> parent,
-	ktl::shared_ptr<job_dispatcher> critical_to)
+	ktl::shared_ptr<job> parent,
+	ktl::shared_ptr<job> critical_to)
 	: parent(std::move(parent)), critical_to(std::move(critical_to))
 {
 	this->name = ktl::span<char>{ _name_buf, name.size() };
@@ -142,7 +142,7 @@ task::process_dispatcher::process_dispatcher(std::span<char> name,
 	lock::spinlock_initialize_lock(&messaging_data.lock, this->name.data());
 }
 
-error_code process_dispatcher::setup_mm()
+error_code process::setup_mm()
 {
 	this->mm = vmm::mm_create();
 	if (this->mm == nullptr)
@@ -164,33 +164,8 @@ error_code process_dispatcher::setup_mm()
 
 	return ERROR_SUCCESS;
 }
-error_code process_dispatcher::load_binary(uint8_t* bin, size_t binary_size, binary_types type, size_t flags)
-{
-	return 0;
-}
-error_code process_dispatcher::terminate(error_code terminate_error)
-{
-	return 0;
-}
 
-error_code process_dispatcher::sleep(sleep_channel_type channel, lock::spinlock_struct* lk)
-{
-	return 0;
-}
-error_code process_dispatcher::wakeup(sleep_channel_type channel)
-{
-	return 0;
-}
-error_code process_dispatcher::wakeup_no_lock(sleep_channel_type channel)
-{
-	return 0;
-}
-error_code process_dispatcher::change_heap_ptr(uintptr_t* heap_ptr)
-{
-	return 0;
-}
-
-void process_dispatcher::finish_dead_transition() noexcept
+void process::finish_dead_transition() noexcept
 {
 	if (mm != nullptr)
 	{
@@ -218,7 +193,7 @@ void process_dispatcher::finish_dead_transition() noexcept
 
 	parent->remove_child_process(this);
 
-	ktl::shared_ptr<job_dispatcher> kill_job{ nullptr };
+	ktl::shared_ptr<job> kill_job{ nullptr };
 	{
 		lock_guard guard{ lock };
 
@@ -237,7 +212,7 @@ void process_dispatcher::finish_dead_transition() noexcept
 	}
 }
 
-void process_dispatcher::exit(task_return_code code) noexcept
+void process::exit(task_return_code code) noexcept
 {
 	KDEBUG_ASSERT(cur_proc == this);
 
@@ -261,7 +236,7 @@ void process_dispatcher::exit(task_return_code code) noexcept
 
 	__UNREACHABLE;
 }
-void process_dispatcher::kill(task_return_code code) noexcept
+void process::kill(task_return_code code) noexcept
 {
 	bool finish_dying = false;
 
@@ -296,7 +271,7 @@ void process_dispatcher::kill(task_return_code code) noexcept
 	}
 }
 
-void process_dispatcher::set_status_locked(process_dispatcher::Status st) noexcept TA_REQ(lock)
+void process::set_status_locked(process::Status st) noexcept TA_REQ(lock)
 {
 	KDEBUG_ASSERT(lock.holding());
 
@@ -318,7 +293,7 @@ void process_dispatcher::set_status_locked(process_dispatcher::Status st) noexce
 	}
 }
 
-void process_dispatcher::kill_all_threads_locked() noexcept TA_REQ(lock)
+void process::kill_all_threads_locked() noexcept TA_REQ(lock)
 {
 	KDEBUG_NOT_IMPLEMENTED;
 }

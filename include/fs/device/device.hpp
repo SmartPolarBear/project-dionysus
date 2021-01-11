@@ -16,7 +16,7 @@ namespace file_system
 
 	class vnode_base;
 
-	using vnode_link_getter_type = vnode_base* (*)(task::process_dispatcher* proc, vnode_base*, char*, size_t);
+	using vnode_link_getter_type = vnode_base* (*)(task::process* proc, vnode_base*, char*, size_t);
 
 
 	enum device_class_id

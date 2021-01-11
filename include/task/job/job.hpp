@@ -25,7 +25,7 @@
 #include "ktl/unique_ptr.hpp"
 #include "ktl/list.hpp"
 
-#include "task/process/process_dispatcher.hpp"
+#include "task/process/process.hpp"
 #include "object/dispatcher.hpp"
 
 #include <cstring>
@@ -100,9 +100,9 @@ namespace task
 		std::optional<policy_item> action[POLICY_CONDITION_MAX];
 	};
 
-	class job_dispatcher final
-		: public object::dispatcher<job_dispatcher, 0>,
-		  public kbl::single_linked_child_list_base<job_dispatcher*>
+	class job final
+		: public object::dispatcher<job, 0>,
+		  public kbl::single_linked_child_list_base<job*>
 	{
 	 public:
 		enum class [[clang::enum_extensibility(closed)]] job_status
@@ -112,11 +112,11 @@ namespace task
 			DEAD
 		};
 	 public:
-		friend class process_dispatcher;
+		friend class process;
 		friend class thread_dispatcher;
 
-		using job_list_type = ktl::list<std::shared_ptr<job_dispatcher>>;
-		using process_list_type = ktl::list<std::shared_ptr<process_dispatcher>>;
+		using job_list_type = ktl::list<std::shared_ptr<job>>;
+		using process_list_type = ktl::list<std::shared_ptr<process>>;
 
 		template<typename T>
 		using array_of_child = ktl::unique_ptr<T[]>();
@@ -131,12 +131,12 @@ namespace task
 
 		[[nodiscard]]job_policy get_policy() const;
 
-		[[nodiscard]]static error_code_with_result<std::shared_ptr<task::job_dispatcher>> create_root();
+		[[nodiscard]]static error_code_with_result<std::shared_ptr<task::job>> create_root();
 
-		[[nodiscard]]static error_code_with_result<std::shared_ptr<task::job_dispatcher>> create(uint64_t flags,
-			std::shared_ptr<job_dispatcher> parent);
+		[[nodiscard]]static error_code_with_result<std::shared_ptr<task::job>> create(uint64_t flags,
+			std::shared_ptr<job> parent);
 
-		~job_dispatcher() final;
+		~job() final;
 
 		[[nodiscard]]size_t get_max_height() const
 		{
@@ -150,19 +150,19 @@ namespace task
 		}
 
 	 private:
-		job_dispatcher(uint64_t flags,
-			std::shared_ptr<job_dispatcher> parent,
+		job(uint64_t flags,
+			std::shared_ptr<job> parent,
 			job_policy policy);
 
 		void remove_from_job_trees() TA_EXCL(lock);
 
-		bool add_child_job(std::shared_ptr<job_dispatcher> child);
-		void remove_child_job(job_dispatcher* job);
-		void remove_child_job(std::shared_ptr<job_dispatcher> proc);
+		bool add_child_job(std::shared_ptr<job> child);
+		void remove_child_job(job* job);
+		void remove_child_job(std::shared_ptr<job> proc);
 
-		void add_child_process(std::shared_ptr<process_dispatcher> proc);
-		void remove_child_process(process_dispatcher* proc);
-		void remove_child_process(std::shared_ptr<process_dispatcher> proc);
+		void add_child_process(std::shared_ptr<process> proc);
+		void remove_child_process(process* proc);
+		void remove_child_process(std::shared_ptr<process> proc);
 
 		bool is_ready_for_dead_transition()TA_REQ(lock);
 		bool finish_dead_transition()TA_EXCL(lock);
@@ -181,7 +181,7 @@ namespace task
 
 		job_policy policy;
 
-		std::shared_ptr<job_dispatcher> parent;
+		std::shared_ptr<job> parent;
 
 		char name[JOB_NAME_MAX]{ 0 };
 

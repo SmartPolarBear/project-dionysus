@@ -36,7 +36,7 @@
 // std::variant is usable with the pseudo-syscalls
 // std::span is usable unconditionally
 
-extern std::shared_ptr<task::job_dispatcher> root_job;
+extern std::shared_ptr<task::job> root_job;
 static inline void run(char* name)
 {
 	uint8_t* bin = nullptr;
@@ -46,7 +46,7 @@ static inline void run(char* name)
 
 	KDEBUG_ASSERT(ret == ERROR_SUCCESS);
 
-	auto create_ret = task::process_dispatcher::create(name, root_job);
+	auto create_ret = task::process::create(name, root_job);
 	if (has_error(create_ret))
 	{
 		KDEBUG_GERNERALPANIC_CODE(get_error_code(create_ret));

@@ -14,7 +14,7 @@
 #include "../../libs/basic_io/include/builtin_text_io.hpp"
 
 console::console_dev g_monitor_dev{};
-task::process_dispatcher* g_monitor_proc = nullptr;
+task::process* g_monitor_proc = nullptr;
 
 static inline error_code map_framebuffer(multiboot_tag_framebuffer* framebuffer_tag)
 {
