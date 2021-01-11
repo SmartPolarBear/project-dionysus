@@ -15,7 +15,6 @@
 #include "kbl/data/pod_list.h"
 #include "kbl/data/list_base.hpp"
 
-#include "task/task_dispatcher.hpp"
 #include "task/process/process.hpp"
 #include "task/job/job.hpp"
 
@@ -25,71 +24,6 @@
 
 namespace task
 {
-
-// Per-task state
-//	struct process
-//	{
-//		static constexpr size_t KERNSTACK_PAGES = 2;
-//		static constexpr size_t KERNSTACK_SIZE = KERNSTACK_PAGES * PAGE_SIZE;
-//
-//		char name[PROC_NAME_LEN + 1];
-//
-//		process_state state;
-//
-//		pid_type id;
-//		pid_type parent_id;
-//
-//		size_t runs;
-//
-//		uintptr_t kstack;
-//
-//		vmm::mm_struct* memory;
-//
-//		size_t flags;
-//		size_t wating_state;
-//		error_code ret_code;
-//
-//		trap::trap_frame* tf;
-//		context* context;
-//
-//		struct sleep_data_struct
-//		{
-//			size_t channel;
-//		} sleep_data{};
-//
-//		struct messaging_data_struct
-//		{
-//			static constexpr size_t INTERNAL_BUF_SIZE = 64;
-//
-//			lock::spinlock_struct lock;
-//
-//			// message passing
-//			void* kbl;
-//			size_t data_size;
-//			uint8_t internal_buf[INTERNAL_BUF_SIZE];
-//
-//			// page passing
-//			bool can_receive;
-//			void* dst;
-//			size_t unique_value;
-//			pid_type from;
-//			uint64_t perms;
-//
-//		} messaging_data{};
-//
-//		list_head link;
-//
-//		process(const char* name, pid_type id, pid_type parent_id, size_t flags)
-//			: state(PROC_STATE_EMBRYO), id(id), parent_id(parent_id),
-//			  runs(0), kstack(0), memory(nullptr), flags(flags), wating_state(PROC_WAITING_NONE),
-//			  ret_code(ERROR_SUCCESS), tf(nullptr), context(nullptr)
-//		{
-//			memmove(this->name, name, std::min((size_t)strlen(name), PROC_NAME_LEN));
-//
-//			lock::spinlock_initialize_lock(&messaging_data.lock, name);
-//		}
-//	};
-
 	void process_init();
 
 	// FIXME
