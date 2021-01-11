@@ -8,6 +8,7 @@
 #include "task/process/process_dispatcher.hpp"
 
 #include "system/process.h"
+#include "system/dpc.hpp"
 
 #include "kbl/lock/spinlock.h"
 
@@ -383,92 +384,5 @@ bool thread::check_kill_signal() TA_REQ(master_thread_lock)
 	}
 }
 
-task::thread* task::thread::current::get()
-{
-	return task::thread::current::cur_thread();
-}
 
-void task::thread::current::yield()
-{
 
-}
-
-void task::thread::current::preempt()
-{
-
-}
-
-void task::thread::current::reschedule()
-{
-
-}
-
-void task::thread::current::exit(int retcode)
-{
-
-}
-
-void task::thread::current::exit_locked(int retcode) TA_REQ(lock)
-{
-
-}
-
-void task::thread::current::becomde_idle()
-{
-
-}
-
-void task::thread::current::do_suspend()
-{
-
-}
-
-void task::thread::current::set_name(const char* name)
-{
-
-}
-
-void task::task_state::init(task::thread_start_routine_type entry, void* arg)
-{
-
-}
-
-error_code task::task_state::join(time_t deadline) TA_REQ(master_thread_lock)
-{
-	return 0;
-}
-
-error_code task::task_state::wake_joiners(error_code status) TA_REQ(master_thread_lock)
-{
-	return 0;
-}
-
-wait_queue_state::~wait_queue_state()
-{
-
-}
-
-void wait_queue_state::block(interruptible intr, error_code block_code) TA_REQ(master_thread_lock)
-{
-
-}
-
-error_code wait_queue_state::try_unblock(thread* t, error_code block_code) TA_REQ(master_thread_lock)
-{
-	return 0;
-}
-
-bool wait_queue_state::wakeup(thread* t, error_code st) TA_REQ(master_thread_lock)
-{
-	return false;
-}
-
-error_code_with_result<bool> wait_queue_state::try_wakeup(thread* t, error_code st) TA_REQ(master_thread_lock)
-{
-	return error_code_with_result<bool>();
-}
-
-void wait_queue_state::update_priority_when_blocking(thread* t, int prio, propagating prop) TA_REQ(master_thread_lock)
-{
-
-}
