@@ -12,7 +12,6 @@
 //FIXME
 
 #include "system/scheduler.h"
-#include "task/thread/thread_dispatcher.hpp"
 
 namespace task
 {
@@ -132,8 +131,6 @@ namespace task
 		void kill_all_threads_locked() noexcept TA_REQ(lock);
 
 		Status status;
-
-		ktl::list<ktl::shared_ptr<thread_dispatcher>> threads;
 
 		ktl::shared_ptr<job_dispatcher> parent;
 		ktl::shared_ptr<job_dispatcher> critical_to;

@@ -31,8 +31,6 @@ struct cpu_struct
 	task_state_segment tss{};
 	gdt_table gdt_table{};
 
-	task::thread idle;
-
 	cpu_struct()
 		: id(0), apicid(0),
 		  started(0), nest_pushcli_depth(0),

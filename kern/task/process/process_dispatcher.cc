@@ -278,16 +278,16 @@ void process_dispatcher::kill(task_return_code code) noexcept
 			ret_code = code;
 		}
 
-		if (threads.empty())
-		{
-			set_status_locked(Status::DEAD);
-			finish_dying = true;
-		}
-		else
-		{
-			set_status_locked(Status::DYING);
-
-		}
+//		if (threads.empty())
+//		{
+//			set_status_locked(Status::DEAD);
+//			finish_dying = true;
+//		}
+//		else
+//		{
+//			set_status_locked(Status::DYING);
+//
+//		}
 	}
 
 	if (finish_dying)
