@@ -6,6 +6,7 @@
 #include "system/segmentation.hpp"
 
 #include "system/cls.hpp"
+#include "system/dpc.hpp"
 
 #include "task/thread/thread.hpp"
 

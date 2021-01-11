@@ -17,9 +17,11 @@
 
 #include "system/cls.hpp"
 
+#include "task/thread/thread_lock.hpp"
+
 namespace task
 {
-extern lock::spinlock master_thread_lock;
+
 
 class thread_dispatcher;
 class thread;
