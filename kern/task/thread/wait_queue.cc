@@ -50,3 +50,8 @@ void wait_queue_state::update_priority_when_blocking(thread* t, int prio, propag
 {
 
 }
+
+void owned_wait_queue::disown_all_queues(thread*)
+{
+
+}

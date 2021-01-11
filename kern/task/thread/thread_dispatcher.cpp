@@ -50,10 +50,10 @@ bool thread_dispatcher::has_started() const TA_EXCL(lock)
 {
 }
 
-void thread_dispatcher::suspending()
+void thread_dispatcher::on_suspending()
 {
 }
-void thread_dispatcher::resuming()
+void thread_dispatcher::on_resuming()
 {
 }
 void thread_dispatcher::exiting_current()

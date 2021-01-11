@@ -10,6 +10,7 @@ class dpc final
 	using func_type = void (*)(dpc*);
 
  public:
+
 	explicit dpc(func_type f, void* ar = nullptr)
 		: func_(f), arg_(ar)
 	{

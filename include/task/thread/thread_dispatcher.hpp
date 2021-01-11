@@ -79,8 +79,8 @@ namespace task
 		bool is_dying_or_dead() const TA_EXCL(lock);
 		bool has_started() const TA_EXCL(lock);
 
-		void suspending();
-		void resuming();
+		void on_suspending();
+		void on_resuming();
 		void exiting_current();
 
 		thread_dispatcher(const thread_dispatcher&) = delete;

@@ -19,9 +19,10 @@
 
 #include "task/thread/thread_lock.hpp"
 
+class dpc;
+
 namespace task
 {
-
 
 class thread_dispatcher;
 class thread;
@@ -32,7 +33,7 @@ using thread_trampoline_routine_type = void (*)();
 enum [[clang::flag_enum, clang::enum_extensibility(open)]] thread_flags
 {
 	THREAD_FLAG_DETACHED = (1 << 0),
-	THREAD_FLAG_FREE_STRUCT = (1 << 1),
+	THREAD_FLAG_RELEASE_NEEDED = (1 << 1),
 	THREAD_FLAG_IDLE = (1 << 2),
 	THREAD_FLAG_VCPU = (1 << 3),
 };
@@ -44,10 +45,16 @@ enum [[clang::flag_enum, clang::enum_extensibility(open)]] thread_signals
 	THREAD_SIGNAL_POLICY_EXCEPTION = (1 << 2),
 };
 
-class wait_queue final
+class wait_queue
 {
  public:
  private:
+};
+
+class owned_wait_queue final : public wait_queue
+{
+ public:
+	static void disown_all_queues(thread*);
 };
 
 class task_state final
@@ -177,7 +184,7 @@ class wait_queue_state final
 
  private:
 	wait_queue* blocking_queue TA_GUARDED(master_thread_lock){ nullptr };
-	ktl::list<wait_queue*> wait_queues TA_GUARDED(master_thread_lock){};
+	ktl::list<owned_wait_queue*> wait_queues TA_GUARDED(master_thread_lock){};
 
 	ktl::list<thread*> sublist;
 
@@ -188,6 +195,15 @@ class wait_queue_state final
 	bool is_in_sublist{ false };
 
 	interruptible interruptible_{ interruptible::NO };
+};
+
+class kernel_stack
+{
+ public:
+	[[nodiscard]]void* get()
+	{
+		return nullptr;
+	}
 };
 
 class thread final
@@ -207,6 +223,8 @@ class thread final
 		void* agr,
 		int priority,
 		thread_trampoline_routine_type trampoline);
+
+	static void free_dpc(dpc* dpc);
 
  public:
 	thread();
@@ -255,6 +273,18 @@ class thread final
 		scheduler_state_.set_status(scheduler_state::THREAD_READY);
 	}
 
+	void set_death()
+	{
+		scheduler_state_.set_status(scheduler_state::THREAD_DEATH);
+
+	}
+
+	void set_suspended()
+	{
+		scheduler_state_.set_status(scheduler_state::THREAD_SUSPENDED);
+
+	}
+
 	class current
 	{
 	 public:
@@ -289,6 +319,8 @@ class thread final
 	scheduler_state scheduler_state_{};
 
 	wait_queue_state wait_queue_state_{};
+
+	kernel_stack kstack{};
 
 	mutable lock::spinlock lock{ "thread_own_lock" };
 };

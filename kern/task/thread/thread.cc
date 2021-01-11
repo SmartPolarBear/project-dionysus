@@ -11,6 +11,7 @@
 #include "system/dpc.hpp"
 
 #include "kbl/lock/spinlock.h"
+#include "kbl/atomic/atomic.hpp"
 
 #include "ktl/mutex/lock_guard.hpp"
 #include "ktl/algorithm.hpp"
@@ -98,7 +99,7 @@ task::thread* task::thread::create_etc(task::thread* t,
 			return nullptr;
 		}
 
-		flags |= THREAD_FLAG_FREE_STRUCT;
+		flags |= THREAD_FLAG_RELEASE_NEEDED;
 	}
 
 	t->task_state_.init(entry, arg);
@@ -384,5 +385,17 @@ bool thread::check_kill_signal() TA_REQ(master_thread_lock)
 	}
 }
 
+void thread::free_dpc(dpc* dpc)
+{
+	auto t = dpc->arg<thread>();
 
+	KDEBUG_ASSERT(t->get_status() == scheduler_state::THREAD_DEATH);
 
+	// sync
+	{
+		lock_guard g{ master_thread_lock };
+		kbl::atomic_signal_fence(kbl::memory_order_seq_cst);
+	}
+
+	delete t;
+}
