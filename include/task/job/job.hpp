@@ -1,32 +1,23 @@
 #pragma once
 
-#include "object/kernel_object.hpp"
+#include "object/dispatcher.hpp"
 
 #include "arch/amd64/cpu/regs.h"
 
 #include "debug/thread_annotations.hpp"
 
-#include "system/mmu.h"
 #include "system/types.h"
-#include "system/vmm.h"
-#include "system/syscall.h"
-#include "ktl/concepts.hpp"
-#include "system/messaging.hpp"
-
-#include "drivers/apic/traps.h"
 
 #include "kbl/lock/spinlock.h"
-#include "kbl/data/pod_list.h"
 #include "kbl/data/list_base.hpp"
-#include "kbl/atomic/atomic_ref.hpp"
 #include "kbl/ref_count/ref_count_base.hpp"
 
 #include "ktl/mutex/lock_guard.hpp"
 #include "ktl/unique_ptr.hpp"
 #include "ktl/list.hpp"
+#include "ktl/concepts.hpp"
 
 #include "task/process/process.hpp"
-#include "object/dispatcher.hpp"
 
 #include <cstring>
 #include <algorithm>

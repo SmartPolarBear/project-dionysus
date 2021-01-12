@@ -1,6 +1,8 @@
 #pragma once
 #include "kbl/atomic/atomic_ref.hpp"
 
+#include "debug/kdebug.h"
+
 namespace kbl
 {
 	template<bool CheckUseAfterFreeOrPreAdopt>

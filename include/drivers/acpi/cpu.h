@@ -8,8 +8,6 @@
 #include "system/cls.hpp"
 #include "system/dpc.hpp"
 
-#include "task/thread/thread.hpp"
-
 using context = arch_task_context_registers;
 
 struct cpu_struct

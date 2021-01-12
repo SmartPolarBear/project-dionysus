@@ -5,11 +5,10 @@
 
 namespace ktl
 {
-	template<class T>
-	concept Pointer = std::is_pointer<T>::value;
+template<class T>
+concept Pointer = std::is_pointer_v<T>;
 
-	template<typename TList, typename TChild>
-	concept ListOfTWithBound=
-	requires(TList l){ l[0]; (l[0])->TChild; };
+template<typename TFrom, typename TTo>
+concept Convertible=std::is_convertible_v<TFrom, TTo>;
 
 }

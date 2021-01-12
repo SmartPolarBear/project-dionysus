@@ -13,6 +13,7 @@
 #include "system/scheduler.h"
 
 #include "drivers/acpi/cpu.h"
+#include "drivers/apic/traps.h"
 
 
 namespace task

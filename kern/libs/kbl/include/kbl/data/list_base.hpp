@@ -1,6 +1,8 @@
 #pragma once
 
 #include "system/types.h"
+#include "system/error.hpp"
+
 #include "ktl/concepts.hpp"
 
 #include <any>
@@ -8,6 +10,10 @@
 
 namespace kbl
 {
+
+template<typename TList, typename TChild>
+concept ListOfTWithBound=
+requires(TList l){ l[0]; (l[0])->TChild; };
 
 template<ktl::Pointer TPtr>
 class linked_list_base
