@@ -53,25 +53,27 @@ class thread final
 
 	static_assert(ktl::Convertible<decltype(trampoline), trampoline_type>);
 
-	[[nodiscard]]static thread* create(ktl::shared_ptr<process> parent,
+	[[nodiscard]]static error_code_with_result<thread*> create(ktl::shared_ptr<process> parent,
 		ktl::string_view name,
 		routine_type routine,
 		trampoline_type trampoline);
 
  public:
+	thread(const thread&) = delete;
+	thread& operator=(const thread&) = delete;
+
 	[[nodiscard]]vmm::mm_struct* get_mm();
 
  private:
+	thread(ktl::shared_ptr<process> parent, ktl::string_view name);
 
 	[[noreturn]] void switch_to();
+
+
 
 	ktl::shared_ptr<process> parent{ nullptr };
 
 	ktl::unique_ptr<kernel_stack> kstack{ nullptr };
-
-	arch_task_context_registers context{};
-
-	trap::trap_frame tf{};
 
 	kbl::doubly_linked_node_state<thread> thread_link{};
 
@@ -91,12 +93,11 @@ class kernel_stack final
  public:
 	friend class thread;
 
-	static constexpr size_t MAX_SIZE = 16_MB;
+	static constexpr size_t MAX_SIZE = 4_MB;
 	static constexpr size_t MAX_PAGE_COUNT = MAX_SIZE / PAGE_SIZE;
 
  public:
-	[[nodiscard]] ktl::unique_ptr<kernel_stack> create(vmm::mm_struct* parent_mm,
-		thread::routine_type start_routine,
+	[[nodiscard]] static ktl::unique_ptr<kernel_stack> create(thread::routine_type start_routine,
 		thread::trampoline_type tpl);
 
 	~kernel_stack();
@@ -111,17 +112,17 @@ class kernel_stack final
 		return reinterpret_cast<uintptr_t >(get_raw());
 	}
  private:
-	[[nodiscard]] kernel_stack(vmm::mm_struct* parent_mm,
-		thread::routine_type routine,
-		thread::trampoline_type tpl) noexcept;
+	[[nodiscard]] kernel_stack(thread::routine_type routine,
+		thread::trampoline_type tpl);
 
-	[[nodiscard]]error_code grow_downward(size_t count = 1);
+	void* top{ nullptr };
 
-	void* top;
-	void* bottom;
-	vmm::mm_struct* mm;
+	trap::trap_frame* tf{ nullptr };
+
+	arch_task_context_registers* context{ nullptr };
 };
 
 extern thread::thread_list_type global_thread_list;
 extern cls_item<thread*, CLS_CUR_THREAD_PTR> cur_thread;
+
 }

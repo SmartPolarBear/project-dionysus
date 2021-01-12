@@ -15,7 +15,6 @@
 #include "drivers/acpi/cpu.h"
 #include "drivers/apic/traps.h"
 
-
 namespace task
 {
 enum [[clang::enum_extensibility(closed)]]task_return_code : int64_t
@@ -107,6 +106,7 @@ class process final
 	void exit(task_return_code code) noexcept;
 	void kill(task_return_code code) noexcept;
 	void finish_dead_transition() noexcept;
+
 
 	[[nodiscard]] ktl::string_view get_name() const
 	{
