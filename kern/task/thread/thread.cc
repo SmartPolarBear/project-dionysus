@@ -45,6 +45,6 @@ void thread::trampoline()
 
 void thread::switch_to()
 {
-	cur_thread = this;
-	context_switch(&cpu->scheduler, &cur_thread->context);
+//	cur_thread = this;
+//	context_switch(&cpu->scheduler, &cur_thread->context);
 }

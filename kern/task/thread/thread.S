@@ -1,33 +1,34 @@
+#include "syscall.h"
 .code64
+
 
 // extern "C"  void context_switch(struct context **old, struct context *new)
 .global context_switch
 context_switch:
       // Save old callee-save registers
-      push %rbp
-      push %rbx
-      push %r11
-      push %r12
-      push %r13
-      push %r14
-      push %r15
+      pushq %rbp
+      pushq %rbx
+      pushq %r11
+      pushq %r12
+      pushq %r13
+      pushq %r14
+      pushq %r15
 
       // Switch stacks
-      mov %rsp, (%rdi)
-      mov %rsi, %rsp
+      movq %rsp, (%rdi)
+      movq %rsi, %rsp
 
       // Load new callee-save registers
-      pop %r15
-      pop %r14
-      pop %r13
-      pop %r12
-      pop %r11
-      pop %rbx
-      pop %rbp
+      popq %r15
+      popq %r14
+      popq %r13
+      popq %r12
+      popq %r11
+      popq %rbx
+      popq %rbp
 
-      ret // run code from address in %rip
+      retq // run code from address in %rip
 
-// assume that the stack is firstly kstack pointer and then a trapframe
 .global user_proc_entry
 user_proc_entry:
     popq %rsi   // pop kstack address, we currently do nothing for it.
@@ -64,7 +65,6 @@ user_proc_entry:
     // switch to user model
     sysretq
 
-// assume that the stack is firstly kstack pointer and then a trapframe
 .global thread_entry
 thread_entry:
     popq %rsi   // pop kstack address, we currently do nothing for it.
