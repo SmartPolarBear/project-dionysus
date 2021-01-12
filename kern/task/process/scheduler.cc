@@ -80,8 +80,10 @@ using lock::spinlock_holding;
 				cpu()->tss.rsp0 = kstack_addr + task::process::KERNSTACK_SIZE;
 
 				// Set gs. without calling swapgs to ensure atomic
-				uintptr_t* kstack_gs = (uintptr_t*)(((uint8_t*)cpu->kernel_gs) + KERNEL_GS_KSTACK);
-				*kstack_gs = kstack_addr;
+				gs_put_cpu_dependent(KERNEL_GS_KSTACK, kstack_addr);
+//				uintptr_t* kstack_gs = (uintptr_t*)(((uint8_t*)cpu->kernel_gs) + KERNEL_GS_KSTACK);
+//				*kstack_gs = kstack_addr;
+
 
 				trap::popcli();
 

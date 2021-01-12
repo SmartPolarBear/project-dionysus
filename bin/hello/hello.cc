@@ -2,15 +2,13 @@
 #include "system/types.h"
 extern "C" void* memmove(void* s1, const void* s2, size_t n);
 
-
 uint8_t buf[4_MB] __attribute__((aligned(2_MB)));
 
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "EndlessLoop"
 int main()
 {
-	put_str("hELLO\n");
-	while (true);
+	while (true) put_str("hELLO\n");;
 	size_t num = 1234567;
 	for (;;)
 	{

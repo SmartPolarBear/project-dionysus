@@ -14,6 +14,7 @@
 
 using syscall::syscall_regs;
 
+// FIXME: put this elsewhere
 enum KERNEL_GS_INDEX
 {
 	KERNEL_GS_KSTACK = 0,

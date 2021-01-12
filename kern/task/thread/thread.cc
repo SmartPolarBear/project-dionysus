@@ -1,3 +1,5 @@
+#include "../include/syscall.h"
+
 #include "task/thread/thread.hpp"
 #include "task/process/process.hpp"
 
@@ -45,6 +47,29 @@ void thread::trampoline()
 
 void thread::switch_to()
 {
-//	cur_thread = this;
-//	context_switch(&cpu->scheduler, &cur_thread->context);
+	KDEBUG_ASSERT(this->state == thread_states::READY);
+	KDEBUG_ASSERT(this->get_mm() != nullptr);
+
+	trap::pushcli();
+
+	cur_thread = this;
+
+	cur_thread->state = thread_states::RUNNING;
+
+	// TODO: add counters to track run count?
+
+	lcr3(V2P((uintptr_t)this->get_mm()->pgdir));
+
+	uintptr_t kstack_addr = this->kstack->get_address();
+
+	cpu->tss.rsp0 = kstack_addr + task::process::KERNSTACK_SIZE;
+
+	// Set gs. without calling swapgs to ensure atomic
+	gs_put_cpu_dependent(KERNEL_GS_KSTACK, kstack_addr);
+
+	trap::popcli();
+
+	context_switch(&cpu->scheduler, &this->context);
+
+	cur_thread = nullptr;
 }
