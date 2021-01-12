@@ -1,13 +1,12 @@
 #pragma once
 
+#include "internals/thread.hpp"
+
 #include "arch/amd64/cpu/regs.h"
 
 #include "system/process.h"
 
 #include "task/thread/thread.hpp"
-
-#include "drivers/apic/traps.h"
-#include "drivers/acpi/cpu.h"
 
 #include "kbl/data/queue.hpp"
 #include "kbl/lock/spinlock.h"
@@ -35,10 +34,6 @@ struct process_list_struct
 };
 
 extern process_list_struct proc_list;
-
-extern "C" [[noreturn]] void user_proc_entry();
-
-extern "C" void context_switch(context** oldcontext, context* newcontext);
 
 // task.cc
 task::process* find_process(pid_type pid);

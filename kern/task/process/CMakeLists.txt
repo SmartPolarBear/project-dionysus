@@ -5,7 +5,5 @@ target_sources(kernel
         PRIVATE process_new.cc
         PRIVATE load_code.cc
         PRIVATE scheduler.cc
-        PRIVATE process_run.S
-        PRIVATE context_switch.S
         PRIVATE process_ipc.cc
         PRIVATE process.cc)

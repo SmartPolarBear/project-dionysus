@@ -10,6 +10,7 @@
 #include "kbl/data/list_base.hpp"
 
 #include "ktl/shared_ptr.hpp"
+#include "ktl/unique_ptr.hpp"
 #include "ktl/string_view.hpp"
 #include "ktl/list.hpp"
 #include "ktl/concepts.hpp"
@@ -17,9 +18,12 @@
 #include "system/cls.hpp"
 
 #include "drivers/acpi/cpu.h"
+#include "drivers/apic/traps.h"
 
 namespace task
 {
+
+extern lock::spinlock global_thread_lock;
 
 class process;
 
@@ -63,9 +67,11 @@ class thread final
 
 	ktl::shared_ptr<process> parent{ nullptr };
 
-	ktl::shared_ptr<kernel_stack> kstack{ nullptr };
+	ktl::unique_ptr<kernel_stack> kstack{ nullptr };
 
 	arch_task_context_registers context{};
+
+	trap::trap_frame tf{};
 
 	kbl::doubly_linked_node_state<thread> thread_link{};
 
@@ -74,6 +80,9 @@ class thread final
 	thread_states state{ thread_states::INITIAL };
 
 	error_code exit_code{ ERROR_SUCCESS };
+
+ public:
+	using thread_list_type = kbl::intrusive_doubly_linked_list<thread, &thread::thread_link>;
 
 };
 
@@ -86,7 +95,11 @@ class kernel_stack final
 	static constexpr size_t MAX_PAGE_COUNT = MAX_SIZE / PAGE_SIZE;
 
  public:
-	[[nodiscard]] ktl::shared_ptr<kernel_stack> create(vmm::mm_struct* parent_mm, thread::trampoline_type tpl);
+	[[nodiscard]] ktl::unique_ptr<kernel_stack> create(vmm::mm_struct* parent_mm,
+		thread::routine_type start_routine,
+		thread::trampoline_type tpl);
+
+	~kernel_stack();
 
 	[[nodiscard]] void* get_raw() const
 	{
@@ -98,10 +111,17 @@ class kernel_stack final
 		return reinterpret_cast<uintptr_t >(get_raw());
 	}
  private:
-	error_code grow_downward(size_t count = 1);
+	[[nodiscard]] kernel_stack(vmm::mm_struct* parent_mm,
+		thread::routine_type routine,
+		thread::trampoline_type tpl) noexcept;
+
+	[[nodiscard]]error_code grow_downward(size_t count = 1);
 
 	void* top;
+	void* bottom;
 	vmm::mm_struct* mm;
 };
 
+extern thread::thread_list_type global_thread_list;
+extern cls_item<thread*, CLS_CUR_THREAD_PTR> cur_thread;
 }
