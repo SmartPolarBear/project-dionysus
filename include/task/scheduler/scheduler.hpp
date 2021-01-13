@@ -12,6 +12,8 @@ namespace task
 class scheduler
 {
  public:
+	static void schedule();
+
 	static void reschedule();
 	static void yield();
 };

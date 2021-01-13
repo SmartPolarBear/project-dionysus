@@ -34,6 +34,7 @@ class thread final
 {
  public:
 	friend class process;
+	friend class scheduler;
 
 	enum class [[clang::enum_extensibility(closed)]] thread_states
 	{
@@ -45,7 +46,7 @@ class thread final
 		DEAD,
 	};
 
-	enum  [[clang::flag_enum, clang::enum_extensibility(open)]] thread_flags : uint64_t
+	enum [[clang::flag_enum, clang::enum_extensibility(open)]] thread_flags : uint64_t
 	{
 		FLAG_DETACHED,
 		FLAG_IDLE,
@@ -80,6 +81,8 @@ class thread final
 
 	void remove_from_lists();
 
+	void finish_dying();
+
 	[[noreturn]] void switch_to();
 
 	ktl::shared_ptr<process> parent{ nullptr };
@@ -96,6 +99,8 @@ class thread final
 
 	bool need_reschedule{ false };
 
+	bool critical{ false };
+
 	uint64_t flag{ 0 };
 
  public:
@@ -107,6 +112,7 @@ class kernel_stack final
 {
  public:
 	friend class thread;
+	friend class scheduler;
 
 	static constexpr size_t MAX_SIZE = 4_MB;
 	static constexpr size_t MAX_PAGE_COUNT = MAX_SIZE / PAGE_SIZE;

@@ -177,6 +177,14 @@ void thread::remove_from_lists()
 	global_thread_list.erase(thread_list_type::iterator_type{ &this->thread_link });
 }
 
+void thread::finish_dying()
+{
+	cur_thread = nullptr;
+	this->state = thread_states::DEAD;
+
+	delete this;
+}
+
 void thread::current::exit(error_code code)
 {
 	lock_guard g{ global_thread_lock };
