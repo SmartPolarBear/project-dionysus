@@ -43,6 +43,8 @@ void task::scheduler::yield()
 
 void task::scheduler::schedule()
 {
+	KDEBUG_ASSERT(!global_thread_list.empty());
+
 	ktl::mutex::lock_guard guard{ global_thread_lock };
 
 	auto pick_next = [&](thread::thread_list_type::iterator_type iter)

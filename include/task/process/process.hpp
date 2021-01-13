@@ -107,7 +107,7 @@ class process final
 	void kill(task_return_code code) noexcept;
 	void finish_dead_transition() noexcept;
 
-	void remove_thread(thread *t);
+	void remove_thread(thread* t);
 
 	[[nodiscard]] ktl::string_view get_name() const
 	{
@@ -273,11 +273,11 @@ class process final
 
 	friend error_code alloc_ustack(task::process* proc);
 
-	friend void scheduler::scheduler_enter();
+	friend void ::scheduler::scheduler_enter();
 
-	friend void scheduler::scheduler_loop();
+	friend void ::scheduler::scheduler_loop();
 
-	friend void scheduler::scheduler_yield();
+	friend void ::scheduler::scheduler_yield();
 };
 
 }

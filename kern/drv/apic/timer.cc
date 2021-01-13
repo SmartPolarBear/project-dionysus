@@ -14,6 +14,8 @@
 #include "kbl/lock/spinlock.h"
 #include "drivers/acpi/cpu.h"
 
+#include "task/scheduler/scheduler.hpp"
+
 #include "../../libs/basic_io/include/builtin_text_io.hpp"
 
 using local_apic::TDCR;
@@ -88,6 +90,8 @@ error_code trap_handle_tick([[maybe_unused]] trap::trap_frame info)
 
 		if (cur_proc != nullptr && cur_proc->get_state() == task::PROC_STATE_RUNNING)
 		{
+			task::scheduler::yield();
+
 			scheduler::scheduler_yield();
 		}
 	}

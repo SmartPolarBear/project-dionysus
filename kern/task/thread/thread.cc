@@ -21,22 +21,23 @@ using namespace task;
 using ktl::mutex::lock_guard;
 
 lock::spinlock task::global_thread_lock{ "gtl" };
-thread::thread_list_type task::global_thread_list{};
-cls_item<thread*, CLS_CUR_THREAD_PTR> task::cur_thread;
+cls_item<thread*, CLS_CUR_THREAD_PTR> task::cur_thread TA_GUARDED(global_thread_lock);
+thread::thread_list_type task::global_thread_list TA_GUARDED(global_thread_lock);
 
 ktl::unique_ptr<kernel_stack> task::kernel_stack::create(thread::routine_type start_routine,
 	void* arg,
 	thread::trampoline_type tpl)
 {
 	kbl::allocate_checker ck{};
-	ktl::unique_ptr<kernel_stack> ret{ new(&ck) kernel_stack{ start_routine, arg, tpl }};
+
+	auto stack_mem = memory::kmalloc(MAX_SIZE, 0);
+	ktl::unique_ptr<kernel_stack> ret{ new(&ck) kernel_stack{ stack_mem, start_routine, arg, tpl }};
 
 	if (!ck.check())
 	{
 		return nullptr;
 	}
 
-	ret->top = memory::kmalloc(KERNEL_SIZE, 0);
 	if (ret->top == nullptr)
 	{
 		return nullptr;
@@ -50,10 +51,11 @@ kernel_stack::~kernel_stack()
 	memory::kfree(top);
 }
 
-kernel_stack::kernel_stack(thread::routine_type routine, void* arg, thread::trampoline_type tpl)
+kernel_stack::kernel_stack(void* stk_mem, thread::routine_type routine, void* arg, thread::trampoline_type tpl)
+	: top(stk_mem)
 {
 	// setup initial kernel stack
-	auto sp = reinterpret_cast<uintptr_t>(static_cast<char*>(top) + task::process::KERNSTACK_SIZE);
+	auto sp = reinterpret_cast<uintptr_t>(static_cast<char*>(top) + MAX_SIZE);
 
 	sp -= sizeof(trap::trap_frame);
 	this->tf = reinterpret_cast<decltype(this->tf)>(sp);
@@ -84,9 +86,10 @@ kernel_stack::kernel_stack(thread::routine_type routine, void* arg, thread::tram
 	tf->rdx = reinterpret_cast<uintptr_t>(thread::current::exit);
 }
 
-error_code_with_result<thread*> thread::create(ktl::shared_ptr<process> parent,
+error_code_with_result<task::thread*> thread::create(ktl::shared_ptr<process> parent,
 	ktl::string_view name,
 	routine_type routine,
+	void* arg,
 	trampoline_type trampoline)
 {
 
@@ -98,7 +101,7 @@ error_code_with_result<thread*> thread::create(ktl::shared_ptr<process> parent,
 		return -ERROR_MEMORY_ALLOC;
 	}
 
-	ret->kstack = kernel_stack::create(routine, nullptr, trampoline);
+	ret->kstack = kernel_stack::create(routine, arg, trampoline);
 
 	if (ret->kstack == nullptr)
 	{
@@ -107,6 +110,33 @@ error_code_with_result<thread*> thread::create(ktl::shared_ptr<process> parent,
 	}
 
 	return ret;
+}
+
+error_code_with_result<task::thread*> thread::create_and_enqueue(ktl::shared_ptr<process> parent,
+	ktl::string_view name,
+	thread::routine_type routine,
+	void* arg,
+	thread::trampoline_type trampoline)
+{
+	lock_guard g{ global_thread_lock };
+
+	auto create_ret = create(std::move(parent), name, routine, arg, trampoline);
+	if (has_error(create_ret))
+	{
+		return get_error_code(create_ret);
+	}
+
+	auto t = get_result(create_ret);
+
+	global_thread_list.push_back(*t);
+
+	return t;
+}
+
+error_code thread::create_idle()
+{
+	[[maybe_unused]]auto t = create_and_enqueue(nullptr, "idle", idle_routine, nullptr, default_trampoline);
+	return ERROR_SUCCESS;
 }
 
 vmm::mm_struct* task::thread::get_mm()
@@ -183,6 +213,11 @@ void thread::finish_dying()
 	this->state = thread_states::DEAD;
 
 	delete this;
+}
+error_code thread::idle_routine(void* arg)
+{
+	while (true)hlt();
+	return ERROR_SUCCESS;
 }
 
 void thread::current::exit(error_code code)

@@ -25,6 +25,8 @@
 #include "system/syscall.h"
 #include "system/vmm.h"
 
+#include "task/scheduler/scheduler.hpp"
+
 #include "fs/fs.hpp"
 
 #include "../libs/basic_io/include/builtin_text_io.hpp"
@@ -36,9 +38,25 @@
 // std::variant is usable with the pseudo-syscalls
 // std::span is usable unconditionally
 
+error_code test_routine(void* arg)
+{
+	while (true)
+	{
+		write_format("%d", cpu->id);
+	}
+	return ERROR_SUCCESS;
+}
+
 extern std::shared_ptr<task::job> root_job;
 static inline void run(char* name)
 {
+	if (auto ret = task::thread::create_and_enqueue(nullptr, "test", test_routine, nullptr);has_error(ret))
+	{
+		KDEBUG_GERNERALPANIC_CODE(get_error_code(ret));
+	}
+
+	return;
+
 	uint8_t* bin = nullptr;
 	size_t size = 0;
 
@@ -116,8 +134,8 @@ extern "C" [[noreturn]] void kmain()
 
 	write_format("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
 
-	run("/ipctest");
-	run("/hello");
+//	run("/ipctest");
+//	run("/hello");
 
 	// start kernel servers in user space
 	init_servers();
@@ -133,6 +151,10 @@ void ap::all_processor_main()
 
 	// enable timer interrupt
 	timer::set_enable_on_cpu(cpu->id, true);
+
+	KDEBUG_GERNERALPANIC_CODE(task::thread::create_idle());
+
+	task::scheduler::schedule();
 
 	scheduler::scheduler_loop();
 }

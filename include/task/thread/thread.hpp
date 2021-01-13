@@ -65,11 +65,19 @@ class thread final
 	static void default_trampoline();
 	static_assert(ktl::Convertible<decltype(default_trampoline), trampoline_type>);
 
-	[[nodiscard]]static error_code_with_result<thread*> create(ktl::shared_ptr<process> parent,
+	[[nodiscard]]static error_code_with_result<task::thread*> create(ktl::shared_ptr<process> parent,
 		ktl::string_view name,
 		routine_type routine,
-		trampoline_type trampoline);
+		void* arg,
+		trampoline_type trampoline = default_trampoline);
 
+	[[nodiscard]]static error_code_with_result<task::thread*> create_and_enqueue(ktl::shared_ptr<process> parent,
+		ktl::string_view name,
+		routine_type routine,
+		void* arg,
+		trampoline_type trampoline = default_trampoline);
+
+	[[nodiscard]]static error_code create_idle();
  public:
 	thread(const thread&) = delete;
 	thread& operator=(const thread&) = delete;
@@ -77,6 +85,9 @@ class thread final
 	[[nodiscard]]vmm::mm_struct* get_mm();
 
  private:
+	static error_code idle_routine(void* arg);
+	static_assert(ktl::Convertible<decltype(idle_routine), routine_type>);
+
 	thread(ktl::shared_ptr<process> parent, ktl::string_view name);
 
 	void remove_from_lists();
@@ -118,7 +129,8 @@ class kernel_stack final
 	static constexpr size_t MAX_PAGE_COUNT = MAX_SIZE / PAGE_SIZE;
 
  public:
-	[[nodiscard]] static ktl::unique_ptr<kernel_stack> create(thread::routine_type start_routine,
+	[[nodiscard]] static ktl::unique_ptr<kernel_stack> create(
+		thread::routine_type start_routine,
 		void* arg,
 		thread::trampoline_type tpl);
 
@@ -134,7 +146,7 @@ class kernel_stack final
 		return reinterpret_cast<uintptr_t >(get_raw());
 	}
  private:
-	[[nodiscard]] kernel_stack(thread::routine_type routine, void* arg, thread::trampoline_type tpl);
+	[[nodiscard]] kernel_stack(void *stk_mem,thread::routine_type routine, void* arg, thread::trampoline_type tpl);
 
 	void* top{ nullptr };
 
