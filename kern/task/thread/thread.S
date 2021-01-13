@@ -29,8 +29,8 @@ context_switch:
 
       retq // run code from address in %rip
 
-.global user_proc_entry
-user_proc_entry:
+.global user_entry
+user_entry:
     popq %rsi   // pop kstack address, we currently do nothing for it.
 
     popq %rax

@@ -45,6 +45,13 @@ class thread final
 		DEAD,
 	};
 
+	enum  [[clang::flag_enum, clang::enum_extensibility(open)]] thread_flags : uint64_t
+	{
+		FLAG_DETACHED,
+		FLAG_IDLE,
+		FLAG_DEFERRED_FREE,
+	};
+
 	struct current
 	{
 		static void exit(error_code code);
@@ -54,9 +61,8 @@ class thread final
 
 	using routine_type = error_code (*)(void* arg);
 
-	static void trampoline();
-
-	static_assert(ktl::Convertible<decltype(trampoline), trampoline_type>);
+	static void default_trampoline();
+	static_assert(ktl::Convertible<decltype(default_trampoline), trampoline_type>);
 
 	[[nodiscard]]static error_code_with_result<thread*> create(ktl::shared_ptr<process> parent,
 		ktl::string_view name,
@@ -72,6 +78,8 @@ class thread final
  private:
 	thread(ktl::shared_ptr<process> parent, ktl::string_view name);
 
+	void remove_from_lists();
+
 	[[noreturn]] void switch_to();
 
 	ktl::shared_ptr<process> parent{ nullptr };
@@ -85,6 +93,10 @@ class thread final
 	thread_states state{ thread_states::INITIAL };
 
 	error_code exit_code{ ERROR_SUCCESS };
+
+	bool need_reschedule{ false };
+
+	uint64_t flag{ 0 };
 
  public:
 	using thread_list_type = kbl::intrusive_doubly_linked_list<thread, &thread::thread_link>;

@@ -287,17 +287,19 @@ template<typename T, doubly_linked_node_state<T> T::*NS>
 class intrusive_doubly_linked_list
 {
  public:
+	using iterator_type = intrusive_doubly_linked_list_iterator<T, NS>;
+ public:
 	intrusive_doubly_linked_list()
 	{
 		this->head.prev = &this->head;
 	}
 
-	intrusive_doubly_linked_list_iterator<T, NS> begin()
+	iterator_type begin()
 	{
 		return intrusive_doubly_linked_list_iterator<T, NS>(&this->head);
 	}
 
-	intrusive_doubly_linked_list_iterator<T, NS> end()
+	iterator_type end()
 	{
 		return intrusive_doubly_linked_list_iterator<T, NS>(this->head.prev);
 	}

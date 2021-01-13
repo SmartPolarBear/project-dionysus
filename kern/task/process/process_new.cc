@@ -44,7 +44,7 @@ void default_trampoline()
 //	spinlock_release(&proc_list.lock);
 	proc_list.lock.unlock();
 
-	// "return" to user_proc_entry
+	// "return" to user_entry
 }
 
 kbl::integral_atomic<pid_type> process::pid_counter;
@@ -103,7 +103,7 @@ error_code process::setup_kernel_stack()
 	*((uintptr_t*)sp) = reinterpret_cast<uintptr_t>(raw_stack);
 
 	sp -= sizeof(uintptr_t);
-	*((uintptr_t*)sp) = (uintptr_t)user_proc_entry;
+	*((uintptr_t*)sp) = (uintptr_t)user_entry;
 
 	sp -= sizeof(*this->context);
 	this->context = reinterpret_cast<decltype(this->context)>(sp);
@@ -296,4 +296,9 @@ void process::set_status_locked(process::Status st) noexcept TA_REQ(lock)
 void process::kill_all_threads_locked() noexcept TA_REQ(lock)
 {
 	KDEBUG_NOT_IMPLEMENTED;
+}
+
+void task::process::remove_thread(task::thread* t)
+{
+
 }

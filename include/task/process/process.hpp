@@ -107,6 +107,7 @@ class process final
 	void kill(task_return_code code) noexcept;
 	void finish_dead_transition() noexcept;
 
+	void remove_thread(thread *t);
 
 	[[nodiscard]] ktl::string_view get_name() const
 	{

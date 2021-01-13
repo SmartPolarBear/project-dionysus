@@ -1,18 +1,24 @@
 #include "../include/syscall.h"
+#include "internals/thread.hpp"
 
 #include "task/thread/thread.hpp"
 #include "task/process/process.hpp"
-
-#include "internals/thread.hpp"
+#include "task/scheduler/scheduler.hpp"
 
 #include "system/mmu.h"
+#include "system/vmm.h"
 #include "system/kmalloc.hpp"
+#include "system/scheduler.h"
 
 #include "drivers/acpi/cpu.h"
+
+#include "ktl/mutex/lock_guard.hpp"
 
 #include <utility>
 
 using namespace task;
+
+using ktl::mutex::lock_guard;
 
 lock::spinlock task::global_thread_lock{ "gtl" };
 thread::thread_list_type task::global_thread_list{};
@@ -113,7 +119,7 @@ vmm::mm_struct* task::thread::get_mm()
 	return nullptr;
 }
 
-void thread::trampoline()
+void thread::default_trampoline()
 {
 	global_thread_lock.unlock();
 
@@ -122,6 +128,7 @@ void thread::trampoline()
 
 void thread::switch_to()
 {
+
 	KDEBUG_ASSERT(this->state == thread_states::READY);
 	KDEBUG_ASSERT(this->get_mm() != nullptr);
 
@@ -131,9 +138,17 @@ void thread::switch_to()
 
 	cur_thread->state = thread_states::RUNNING;
 
-	// TODO: add counters to track run count?
+	// TODO: add counters to track run count
 
-	lcr3(V2P((uintptr_t)this->get_mm()->pgdir));
+	auto mm = this->get_mm();
+	if (mm == nullptr)
+	{
+		lcr3(V2P((uintptr_t)vmm::g_kpml4t));
+	}
+	else
+	{
+		lcr3(V2P((uintptr_t)this->get_mm()->pgdir));
+	}
 
 	uintptr_t kstack_addr = this->kstack->get_address();
 
@@ -156,7 +171,31 @@ thread::thread(ktl::shared_ptr<process> prt,
 {
 }
 
+void thread::remove_from_lists()
+{
+	lock_guard g{ global_thread_lock };
+	global_thread_list.erase(thread_list_type::iterator_type{ &this->thread_link });
+}
+
 void thread::current::exit(error_code code)
 {
+	lock_guard g{ global_thread_lock };
 
+	cur_thread->parent->remove_thread(cur_thread.get());
+
+	cur_thread->state = thread_states::DYING;
+	cur_thread->exit_code = code;
+
+	if (cur_thread->flag & FLAG_DETACHED)
+	{
+		cur_thread->remove_from_lists();
+	}
+	else
+	{
+		// TODO: waiting queue
+	}
+
+	task::scheduler::reschedule();
+
+	__UNREACHABLE;
 }

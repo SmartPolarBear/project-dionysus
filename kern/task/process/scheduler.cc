@@ -1,5 +1,6 @@
 
 #include <task/scheduler/scheduler.hpp>
+#include <task/process/process.hpp>
 
 #include "process.hpp"
 #include "syscall.h"
