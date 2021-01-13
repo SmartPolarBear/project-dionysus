@@ -45,6 +45,11 @@ class thread final
 		DEAD,
 	};
 
+	struct current
+	{
+		static void exit(error_code code);
+	};
+
 	using trampoline_type = void (*)();
 
 	using routine_type = error_code (*)(void* arg);
@@ -68,8 +73,6 @@ class thread final
 	thread(ktl::shared_ptr<process> parent, ktl::string_view name);
 
 	[[noreturn]] void switch_to();
-
-
 
 	ktl::shared_ptr<process> parent{ nullptr };
 
@@ -98,6 +101,7 @@ class kernel_stack final
 
  public:
 	[[nodiscard]] static ktl::unique_ptr<kernel_stack> create(thread::routine_type start_routine,
+		void* arg,
 		thread::trampoline_type tpl);
 
 	~kernel_stack();
@@ -112,8 +116,7 @@ class kernel_stack final
 		return reinterpret_cast<uintptr_t >(get_raw());
 	}
  private:
-	[[nodiscard]] kernel_stack(thread::routine_type routine,
-		thread::trampoline_type tpl);
+	[[nodiscard]] kernel_stack(thread::routine_type routine, void* arg, thread::trampoline_type tpl);
 
 	void* top{ nullptr };
 

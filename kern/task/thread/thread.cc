@@ -19,10 +19,11 @@ thread::thread_list_type task::global_thread_list{};
 cls_item<thread*, CLS_CUR_THREAD_PTR> task::cur_thread;
 
 ktl::unique_ptr<kernel_stack> task::kernel_stack::create(thread::routine_type start_routine,
+	void* arg,
 	thread::trampoline_type tpl)
 {
 	kbl::allocate_checker ck{};
-	ktl::unique_ptr<kernel_stack> ret{ new(&ck) kernel_stack{ start_routine, tpl }};
+	ktl::unique_ptr<kernel_stack> ret{ new(&ck) kernel_stack{ start_routine, arg, tpl }};
 
 	if (!ck.check())
 	{
@@ -43,28 +44,38 @@ kernel_stack::~kernel_stack()
 	memory::kfree(top);
 }
 
-kernel_stack::kernel_stack(thread::routine_type routine, thread::trampoline_type tpl)
+kernel_stack::kernel_stack(thread::routine_type routine, void* arg, thread::trampoline_type tpl)
 {
 	// setup initial kernel stack
 	auto sp = reinterpret_cast<uintptr_t>(static_cast<char*>(top) + task::process::KERNSTACK_SIZE);
 
 	sp -= sizeof(trap::trap_frame);
 	this->tf = reinterpret_cast<decltype(this->tf)>(sp);
+	memset(this->tf, 0, sizeof(*this->tf));
 
 	sp -= sizeof(uintptr_t);
 	*((uintptr_t*)sp) = reinterpret_cast<uintptr_t>(sp);
 
 	sp -= sizeof(uintptr_t);
-	*((uintptr_t*)sp) = reinterpret_cast<uintptr_t>(user_proc_entry);
+	*((uintptr_t*)sp) = reinterpret_cast<uintptr_t>(thread_trampoline_s);
 
 	sp -= sizeof(arch_task_context_registers);
 	this->context = reinterpret_cast<arch_task_context_registers*>(sp);
 	memset(this->context, 0, sizeof(*this->context));
 
 	this->context->rip = (uintptr_t)tpl;
+	this->tf->rip = reinterpret_cast<uintptr_t >(thread_entry);
 
-	// setup tf to execute the routine
-	this->tf->rip = reinterpret_cast<uintptr_t >(routine);
+	// setup registers
+	tf->cs = SEGMENT_VAL(SEGMENTSEL_KCODE, DPL_KERNEL);
+	tf->ss = SEGMENT_VAL(SEGMENTSEL_KDATA, DPL_KERNEL);
+
+	tf->rflags |= trap::EFLAG_IF | trap::EFLAG_IOPL_MASK;
+
+	// argument: routine arg and exit callback
+	tf->rdi = reinterpret_cast<uintptr_t>(routine);
+	tf->rsi = reinterpret_cast<uintptr_t>(arg);
+	tf->rdx = reinterpret_cast<uintptr_t>(thread::current::exit);
 }
 
 error_code_with_result<thread*> thread::create(ktl::shared_ptr<process> parent,
@@ -81,7 +92,7 @@ error_code_with_result<thread*> thread::create(ktl::shared_ptr<process> parent,
 		return -ERROR_MEMORY_ALLOC;
 	}
 
-	ret->kstack = kernel_stack::create(routine, trampoline);
+	ret->kstack = kernel_stack::create(routine, nullptr, trampoline);
 
 	if (ret->kstack == nullptr)
 	{
@@ -94,7 +105,12 @@ error_code_with_result<thread*> thread::create(ktl::shared_ptr<process> parent,
 
 vmm::mm_struct* task::thread::get_mm()
 {
-	return parent->get_mm();
+	if (parent != nullptr)
+	{
+		return parent->get_mm();
+	}
+
+	return nullptr;
 }
 
 void thread::trampoline()
@@ -138,4 +154,9 @@ thread::thread(ktl::shared_ptr<process> prt,
 	: parent{ std::move(prt) },
 	  name{ nm }
 {
+}
+
+void thread::current::exit(error_code code)
+{
+
 }

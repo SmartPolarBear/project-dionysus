@@ -65,38 +65,38 @@ user_proc_entry:
     // switch to user model
     sysretq
 
+.global thread_trampoline_s
+thread_trampoline_s:
+   pop %rax
+   pop %rbx
+   pop %rcx
+   pop %rdx
+   pop %rbp
+   pop %rsi
+   pop %rdi
+   pop %r8
+   pop %r9
+   pop %r10
+   pop %r11
+   pop %r12
+   pop %r13
+   pop %r14
+   pop %r15
+
+   // discard trapnum and errorcode
+   add $16, %rsp
+
+   iretq
+
+
 .global thread_entry
 thread_entry:
-    popq %rsi   // pop kstack address, we currently do nothing for it.
+    movq %rdi, %rax         // mov fn to rax
+    movq %rsi, %rdi         // prepare arg
 
-    popq %rax
-    popq %rbx
-    popq %rcx
-    popq %rdx
-    popq %rbp
-    popq %rsi
-    popq %rdi
-    popq %r8
-    popq %r9
-    popq %r10
-    popq %r11
-    popq %r12
-    popq %r13
-    popq %r14
-    popq %r15
+    movq %rdx, %r15         // put exit callback in preserved register
 
-    addq $16, %rsp
+    callq *%rax             // call fn
 
-    // rip into rcx
-    popq %rcx
-
-    addq $8, %rsp
-
-    // rflags into r11
-    popq %r11
-
-    // rsp into rsp
-    popq %rsp
-
-    // switch to user model
-    sysretq
+    movq %rax, %rdi         // save the return value of fn(arg)
+    call *%r15              // call exit callback to terminate current thread
