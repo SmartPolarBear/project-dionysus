@@ -138,7 +138,7 @@ extern "C" [[noreturn]] void kmain()
 //	run("/hello");
 
 	// start kernel servers in user space
-	init_servers();
+//	init_servers();
 
 	ap::all_processor_main();
 
@@ -156,5 +156,5 @@ void ap::all_processor_main()
 
 	task::scheduler::schedule();
 
-	scheduler::scheduler_loop();
+//	scheduler::scheduler_loop();
 }

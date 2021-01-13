@@ -94,7 +94,7 @@ class thread final
 
 	void finish_dying();
 
-	[[noreturn]] void switch_to();
+	[[noreturn]] void switch_to() TA_REQ(global_thread_lock);
 
 	ktl::shared_ptr<process> parent{ nullptr };
 
@@ -146,7 +146,7 @@ class kernel_stack final
 		return reinterpret_cast<uintptr_t >(get_raw());
 	}
  private:
-	[[nodiscard]] kernel_stack(void *stk_mem,thread::routine_type routine, void* arg, thread::trampoline_type tpl);
+	[[nodiscard]] kernel_stack(void* stk_mem, thread::routine_type routine, void* arg, thread::trampoline_type tpl);
 
 	void* top{ nullptr };
 

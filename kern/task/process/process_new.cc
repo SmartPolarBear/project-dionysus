@@ -92,6 +92,7 @@ error_code_with_result<ktl::shared_ptr<process>> process::create(const char* nam
 
 error_code process::setup_kernel_stack()
 {
+	KDEBUG_NOT_IMPLEMENTED;
 	auto raw_stack = this->kstack.get();
 
 	auto sp = reinterpret_cast<uintptr_t>(raw_stack + task::process::KERNSTACK_SIZE);

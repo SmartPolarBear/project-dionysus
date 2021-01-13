@@ -6,6 +6,8 @@
 
 #include "ktl/mutex/lock_guard.hpp"
 
+#include "ktl/algorithm.hpp"
+
 void task::scheduler::reschedule()
 {
 	if (!global_thread_lock.holding())
@@ -47,30 +49,19 @@ void task::scheduler::schedule()
 
 	ktl::mutex::lock_guard guard{ global_thread_lock };
 
-	auto pick_next = [&](thread::thread_list_type::iterator_type iter)
+	while (true)
 	{
-	  iter++;
-
-	  if (iter == global_thread_list.end())
-	  {
-		  return global_thread_list.begin();
-	  }
-
-	  return iter;
-	};
-
-	if (cur_thread->state == thread::thread_states::DYING)
-	{
-		cur_thread->finish_dying();
-	}
-
-	thread::thread_list_type::iterator_type iter_head{ &cur_thread->thread_link };
-	auto from = ++iter_head;
-	for (auto it = from; it != iter_head; it = pick_next(it))
-	{
-		if (it->state == thread::thread_states::READY)
+		for (auto& t:global_thread_list)
 		{
-			it->switch_to();
+			if (t.state == thread::thread_states::READY)
+			{
+				t.switch_to();
+			}
+
+			if (cur_thread != nullptr && cur_thread->state == thread::thread_states::DYING)
+			{
+				cur_thread->finish_dying();
+			}
 		}
 	}
 

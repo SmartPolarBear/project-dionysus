@@ -109,6 +109,7 @@ error_code_with_result<task::thread*> thread::create(ktl::shared_ptr<process> pa
 		return -ERROR_MEMORY_ALLOC;
 	}
 
+	ret->state = thread_states::READY;
 	return ret;
 }
 
@@ -135,7 +136,23 @@ error_code_with_result<task::thread*> thread::create_and_enqueue(ktl::shared_ptr
 
 error_code thread::create_idle()
 {
-	[[maybe_unused]]auto t = create_and_enqueue(nullptr, "idle", idle_routine, nullptr, default_trampoline);
+	[[maybe_unused]]auto ret = create_and_enqueue(nullptr, "idle", idle_routine, nullptr, default_trampoline);
+	if (has_error(ret))
+	{
+		return get_error_code(ret);
+	}
+
+	lock_guard g{ global_thread_lock };
+
+	auto th = get_result(ret);
+
+	th->flag |= FLAG_IDLE;
+
+	if (cur_thread == nullptr)
+	{
+		cur_thread = th;
+	}
+
 	return ERROR_SUCCESS;
 }
 
@@ -156,11 +173,9 @@ void thread::default_trampoline()
 	// will return to thread_entry
 }
 
-void thread::switch_to()
+void thread::switch_to() TA_REQ(global_thread_lock)
 {
-
 	KDEBUG_ASSERT(this->state == thread_states::READY);
-	KDEBUG_ASSERT(this->get_mm() != nullptr);
 
 	trap::pushcli();
 
@@ -182,7 +197,7 @@ void thread::switch_to()
 
 	uintptr_t kstack_addr = this->kstack->get_address();
 
-	cpu->tss.rsp0 = kstack_addr + task::process::KERNSTACK_SIZE;
+	cpu->tss.rsp0 = kstack_addr + kernel_stack::MAX_SIZE;
 
 	// Set gs. without calling swapgs to ensure atomic
 	gs_put_cpu_dependent(KERNEL_GS_KSTACK, kstack_addr);

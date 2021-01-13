@@ -1,5 +1,7 @@
 #pragma once
 
+#include "debug/nullability.hpp"
+
 #include "system/types.h"
 #include "system/error.hpp"
 
@@ -227,6 +229,7 @@ class intrusive_doubly_linked_list_iterator
 	explicit intrusive_doubly_linked_list_iterator(doubly_linked_node_state<T>* ns)
 		: node_state(ns)
 	{
+		KDEBUG_ASSERT(ns != nullptr);
 	}
 
 	T& operator*()
