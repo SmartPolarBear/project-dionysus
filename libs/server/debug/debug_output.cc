@@ -78,7 +78,7 @@ void debug_write_format_a(const char* fmt, va_list ap)
 		case 'f':
 		{
 			//FIXME: va_arg(ap, double) always return wrong value
-			put_str("%f flag is disabled because va_arg(ap, double) always return wrong value");
+			put_str("%f flags is disabled because va_arg(ap, double) always return wrong value");
 
 			size_t len = ftoa_ex(va_arg(ap, double), nbuf, 10);
 			for (size_t i = 0; i < len; i++)

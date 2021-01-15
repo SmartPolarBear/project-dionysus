@@ -156,7 +156,7 @@ error_code thread::create_idle()
 
 	auto th = get_result(ret);
 
-	th->flag |= FLAG_IDLE;
+	th->flags |= FLAG_IDLE;
 
 	th->need_reschedule = true;
 
@@ -252,7 +252,18 @@ void thread::finish_dying()
 
 void thread::kill()
 {
+	lock_guard g{ global_thread_lock };
 
+	signals |= SIGNAL_KILLED;
+
+	if (this == cur_thread)
+	{
+		return;
+	}
+
+	// TODO: wakeup
+
+	scheduler::yield();
 }
 
 void thread::resume()
@@ -267,7 +278,16 @@ void thread::suspend()
 
 void thread::forget()
 {
+	{
+		lock_guard g{ global_thread_lock };
+		KDEBUG_ASSERT(this != cur_thread.get());
 
+		this->remove_from_lists();
+	}
+
+	// TODO if waiting?
+
+	delete this;
 }
 
 error_code thread::detach()
@@ -277,6 +297,7 @@ error_code thread::detach()
 
 error_code thread::join(error_code* out_err_code)
 {
+
 	return 0;
 }
 
@@ -292,7 +313,7 @@ void thread::current::exit(error_code code)
 	cur_thread->state = thread_states::DYING;
 	cur_thread->exit_code = code;
 
-	if (cur_thread->flag & FLAG_DETACHED)
+	if (cur_thread->flags & FLAG_DETACHED)
 	{
 		cur_thread->remove_from_lists();
 	}

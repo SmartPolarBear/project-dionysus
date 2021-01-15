@@ -194,7 +194,7 @@ namespace executable
 		PF_X = 0x1,//Execute permission
 		PF_W = 0x2,//Write permission
 		PF_R = 0x4,//Read permission
-		PF_MASKOS = 0x00FF0000,//These flag bits are reserved for environment-specific use
-		PF_MASKPROC = 0xFF000000,//These flag bits are reserved for processor-specific use
+		PF_MASKOS = 0x00FF0000,//These flags bits are reserved for environment-specific use
+		PF_MASKPROC = 0xFF000000,//These flags bits are reserved for processor-specific use
 	};
 }

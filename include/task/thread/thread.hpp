@@ -53,6 +53,11 @@ class thread final
 		FLAG_DEFERRED_FREE,
 	};
 
+	enum [[clang::flag_enum, clang::enum_extensibility(open)]] thread_signals : uint64_t
+	{
+		SIGNAL_KILLED
+	};
+
 	struct current
 	{
 		static void exit(error_code code);
@@ -96,12 +101,15 @@ class thread final
 
 	void suspend();
 
-	void forget();
-
 	error_code detach();
 
+	/// \brief wait until the thread complete
+	/// \param out_err_code the exit code of the thread
+	/// \return whether the joining is succeeded.
 	error_code join(error_code* out_err_code);
 
+	/// \brief forcibly remove the thread from global thread list and free the thread
+	[[deprecated("We rarely force terminate a thread using this.")]] void forget();
  private:
 	[[noreturn]]static error_code idle_routine(void* arg);
 	static_assert(ktl::Convertible<decltype(idle_routine), routine_type>);
@@ -130,7 +138,9 @@ class thread final
 
 	bool critical{ false };
 
-	uint64_t flag{ 0 };
+	uint64_t flags{ 0 };
+
+	uint64_t signals{ 0 };
 
  public:
 	using thread_list_type = kbl::intrusive_doubly_linked_list<thread, &thread::thread_link>;
