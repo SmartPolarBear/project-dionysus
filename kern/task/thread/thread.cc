@@ -38,7 +38,7 @@ ktl::unique_ptr<kernel_stack> task::kernel_stack::create(thread::routine_type st
 		return nullptr;
 	}
 
-	if (ret->top == nullptr)
+	if (ret->bottom == nullptr)
 	{
 		return nullptr;
 	}
@@ -48,21 +48,18 @@ ktl::unique_ptr<kernel_stack> task::kernel_stack::create(thread::routine_type st
 
 kernel_stack::~kernel_stack()
 {
-	memory::kfree(top);
+	memory::kfree(bottom);
 }
 
 kernel_stack::kernel_stack(void* stk_mem, thread::routine_type routine, void* arg, thread::trampoline_type tpl)
-	: top(stk_mem)
+	: bottom(stk_mem)
 {
 	// setup initial kernel stack
-	auto sp = reinterpret_cast<uintptr_t>(static_cast<char*>(top) + MAX_SIZE);
+	auto sp = reinterpret_cast<uintptr_t>(static_cast<char*>(bottom) + MAX_SIZE);
 
 	sp -= sizeof(trap::trap_frame);
 	this->tf = reinterpret_cast<decltype(this->tf)>(sp);
 	memset(this->tf, 0, sizeof(*this->tf));
-
-	sp -= sizeof(uintptr_t);
-	*((uintptr_t*)sp) = reinterpret_cast<uintptr_t>(sp);
 
 	sp -= sizeof(uintptr_t);
 	*((uintptr_t*)sp) = reinterpret_cast<uintptr_t>(thread_trampoline_s);
@@ -72,7 +69,6 @@ kernel_stack::kernel_stack(void* stk_mem, thread::routine_type routine, void* ar
 	memset(this->context, 0, sizeof(*this->context));
 
 	this->context->rip = (uintptr_t)tpl;
-	this->tf->rip = reinterpret_cast<uintptr_t >(thread_entry);
 
 	// setup registers
 	tf->cs = SEGMENT_VAL(SEGMENTSEL_KCODE, DPL_KERNEL);
@@ -84,6 +80,10 @@ kernel_stack::kernel_stack(void* stk_mem, thread::routine_type routine, void* ar
 	tf->rdi = reinterpret_cast<uintptr_t>(routine);
 	tf->rsi = reinterpret_cast<uintptr_t>(arg);
 	tf->rdx = reinterpret_cast<uintptr_t>(thread::current::exit);
+
+	tf->rip = reinterpret_cast<uintptr_t >(thread_entry);
+
+	top = sp;
 }
 
 error_code_with_result<task::thread*> thread::create(ktl::shared_ptr<process> parent,
@@ -107,6 +107,16 @@ error_code_with_result<task::thread*> thread::create(ktl::shared_ptr<process> pa
 	{
 		delete ret;
 		return -ERROR_MEMORY_ALLOC;
+	}
+
+	if (parent != nullptr)
+	{
+		// TODO: allocate user stack
+		KDEBUG_NOT_IMPLEMENTED;
+	}
+	else
+	{
+		ret->kstack->tf->rsp = ret->kstack->top;
 	}
 
 	ret->state = thread_states::READY;

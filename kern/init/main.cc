@@ -50,10 +50,10 @@ error_code test_routine(void* arg)
 extern std::shared_ptr<task::job> root_job;
 static inline void run(char* name)
 {
-	if (auto ret = task::thread::create_and_enqueue(nullptr, "test", test_routine, nullptr);has_error(ret))
-	{
-		KDEBUG_GERNERALPANIC_CODE(get_error_code(ret));
-	}
+//	if (auto ret = task::thread::create_and_enqueue(nullptr, "test", test_routine, nullptr);has_error(ret))
+//	{
+//		KDEBUG_GERNERALPANIC_CODE(get_error_code(ret));
+//	}
 
 	return;
 

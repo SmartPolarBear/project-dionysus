@@ -67,24 +67,24 @@ user_entry:
 
 .global thread_trampoline_s
 thread_trampoline_s:
-   pop %rax
-   pop %rbx
-   pop %rcx
-   pop %rdx
-   pop %rbp
-   pop %rsi
-   pop %rdi
-   pop %r8
-   pop %r9
-   pop %r10
-   pop %r11
-   pop %r12
-   pop %r13
-   pop %r14
-   pop %r15
+   popq %rax
+   popq %rbx
+   popq %rcx
+   popq %rdx
+   popq %rbp
+   popq %rsi
+   popq %rdi
+   popq %r8
+   popq %r9
+   popq %r10
+   popq %r11
+   popq %r12
+   popq %r13
+   popq %r14
+   popq %r15
 
    // discard trapnum and errorcode
-   add $16, %rsp
+   addq $16, %rsp
 
    iretq
 

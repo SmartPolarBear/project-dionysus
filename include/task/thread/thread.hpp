@@ -138,7 +138,7 @@ class kernel_stack final
 
 	[[nodiscard]] void* get_raw() const
 	{
-		return top;
+		return bottom;
 	}
 
 	[[nodiscard]] uintptr_t get_address() const
@@ -148,11 +148,13 @@ class kernel_stack final
  private:
 	[[nodiscard]] kernel_stack(void* stk_mem, thread::routine_type routine, void* arg, thread::trampoline_type tpl);
 
-	void* top{ nullptr };
+	void* bottom{ nullptr };
 
 	trap::trap_frame* tf{ nullptr };
 
 	arch_task_context_registers* context{ nullptr };
+
+	uintptr_t top{ 0 };
 };
 
 extern thread::thread_list_type global_thread_list;

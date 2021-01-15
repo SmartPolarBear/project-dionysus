@@ -77,7 +77,7 @@ namespace trap
 
 	struct trap_frame
 	{
-		uint64_t rax; // eax in x86
+		uint64_t rax;
 		uint64_t rbx;
 		uint64_t rcx;
 		uint64_t rdx;
@@ -96,10 +96,10 @@ namespace trap
 		uint64_t trap_num;
 		uint64_t err;
 
-		uint64_t rip; // eip in x86
+		uint64_t rip;
 		uint64_t cs;
-		uint64_t rflags; // eflags in x86
-		uint64_t rsp;    // esp in x86
+		uint64_t rflags;
+		uint64_t rsp;
 		uint64_t ss;     // ds in x86
 	};
 
