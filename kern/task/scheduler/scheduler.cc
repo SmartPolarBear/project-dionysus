@@ -60,9 +60,7 @@ void task::scheduler::schedule()
 			{
 				t.switch_to();
 			}
-
-			int a = 0;
-
+			
 			if (t.state == thread::thread_states::DYING)
 			{
 				t.finish_dying();

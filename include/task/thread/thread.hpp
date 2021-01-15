@@ -85,6 +85,23 @@ class thread final
 
 	[[nodiscard]]vmm::mm_struct* get_mm();
 
+	[[nodiscard]]bool get_need_reschedule() const
+	{
+		return need_reschedule;
+	}
+
+	void kill();
+
+	void resume();
+
+	void suspend();
+
+	void forget();
+
+	error_code detach();
+
+	error_code join(error_code* out_err_code);
+
  private:
 	[[noreturn]]static error_code idle_routine(void* arg);
 	static_assert(ktl::Convertible<decltype(idle_routine), routine_type>);
@@ -117,7 +134,6 @@ class thread final
 
  public:
 	using thread_list_type = kbl::intrusive_doubly_linked_list<thread, &thread::thread_link>;
-
 };
 
 class kernel_stack final

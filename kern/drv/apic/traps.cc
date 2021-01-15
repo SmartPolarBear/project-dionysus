@@ -3,6 +3,9 @@
 
 #include "arch/amd64/cpu/x86.h"
 
+#include "task/thread/thread.hpp"
+#include "task/scheduler/scheduler.hpp"
+
 #include "drivers/apic/apic.h"
 #include "drivers/apic/traps.h"
 #include "drivers/console/console.h"
@@ -95,14 +98,14 @@ static inline void make_idt_entry(idt_entry* gate, exception_type type, uintptr_
 
 PANIC void trap::init_trap()
 {
-	auto idt = reinterpret_cast<idt_entry*>(new (std::nothrow)BLOCK<IDT_SIZE>);
+	auto idt = reinterpret_cast<idt_entry*>(new(std::nothrow)BLOCK<IDT_SIZE>);
 	if (idt == nullptr)
 	{
 		KDEBUG_GENERALPANIC("Can't allocate memory for IDT.");
 	}
 	memset(idt, 0, IDT_SIZE);
 
-	auto desc = reinterpret_cast<idt_table_desc*>(new (std::nothrow)BLOCK<sizeof(idt_table_desc)>);
+	auto desc = reinterpret_cast<idt_table_desc*>(new(std::nothrow)BLOCK<sizeof(idt_table_desc)>);
 	if (desc == nullptr)
 	{
 		KDEBUG_GENERALPANIC("Can't allocate memory for IDT descriptor.");
@@ -190,6 +193,12 @@ extern "C" void trap_body(trap::trap_frame info)
 		&& ((info.cs & 0b11) == DPL_USER))
 	{
 		task::process_exit(cur_proc());
+	}
+
+	// if rescheduling needed, reschedule
+	if (task::cur_thread != nullptr && task::cur_thread->get_need_reschedule())
+	{
+		task::scheduler::yield();
 	}
 
 	if (error != ERROR_SUCCESS)

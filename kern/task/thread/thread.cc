@@ -158,6 +158,8 @@ error_code thread::create_idle()
 
 	th->flag |= FLAG_IDLE;
 
+	th->need_reschedule = true;
+
 	if (cur_thread == nullptr)
 	{
 		cur_thread = th;
@@ -234,22 +236,48 @@ void thread::remove_from_lists()
 
 void thread::finish_dying()
 {
-	cur_thread = nullptr;
 	this->state = thread_states::DEAD;
-
 	delete this;
 }
 
-[[noreturn]] error_code thread::idle_routine(void* arg)
+[[noreturn]] error_code thread::idle_routine(void* arg __UNUSED)
 {
 	for (;;)
 	{
 		task::scheduler::yield();
 	}
 
-	__UNREACHABLE;
+	__UNREACHABLE; // do not do return -ERROR_SHOULD_NOT_REACH_HERE;
+}
 
-	return -ERROR_SHOULD_NOT_REACH_HERE;
+void thread::kill()
+{
+
+}
+
+void thread::resume()
+{
+
+}
+
+void thread::suspend()
+{
+
+}
+
+void thread::forget()
+{
+
+}
+
+error_code thread::detach()
+{
+	return 0;
+}
+
+error_code thread::join(error_code* out_err_code)
+{
+	return 0;
 }
 
 void thread::current::exit(error_code code)
