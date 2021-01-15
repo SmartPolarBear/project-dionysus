@@ -63,6 +63,7 @@ class thread final
 	using routine_type = error_code (*)(void* arg);
 
 	static void default_trampoline();
+
 	static_assert(ktl::Convertible<decltype(default_trampoline), trampoline_type>);
 
 	[[nodiscard]]static error_code_with_result<task::thread*> create(ktl::shared_ptr<process> parent,
@@ -85,7 +86,7 @@ class thread final
 	[[nodiscard]]vmm::mm_struct* get_mm();
 
  private:
-	static error_code idle_routine(void* arg);
+	[[noreturn]]static error_code idle_routine(void* arg);
 	static_assert(ktl::Convertible<decltype(idle_routine), routine_type>);
 
 	thread(ktl::shared_ptr<process> parent, ktl::string_view name);
@@ -94,7 +95,7 @@ class thread final
 
 	void finish_dying();
 
-	[[noreturn]] void switch_to() TA_REQ(global_thread_lock);
+	void switch_to() TA_REQ(global_thread_lock);
 
 	ktl::shared_ptr<process> parent{ nullptr };
 

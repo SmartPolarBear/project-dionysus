@@ -39,7 +39,10 @@ void task::scheduler::reschedule()
 
 void task::scheduler::yield()
 {
+	ktl::mutex::lock_guard g{ global_thread_lock };
+
 	cur_thread->state = thread::thread_states::READY;
+
 	reschedule();
 }
 

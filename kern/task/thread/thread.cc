@@ -239,10 +239,16 @@ void thread::finish_dying()
 
 	delete this;
 }
-error_code thread::idle_routine(void* arg)
+
+[[noreturn]] error_code thread::idle_routine(void* arg)
 {
-	while (true)hlt();
-	return ERROR_SUCCESS;
+	for (;;)
+	{
+		task::scheduler::yield();
+	}
+
+	__UNREACHABLE;
+	return -ERROR_SHOULD_NOT_REACH_HERE;
 }
 
 void thread::current::exit(error_code code)

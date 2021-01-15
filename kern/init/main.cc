@@ -38,22 +38,24 @@
 // std::variant is usable with the pseudo-syscalls
 // std::span is usable unconditionally
 
-error_code test_routine(void* arg)
+[[noreturn]] error_code test_routine(void* arg)
 {
-	while (true)
+	for (;;)
 	{
-		write_format("%d", cpu->id);
+		write_format("%d\n", cpu->id);
 	}
-	return ERROR_SUCCESS;
+
+	__UNREACHABLE;
+	return -ERROR_SHOULD_NOT_REACH_HERE;
 }
 
 extern std::shared_ptr<task::job> root_job;
 static inline void run(char* name)
 {
-//	if (auto ret = task::thread::create_and_enqueue(nullptr, "test", test_routine, nullptr);has_error(ret))
-//	{
-//		KDEBUG_GERNERALPANIC_CODE(get_error_code(ret));
-//	}
+	if (auto ret = task::thread::create_and_enqueue(nullptr, "test", test_routine, nullptr);has_error(ret))
+	{
+		KDEBUG_GERNERALPANIC_CODE(get_error_code(ret));
+	}
 
 	return;
 
@@ -134,8 +136,8 @@ extern "C" [[noreturn]] void kmain()
 
 	write_format("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
 
-//	run("/ipctest");
-//	run("/hello");
+	run("/ipctest");
+	run("/hello");
 
 	// start kernel servers in user space
 //	init_servers();
