@@ -61,9 +61,11 @@ void task::scheduler::schedule()
 				t.switch_to();
 			}
 
-			if (cur_thread != nullptr && cur_thread->state == thread::thread_states::DYING)
+			int a = 0;
+
+			if (t.state == thread::thread_states::DYING)
 			{
-				cur_thread->finish_dying();
+				t.finish_dying();
 			}
 		}
 	}

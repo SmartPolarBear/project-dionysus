@@ -246,7 +246,7 @@ void thread::finish_dying()
 	{
 		task::scheduler::yield();
 	}
-	
+
 	__UNREACHABLE;
 
 	return -ERROR_SHOULD_NOT_REACH_HERE;
