@@ -38,15 +38,11 @@
 // std::variant is usable with the pseudo-syscalls
 // std::span is usable unconditionally
 
-[[noreturn]] error_code test_routine(void* arg)
+error_code test_routine(void* arg)
 {
-	for (;;)
-	{
-		write_format("%d\n", cpu->id);
-	}
+	write_format("%d\n", cpu->id);
 
-	__UNREACHABLE;
-	return -ERROR_SHOULD_NOT_REACH_HERE;
+	return 20011204;
 }
 
 extern std::shared_ptr<task::job> root_job;

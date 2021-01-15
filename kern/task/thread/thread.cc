@@ -246,8 +246,9 @@ void thread::finish_dying()
 	{
 		task::scheduler::yield();
 	}
-
+	
 	__UNREACHABLE;
+
 	return -ERROR_SHOULD_NOT_REACH_HERE;
 }
 
@@ -255,7 +256,10 @@ void thread::current::exit(error_code code)
 {
 	lock_guard g{ global_thread_lock };
 
-	cur_thread->parent->remove_thread(cur_thread.get());
+	if (cur_thread->parent != nullptr)
+	{
+		cur_thread->parent->remove_thread(cur_thread.get());
+	}
 
 	cur_thread->state = thread_states::DYING;
 	cur_thread->exit_code = code;
