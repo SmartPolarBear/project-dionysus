@@ -28,7 +28,7 @@ struct cpu_struct
 	// scheduler_context context
 	context* scheduler_context{ nullptr };
 
-	task::default_scheduler_type scheduler{};
+	task::scheduler scheduler{};
 
 	task_state_segment tss{};
 	gdt_table gdt_table{};

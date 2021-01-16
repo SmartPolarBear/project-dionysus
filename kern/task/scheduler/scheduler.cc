@@ -8,6 +8,8 @@
 
 #include "ktl/algorithm.hpp"
 
+task::scheduler::class_type scheduler_class{};
+
 void task::scheduler::reschedule()
 {
 	if (!global_thread_lock.holding())
@@ -70,18 +72,26 @@ void task::scheduler::schedule()
 
 }
 
+void task::scheduler::unblock(task::thread* t) TA_REQ(global_thread_lock)
+{
+
+}
+
 void task::round_rubin_scheduler_class::enqueue(task::thread* thread)
 {
 
 }
+
 void task::round_rubin_scheduler_class::dequeue(task::thread* thread)
 {
 
 }
+
 task::thread* task::round_rubin_scheduler_class::pick_next()
 {
 	return nullptr;
 }
+
 void task::round_rubin_scheduler_class::timer_tick()
 {
 
