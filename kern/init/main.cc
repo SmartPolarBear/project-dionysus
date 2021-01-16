@@ -154,5 +154,5 @@ void ap::all_processor_main()
 
 	cpu->scheduler.schedule();
 
-//	scheduler_context::scheduler_loop();
+//	context::scheduler_loop();
 }

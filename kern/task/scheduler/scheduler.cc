@@ -33,7 +33,7 @@ void task::scheduler::reschedule()
 
 	auto intr_enable = cpu->intr_enable;
 
-	context_switch(&cur_thread->kstack->context, this->scheduler_context);
+	context_switch(&cur_thread->kstack->context, this->context);
 
 	cpu->intr_enable = intr_enable;
 }

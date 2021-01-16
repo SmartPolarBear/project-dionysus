@@ -61,8 +61,8 @@ class scheduler
  public:
 	friend class thread;
 
-	// scheduler_context context
-	arch_task_context_registers* scheduler_context{ nullptr };
+	// context context
+	arch_task_context_registers* context{ nullptr };
 };
 
 }

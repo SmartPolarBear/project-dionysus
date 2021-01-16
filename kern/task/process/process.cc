@@ -231,7 +231,7 @@ void task::process_exit(IN process* proc)
 
 	proc->mm = nullptr;
 
-	// set task state and call the scheduler_context
+	// set task state and call the context
 	proc->state = PROC_STATE_ZOMBIE;
 
 	proc_list.zombie_queue.push(proc);

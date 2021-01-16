@@ -88,12 +88,12 @@ using lock::spinlock_holding;
 
 				trap::popcli();
 
-				context_switch(&cpu->scheduler.scheduler_context, cur_proc()->context);
+				context_switch(&cpu->scheduler.context, cur_proc()->context);
 
 				cur_proc = nullptr;
 			}
 
-			// In scheduler_context, we check if there's task to be killed
+			// In context, we check if there's task to be killed
 			while (proc_list.zombie_queue.size())
 			{
 				auto zombie = proc_list.zombie_queue.front();
@@ -137,7 +137,7 @@ void scheduler::scheduler_enter()
 
 	auto intr_enable = cpu->intr_enable;
 
-	context_switch(&cur_proc->context, cpu->scheduler.scheduler_context);
+	context_switch(&cur_proc->context, cpu->scheduler.context);
 
 	cpu->intr_enable = intr_enable;
 }
