@@ -90,7 +90,7 @@ error_code trap_handle_tick([[maybe_unused]] trap::trap_frame info)
 
 		if (cur_proc != nullptr && cur_proc->get_state() == task::PROC_STATE_RUNNING)
 		{
-			task::scheduler::yield();
+			cpu->scheduler.yield();
 
 			scheduler::scheduler_yield();
 		}

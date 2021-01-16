@@ -8,36 +8,32 @@
 #include "system/cls.hpp"
 #include "system/dpc.hpp"
 
+#include "task/scheduler/scheduler.hpp"
+
 using context = arch_task_context_registers;
 
 struct cpu_struct
 {
-	uint8_t id;                // index into cpus[] below
-	uint8_t apicid;            // Local APIC ID
-	volatile uint32_t started; // Has the CPU started?
-	int nest_pushcli_depth;    // Depth of pushcli nesting.
-	int intr_enable;           // Were interrupts enabled before pushcli?
-	bool present;              // Is this core available
+	uint8_t id{ 0 };                // index into cpus[] below
+	uint8_t apicid{ 0 };            // Local APIC ID
+	volatile uint32_t started{ 0 }; // Has the CPU started?
+	int nest_pushcli_depth{ 0 };    // Depth of pushcli nesting.
+	int intr_enable{ false };           // Were interrupts enabled before pushcli?
+	bool present{ false };              // Is this core available
 
 	// Cpu-local storage variables
-	void* local_fs;
-	void* kernel_gs;
+	void* local_fs{ nullptr };
+	void* kernel_gs{ nullptr };
 
-	// scheduler context
-	context* scheduler;
+	// scheduler_context context
+	context* scheduler_context{ nullptr };
+
+	task::default_scheduler_type scheduler{};
 
 	task_state_segment tss{};
 	gdt_table gdt_table{};
 
-	cpu_struct()
-		: id(0), apicid(0),
-		  started(0), nest_pushcli_depth(0),
-		  intr_enable(0), present(false),
-		  local_fs(nullptr), kernel_gs(nullptr),
-		  scheduler(nullptr)
-	{
-
-	}
+	cpu_struct() = default;
 
 	void install_gdt_and_tss()
 	{

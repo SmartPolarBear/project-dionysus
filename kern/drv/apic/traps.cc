@@ -198,7 +198,9 @@ extern "C" void trap_body(trap::trap_frame info)
 	// if rescheduling needed, reschedule
 	if (task::cur_thread != nullptr && task::cur_thread->get_need_reschedule())
 	{
-		task::scheduler::yield();
+//		task::scheduler::yield();
+		cpu->scheduler.yield();
+
 	}
 
 	if (error != ERROR_SUCCESS)

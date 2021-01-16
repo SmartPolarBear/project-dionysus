@@ -32,7 +32,7 @@ void task::scheduler::reschedule()
 
 	auto intr_enable = cpu->intr_enable;
 
-	context_switch(&cur_thread->kstack->context, cpu->scheduler);
+	context_switch(&cur_thread->kstack->context, cpu->scheduler_context);
 
 	cpu->intr_enable = intr_enable;
 }
@@ -60,12 +60,29 @@ void task::scheduler::schedule()
 			{
 				t.switch_to();
 			}
-			
+
 			if (t.state == thread::thread_states::DYING)
 			{
 				t.finish_dying();
 			}
 		}
 	}
+
+}
+
+void task::round_rubin_scheduler_class::enqueue(task::thread* thread)
+{
+
+}
+void task::round_rubin_scheduler_class::dequeue(task::thread* thread)
+{
+
+}
+task::thread* task::round_rubin_scheduler_class::pick_next()
+{
+	return nullptr;
+}
+void task::round_rubin_scheduler_class::timer_tick()
+{
 
 }

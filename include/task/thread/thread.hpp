@@ -17,7 +17,6 @@
 
 #include "system/cls.hpp"
 
-#include "drivers/acpi/cpu.h"
 #include "drivers/apic/traps.h"
 
 namespace task
@@ -34,7 +33,9 @@ class thread final
 {
  public:
 	friend class process;
-	friend class scheduler;
+
+	friend
+	class scheduler;
 
 	enum class [[clang::enum_extensibility(closed)]] thread_states
 	{
@@ -150,7 +151,9 @@ class kernel_stack final
 {
  public:
 	friend class thread;
-	friend class scheduler;
+
+	friend
+	class scheduler;
 
 	static constexpr size_t MAX_SIZE = 4_MB;
 	static constexpr size_t MAX_PAGE_COUNT = MAX_SIZE / PAGE_SIZE;

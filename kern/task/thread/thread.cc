@@ -216,7 +216,7 @@ void thread::switch_to() TA_REQ(global_thread_lock)
 
 	trap::popcli();
 
-	context_switch(&cpu->scheduler, this->kstack->context);
+	context_switch(&cpu->scheduler_context, this->kstack->context);
 
 	cur_thread = nullptr;
 }
@@ -244,7 +244,8 @@ void thread::finish_dying()
 {
 	for (;;)
 	{
-		task::scheduler::yield();
+//		task::scheduler::yield();
+		cpu->scheduler.yield();
 	}
 
 	__UNREACHABLE; // do not do return -ERROR_SHOULD_NOT_REACH_HERE;
@@ -263,7 +264,7 @@ void thread::kill()
 
 	// TODO: wakeup
 
-	scheduler::yield();
+	cpu->scheduler.yield();
 }
 
 void thread::resume()
@@ -322,7 +323,7 @@ void thread::current::exit(error_code code)
 		// TODO: waiting queue
 	}
 
-	task::scheduler::reschedule();
+	cpu->scheduler.reschedule();
 
 	__UNREACHABLE;
 }

@@ -231,12 +231,12 @@ void task::process_exit(IN process* proc)
 
 	proc->mm = nullptr;
 
-	// set task state and call the scheduler
+	// set task state and call the scheduler_context
 	proc->state = PROC_STATE_ZOMBIE;
 
 	proc_list.zombie_queue.push(proc);
 
-	scheduler::scheduler_enter();
+	::scheduler::scheduler_enter();
 }
 
 // let current task sleep on certain channel
@@ -264,7 +264,7 @@ error_code task::process_sleep(size_t channel, lock::spinlock_struct* lock)
 	cur_proc->sleep_data.channel = channel;
 	cur_proc->state = PROC_STATE_SLEEPING;
 
-	scheduler::scheduler_enter();
+	::scheduler::scheduler_enter();
 
 	cur_proc->sleep_data.channel = 0;
 

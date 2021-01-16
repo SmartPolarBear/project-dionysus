@@ -152,7 +152,7 @@ void ap::all_processor_main()
 
 	KDEBUG_GERNERALPANIC_CODE(task::thread::create_idle());
 
-	task::scheduler::schedule();
+	cpu->scheduler.schedule();
 
-//	scheduler::scheduler_loop();
+//	scheduler_context::scheduler_loop();
 }
