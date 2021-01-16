@@ -40,6 +40,7 @@ class round_rubin_scheduler_class
 
  private:
 	ktl::list<thread*> run_queue TA_GUARDED(global_thread_lock);
+
 };
 
 class scheduler
@@ -55,7 +56,13 @@ class scheduler
 	void unblock(thread* t) TA_REQ(global_thread_lock);
 
  private:
-	static class_type scheduler_class;
+	class_type scheduler_class{};
+
+ public:
+	friend class thread;
+
+	// scheduler_context context
+	arch_task_context_registers* scheduler_context{ nullptr };
 };
 
 }

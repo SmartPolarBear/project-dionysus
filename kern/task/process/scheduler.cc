@@ -88,7 +88,7 @@ using lock::spinlock_holding;
 
 				trap::popcli();
 
-				context_switch(&cpu->scheduler_context, cur_proc()->context);
+				context_switch(&cpu->scheduler.scheduler_context, cur_proc()->context);
 
 				cur_proc = nullptr;
 			}
@@ -137,7 +137,7 @@ void scheduler::scheduler_enter()
 
 	auto intr_enable = cpu->intr_enable;
 
-	context_switch(&cur_proc->context, cpu->scheduler_context);
+	context_switch(&cur_proc->context, cpu->scheduler.scheduler_context);
 
 	cpu->intr_enable = intr_enable;
 }

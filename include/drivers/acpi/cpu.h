@@ -25,8 +25,6 @@ struct cpu_struct
 	void* local_fs{ nullptr };
 	void* kernel_gs{ nullptr };
 
-	// scheduler_context context
-	context* scheduler_context{ nullptr };
 
 	task::scheduler scheduler{};
 

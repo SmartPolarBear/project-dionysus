@@ -216,7 +216,7 @@ void thread::switch_to() TA_REQ(global_thread_lock)
 
 	trap::popcli();
 
-	context_switch(&cpu->scheduler_context, this->kstack->context);
+	context_switch(&cpu->scheduler.scheduler_context, this->kstack->context);
 
 	cur_thread = nullptr;
 }
