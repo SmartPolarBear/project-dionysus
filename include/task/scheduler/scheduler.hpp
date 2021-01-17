@@ -55,8 +55,15 @@ class scheduler
 
 	void unblock(thread* t) TA_REQ(global_thread_lock);
 
+	void handle_timer();
+
  private:
 	class_type scheduler_class{};
+
+	void enqueue(thread *t) TA_REQ(global_thread_lock);
+	void dequeue(thread *t) TA_REQ(global_thread_lock);
+	thread *pick_next() TA_REQ(global_thread_lock);
+	void timer_tick(thread *t) TA_REQ(global_thread_lock);
 
  public:
 	friend class thread;

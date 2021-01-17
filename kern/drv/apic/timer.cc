@@ -15,6 +15,7 @@
 #include "drivers/acpi/cpu.h"
 
 #include "task/scheduler/scheduler.hpp"
+#include "task/thread/thread.hpp"
 
 #include "../../libs/basic_io/include/builtin_text_io.hpp"
 
@@ -90,7 +91,11 @@ error_code trap_handle_tick([[maybe_unused]] trap::trap_frame info)
 
 		if (cur_proc != nullptr && cur_proc->get_state() == task::PROC_STATE_RUNNING)
 		{
-			cpu->scheduler.yield();
+			if (task::cur_thread->get_need_reschedule())
+			{
+				cpu->scheduler.yield();
+			}
+			cpu->scheduler.handle_timer();
 
 			scheduler::scheduler_yield();
 		}

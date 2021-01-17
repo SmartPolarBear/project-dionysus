@@ -165,6 +165,8 @@ error_code thread::create_idle()
 		cur_thread = th;
 	}
 
+	cpu->idle = th;
+
 	return ERROR_SUCCESS;
 }
 
@@ -189,36 +191,36 @@ void thread::switch_to() TA_REQ(global_thread_lock)
 {
 	KDEBUG_ASSERT(this->state == thread_states::READY);
 
-	trap::pushcli();
-
-	cur_thread = this;
-
-	cur_thread->state = thread_states::RUNNING;
-
-	// TODO: add counters to track run count
-
-	auto mm = this->get_mm();
-	if (mm == nullptr)
+	if (this != cur_thread)
 	{
-		lcr3(V2P((uintptr_t)vmm::g_kpml4t));
+		trap::pushcli();
+
+		auto prev = cur_thread.get();
+
+		cur_thread = this;
+
+		cur_thread->state = thread_states::RUNNING;
+
+		uintptr_t kstack_addr = this->kstack->get_address();
+		cpu->tss.rsp0 = kstack_addr + kernel_stack::MAX_SIZE;
+
+		// Set gs. without calling swapgs to ensure atomic
+		gs_put_cpu_dependent(KERNEL_GS_KSTACK, kstack_addr);
+
+		auto mm = this->get_mm();
+		if (mm == nullptr)
+		{
+			lcr3(V2P((uintptr_t)vmm::g_kpml4t));
+		}
+		else
+		{
+			lcr3(V2P((uintptr_t)this->get_mm()->pgdir));
+		}
+
+		trap::popcli();
+
+		context_switch(&prev->kstack->context, this->kstack->context);
 	}
-	else
-	{
-		lcr3(V2P((uintptr_t)this->get_mm()->pgdir));
-	}
-
-	uintptr_t kstack_addr = this->kstack->get_address();
-
-	cpu->tss.rsp0 = kstack_addr + kernel_stack::MAX_SIZE;
-
-	// Set gs. without calling swapgs to ensure atomic
-	gs_put_cpu_dependent(KERNEL_GS_KSTACK, kstack_addr);
-
-	trap::popcli();
-
-	context_switch(&cpu->scheduler.context, this->kstack->context);
-
-	cur_thread = nullptr;
 }
 
 thread::thread(ktl::shared_ptr<process> prt,

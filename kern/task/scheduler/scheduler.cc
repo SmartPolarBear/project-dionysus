@@ -8,6 +8,7 @@
 
 #include "ktl/algorithm.hpp"
 
+using namespace ktl::mutex;
 
 void task::scheduler::reschedule()
 {
@@ -31,11 +32,7 @@ void task::scheduler::reschedule()
 		KDEBUG_GENERALPANIC("scheduler_enter can't be interruptible");
 	}
 
-	auto intr_enable = cpu->intr_enable;
-
-	context_switch(&cur_thread->kstack->context, this->context);
-
-	cpu->intr_enable = intr_enable;
+	cur_thread->need_reschedule = true;
 }
 
 void task::scheduler::yield()
@@ -53,22 +50,35 @@ void task::scheduler::schedule()
 
 	ktl::mutex::lock_guard guard{ global_thread_lock };
 
-	while (true)
-	{
-		for (auto& t:global_thread_list)
-		{
-			if (t.state == thread::thread_states::READY)
-			{
-				t.switch_to();
-			}
+	cur_thread->need_reschedule = false;
 
-			if (t.state == thread::thread_states::DYING)
-			{
-				t.finish_dying();
-			}
-		}
+	if (cur_thread->state == thread::thread_states::READY)
+	{
+		enqueue(cur_thread.get());
 	}
 
+	auto next = pick_next();
+	if (next != nullptr)
+	{
+		dequeue(next);
+	}
+
+	if (next == nullptr)
+	{
+		next = cpu->idle;
+	}
+
+	if (next != cur_thread)
+	{
+		next->switch_to();
+	}
+}
+
+void task::scheduler::handle_timer()
+{
+	lock_guard g{ global_thread_lock };
+
+	timer_tick(cur_thread.get());
 }
 
 void task::scheduler::unblock(task::thread* t) TA_REQ(global_thread_lock)
@@ -76,22 +86,35 @@ void task::scheduler::unblock(task::thread* t) TA_REQ(global_thread_lock)
 
 }
 
-void task::round_rubin_scheduler_class::enqueue(task::thread* thread)
+void task::scheduler::enqueue(task::thread* t)
 {
 
+	if (cur_thread != cpu->idle)
+	{
+		scheduler_class.enqueue(t);
+	}
 }
 
-void task::round_rubin_scheduler_class::dequeue(task::thread* thread)
+void task::scheduler::dequeue(task::thread* t)
 {
 
+	scheduler_class.dequeue(t);
 }
 
-task::thread* task::round_rubin_scheduler_class::pick_next()
+task::thread* task::scheduler::pick_next()
 {
-	return nullptr;
+
+	return scheduler_class.pick_next();
 }
 
-void task::round_rubin_scheduler_class::timer_tick()
+void task::scheduler::timer_tick(task::thread* t)
 {
-
+	if (cur_thread != cpu->idle)
+	{
+		scheduler_class.timer_tick();
+	}
+	else
+	{
+		cur_thread->need_reschedule = true;
+	}
 }

@@ -25,7 +25,7 @@ struct cpu_struct
 	void* local_fs{ nullptr };
 	void* kernel_gs{ nullptr };
 
-
+	task::thread *idle;
 	task::scheduler scheduler{};
 
 	task_state_segment tss{};

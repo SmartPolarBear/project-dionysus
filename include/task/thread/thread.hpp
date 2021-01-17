@@ -96,6 +96,7 @@ class thread final
 		return need_reschedule;
 	}
 
+
 	void kill();
 
 	void resume();
