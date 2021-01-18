@@ -9,6 +9,7 @@
 #include "ktl/algorithm.hpp"
 
 using namespace ktl::mutex;
+using namespace trap;
 
 void task::scheduler::reschedule()
 {
@@ -60,7 +61,7 @@ void task::scheduler::schedule()
 
 }
 
-void task::scheduler::handle_timer()
+void task::scheduler::handle_timer_tick()
 {
 	lock_guard g{ global_thread_lock };
 
@@ -95,6 +96,16 @@ task::thread* task::scheduler::pick_next()
 
 void task::scheduler::timer_tick(task::thread* t)
 {
+	pushcli();
+
+	{
+		lock_guard g{ this->timer_lock };
+		if (!timer_list.empty())
+		{
+			// TODO
+		}
+	}
+
 	if (t != cpu->idle)
 	{
 		scheduler_class.timer_tick();
@@ -103,6 +114,8 @@ void task::scheduler::timer_tick(task::thread* t)
 	{
 		t->need_reschedule = true;
 	}
+
+	popcli();
 }
 
 void task::scheduler::insert(task::thread* t) TA_REQ(global_thread_lock)

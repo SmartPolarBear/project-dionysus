@@ -5,6 +5,7 @@ namespace task
 {
 class thread;
 
+
 class scheduler_class_base
 {
  public:

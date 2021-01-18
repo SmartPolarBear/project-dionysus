@@ -38,7 +38,7 @@
 // public:
 //	void initialize_for_current_cpu();
 //
-//	error_code shutdown(time_type deadline);
+//	error_code shutdown(time_type expires);
 //
 //	void transition_off_Cpu(dpc_queue& src);
 //

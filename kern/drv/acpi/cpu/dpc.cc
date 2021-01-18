@@ -19,7 +19,7 @@
 //{
 //
 //}
-//error_code dpc_queue::shutdown(time_type deadline)
+//error_code dpc_queue::shutdown(time_type expires)
 //{
 //	return 0;
 //}
