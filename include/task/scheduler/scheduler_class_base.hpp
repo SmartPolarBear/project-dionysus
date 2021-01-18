@@ -1,4 +1,5 @@
 #pragma once
+#include "task/thread/thread.hpp"
 
 namespace task
 {

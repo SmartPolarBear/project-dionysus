@@ -88,7 +88,6 @@ void task::scheduler::unblock(task::thread* t) TA_REQ(global_thread_lock)
 
 void task::scheduler::enqueue(task::thread* t)
 {
-
 	if (cur_thread != cpu->idle)
 	{
 		scheduler_class.enqueue(t);
@@ -97,13 +96,11 @@ void task::scheduler::enqueue(task::thread* t)
 
 void task::scheduler::dequeue(task::thread* t)
 {
-
 	scheduler_class.dequeue(t);
 }
 
 task::thread* task::scheduler::pick_next()
 {
-
 	return scheduler_class.pick_next();
 }
 

@@ -120,33 +120,29 @@ error_code_with_result<task::thread*> thread::create(ktl::shared_ptr<process> pa
 	}
 
 	ret->state = thread_states::READY;
-	return ret;
-}
 
-error_code_with_result<task::thread*> thread::create_and_enqueue(ktl::shared_ptr<process> parent,
-	ktl::string_view name,
-	thread::routine_type routine,
-	void* arg,
-	thread::trampoline_type trampoline)
-{
-	lock_guard g{ global_thread_lock };
-
-	auto create_ret = create(std::move(parent), name, routine, arg, trampoline);
-	if (has_error(create_ret))
 	{
-		return get_error_code(create_ret);
+		lock_guard g{ global_thread_lock };
+		global_thread_list.push_back(*ret);
 	}
 
-	auto t = get_result(create_ret);
-
-	global_thread_list.push_back(*t);
-
-	return t;
+	return ret;
 }
 
 error_code thread::create_idle()
 {
-	[[maybe_unused]]auto ret = create_and_enqueue(nullptr, "idle", idle_routine, nullptr, default_trampoline);
+	char name[16]{ "idle" };
+
+	// TODO: make snprintf usable later
+	{
+		for (size_t i = 4; i < 16; i++)name[i] = ' ';
+		for (size_t idx = 15, id = cpu->id; id; id /= 10, idx--)
+		{
+			name[idx] = id % 10;
+		}
+	}
+
+	[[maybe_unused]]auto ret = create(nullptr, name, idle_routine, nullptr, default_trampoline);
 	if (has_error(ret))
 	{
 		return get_error_code(ret);
@@ -166,6 +162,7 @@ error_code thread::create_idle()
 	}
 
 	cpu->idle = th;
+	cpu->scheduler.enqueue(cpu->idle);
 
 	return ERROR_SUCCESS;
 }
@@ -255,15 +252,16 @@ void thread::finish_dying()
 
 void thread::kill()
 {
-	lock_guard g{ global_thread_lock };
-
-	signals |= SIGNAL_KILLED;
-
-	if (this == cur_thread)
 	{
-		return;
-	}
+		lock_guard g{ global_thread_lock };
 
+		signals |= SIGNAL_KILLED;
+
+		if (this == cur_thread)
+		{
+			return;
+		}
+	}
 	// TODO: wakeup
 
 	cpu->scheduler.yield();

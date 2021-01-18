@@ -34,8 +34,9 @@ class thread final
  public:
 	friend class process;
 
-	friend
-	class scheduler;
+	friend class scheduler;
+	friend class scheduler_class_base;
+	friend class round_rubin_scheduler_class;
 
 	enum class [[clang::enum_extensibility(closed)]] thread_states
 	{
@@ -78,11 +79,6 @@ class thread final
 		void* arg,
 		trampoline_type trampoline = default_trampoline);
 
-	[[nodiscard]]static error_code_with_result<task::thread*> create_and_enqueue(ktl::shared_ptr<process> parent,
-		ktl::string_view name,
-		routine_type routine,
-		void* arg,
-		trampoline_type trampoline = default_trampoline);
 
 	[[nodiscard]]static error_code create_idle();
  public:
@@ -95,7 +91,6 @@ class thread final
 	{
 		return need_reschedule;
 	}
-
 
 	void kill();
 

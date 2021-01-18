@@ -1,4 +1,5 @@
 #include "task/scheduler/scheduler_class_base.hpp"
+#include "task/thread/thread.hpp"
 
 namespace task
 {
@@ -18,8 +19,10 @@ class round_rubin_scheduler_class final
 	void timer_tick() TA_REQ(global_thread_lock) override final;
 
  private:
-	ktl::list<thread*> run_queue TA_GUARDED(global_thread_lock);
+	using run_queue_type = ktl::list<thread*>;
 
+	run_queue_type run_queue TA_GUARDED(global_thread_lock) {};
+	run_queue_type::iterator current = run_queue.end();
 };
 
 }
