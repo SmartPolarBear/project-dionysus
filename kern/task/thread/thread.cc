@@ -171,7 +171,7 @@ void thread::default_trampoline()
 
 void thread::switch_to() TA_REQ(global_thread_lock)
 {
-	kdebug::kdebug_log("[cpu %d]%s->%s", cpu->id, cur_thread->name.data(), this->name.data());
+//	kdebug::kdebug_log("[cpu %d]%s->%s", cpu->id, cur_thread->name.data(), this->name.data());
 	KDEBUG_ASSERT(this->state == thread_states::READY);
 
 	if (this != cur_thread)
@@ -202,9 +202,9 @@ void thread::switch_to() TA_REQ(global_thread_lock)
 
 		trap::popcli();
 
-		kdebug::kdebug_log("!\n");
 		context_switch(&prev->kstack->context, this->kstack->context);
-		kdebug::kdebug_log("WRONG!\n");
+
+
 	}
 }
 
@@ -313,6 +313,6 @@ void thread::current::exit(error_code code)
 	}
 
 	cpu->scheduler.reschedule();
-	
+
 	__UNREACHABLE;
 }

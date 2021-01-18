@@ -41,6 +41,7 @@
 error_code test_routine(void* arg)
 {
 	write_format("%d\n", cpu->id);
+//	while (true) write_format("%d\n", cpu->id);
 
 	return 20011204;
 }

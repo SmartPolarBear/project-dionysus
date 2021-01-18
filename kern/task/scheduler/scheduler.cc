@@ -14,6 +14,9 @@ void task::scheduler::reschedule()
 {
 	KDEBUG_ASSERT(!global_thread_lock.holding());
 	schedule();
+
+	KDEBUG_GERNERALPANIC_CODE(-ERROR_SHOULD_NOT_REACH_HERE);
+	__UNREACHABLE;
 }
 
 void task::scheduler::yield()
@@ -66,9 +69,9 @@ void task::scheduler::schedule()
 
 	if (next != cur_thread.get())
 	{
-		kdebug::kdebug_log("[cpu %d] switch_to %s\n", cpu->id, next->name);
 		next->switch_to();
 	}
+
 }
 
 void task::scheduler::handle_timer()
