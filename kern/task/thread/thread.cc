@@ -291,26 +291,28 @@ error_code thread::join(error_code* out_err_code)
 
 void thread::current::exit(error_code code)
 {
-	lock_guard g{ global_thread_lock };
-
-	if (cur_thread->parent != nullptr)
 	{
-		cur_thread->parent->remove_thread(cur_thread.get());
-	}
+		lock_guard g{ global_thread_lock };
 
-	cur_thread->state = thread_states::DYING;
-	cur_thread->exit_code = code;
+		if (cur_thread->parent != nullptr)
+		{
+			cur_thread->parent->remove_thread(cur_thread.get());
+		}
 
-	if (cur_thread->flags & FLAG_DETACHED)
-	{
-		cur_thread->remove_from_lists();
-	}
-	else
-	{
-		// TODO: waiting queue
+		cur_thread->state = thread_states::DYING;
+		cur_thread->exit_code = code;
+
+		if (cur_thread->flags & FLAG_DETACHED)
+		{
+			cur_thread->remove_from_lists();
+		}
+		else
+		{
+			// TODO: waiting queue
+		}
 	}
 
 	cpu->scheduler.reschedule();
-
+	
 	__UNREACHABLE;
 }

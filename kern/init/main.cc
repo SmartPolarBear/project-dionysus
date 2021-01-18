@@ -40,7 +40,7 @@
 
 error_code test_routine(void* arg)
 {
-	while (true)write_format("%d\n", cpu->id);
+	write_format("%d\n", cpu->id);
 
 	return 20011204;
 }
@@ -165,7 +165,6 @@ void ap::all_processor_main()
 	}
 	else
 	{
-		ktl::mutex::lock_guard g{ task::global_thread_lock };
 		cpu->scheduler.unblock(get_result(ret));
 	}
 

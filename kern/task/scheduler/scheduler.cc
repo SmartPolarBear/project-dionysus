@@ -12,10 +12,15 @@ using namespace ktl::mutex;
 
 void task::scheduler::reschedule()
 {
-	if (!global_thread_lock.holding())
-	{
-		KDEBUG_GENERALPANIC("scheduler_enter should hold proc_list.lock");
-	}
+	KDEBUG_ASSERT(!global_thread_lock.holding());
+	schedule();
+}
+
+void task::scheduler::yield()
+{
+	ktl::mutex::lock_guard g{ global_thread_lock };
+
+	cur_thread->state = thread::thread_states::READY;
 
 	if (cpu->nest_pushcli_depth != 1)
 	{
@@ -33,15 +38,6 @@ void task::scheduler::reschedule()
 	}
 
 	cur_thread->need_reschedule = true;
-}
-
-void task::scheduler::yield()
-{
-	ktl::mutex::lock_guard g{ global_thread_lock };
-
-	cur_thread->state = thread::thread_states::READY;
-
-	reschedule();
 }
 
 void task::scheduler::schedule()
@@ -86,9 +82,8 @@ void task::scheduler::unblock(task::thread* t) TA_REQ(global_thread_lock)
 {
 	// TODO: cpu affinity
 
+	t->state = thread::thread_states::READY;
 	cpu->scheduler.insert(t);
-
-	cpu->scheduler.reschedule();
 }
 
 void task::scheduler::enqueue(task::thread* t)
