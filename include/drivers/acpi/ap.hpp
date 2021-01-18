@@ -2,8 +2,8 @@
 
 namespace ap
 {
-	void init_ap();
+void init_ap();
 
-	// in main.cc
-	void all_processor_main();
+// in main.cc
+void all_processor_main();
 } // namespace ap

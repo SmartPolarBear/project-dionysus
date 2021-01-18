@@ -49,15 +49,15 @@ void task::scheduler::schedule()
 	KDEBUG_ASSERT(!global_thread_list.empty());
 
 	ktl::mutex::lock_guard guard{ global_thread_lock };
+	thread* next = nullptr;
 
 	cur_thread->need_reschedule = false;
-
 	if (cur_thread->state == thread::thread_states::READY)
 	{
 		enqueue(cur_thread.get());
 	}
 
-	auto next = pick_next();
+	next = pick_next();
 	if (next != nullptr)
 	{
 		dequeue(next);
@@ -68,8 +68,9 @@ void task::scheduler::schedule()
 		next = cpu->idle;
 	}
 
-	if (next != cur_thread)
+	if (next != cur_thread.get())
 	{
+		kdebug::kdebug_log("[cpu %d] switch_to", cpu->id);
 		next->switch_to();
 	}
 }
@@ -83,12 +84,16 @@ void task::scheduler::handle_timer()
 
 void task::scheduler::unblock(task::thread* t) TA_REQ(global_thread_lock)
 {
+	// TODO: cpu affinity
 
+	cpu->scheduler.insert(t);
+
+	cpu->scheduler.reschedule();
 }
 
 void task::scheduler::enqueue(task::thread* t)
 {
-	if (cur_thread != cpu->idle)
+	if (t != cpu->idle)
 	{
 		scheduler_class.enqueue(t);
 	}
@@ -114,4 +119,9 @@ void task::scheduler::timer_tick(task::thread* t)
 	{
 		cur_thread->need_reschedule = true;
 	}
+}
+
+void task::scheduler::insert(task::thread* t) TA_REQ(global_thread_lock)
+{
+	enqueue(t);
 }

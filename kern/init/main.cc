@@ -52,6 +52,11 @@ static inline void run(char* name)
 	{
 		KDEBUG_GERNERALPANIC_CODE(get_error_code(ret));
 	}
+	else
+	{
+		ktl::mutex::lock_guard g{ task::global_thread_lock };
+		cpu->scheduler.unblock(get_result(ret));
+	}
 
 	return;
 
@@ -132,8 +137,8 @@ extern "C" [[noreturn]] void kmain()
 
 	write_format("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
 
-	run("/ipctest");
-	run("/hello");
+//	run("/ipctest");
+//	run("/hello");
 
 	// start kernel servers in user space
 //	init_servers();
@@ -141,6 +146,7 @@ extern "C" [[noreturn]] void kmain()
 	ap::all_processor_main();
 
 	for (;;);
+
 }
 
 void ap::all_processor_main()
@@ -152,7 +158,20 @@ void ap::all_processor_main()
 
 	KDEBUG_GERNERALPANIC_CODE(task::thread::create_idle());
 
+	if (auto ret = task::thread::create(nullptr, "init", test_routine, nullptr);has_error(ret))
+	{
+		KDEBUG_GERNERALPANIC_CODE(get_error_code(ret));
+	}
+	else
+	{
+		ktl::mutex::lock_guard g{ task::global_thread_lock };
+		cpu->scheduler.unblock(get_result(ret));
+	}
+
 	cpu->scheduler.schedule();
+
+	for (;;);
+
 
 //	context::scheduler_loop();
 }

@@ -131,18 +131,7 @@ error_code_with_result<task::thread*> thread::create(ktl::shared_ptr<process> pa
 
 error_code thread::create_idle()
 {
-	char name[16]{ "idle" };
-
-	// TODO: make snprintf usable later
-	{
-		for (size_t i = 4; i < 16; i++)name[i] = ' ';
-		for (size_t idx = 15, id = cpu->id; id; id /= 10, idx--)
-		{
-			name[idx] = id % 10;
-		}
-	}
-
-	[[maybe_unused]]auto ret = create(nullptr, name, idle_routine, nullptr, default_trampoline);
+	[[maybe_unused]]auto ret = create(nullptr, "idle", idle_routine, nullptr, default_trampoline);
 	if (has_error(ret))
 	{
 		return get_error_code(ret);
@@ -156,13 +145,8 @@ error_code thread::create_idle()
 
 	th->need_reschedule = true;
 
-	if (cur_thread == nullptr)
-	{
-		cur_thread = th;
-	}
-
 	cpu->idle = th;
-	cpu->scheduler.enqueue(cpu->idle);
+	cur_thread = cpu->idle;
 
 	return ERROR_SUCCESS;
 }
@@ -187,6 +171,7 @@ void thread::default_trampoline()
 void thread::switch_to() TA_REQ(global_thread_lock)
 {
 	KDEBUG_ASSERT(this->state == thread_states::READY);
+	kdebug::kdebug_log("[cpu %d]%s->%s", cpu->id, cur_thread->name.data(), this->name.data());
 
 	if (this != cur_thread)
 	{
@@ -216,7 +201,9 @@ void thread::switch_to() TA_REQ(global_thread_lock)
 
 		trap::popcli();
 
+		kdebug::kdebug_log("!\n");
 		context_switch(&prev->kstack->context, this->kstack->context);
+		kdebug::kdebug_log("WRONG!\n");
 	}
 }
 
@@ -243,7 +230,6 @@ void thread::finish_dying()
 {
 	for (;;)
 	{
-//		task::scheduler::yield();
 		cpu->scheduler.yield();
 	}
 

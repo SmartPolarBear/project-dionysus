@@ -79,7 +79,6 @@ class thread final
 		void* arg,
 		trampoline_type trampoline = default_trampoline);
 
-
 	[[nodiscard]]static error_code create_idle();
  public:
 	thread(const thread&) = delete;
@@ -106,7 +105,12 @@ class thread final
 	error_code join(error_code* out_err_code);
 
 	/// \brief forcibly remove the thread from global thread list and free the thread
-	[[deprecated("We rarely force terminate a thread using this.")]] void forget();
+	[[deprecated("We rarely force terminate a thread using this."), maybe_unused]]
+	void forget();
+
+	// FIXME: should be private
+	void switch_to() TA_REQ(global_thread_lock);
+
  private:
 	[[noreturn]]static error_code idle_routine(void* arg);
 	static_assert(ktl::Convertible<decltype(idle_routine), routine_type>);
@@ -117,7 +121,7 @@ class thread final
 
 	void finish_dying();
 
-	void switch_to() TA_REQ(global_thread_lock);
+
 
 	ktl::shared_ptr<process> parent{ nullptr };
 

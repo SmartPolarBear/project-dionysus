@@ -18,12 +18,13 @@ class scheduler
  public:
 	using class_type = round_rubin_scheduler_class;
  public:
-	[[noreturn]] void schedule() TA_EXCL(global_thread_lock);;
+	void schedule() TA_EXCL(global_thread_lock);;
 
 	void reschedule() TA_REQ(global_thread_lock);
 	void yield() TA_EXCL(global_thread_lock);
 
 	void unblock(thread* t) TA_REQ(global_thread_lock);
+	void insert(thread* t) TA_REQ(global_thread_lock);
 
 	void handle_timer();
 
