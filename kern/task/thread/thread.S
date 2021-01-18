@@ -94,9 +94,9 @@ thread_entry:
     movq %rdi, %rax         // mov fn to rax
     movq %rsi, %rdi         // prepare arg
 
-    movq %rdx, %r15         // put exit callback in preserved register
+    movq %rdx, %r12         // put exit callback in preserved register
 
     callq *%rax             // call fn
 
     movq %rax, %rdi         // save the return value of fn(arg)
-    call *%r15              // call exit callback to terminate current thread
+    call *%r12              // call exit callback to terminate current thread

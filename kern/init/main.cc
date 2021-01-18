@@ -40,23 +40,24 @@
 
 error_code test_routine(void* arg)
 {
-	write_format("%d\n", cpu->id);
+	while (true)write_format("%d\n", cpu->id);
 
 	return 20011204;
 }
 
 extern std::shared_ptr<task::job> root_job;
+
 static inline void run(char* name)
 {
-	if (auto ret = task::thread::create(nullptr, "test", test_routine, nullptr);has_error(ret))
-	{
-		KDEBUG_GERNERALPANIC_CODE(get_error_code(ret));
-	}
-	else
-	{
-		ktl::mutex::lock_guard g{ task::global_thread_lock };
-		cpu->scheduler.unblock(get_result(ret));
-	}
+//	if (auto ret = task::thread::create(nullptr, "test", test_routine, nullptr);has_error(ret))
+//	{
+//		KDEBUG_GERNERALPANIC_CODE(get_error_code(ret));
+//	}
+//	else
+//	{
+//		ktl::mutex::lock_guard g{ task::global_thread_lock };
+//		cpu->scheduler.unblock(get_result(ret));
+//	}
 
 	return;
 
@@ -137,8 +138,8 @@ extern "C" [[noreturn]] void kmain()
 
 	write_format("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
 
-//	run("/ipctest");
-//	run("/hello");
+	run("/ipctest");
+	run("/hello");
 
 	// start kernel servers in user space
 //	init_servers();

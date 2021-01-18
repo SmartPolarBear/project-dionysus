@@ -73,7 +73,7 @@ class thread final
 
 	static_assert(ktl::Convertible<decltype(default_trampoline), trampoline_type>);
 
-	[[nodiscard]]static error_code_with_result<task::thread*> create(ktl::shared_ptr<process> parent,
+	[[nodiscard]]static error_code_with_result<task::thread*> create(process* parent,
 		ktl::string_view name,
 		routine_type routine,
 		void* arg,
@@ -115,17 +115,15 @@ class thread final
 	[[noreturn]]static error_code idle_routine(void* arg);
 	static_assert(ktl::Convertible<decltype(idle_routine), routine_type>);
 
-	thread(ktl::shared_ptr<process> parent, ktl::string_view name);
+	thread(process* parent, ktl::string_view name);
 
 	void remove_from_lists();
 
 	void finish_dying();
 
-
-
-	ktl::shared_ptr<process> parent{ nullptr };
-
 	ktl::unique_ptr<kernel_stack> kstack{ nullptr };
+
+	process* parent{ nullptr };
 
 	kbl::doubly_linked_node_state<thread> thread_link{};
 

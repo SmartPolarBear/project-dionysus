@@ -89,16 +89,16 @@ error_code trap_handle_tick([[maybe_unused]] trap::trap_frame info)
 
 		local_apic::write_eoi();
 
-		if (cur_proc != nullptr && cur_proc->get_state() == task::PROC_STATE_RUNNING)
-		{
-			if (task::cur_thread->get_need_reschedule())
-			{
-				cpu->scheduler.yield();
-			}
-			cpu->scheduler.handle_timer();
+		cpu->scheduler.handle_timer();
 
-			scheduler::scheduler_yield();
-		}
+//		if (cur_proc != nullptr && cur_proc->get_state() == task::PROC_STATE_RUNNING)
+//		{
+//			if (task::cur_thread->get_need_reschedule())
+//			{
+//				cpu->scheduler.yield();
+//			}
+////			scheduler::scheduler_yield();
+//		}
 	}
 
 	return ERROR_SUCCESS;

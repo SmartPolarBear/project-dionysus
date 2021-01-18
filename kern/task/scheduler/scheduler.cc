@@ -70,7 +70,7 @@ void task::scheduler::schedule()
 
 	if (next != cur_thread.get())
 	{
-		kdebug::kdebug_log("[cpu %d] switch_to", cpu->id);
+		kdebug::kdebug_log("[cpu %d] switch_to %s\n", cpu->id, next->name);
 		next->switch_to();
 	}
 }
@@ -111,13 +111,13 @@ task::thread* task::scheduler::pick_next()
 
 void task::scheduler::timer_tick(task::thread* t)
 {
-	if (cur_thread != cpu->idle)
+	if (t != cpu->idle)
 	{
 		scheduler_class.timer_tick();
 	}
 	else
 	{
-		cur_thread->need_reschedule = true;
+		t->need_reschedule = true;
 	}
 }
 

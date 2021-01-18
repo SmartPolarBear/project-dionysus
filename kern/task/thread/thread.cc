@@ -80,13 +80,14 @@ kernel_stack::kernel_stack(void* stk_mem, thread::routine_type routine, void* ar
 	tf->rdi = reinterpret_cast<uintptr_t>(routine);
 	tf->rsi = reinterpret_cast<uintptr_t>(arg);
 	tf->rdx = reinterpret_cast<uintptr_t>(thread::current::exit);
+//	tf->rdx = 0xdeadbeef;
 
 	tf->rip = reinterpret_cast<uintptr_t >(thread_entry);
 
 	top = sp;
 }
 
-error_code_with_result<task::thread*> thread::create(ktl::shared_ptr<process> parent,
+error_code_with_result<task::thread*> thread::create(process* parent,
 	ktl::string_view name,
 	routine_type routine,
 	void* arg,
@@ -94,7 +95,7 @@ error_code_with_result<task::thread*> thread::create(ktl::shared_ptr<process> pa
 {
 
 	kbl::allocate_checker ck{};
-	auto ret = new(&ck) thread{ std::move(parent), name };
+	auto ret = new(&ck) thread{ parent, name };
 
 	if (!ck.check())
 	{
@@ -170,8 +171,8 @@ void thread::default_trampoline()
 
 void thread::switch_to() TA_REQ(global_thread_lock)
 {
-	KDEBUG_ASSERT(this->state == thread_states::READY);
 	kdebug::kdebug_log("[cpu %d]%s->%s", cpu->id, cur_thread->name.data(), this->name.data());
+	KDEBUG_ASSERT(this->state == thread_states::READY);
 
 	if (this != cur_thread)
 	{
@@ -207,9 +208,9 @@ void thread::switch_to() TA_REQ(global_thread_lock)
 	}
 }
 
-thread::thread(ktl::shared_ptr<process> prt,
+thread::thread(process* prt,
 	ktl::string_view nm)
-	: parent{ std::move(prt) },
+	: parent{ prt },
 	  name{ nm }
 {
 }
