@@ -80,7 +80,6 @@ kernel_stack::kernel_stack(void* stk_mem, thread::routine_type routine, void* ar
 	tf->rdi = reinterpret_cast<uintptr_t>(routine);
 	tf->rsi = reinterpret_cast<uintptr_t>(arg);
 	tf->rdx = reinterpret_cast<uintptr_t>(thread::current::exit);
-//	tf->rdx = 0xdeadbeef;
 
 	tf->rip = reinterpret_cast<uintptr_t >(thread_entry);
 

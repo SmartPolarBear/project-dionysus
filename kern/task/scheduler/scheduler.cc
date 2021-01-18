@@ -11,6 +11,8 @@
 using namespace ktl::mutex;
 using namespace trap;
 
+// TODO: multi-core scheduler ( load balance )
+
 void task::scheduler::reschedule()
 {
 	KDEBUG_ASSERT(!global_thread_lock.holding());

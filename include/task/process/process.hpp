@@ -187,6 +187,8 @@ class process final
 	char _name_buf[PROC_NAME_LEN]{};
 	ktl::span<char> name;
 
+	ktl::list<thread*> threads{};
+
 	task_return_code ret_code;
 
 	process_state state;

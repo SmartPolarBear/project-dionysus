@@ -189,13 +189,14 @@ void process::finish_dead_transition() noexcept
 
 	mm = nullptr;
 
-	set_status_locked(Status::DEAD);
-
 	parent->remove_child_process(this);
 
 	ktl::shared_ptr<job> kill_job{ nullptr };
+
 	{
 		lock_guard guard{ lock };
+
+		set_status_locked(Status::DEAD);
 
 		if (critical_to != nullptr)
 		{
