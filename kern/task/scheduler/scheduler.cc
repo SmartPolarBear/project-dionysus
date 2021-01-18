@@ -13,9 +13,9 @@ using namespace ktl::mutex;
 void task::scheduler::reschedule()
 {
 	KDEBUG_ASSERT(!global_thread_lock.holding());
+
 	schedule();
 
-	KDEBUG_GERNERALPANIC_CODE(-ERROR_SHOULD_NOT_REACH_HERE);
 	__UNREACHABLE;
 }
 
@@ -25,29 +25,14 @@ void task::scheduler::yield()
 
 	cur_thread->state = thread::thread_states::READY;
 
-	if (cpu->nest_pushcli_depth != 1)
-	{
-		KDEBUG_GENERALPANIC("scheduler_enter should validly hold proc_list.lock");
-	}
-
-	if (cur_thread->state == thread::thread_states::RUNNING)
-	{
-		KDEBUG_GENERALPANIC("scheduler_enter should have current task not running");
-	}
-
-	if (read_eflags() & trap::EFLAG_IF)
-	{
-		KDEBUG_GENERALPANIC("scheduler_enter can't be interruptible");
-	}
-
 	cur_thread->need_reschedule = true;
 }
 
 void task::scheduler::schedule()
 {
 	KDEBUG_ASSERT(!global_thread_list.empty());
-
 	ktl::mutex::lock_guard guard{ global_thread_lock };
+
 	thread* next = nullptr;
 
 	cur_thread->need_reschedule = false;

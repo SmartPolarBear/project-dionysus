@@ -204,7 +204,6 @@ void thread::switch_to() TA_REQ(global_thread_lock)
 
 		context_switch(&prev->kstack->context, this->kstack->context);
 
-
 	}
 }
 
