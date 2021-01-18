@@ -5,6 +5,7 @@
 #include "debug/thread_annotations.hpp"
 
 #include "task/thread/thread.hpp"
+#include "task/scheduler/round_rubin.hpp"
 
 #include "ktl/string_view.hpp"
 #include "ktl/list.hpp"
@@ -12,46 +13,15 @@
 namespace task
 {
 
-class scheduler_class
-{
- public:
-	virtual ~scheduler_class() = default;
-
-	virtual void enqueue(thread*) TA_REQ(global_thread_lock) = 0;
-
-	virtual void dequeue(thread*) TA_REQ(global_thread_lock) = 0;
-
-	virtual thread* pick_next() TA_REQ(global_thread_lock) = 0;
-
-	virtual void timer_tick() TA_REQ(global_thread_lock) = 0;
-};
-
-class round_rubin_scheduler_class
-	: public scheduler_class
-{
- public:
-	void enqueue(thread* thread) TA_REQ(global_thread_lock) override;
-
-	void dequeue(thread* thread) TA_REQ(global_thread_lock) override;
-
-	thread* pick_next() TA_REQ(global_thread_lock) override;
-
-	void timer_tick() TA_REQ(global_thread_lock) override;
-
- private:
-	ktl::list<thread*> run_queue TA_GUARDED(global_thread_lock);
-
-};
-
 class scheduler
 {
  public:
 	using class_type = round_rubin_scheduler_class;
  public:
-	[[noreturn]] void schedule();
+	[[noreturn]] void schedule() TA_EXCL(global_thread_lock);;
 
-	void reschedule();
-	void yield();
+	void reschedule() TA_REQ(global_thread_lock);
+	void yield() TA_EXCL(global_thread_lock);
 
 	void unblock(thread* t) TA_REQ(global_thread_lock);
 
@@ -60,10 +30,10 @@ class scheduler
  private:
 	class_type scheduler_class{};
 
-	void enqueue(thread *t) TA_REQ(global_thread_lock);
-	void dequeue(thread *t) TA_REQ(global_thread_lock);
-	thread *pick_next() TA_REQ(global_thread_lock);
-	void timer_tick(thread *t) TA_REQ(global_thread_lock);
+	void enqueue(thread* t) TA_REQ(global_thread_lock);
+	void dequeue(thread* t) TA_REQ(global_thread_lock);
+	thread* pick_next() TA_REQ(global_thread_lock);
+	void timer_tick(thread* t) TA_REQ(global_thread_lock);
 
  public:
 	friend class thread;
