@@ -9,20 +9,23 @@ class round_rubin_scheduler_class final
  public:
 	friend class thread;
 
- public:
-	void enqueue(thread* thread) TA_REQ(global_thread_lock) override final;
-
-	void dequeue(thread* thread) TA_REQ(global_thread_lock) override final;
-
-	thread* pick_next() TA_REQ(global_thread_lock) override final;
-
-	void timer_tick() TA_REQ(global_thread_lock) override final;
-
- private:
 	using run_queue_type = ktl::list<thread*>;
 
-	run_queue_type run_queue TA_GUARDED(global_thread_lock) {};
-	run_queue_type::iterator current = run_queue.end();
+ public:
+	void enqueue(thread* thread) TA_REQ(global_thread_lock, lk) override final;
+
+	void dequeue(thread* thread) TA_REQ(global_thread_lock, lk) override final;
+
+	thread* pick_next() TA_REQ(global_thread_lock, lk) override final;
+
+	void timer_tick() TA_REQ(global_thread_lock, lk) override final;
+
+ private:
+
+	run_queue_type run_queue TA_GUARDED(lk) {};
+	run_queue_type::iterator current TA_GUARDED(lk) = run_queue.end();
+
+	mutable lock::spinlock lk;
 };
 
 }

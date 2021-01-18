@@ -14,6 +14,8 @@ void task::scheduler::reschedule()
 {
 	KDEBUG_ASSERT(!global_thread_lock.holding());
 
+	ktl::mutex::lock_guard guard{ global_thread_lock };
+
 	schedule();
 
 	__UNREACHABLE;
@@ -21,7 +23,7 @@ void task::scheduler::reschedule()
 
 void task::scheduler::yield()
 {
-	ktl::mutex::lock_guard g{ global_thread_lock };
+	lock_guard g{ global_thread_lock };
 
 	cur_thread->state = thread::thread_states::READY;
 
@@ -31,7 +33,6 @@ void task::scheduler::yield()
 void task::scheduler::schedule()
 {
 	KDEBUG_ASSERT(!global_thread_list.empty());
-	ktl::mutex::lock_guard guard{ global_thread_lock };
 
 	thread* next = nullptr;
 

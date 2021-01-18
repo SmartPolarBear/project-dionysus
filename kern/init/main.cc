@@ -167,10 +167,14 @@ void ap::all_processor_main()
 	else
 	{
 		ktl::mutex::lock_guard g{ task::global_thread_lock };
+
 		cpu->scheduler.unblock(get_result(ret));
 	}
 
-	cpu->scheduler.schedule();
+	{
+		ktl::mutex::lock_guard g{ task::global_thread_lock };
+		cpu->scheduler.schedule();
+	}
 
 	for (;;);
 
