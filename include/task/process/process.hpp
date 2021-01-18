@@ -63,6 +63,11 @@ enum binary_types
 	BINARY_ELF
 };
 
+class elf_loader
+{
+
+};
+
 constexpr size_t PROC_NAME_LEN = 64;
 
 // it should be enough
