@@ -123,6 +123,8 @@ class thread final
 
 	ktl::unique_ptr<kernel_stack> kstack{ nullptr };
 
+	void* ustack{ nullptr };
+
 	process* parent{ nullptr };
 
 	kbl::doubly_linked_node_state<thread> thread_link{};
@@ -149,6 +151,7 @@ class kernel_stack final
 {
  public:
 	friend class thread;
+	friend class process;
 
 	friend
 	class scheduler;

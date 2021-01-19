@@ -103,6 +103,11 @@ class process final
 	static error_code_with_result<ktl::shared_ptr<process>> create(const char* name,
 		ktl::shared_ptr<job> parent);
 
+	static error_code_with_result<ktl::shared_ptr<task::process>> create(const char* name,
+		void* bin,
+		size_t size,
+		ktl::shared_ptr<job> parent);
+
 	process() = delete;
 	process(const process&) = delete;
 
@@ -168,6 +173,9 @@ class process final
 	}
 
  private:
+	static error_code process_main_thread_routine(void* arg);
+	static_assert(ktl::Convertible<decltype(process_main_thread_routine), thread::routine_type>);
+
 	process(std::span<char> name,
 		pid_type id,
 		ktl::shared_ptr<job> parent,
@@ -192,7 +200,7 @@ class process final
 	char _name_buf[PROC_NAME_LEN]{};
 	ktl::span<char> name;
 
-	ktl::list<thread*> threads{};
+	ktl::list<thread*> threads TA_GUARDED(lock){};
 
 	task_return_code ret_code;
 

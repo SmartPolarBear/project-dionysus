@@ -67,6 +67,7 @@ error_code_with_result<ktl::shared_ptr<process>> process::create(const char* nam
 	}
 
 	proc->kstack = std::make_unique<uint8_t[]>(KERNSTACK_SIZE);
+
 	if (auto ret = proc->setup_kernel_stack();ret != ERROR_SUCCESS)
 	{
 		return ret;
@@ -302,4 +303,90 @@ void process::kill_all_threads_locked() noexcept TA_REQ(lock)
 void task::process::remove_thread(task::thread* t)
 {
 
+}
+
+error_code task::process::process_main_thread_routine(void* arg)
+{
+	auto t = reinterpret_cast<thread*>(arg);
+
+	// setup kernel stack
+	auto raw_stack = (uint8_t*)t->kstack->bottom;
+
+	auto sp = reinterpret_cast<uintptr_t>(raw_stack + task::process::KERNSTACK_SIZE);
+
+	sp -= sizeof(trap::trap_frame);
+	t->kstack->tf = reinterpret_cast<decltype(t->kstack->tf)>(sp);
+
+	t->kstack->tf->cs = SEGMENT_VAL(SEGMENTSEL_UCODE, DPL_USER);
+	t->kstack->tf->ss = SEGMENT_VAL(SEGMENTSEL_UDATA, DPL_USER);
+	t->kstack->tf->rsp = (uintptr_t)t->ustack;
+	t->kstack->tf->rflags |= trap::EFLAG_IF;
+
+	//TODO:
+//	if ((flags & PROC_SYS_SERVER) || (flags & PROC_DRIVER))
+//	{
+//		tf->rflags |= trap::EFLAG_IOPL_MASK;
+//	}
+
+	sp -= sizeof(uintptr_t);
+	*((uintptr_t*)sp) = reinterpret_cast<uintptr_t>(raw_stack);
+
+//	sp -= sizeof(uintptr_t);
+//	*((uintptr_t*)sp) = (uintptr_t)user_entry;
+
+	sp -= sizeof(arch_task_context_registers);
+	t->kstack->context = reinterpret_cast<decltype(t->kstack->context)>(sp);
+	memset(t->kstack->context, 0, sizeof(arch_task_context_registers));
+
+	t->kstack->context->rip = (uintptr_t)user_entry;
+
+	cpu->scheduler.reschedule();
+
+	return ERROR_SUCCESS;
+}
+
+error_code_with_result<ktl::shared_ptr<task::process>> task::process::create(const char* name,
+	void* bin,
+	size_t size,
+	ktl::shared_ptr<job> parent)
+{
+	ktl::shared_ptr<process> proc{ nullptr };
+	if (auto ret = task::process::create(name, std::move(parent));has_error(ret))
+	{
+		return get_error_code(ret);
+	}
+	else
+	{
+		proc = get_result(ret);
+	}
+
+	lock_guard g{ proc->lock };
+
+	// TODO: write better loader
+	uintptr_t entry_addr = 0;
+	if (auto ret = load_binary(proc.get(), (uint8_t*)bin, size, &entry_addr);ret != ERROR_SUCCESS)
+	{
+		return ret;
+	}
+
+	thread* main_thread = nullptr;
+	if (auto ret = thread::create(proc.get(), "main", process_main_thread_routine, nullptr);has_error(ret))
+	{
+		return get_error_code(ret);
+	}
+	else
+	{
+		main_thread = get_result(ret);
+	}
+
+	// the arg is the thread itself
+	main_thread->kstack->tf->rip = reinterpret_cast<uintptr_t>(entry_addr);
+	main_thread->kstack->tf->rsi = reinterpret_cast<uintptr_t>(main_thread);
+
+	// the thread is critical to the process
+	main_thread->critical = true;
+
+	proc->threads.push_back(main_thread);
+
+	return proc;
 }
