@@ -116,6 +116,8 @@ error_code_with_result<task::thread*> thread::create(process* parent,
 		return -ERROR_MEMORY_ALLOC;
 	}
 
+	lock_guard g{ ret->lock };
+
 	ret->kstack = kernel_stack::create(ret, routine, arg, trampoline);
 
 	if (ret->kstack == nullptr)
@@ -137,7 +139,7 @@ error_code_with_result<task::thread*> thread::create(process* parent,
 	ret->state = thread_states::READY;
 
 	{
-		lock_guard g{ global_thread_lock };
+		lock_guard g2{ global_thread_lock };
 		global_thread_list.push_back(*ret);
 	}
 
@@ -152,9 +154,10 @@ error_code thread::create_idle()
 		return get_error_code(ret);
 	}
 
-	lock_guard g{ global_thread_lock };
-
 	auto th = get_result(ret);
+
+	lock_guard g1{ global_thread_lock };
+	lock_guard g2{ th->lock };
 
 	th->flags |= FLAG_IDLE;
 
@@ -168,6 +171,7 @@ error_code thread::create_idle()
 
 vmm::mm_struct* task::thread::get_mm()
 {
+	lock_guard g{ lock };
 	if (parent != nullptr)
 	{
 		return parent->get_mm();
@@ -186,6 +190,7 @@ void thread::default_trampoline()
 void thread::switch_to() TA_REQ(global_thread_lock)
 {
 //	kdebug::kdebug_log("[cpu %d]%s->%s", cpu->id, cur_thread->name.data(), this->name.data());
+
 	KDEBUG_ASSERT(this->state == thread_states::READY);
 
 	if (this != cur_thread)
@@ -194,9 +199,10 @@ void thread::switch_to() TA_REQ(global_thread_lock)
 
 		auto prev = cur_thread.get();
 
-		cur_thread = this;
-
-		cur_thread->state = thread_states::RUNNING;
+		{
+			lock_guard g{ lock };
+			state = thread_states::RUNNING;
+		}
 
 		uintptr_t kstack_addr = this->kstack->get_address();
 		cpu->tss.rsp0 = kstack_addr + kernel_stack::MAX_SIZE;
@@ -213,6 +219,8 @@ void thread::switch_to() TA_REQ(global_thread_lock)
 		{
 			lcr3(V2P((uintptr_t)this->get_mm()->pgdir));
 		}
+
+		cur_thread = this;
 
 		trap::popcli();
 
@@ -264,7 +272,7 @@ void thread::finish_dead_transition()
 void thread::kill()
 {
 	{
-		lock_guard g{ global_thread_lock };
+		lock_guard g{ global_thread_lock, lock };
 
 		signals |= SIGNAL_KILLED;
 
@@ -316,7 +324,8 @@ error_code thread::join(error_code* out_err_code)
 void thread::current::exit(error_code code)
 {
 	{
-		lock_guard g{ global_thread_lock };
+
+		lock_guard g{ global_thread_lock, cur_thread->lock };
 
 		if (cur_thread->parent != nullptr)
 		{
@@ -342,7 +351,7 @@ void thread::current::exit(error_code code)
 }
 
 user_stack::user_stack(process* p, thread* t, void* stack_ptr)
-	: owner_process{ p }, owner_thread{ t }, top{ stack_ptr }
+	: top{ stack_ptr }, owner_process{ p }, owner_thread{ t }
 {
 }
 

@@ -311,6 +311,8 @@ void task::process::remove_thread(task::thread* t)
 
 error_code_with_result<void*> task::process::make_next_user_stack()
 {
+	lock_guard g{ lock };
+
 	const uintptr_t current_top = USTACK_TOTAL_SIZE * busy_list.size();
 
 	auto ret = vmm::mm_map(this->mm,
@@ -396,7 +398,10 @@ error_code_with_result<user_stack*> task::process::allocate_ustack(thread* t)
 
 	busy_list.push_back(stack);
 
-	t->ustack = stack;
+	{
+		lock_guard g2{ t->lock };
+		t->ustack = stack;
+	}
 
 	return stack;
 }
@@ -451,9 +456,12 @@ error_code_with_result<ktl::shared_ptr<task::process>> task::process::create(con
 	{
 		main_thread = get_result(ret);
 	}
-	
+
 	// the thread is critical to the process
-	main_thread->critical = true;
+	{
+		lock_guard g2{ main_thread->lock };
+		main_thread->critical = true;
+	}
 
 	proc->threads.push_back(main_thread);
 
