@@ -229,12 +229,9 @@ void process::exit(task_return_code code) noexcept
 		this->ret_code = code;
 
 		set_status_locked(Status::DYING);
+
+		kill_all_threads_locked();
 	}
-
-	// TODO: Exit all threads
-
-
-	KDEBUG_NOT_IMPLEMENTED;
 
 	__UNREACHABLE;
 }
@@ -255,16 +252,16 @@ void process::kill(task_return_code code) noexcept
 			ret_code = code;
 		}
 
-//		if (threads.empty())
-//		{
-//			set_status_locked(Status::DEAD);
-//			finish_dying = true;
-//		}
-//		else
-//		{
-//			set_status_locked(Status::DYING);
-//
-//		}
+		if (threads.empty())
+		{
+			set_status_locked(Status::DEAD);
+			finish_dying = true;
+		}
+		else
+		{
+			set_status_locked(Status::DYING);
+
+		}
 	}
 
 	if (finish_dying)
@@ -297,52 +294,70 @@ void process::set_status_locked(process::Status st) noexcept TA_REQ(lock)
 
 void process::kill_all_threads_locked() noexcept TA_REQ(lock)
 {
-	KDEBUG_NOT_IMPLEMENTED;
+	lock_guard g{ global_thread_lock };
+
+	for (auto& t:threads)
+	{
+		t->kill();
+	}
 }
 
 void task::process::remove_thread(task::thread* t)
 {
+	lock_guard g{ lock };
 
+	this->threads.remove(t);
 }
 
-error_code task::process::process_main_thread_routine(void* arg)
+error_code_with_result<user_stack*> task::process::allocate_ustack(thread* t)
 {
-	auto t = reinterpret_cast<thread*>(arg);
+	lock_guard g{ lock };
 
-	// setup kernel stack
-	auto raw_stack = (uint8_t*)t->kstack->bottom;
+	if (!free_list.empty())
+	{
+		auto stack = free_list.front();
+		free_list.pop_front();
 
-	auto sp = reinterpret_cast<uintptr_t>(raw_stack + task::process::KERNSTACK_SIZE);
+		{
+			auto iter = busy_list.begin();
+			while (*(*iter) < *stack); // forward the iterator until iter is greater or equal stack
+			busy_list.insert(--iter, stack);
+		}
 
-	sp -= sizeof(trap::trap_frame);
-	t->kstack->tf = reinterpret_cast<decltype(t->kstack->tf)>(sp);
+		return stack;
+	}
 
-	t->kstack->tf->cs = SEGMENT_VAL(SEGMENTSEL_UCODE, DPL_USER);
-	t->kstack->tf->ss = SEGMENT_VAL(SEGMENTSEL_UDATA, DPL_USER);
-	t->kstack->tf->rsp = (uintptr_t)t->ustack;
-	t->kstack->tf->rflags |= trap::EFLAG_IF;
+	kbl::allocate_checker ac{};
+	auto stack = new(&ac) user_stack{ this, t };
 
-	//TODO:
-//	if ((flags & PROC_SYS_SERVER) || (flags & PROC_DRIVER))
-//	{
-//		tf->rflags |= trap::EFLAG_IOPL_MASK;
-//	}
+	stack->top= nullptr; // TODO
 
-	sp -= sizeof(uintptr_t);
-	*((uintptr_t*)sp) = reinterpret_cast<uintptr_t>(raw_stack);
+	if (!ac.check())
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
 
-//	sp -= sizeof(uintptr_t);
-//	*((uintptr_t*)sp) = (uintptr_t)user_entry;
+	busy_list.push_back(stack);
 
-	sp -= sizeof(arch_task_context_registers);
-	t->kstack->context = reinterpret_cast<decltype(t->kstack->context)>(sp);
-	memset(t->kstack->context, 0, sizeof(arch_task_context_registers));
+	t->ustack = stack;
+	return stack;
+}
 
-	t->kstack->context->rip = (uintptr_t)user_entry;
+void task::process::free_ustack(task::user_stack* ustack)
+{
+	lock_guard g{ lock };
 
-	cpu->scheduler.reschedule();
+	if (free_list.size() >= USTACK_FREELIST_THRESHOLD)
+	{
+		auto back = free_list.back();
+		free_list.pop_back();
 
-	return ERROR_SUCCESS;
+		delete back;
+	}
+
+	auto iter = free_list.begin();
+	while (*(*iter) < *ustack); // forward the iterator until iter is greater or equal stack
+	free_list.insert(--iter, ustack);
 }
 
 error_code_with_result<ktl::shared_ptr<task::process>> task::process::create(const char* name,
@@ -370,7 +385,7 @@ error_code_with_result<ktl::shared_ptr<task::process>> task::process::create(con
 	}
 
 	thread* main_thread = nullptr;
-	if (auto ret = thread::create(proc.get(), "main", process_main_thread_routine, nullptr);has_error(ret))
+	if (auto ret = thread::create(proc.get(), "main", (thread::routine_type)entry_addr, nullptr);has_error(ret))
 	{
 		return get_error_code(ret);
 	}

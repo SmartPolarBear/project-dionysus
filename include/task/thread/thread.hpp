@@ -27,6 +27,7 @@ extern lock::spinlock global_thread_lock;
 class process;
 
 class kernel_stack;
+class user_stack;
 
 class thread final
 	: object::dispatcher<thread, 0>
@@ -37,6 +38,8 @@ class thread final
 	friend class scheduler;
 	friend class scheduler_class_base;
 	friend class round_rubin_scheduler_class;
+
+	friend class kernel_stack;
 
 	enum class [[clang::enum_extensibility(closed)]] thread_states
 	{
@@ -50,9 +53,9 @@ class thread final
 
 	enum [[clang::flag_enum, clang::enum_extensibility(open)]] thread_flags : uint64_t
 	{
-		FLAG_DETACHED,
-		FLAG_IDLE,
-		FLAG_DEFERRED_FREE,
+		FLAG_DETACHED = 0b1,
+		FLAG_IDLE = 0b10,
+		FLAG_DEFERRED_FREE = 0b100,
 	};
 
 	enum [[clang::flag_enum, clang::enum_extensibility(open)]] thread_signals : uint64_t
@@ -84,11 +87,16 @@ class thread final
 	thread(const thread&) = delete;
 	thread& operator=(const thread&) = delete;
 
-	[[nodiscard]]vmm::mm_struct* get_mm();
+	[[nodiscard]] vmm::mm_struct* get_mm();
 
-	[[nodiscard]]bool get_need_reschedule() const
+	[[nodiscard]] bool get_need_reschedule() const
 	{
 		return need_reschedule;
+	}
+
+	[[nodiscard]] bool is_user_thread() const
+	{
+		return parent != nullptr;
 	}
 
 	void kill();
@@ -123,7 +131,7 @@ class thread final
 
 	ktl::unique_ptr<kernel_stack> kstack{ nullptr };
 
-	void* ustack{ nullptr };
+	user_stack* ustack{ nullptr };
 
 	process* parent{ nullptr };
 
@@ -160,7 +168,7 @@ class kernel_stack final
 	static constexpr size_t MAX_PAGE_COUNT = MAX_SIZE / PAGE_SIZE;
 
  public:
-	[[nodiscard]] static ktl::unique_ptr<kernel_stack> create(
+	[[nodiscard]] static ktl::unique_ptr<kernel_stack> create(thread* parent,
 		thread::routine_type start_routine,
 		void* arg,
 		thread::trampoline_type tpl);
@@ -177,7 +185,13 @@ class kernel_stack final
 		return reinterpret_cast<uintptr_t >(get_raw());
 	}
  private:
-	[[nodiscard]] kernel_stack(void* stk_mem, thread::routine_type routine, void* arg, thread::trampoline_type tpl);
+	[[nodiscard]] kernel_stack(thread* parent_thread,
+		void* stk_mem,
+		thread::routine_type routine,
+		void* arg,
+		thread::trampoline_type tpl);
+
+	thread* parent{ nullptr };
 
 	void* bottom{ nullptr };
 
@@ -185,7 +199,35 @@ class kernel_stack final
 
 	arch_task_context_registers* context{ nullptr };
 
-	uintptr_t top{ 0 };
+};
+
+class user_stack
+{
+ public:
+	friend class process;
+	friend class thread;
+	using ns_type = kbl::doubly_linked_node_state<user_stack>;
+
+ public:
+
+	user_stack() = delete;
+	user_stack(const user_stack&) = delete;
+	user_stack& operator=(const user_stack&) = delete;
+
+	[[nodiscard]] void* get_top();
+
+	int64_t operator<=>(const user_stack& rhs) const
+	{
+		return (uint8_t*)this->top - (uint8_t*)rhs.top;
+	}
+
+ private:
+	user_stack(process*, thread*);
+
+	void* top{ nullptr };
+
+	process* owner_process{ nullptr };
+	thread* owner_thread{ nullptr };
 };
 
 extern thread::thread_list_type global_thread_list;

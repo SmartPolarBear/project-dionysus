@@ -24,14 +24,15 @@ lock::spinlock task::global_thread_lock{ "gtl" };
 cls_item<thread*, CLS_CUR_THREAD_PTR> task::cur_thread TA_GUARDED(global_thread_lock);
 thread::thread_list_type task::global_thread_list TA_GUARDED(global_thread_lock);
 
-ktl::unique_ptr<kernel_stack> task::kernel_stack::create(thread::routine_type start_routine,
+ktl::unique_ptr<kernel_stack> task::kernel_stack::create(thread* parent,
+	thread::routine_type start_routine,
 	void* arg,
 	thread::trampoline_type tpl)
 {
 	kbl::allocate_checker ck{};
 
 	auto stack_mem = memory::kmalloc(MAX_SIZE, 0);
-	ktl::unique_ptr<kernel_stack> ret{ new(&ck) kernel_stack{ stack_mem, start_routine, arg, tpl }};
+	ktl::unique_ptr<kernel_stack> ret{ new(&ck) kernel_stack{ parent, stack_mem, start_routine, arg, tpl }};
 
 	if (!ck.check())
 	{
@@ -51,8 +52,12 @@ kernel_stack::~kernel_stack()
 	memory::kfree(bottom);
 }
 
-kernel_stack::kernel_stack(void* stk_mem, thread::routine_type routine, void* arg, thread::trampoline_type tpl)
-	: bottom(stk_mem)
+kernel_stack::kernel_stack(thread* parent_thread,
+	void* stk_mem,
+	thread::routine_type routine,
+	void* arg,
+	thread::trampoline_type tpl)
+	: parent(parent_thread), bottom(stk_mem)
 {
 	// setup initial kernel stack
 	auto sp = reinterpret_cast<uintptr_t>(static_cast<char*>(bottom) + MAX_SIZE);
@@ -70,10 +75,6 @@ kernel_stack::kernel_stack(void* stk_mem, thread::routine_type routine, void* ar
 
 	this->context->rip = (uintptr_t)tpl;
 
-	// setup registers
-	tf->cs = SEGMENT_VAL(SEGMENTSEL_KCODE, DPL_KERNEL);
-	tf->ss = SEGMENT_VAL(SEGMENTSEL_KDATA, DPL_KERNEL);
-
 	tf->rflags |= trap::EFLAG_IF | trap::EFLAG_IOPL_MASK;
 
 	// argument: routine arg and exit callback
@@ -83,7 +84,21 @@ kernel_stack::kernel_stack(void* stk_mem, thread::routine_type routine, void* ar
 
 	tf->rip = reinterpret_cast<uintptr_t >(thread_entry);
 
-	top = sp;
+	// setup registers
+	if (parent_thread->parent != nullptr) // the thread is for user
+	{
+		tf->cs = SEGMENT_VAL(SEGMENTSEL_UCODE, DPL_USER);
+		tf->ss = SEGMENT_VAL(SEGMENTSEL_UDATA, DPL_USER);
+
+		tf->rsp = USER_STACK_TOP;
+	}
+	else // kernel
+	{
+		tf->cs = SEGMENT_VAL(SEGMENTSEL_KCODE, DPL_KERNEL);
+		tf->ss = SEGMENT_VAL(SEGMENTSEL_KDATA, DPL_KERNEL);
+
+		tf->rsp = sp;
+	}
 }
 
 error_code_with_result<task::thread*> thread::create(process* parent,
@@ -101,7 +116,7 @@ error_code_with_result<task::thread*> thread::create(process* parent,
 		return -ERROR_MEMORY_ALLOC;
 	}
 
-	ret->kstack = kernel_stack::create(routine, arg, trampoline);
+	ret->kstack = kernel_stack::create(ret, routine, arg, trampoline);
 
 	if (ret->kstack == nullptr)
 	{
@@ -111,12 +126,12 @@ error_code_with_result<task::thread*> thread::create(process* parent,
 
 	if (parent != nullptr)
 	{
-		// TODO: allocate user stack
-		KDEBUG_NOT_IMPLEMENTED;
-	}
-	else
-	{
-		ret->kstack->tf->rsp = ret->kstack->top;
+		if (auto alloc_ret = parent->allocate_ustack(ret);has_error(alloc_ret))
+		{
+			return get_error_code(alloc_ret);
+		}
+
+		ret->kstack->tf->rsp = reinterpret_cast<uintptr_t>(ret->ustack->get_top());
 	}
 
 	ret->state = thread_states::READY;
@@ -313,4 +328,14 @@ void thread::current::exit(error_code code)
 	cpu->scheduler.reschedule();
 
 	__UNREACHABLE;
+}
+
+user_stack::user_stack(process* p, thread* t)
+	: owner_process{ p }, owner_thread{ t }
+{
+}
+
+void* user_stack::get_top()
+{
+	return top;
 }

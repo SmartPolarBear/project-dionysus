@@ -217,9 +217,13 @@ class doubly_linked_node_state
  public:
 	doubly_linked_node_state() = default;
 
-	doubly_linked_node_state(const doubly_linked_node_state&) = delete;
+	doubly_linked_node_state(const doubly_linked_node_state&)
+	{
+	}
 
-	void operator=(const doubly_linked_node_state&) = delete;
+	void operator=(const doubly_linked_node_state&)
+	{
+	}
 };
 
 template<typename T, doubly_linked_node_state<T> T::*NS>

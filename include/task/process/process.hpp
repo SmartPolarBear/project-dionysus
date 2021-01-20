@@ -63,18 +63,15 @@ enum binary_types
 	BINARY_ELF
 };
 
-class elf_loader
-{
-
-};
-
 constexpr size_t PROC_NAME_LEN = 64;
 
 // it should be enough
 constexpr size_t PROC_MAX_COUNT = INT32_MAX;
 
 constexpr pid_type PID_MAX = INT64_MAX;
+
 class job;
+class user_stack;
 
 class process final
 	: public object::dispatcher<process, 0>,
@@ -96,6 +93,7 @@ class process final
 
  public:
 	friend class job;
+	friend class thread;
 
 	static kbl::integral_atomic<pid_type> pid_counter;
 	static_assert(kbl::integral_atomic<pid_type>::is_always_lock_free);
@@ -173,23 +171,27 @@ class process final
 	}
 
  private:
-	static error_code process_main_thread_routine(void* arg);
-	static_assert(ktl::Convertible<decltype(process_main_thread_routine), thread::routine_type>);
+	static constexpr size_t USTACK_FREELIST_THRESHOLD = 16;
 
 	process(std::span<char> name,
 		pid_type id,
 		ktl::shared_ptr<job> parent,
 		ktl::shared_ptr<job> critical_to);
 
-	error_code setup_kernel_stack() TA_REQ(lock);
-	error_code setup_registers() TA_REQ(lock);
-	error_code setup_mm() TA_REQ(lock);
-
 	/// \brief  status transition, must be called with held lock
 	/// \param st the new status
 	void set_status_locked(Status st) noexcept TA_REQ(lock);
 
 	void kill_all_threads_locked() noexcept TA_REQ(lock);
+
+	error_code_with_result<user_stack*> allocate_ustack(thread* t);
+
+	void free_ustack(user_stack* ustack);
+
+	// TODO: remove
+	error_code setup_kernel_stack() TA_REQ(lock);
+	error_code setup_registers() TA_REQ(lock);
+	error_code setup_mm() TA_REQ(lock);
 
 	Status status;
 
@@ -201,6 +203,9 @@ class process final
 	ktl::span<char> name;
 
 	ktl::list<thread*> threads TA_GUARDED(lock){};
+
+	ktl::list<user_stack*> free_list TA_GUARDED(lock){};
+	ktl::list<user_stack*> busy_list TA_GUARDED(lock){};
 
 	task_return_code ret_code;
 
