@@ -173,7 +173,9 @@ class process final
  private:
 	static constexpr size_t USTACK_FREELIST_THRESHOLD = 16;
 
-	process(std::span<char> name,
+	[[nodiscard]] void* make_next_user_stack();
+
+	[[nodiscard]] process(std::span<char> name,
 		pid_type id,
 		ktl::shared_ptr<job> parent,
 		ktl::shared_ptr<job> critical_to);
@@ -184,7 +186,7 @@ class process final
 
 	void kill_all_threads_locked() noexcept TA_REQ(lock);
 
-	error_code_with_result<user_stack*> allocate_ustack(thread* t);
+	[[nodiscard]] error_code_with_result<user_stack*> allocate_ustack(thread* t);
 
 	void free_ustack(user_stack* ustack);
 

@@ -309,6 +309,11 @@ void task::process::remove_thread(task::thread* t)
 	this->threads.remove(t);
 }
 
+void* task::process::make_next_user_stack()
+{
+	return nullptr;
+}
+
 error_code_with_result<user_stack*> task::process::allocate_ustack(thread* t)
 {
 	lock_guard g{ lock };
@@ -328,9 +333,7 @@ error_code_with_result<user_stack*> task::process::allocate_ustack(thread* t)
 	}
 
 	kbl::allocate_checker ac{};
-	auto stack = new(&ac) user_stack{ this, t };
-
-	stack->top= nullptr; // TODO
+	auto stack = new(&ac) user_stack{ this, t, make_next_user_stack() };
 
 	if (!ac.check())
 	{
@@ -340,6 +343,7 @@ error_code_with_result<user_stack*> task::process::allocate_ustack(thread* t)
 	busy_list.push_back(stack);
 
 	t->ustack = stack;
+
 	return stack;
 }
 

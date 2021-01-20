@@ -330,8 +330,8 @@ void thread::current::exit(error_code code)
 	__UNREACHABLE;
 }
 
-user_stack::user_stack(process* p, thread* t)
-	: owner_process{ p }, owner_thread{ t }
+user_stack::user_stack(process* p, thread* t, void* stack_ptr)
+	: owner_process{ p }, owner_thread{ t }, top{ stack_ptr }
 {
 }
 

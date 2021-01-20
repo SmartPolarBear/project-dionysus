@@ -222,7 +222,7 @@ class user_stack
 	}
 
  private:
-	user_stack(process*, thread*);
+	user_stack(process* p, thread* t, void* stack_ptr);
 
 	void* top{ nullptr };
 
