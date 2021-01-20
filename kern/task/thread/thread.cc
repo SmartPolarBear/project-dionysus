@@ -272,7 +272,8 @@ void thread::finish_dead_transition()
 void thread::kill()
 {
 	{
-		lock_guard g{ global_thread_lock, lock };
+		lock_guard g1{ global_thread_lock };
+		lock_guard g2{ lock };
 
 		signals |= SIGNAL_KILLED;
 
@@ -325,7 +326,8 @@ void thread::current::exit(error_code code)
 {
 	{
 
-		lock_guard g{ global_thread_lock, cur_thread->lock };
+		lock_guard g1{ global_thread_lock };
+		lock_guard g2{ cur_thread->lock };
 
 		if (cur_thread->parent != nullptr)
 		{
