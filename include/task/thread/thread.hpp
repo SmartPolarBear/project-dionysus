@@ -127,7 +127,7 @@ class thread final
 
 	void remove_from_lists();
 
-	void finish_dying();
+	void finish_dead_transition();
 
 	ktl::unique_ptr<kernel_stack> kstack{ nullptr };
 
@@ -139,7 +139,7 @@ class thread final
 
 	ktl::string_view name{ "" };
 
-	thread_states state{ thread_states::INITIAL };
+	thread_states state TA_GUARDED(lock) { thread_states::INITIAL };
 
 	error_code exit_code{ ERROR_SUCCESS };
 

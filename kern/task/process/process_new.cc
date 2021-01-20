@@ -66,7 +66,7 @@ error_code_with_result<ktl::shared_ptr<process>> process::create(const char* nam
 		return -ERROR_MEMORY_ALLOC;
 	}
 
-	proc->kstack = std::make_unique<uint8_t[]>(KERNSTACK_SIZE);
+	proc->kstack = std::make_unique<uint8_t[]>(KSTACK_SIZE);
 
 	if (auto ret = proc->setup_kernel_stack();ret != ERROR_SUCCESS)
 	{
@@ -95,7 +95,7 @@ error_code process::setup_kernel_stack()
 {
 	auto raw_stack = this->kstack.get();
 
-	auto sp = reinterpret_cast<uintptr_t>(raw_stack + task::process::KERNSTACK_SIZE);
+	auto sp = reinterpret_cast<uintptr_t>(raw_stack + task::process::KSTACK_SIZE);
 
 	sp -= sizeof(*this->tf);
 	this->tf = reinterpret_cast<decltype(this->tf)>(sp);
@@ -309,9 +309,54 @@ void task::process::remove_thread(task::thread* t)
 	this->threads.remove(t);
 }
 
-void* task::process::make_next_user_stack()
+error_code_with_result<void*> task::process::make_next_user_stack()
 {
-	return nullptr;
+	const uintptr_t current_top = USTACK_TOTAL_SIZE * busy_list.size();
+
+	auto ret = vmm::mm_map(this->mm,
+		current_top - process::USTACK_TOTAL_SIZE - 1, //TODO -1?
+		process::USTACK_TOTAL_SIZE,
+		vmm::VM_STACK, nullptr);
+
+	if (ret != ERROR_SUCCESS)
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
+
+	// allocate an stack
+	for (size_t i = 0;
+	     i < task::process::USTACK_PAGES_PER_THREAD; // do not allocate the guard page
+	     i++)
+	{
+		uintptr_t va = current_top - process::USTACK_USABLE_SIZE_PER_THREAD + i * PAGE_SIZE;
+		page_info* page_ret = nullptr;
+
+		ret = pmm::pgdir_alloc_page(this->mm->pgdir,
+			true,
+			va,
+			PG_W | PG_U | PG_PS | PG_P,
+			&page_ret);
+
+		if (ret != ERROR_SUCCESS)
+		{
+			return -ERROR_MEMORY_ALLOC;
+		}
+	}
+
+	[[maybe_unused]]page_info* guard_page = nullptr;
+
+	ret = pmm::pgdir_alloc_page(this->mm->pgdir,
+		true,
+		current_top - process::USTACK_TOTAL_PAGES_PER_THREAD,
+		PG_U | PG_PS | PG_P, // guard page can't be written
+		&guard_page);
+
+	if (ret != ERROR_SUCCESS)
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
+
+	return (void*)(current_top - process::USTACK_USABLE_SIZE_PER_THREAD);
 }
 
 error_code_with_result<user_stack*> task::process::allocate_ustack(thread* t)
@@ -333,7 +378,16 @@ error_code_with_result<user_stack*> task::process::allocate_ustack(thread* t)
 	}
 
 	kbl::allocate_checker ac{};
-	auto stack = new(&ac) user_stack{ this, t, make_next_user_stack() };
+
+	user_stack* stack = nullptr;
+	if (auto alloc_ret = make_next_user_stack();has_error(alloc_ret))
+	{
+		return get_error_code(alloc_ret);
+	}
+	else
+	{
+		stack = new(&ac) user_stack{ this, t, get_result(alloc_ret) };
+	}
 
 	if (!ac.check())
 	{
@@ -397,11 +451,7 @@ error_code_with_result<ktl::shared_ptr<task::process>> task::process::create(con
 	{
 		main_thread = get_result(ret);
 	}
-
-	// the arg is the thread itself
-	main_thread->kstack->tf->rip = reinterpret_cast<uintptr_t>(entry_addr);
-	main_thread->kstack->tf->rsi = reinterpret_cast<uintptr_t>(main_thread);
-
+	
 	// the thread is critical to the process
 	main_thread->critical = true;
 

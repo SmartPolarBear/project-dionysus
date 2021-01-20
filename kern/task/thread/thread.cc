@@ -234,9 +234,20 @@ void thread::remove_from_lists()
 	global_thread_list.erase(thread_list_type::iterator_type{ &this->thread_link });
 }
 
-void thread::finish_dying()
+void thread::finish_dead_transition()
 {
-	this->state = thread_states::DEAD;
+	{
+		lock_guard g{ lock };
+
+		this->state = thread_states::DEAD;
+
+		if (critical)
+		{
+			// TODO: notify the process
+			KDEBUG_NOT_IMPLEMENTED;
+		}
+	}
+
 	delete this;
 }
 

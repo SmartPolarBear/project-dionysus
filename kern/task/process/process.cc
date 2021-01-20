@@ -47,8 +47,8 @@ std::shared_ptr<job> root_job;
 error_code task::alloc_ustack(task::process* proc)
 {
 	auto ret = vmm::mm_map(proc->mm,
-		USER_TOP - task::process::KERNSTACK_SIZE - 1,
-		task::process::KERNSTACK_PAGES * PAGE_SIZE,
+		USER_TOP - task::process::KSTACK_SIZE - 1,
+		task::process::KSTACK_PAGES * PAGE_SIZE,
 		vmm::VM_STACK, nullptr);
 	if (ret != ERROR_SUCCESS)
 	{
@@ -57,10 +57,10 @@ error_code task::alloc_ustack(task::process* proc)
 
 	// allocate an stack
 	for (size_t i = 0;
-		 i < task::process::KERNSTACK_PAGES;
+		 i < task::process::KSTACK_PAGES;
 		 i++)
 	{
-		uintptr_t va = USER_TOP - task::process::KERNSTACK_SIZE + i * PAGE_SIZE;
+		uintptr_t va = USER_TOP - task::process::KSTACK_SIZE + i * PAGE_SIZE;
 		page_info* page_ret = nullptr;
 
 		ret = pmm::pgdir_alloc_page(proc->mm->pgdir,

@@ -79,7 +79,7 @@ using lock::spinlock_holding;
 				auto raw_kstack = cur_proc->kstack.get();
 				uintptr_t kstack_addr = (uintptr_t)raw_kstack;
 
-				cpu()->tss.rsp0 = kstack_addr + task::process::KERNSTACK_SIZE;
+				cpu()->tss.rsp0 = kstack_addr + task::process::KSTACK_SIZE;
 
 				// Set gs. without calling swapgs to ensure atomic
 				gs_put_cpu_dependent(KERNEL_GS_KSTACK, kstack_addr);

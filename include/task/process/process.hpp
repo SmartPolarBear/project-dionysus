@@ -80,8 +80,18 @@ class process final
  public:
 	static constexpr size_t PROC_MAX_NAME_LEN = 64;
 
-	static constexpr size_t KERNSTACK_PAGES = 2;
-	static constexpr size_t KERNSTACK_SIZE = KERNSTACK_PAGES * PAGE_SIZE;
+	static constexpr size_t KSTACK_PAGES = 2;
+	static constexpr size_t KSTACK_SIZE = KSTACK_PAGES * PAGE_SIZE;
+
+	[[maybe_unused]]static constexpr size_t USTACK_PAGES_PER_THREAD = 8;
+	[[maybe_unused]]static constexpr size_t USTACK_GUARD_PAGES_PER_THREAD = 1;
+	[[maybe_unused]]static constexpr size_t
+		USTACK_TOTAL_PAGES_PER_THREAD = (USTACK_GUARD_PAGES_PER_THREAD + USTACK_PAGES_PER_THREAD);
+
+	[[maybe_unused]]static constexpr size_t USTACK_USABLE_SIZE_PER_THREAD = USTACK_PAGES_PER_THREAD * PAGE_SIZE;
+	[[maybe_unused]]static constexpr size_t USTACK_TOTAL_SIZE = USTACK_TOTAL_PAGES_PER_THREAD * PAGE_SIZE;
+
+	static constexpr size_t USTACK_FREELIST_THRESHOLD = 16;
 
 	enum class [[clang::enum_extensibility(closed)]] Status
 	{
@@ -171,9 +181,8 @@ class process final
 	}
 
  private:
-	static constexpr size_t USTACK_FREELIST_THRESHOLD = 16;
 
-	[[nodiscard]] void* make_next_user_stack();
+	[[nodiscard]] error_code_with_result<void*> make_next_user_stack();
 
 	[[nodiscard]] process(std::span<char> name,
 		pid_type id,
