@@ -109,7 +109,7 @@ class process final
 	static_assert(kbl::integral_atomic<pid_type>::is_always_lock_free);
 
 	static error_code_with_result<ktl::shared_ptr<process>> create(const char* name,
-		ktl::shared_ptr<job> parent);
+		const ktl::shared_ptr<job>& parent);
 
 	static error_code_with_result<ktl::shared_ptr<task::process>> create(const char* name,
 		void* bin,
@@ -168,10 +168,6 @@ class process final
 		flags = _flags;
 	}
 
-	trap::trap_frame* get_tf() const
-	{
-		return tf;
-	}
 
 	/// \brief Get status of this process
 	/// \return the status
@@ -179,6 +175,8 @@ class process final
 	{
 		return status;
 	}
+
+	error_code resize_heap(IN OUT uintptr_t* heap_ptr);
 
  private:
 
@@ -200,9 +198,6 @@ class process final
 	[[nodiscard]] error_code_with_result<user_stack*> allocate_ustack(thread* t) TA_EXCL(lock);
 	void free_ustack(user_stack* ustack) TA_EXCL(lock);
 
-	// TODO: remove
-	error_code setup_kernel_stack() TA_REQ(lock);
-	error_code setup_registers() TA_REQ(lock);
 	error_code setup_mm() TA_REQ(lock);
 
 	Status status;
@@ -229,87 +224,10 @@ class process final
 
 	size_t runs;
 
-	std::unique_ptr<uint8_t[]> kstack;
-
 	vmm::mm_struct* mm;
 
 	size_t flags;
 
-	size_t wating_state;
-	error_code exit_code;
-
-	trap::trap_frame* tf;
-
-	context* context;
-
-	struct sleep_data_struct
-	{
-		size_t channel;
-	} sleep_data{};
-
-	struct messaging_data_struct
-	{
-		static constexpr size_t INTERNAL_BUF_SIZE = 64;
-
-		lock::spinlock_struct lock;
-
-		// message passing
-		void* data;
-		size_t data_size;
-		uint8_t internal_buf[INTERNAL_BUF_SIZE];
-
-		// page passing
-		bool can_receive;
-		void* dst;
-		size_t unique_value;
-		pid_type from;
-		uint64_t perms;
-
-	} messaging_data{};
-
-
-	//FIXME
- public:
-
-	friend error_code process_load_binary(IN process* porc,
-		IN uint8_t* bin,
-		IN size_t binary_size,
-		IN binary_types type,
-		IN size_t flags);
-
-	// handle task cleanup when exiting
-	friend void process_exit(IN process* proc);
-
-	// terminate current task
-	friend error_code process_terminate(error_code error_code);
-
-	// sleep on certain channel
-	friend error_code process_sleep(size_t channel, lock::spinlock_struct* lock);
-
-	// wake up child_processes sleeping on certain channel
-	friend error_code process_wakeup(size_t channel);
-	friend error_code process_wakeup_nolock(size_t channel);
-
-	// send and receive message
-	friend error_code process_ipc_send(pid_type pid, IN const void* message, size_t size);
-	friend error_code process_ipc_receive(OUT void* message_out);
-	// send and receive a page
-	friend error_code process_ipc_send_page(pid_type pid, uint64_t unique_val, IN const void* page, size_t perm);
-	friend error_code process_ipc_receive_page(OUT void* out_page);
-
-	// allocate more memory
-	friend error_code process_heap_change_size(IN process* proc, IN OUT uintptr_t* heap_ptr);
-
-	friend size_t process_terminate_impl(task::process* proc,
-		error_code err);
-
-	friend error_code alloc_ustack(task::process* proc);
-
-	friend void ::scheduler::scheduler_enter();
-
-	friend void ::scheduler::scheduler_loop();
-
-	friend void ::scheduler::scheduler_yield();
 };
 
 }

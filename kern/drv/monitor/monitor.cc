@@ -68,58 +68,58 @@ static inline error_code load_monitor_executable()
 
 static inline error_code load_server_info()
 {
-	constexpr size_t info_size =
-		sizeof(multiboot_tag_vbe) +
-			sizeof(multiboot_tag_framebuffer) +
-			sizeof(uintptr_t[2]);
-
-	// allocate more program heap memory
-	size_t page_count = PAGE_ROUNDUP(info_size) / PAGE_SIZE;
-	page_info* pages = nullptr;
-	auto ret = pmm::pgdir_alloc_pages(g_monitor_proc->get_mm()->pgdir,
-		true,
-		page_count,
-		g_monitor_proc->get_mm()->brk_start,
-		PG_U | PG_P,
-		&pages);
-
-	if (ret != ERROR_SUCCESS)
-	{
-		return ret;
-	}
-
-	// load multiboot tags
-	auto framebuffer_tag = multiboot::acquire_tag_ptr<multiboot_tag_framebuffer>(MULTIBOOT_TAG_TYPE_FRAMEBUFFER);
-
-	if (framebuffer_tag == nullptr)
-	{
-		return -ERROR_VMA_NOT_FOUND;
-	}
-
-	// map a page for framebuffer
-	ret = map_framebuffer(framebuffer_tag);
-	if (ret != ERROR_SUCCESS)
-	{
-		return ret;
-	}
-
-	uintptr_t heap_addr = pmm::page_to_va(pages);
-
-	// copy framebuffer tag to server's heap
-	uintptr_t frmbuf_tag_user = heap_addr;
-	heap_addr += sizeof(*framebuffer_tag);
-	memmove((void*)frmbuf_tag_user, framebuffer_tag, sizeof(*framebuffer_tag));
-
-	// the argv array
-	uintptr_t argv_start = heap_addr, argv_ptr = heap_addr;
-	argv_ptr += sizeof(uintptr_t); // argv[0] should be the path to program itself, now we leave it empty
-	*((uintptr_t*)argv_ptr) = frmbuf_tag_user;
-	argv_ptr += sizeof(uintptr_t);
-
-	heap_addr = argv_ptr;
-
-	g_monitor_proc->get_tf()->rdi = 2; // argc
-	g_monitor_proc->get_tf()->rsi = argv_start; // argv
+//	constexpr size_t info_size =
+//		sizeof(multiboot_tag_vbe) +
+//			sizeof(multiboot_tag_framebuffer) +
+//			sizeof(uintptr_t[2]);
+//
+//	// allocate more program heap memory
+//	size_t page_count = PAGE_ROUNDUP(info_size) / PAGE_SIZE;
+//	page_info* pages = nullptr;
+//	auto ret = pmm::pgdir_alloc_pages(g_monitor_proc->get_mm()->pgdir,
+//		true,
+//		page_count,
+//		g_monitor_proc->get_mm()->brk_start,
+//		PG_U | PG_P,
+//		&pages);
+//
+//	if (ret != ERROR_SUCCESS)
+//	{
+//		return ret;
+//	}
+//
+//	// load multiboot tags
+//	auto framebuffer_tag = multiboot::acquire_tag_ptr<multiboot_tag_framebuffer>(MULTIBOOT_TAG_TYPE_FRAMEBUFFER);
+//
+//	if (framebuffer_tag == nullptr)
+//	{
+//		return -ERROR_VMA_NOT_FOUND;
+//	}
+//
+//	// map a page for framebuffer
+//	ret = map_framebuffer(framebuffer_tag);
+//	if (ret != ERROR_SUCCESS)
+//	{
+//		return ret;
+//	}
+//
+//	uintptr_t heap_addr = pmm::page_to_va(pages);
+//
+//	// copy framebuffer tag to server's heap
+//	uintptr_t frmbuf_tag_user = heap_addr;
+//	heap_addr += sizeof(*framebuffer_tag);
+//	memmove((void*)frmbuf_tag_user, framebuffer_tag, sizeof(*framebuffer_tag));
+//
+//	// the argv array
+//	uintptr_t argv_start = heap_addr, argv_ptr = heap_addr;
+//	argv_ptr += sizeof(uintptr_t); // argv[0] should be the path to program itself, now we leave it empty
+//	*((uintptr_t*)argv_ptr) = frmbuf_tag_user;
+//	argv_ptr += sizeof(uintptr_t);
+//
+//	heap_addr = argv_ptr;
+//
+//	g_monitor_proc->get_tf()->rdi = 2; // argc
+//	g_monitor_proc->get_tf()->rsi = argv_start; // argv
 
 	return ERROR_SUCCESS;
 }
