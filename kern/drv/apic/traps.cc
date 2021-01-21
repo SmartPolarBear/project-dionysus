@@ -192,7 +192,8 @@ extern "C" void trap_body(trap::trap_frame info)
 		&& (cur_proc->get_flags() & task::PROC_EXITING)
 		&& ((info.cs & 0b11) == DPL_USER))
 	{
-		task::process_exit(cur_proc());
+		//FIXME
+		KDEBUG_NOT_IMPLEMENTED;
 	}
 
 	// if rescheduling needed, reschedule

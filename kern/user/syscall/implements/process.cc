@@ -17,7 +17,8 @@
 //  1. exit code, the value of which is error_codes
 error_code sys_exit(const syscall_regs* regs)
 {
-	return task::process_terminate((error_code)get_nth_arg(regs, 0));
+	//FIXME
+	KDEBUG_NOT_IMPLEMENTED;
 }
 
 error_code sys_set_heap(const syscall_regs* regs)

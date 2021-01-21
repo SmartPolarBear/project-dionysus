@@ -56,14 +56,16 @@ extern "C" [[clang::optnone]] error_code syscall_body(const syscall_regs* regs)
 
 	if (cur_proc->get_flags() & task::PROC_EXITING)
 	{
-		task::process_exit(cur_proc());
+		//FIXME
+		KDEBUG_NOT_IMPLEMENTED;
 	}
 
 	auto ret = syscall_table[syscall_no](regs);
 
 	if (cur_proc->get_flags() & task::PROC_EXITING)
 	{
-		task::process_exit(cur_proc());
+		//FIXME
+		KDEBUG_NOT_IMPLEMENTED;
 	}
 
 	return ret;
