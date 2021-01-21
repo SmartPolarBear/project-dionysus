@@ -187,6 +187,9 @@ void thread::default_trampoline()
 	// will return to thread_entry
 }
 
+//FIXME
+extern cls_item<task::process*, CLS_PROC_STRUCT_PTR> cur_proc;
+
 void thread::switch_to() TA_REQ(global_thread_lock)
 {
 //	kdebug::kdebug_log("[cpu %d]%s->%s", cpu->id, cur_thread->name.data(), this->name.data());
@@ -202,6 +205,12 @@ void thread::switch_to() TA_REQ(global_thread_lock)
 		{
 			lock_guard g{ lock };
 			state = thread_states::RUNNING;
+
+			//FIXME
+			if (this->parent)
+			{
+				cur_proc = this->parent;
+			}
 		}
 
 		uintptr_t kstack_addr = this->kstack->get_address();
