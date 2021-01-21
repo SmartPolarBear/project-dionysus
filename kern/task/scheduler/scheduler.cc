@@ -36,13 +36,11 @@ void task::scheduler::yield()
 void task::scheduler::schedule()
 {
 	KDEBUG_ASSERT(!global_thread_list.empty());
+	KDEBUG_ASSERT(global_thread_lock.holding());
 
 	thread* next = nullptr;
 
-	{
-		lock_guard g{ cur_thread->lock };
-		cur_thread->need_reschedule = false;
-	}
+	cur_thread->need_reschedule = false;
 
 	if (cur_thread->state == thread::thread_states::READY)
 	{
@@ -69,7 +67,8 @@ void task::scheduler::schedule()
 
 void task::scheduler::handle_timer_tick()
 {
-	lock_guard g{ global_thread_lock };
+	lock_guard g1{ global_thread_lock };
+	lock_guard g2{ timer_lock };
 
 	timer_tick(cur_thread.get());
 }
@@ -104,12 +103,9 @@ void task::scheduler::timer_tick(task::thread* t)
 {
 	pushcli();
 
+	if (!timer_list.empty())
 	{
-		lock_guard g{ this->timer_lock };
-		if (!timer_list.empty())
-		{
-			// TODO
-		}
+		// TODO
 	}
 
 	if (t != cpu->idle)
@@ -118,7 +114,6 @@ void task::scheduler::timer_tick(task::thread* t)
 	}
 	else
 	{
-		lock_guard g_t{ t->lock };
 		t->need_reschedule = true;
 	}
 

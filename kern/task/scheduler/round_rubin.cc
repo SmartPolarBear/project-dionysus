@@ -13,34 +13,19 @@ using namespace ktl::mutex;
 
 void task::round_rubin_scheduler_class::enqueue(task::thread* thread)
 {
-
-	run_queue.push_front(thread);
+	run_queue.push_back(thread);
 }
 
 void task::round_rubin_scheduler_class::dequeue(task::thread* thread)
 {
-	run_queue.remove(thread);
+//	run_queue.remove(thread);
 }
 
 task::thread* task::round_rubin_scheduler_class::pick_next()
 {
-	if (current == run_queue.end() && !run_queue.empty())
-	{
-		current = run_queue.begin();
-	}
-
-	if (!run_queue.empty())
-	{
-		return *(current++);
-	}
-	else if (run_queue.empty())
-	{
-		current = run_queue.end();
-		return nullptr;
-	}
-
-	__UNREACHABLE;
-	return nullptr;
+	auto ret = run_queue.front();
+	run_queue.pop_front();
+	return ret;
 }
 
 void task::round_rubin_scheduler_class::timer_tick()

@@ -1,3 +1,6 @@
+
+#include <task/process/process.hpp>
+
 #include "process.hpp"
 #include "load_code.hpp"
 #include "syscall.h"
@@ -189,5 +192,4 @@ error_code task::process_ipc_receive_page(void* out_page)
 
 	return ERROR_SUCCESS;
 }
-
 

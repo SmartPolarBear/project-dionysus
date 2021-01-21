@@ -361,6 +361,8 @@ error_code_with_result<void*> task::process::make_next_user_stack()
 
 error_code_with_result<user_stack*> task::process::allocate_ustack(thread* t)
 {
+	lock_guard g{ lock };
+
 	if (!free_list.empty())
 	{
 		auto stack = free_list.front();
@@ -423,6 +425,7 @@ error_code_with_result<ktl::shared_ptr<task::process>> task::process::create(con
 	size_t size,
 	ktl::shared_ptr<job> parent)
 {
+
 	ktl::shared_ptr<process> proc{ nullptr };
 	if (auto ret = task::process::create(name, std::move(parent));has_error(ret))
 	{
@@ -432,8 +435,6 @@ error_code_with_result<ktl::shared_ptr<task::process>> task::process::create(con
 	{
 		proc = get_result(ret);
 	}
-
-	lock_guard g{ proc->lock };
 
 	// TODO: write better loader
 	uintptr_t entry_addr = 0;
@@ -453,19 +454,23 @@ error_code_with_result<ktl::shared_ptr<task::process>> task::process::create(con
 	}
 
 	// the thread is critical to the process
-	{
-		lock_guard g2{ main_thread->lock };
-		main_thread->critical = true;
-	}
-
-	proc->threads.push_back(main_thread);
+	main_thread->critical = true;
 
 	{
-		lock_guard g2{ global_thread_lock };
+		lock_guard g{ global_thread_lock };
+
 		cpu->scheduler.unblock(main_thread);
 	}
+
+	proc->add_child_thread(main_thread);
 
 	proc->parent->add_child_process(proc);
 
 	return proc;
+}
+
+void task::process::add_child_thread(thread* t) noexcept
+{
+	lock_guard g{ lock };
+	threads.push_back(t);
 }

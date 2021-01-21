@@ -107,6 +107,7 @@ error_code_with_result<task::thread*> thread::create(process* parent,
 	void* arg,
 	trampoline_type trampoline)
 {
+	lock_guard g2{ global_thread_lock };
 
 	kbl::allocate_checker ck{};
 	auto ret = new(&ck) thread{ parent, name };
@@ -115,8 +116,6 @@ error_code_with_result<task::thread*> thread::create(process* parent,
 	{
 		return -ERROR_MEMORY_ALLOC;
 	}
-
-	lock_guard g{ ret->lock };
 
 	ret->kstack = kernel_stack::create(ret, routine, arg, trampoline);
 
@@ -138,10 +137,7 @@ error_code_with_result<task::thread*> thread::create(process* parent,
 
 	ret->state = thread_states::READY;
 
-	{
-		lock_guard g2{ global_thread_lock };
-		global_thread_list.push_back(*ret);
-	}
+	global_thread_list.push_back(*ret);
 
 	return ret;
 }
@@ -157,7 +153,6 @@ error_code thread::create_idle()
 	auto th = get_result(ret);
 
 	lock_guard g1{ global_thread_lock };
-	lock_guard g2{ th->lock };
 
 	th->flags |= FLAG_IDLE;
 
@@ -171,7 +166,6 @@ error_code thread::create_idle()
 
 vmm::mm_struct* task::thread::get_mm()
 {
-	lock_guard g{ lock };
 	if (parent != nullptr)
 	{
 		return parent->get_mm();
@@ -247,15 +241,12 @@ thread::thread(process* prt,
 
 void thread::remove_from_lists()
 {
-	lock_guard g{ global_thread_lock };
 	global_thread_list.erase(thread_list_type::iterator_type{ &this->thread_link });
 }
 
 void thread::finish_dead_transition()
 {
 	{
-		lock_guard g{ lock };
-
 		this->state = thread_states::DEAD;
 
 		if (critical)
@@ -282,7 +273,6 @@ void thread::kill()
 {
 	{
 		lock_guard g1{ global_thread_lock };
-		lock_guard g2{ lock };
 
 		signals |= SIGNAL_KILLED;
 
@@ -334,9 +324,7 @@ error_code thread::join(error_code* out_err_code)
 void thread::current::exit(error_code code)
 {
 	{
-
 		lock_guard g1{ global_thread_lock };
-		lock_guard g2{ cur_thread->lock };
 
 		if (cur_thread->parent != nullptr)
 		{

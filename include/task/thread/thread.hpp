@@ -92,15 +92,11 @@ class thread final
 
 	[[nodiscard]] bool get_need_reschedule() const
 	{
-		ktl::mutex::lock_guard g{ lock };
-
 		return need_reschedule;
 	}
 
 	[[nodiscard]] bool is_user_thread() const
 	{
-		ktl::mutex::lock_guard g{ lock };
-
 		return parent != nullptr;
 	}
 
@@ -130,29 +126,29 @@ class thread final
 
 	thread(process* parent, ktl::string_view name);
 
-	void remove_from_lists();
+	void remove_from_lists() TA_REQ(global_thread_lock);
 
 	void finish_dead_transition();
 
 	kernel_stack* kstack{ nullptr };
 
-	user_stack* ustack TA_GUARDED(lock){ nullptr };
+	user_stack* ustack{ nullptr };
 
-	process* parent TA_GUARDED(lock){ nullptr };
+	process* parent { nullptr };
 
-	ktl::string_view name TA_GUARDED(lock){ "" };
+	ktl::string_view name { "" };
 
 	thread_states state{ thread_states::INITIAL };
 
-	error_code exit_code TA_GUARDED(lock){ ERROR_SUCCESS };
+	error_code exit_code{ ERROR_SUCCESS };
 
-	bool need_reschedule TA_GUARDED(lock){ false };
+	bool need_reschedule { false };
 
-	bool critical TA_GUARDED(lock){ false };
+	bool critical { false };
 
-	uint64_t flags TA_GUARDED(lock){ 0 };
+	uint64_t flags { 0 };
 
-	uint64_t signals TA_GUARDED(lock){ 0 };
+	uint64_t signals { 0 };
 
 	kbl::doubly_linked_node_state<thread> thread_link{};
 

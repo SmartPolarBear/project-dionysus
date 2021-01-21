@@ -39,7 +39,7 @@ class scheduler
 	void unblock(thread* t) TA_REQ(global_thread_lock);
 	void insert(thread* t) TA_REQ(global_thread_lock);
 
-	void handle_timer_tick();
+	void handle_timer_tick() TA_EXCL(global_thread_lock, timer_lock);
 
  private:
 	scheduler_class_type scheduler_class{};
@@ -53,7 +53,6 @@ class scheduler
 	friend class thread;
 
 	timer_list_type timer_list TA_GUARDED(timer_lock) {};
-
 	mutable lock::spinlock timer_lock{ "scheduler timer" };
 
 	// context context

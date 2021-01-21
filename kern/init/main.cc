@@ -82,11 +82,13 @@ error_code init_routine([[maybe_unused]]void* arg)
 	if (cpu->id == 0)
 	{
 		run("/ipctest");
+	}
+	else if (cpu->id == 1)
+	{
 		run("/hello");
-		int a = 0;
 	}
 
-	return 20011204;
+	return ERROR_SUCCESS;
 }
 
 static inline void init_servers()

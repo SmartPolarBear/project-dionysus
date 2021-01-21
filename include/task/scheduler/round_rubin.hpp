@@ -22,10 +22,7 @@ class round_rubin_scheduler_class final
 
  private:
 
-	run_queue_type run_queue TA_GUARDED(lk) {};
-	run_queue_type::iterator current TA_GUARDED(lk) = run_queue.end();
-
-	mutable lock::spinlock lk;
+	run_queue_type run_queue TA_GUARDED(global_thread_lock) {};
 };
 
 }

@@ -195,9 +195,10 @@ class process final
 
 	void kill_all_threads_locked() noexcept TA_REQ(lock);
 
-	[[nodiscard]] error_code_with_result<user_stack*> allocate_ustack(thread* t) TA_REQ(lock);
+	void add_child_thread(thread *t) noexcept TA_EXCL(lock);
 
-	void free_ustack(user_stack* ustack);
+	[[nodiscard]] error_code_with_result<user_stack*> allocate_ustack(thread* t) TA_EXCL(lock);
+	void free_ustack(user_stack* ustack) TA_EXCL(lock);
 
 	// TODO: remove
 	error_code setup_kernel_stack() TA_REQ(lock);
