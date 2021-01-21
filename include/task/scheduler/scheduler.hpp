@@ -28,6 +28,7 @@ class scheduler
 {
  public:
 	using scheduler_class_type = round_rubin_scheduler_class;
+	friend class thread;
 
  public:
 	void schedule() TA_REQ(global_thread_lock);
@@ -47,16 +48,10 @@ class scheduler
 	void enqueue(thread* t) TA_REQ(global_thread_lock);
 	void dequeue(thread* t) TA_REQ(global_thread_lock);
 	thread* pick_next() TA_REQ(global_thread_lock);
-	void timer_tick(thread* t) TA_REQ(global_thread_lock, timer_lock);
-
- public:
-	friend class thread;
+	void timer_tick(thread* t) TA_REQ(global_thread_lock) TA_EXCL(timer_lock);
 
 	timer_list_type timer_list TA_GUARDED(timer_lock) {};
 	mutable lock::spinlock timer_lock{ "scheduler timer" };
-
-	// context context
-	[[deprecated("no longer need. left for dead code. TO BE REMOVED")]]arch_task_context_registers* context{ nullptr };
 };
 
 }

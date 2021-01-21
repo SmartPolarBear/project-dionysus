@@ -68,7 +68,6 @@ void task::scheduler::schedule()
 void task::scheduler::handle_timer_tick()
 {
 	lock_guard g1{ global_thread_lock };
-	lock_guard g2{ timer_lock };
 
 	timer_tick(cur_thread.get());
 }
@@ -103,9 +102,13 @@ void task::scheduler::timer_tick(task::thread* t)
 {
 	pushcli();
 
-	if (!timer_list.empty())
 	{
-		// TODO
+		lock_guard g2{ timer_lock };
+
+		if (!timer_list.empty())
+		{
+			// TODO
+		}
 	}
 
 	if (t != cpu->idle)
@@ -120,7 +123,7 @@ void task::scheduler::timer_tick(task::thread* t)
 	popcli();
 }
 
-void task::scheduler::insert(task::thread* t) TA_REQ(global_thread_lock)
+void task::scheduler::insert(task::thread* t)
 {
 	enqueue(t);
 }
