@@ -12,13 +12,13 @@ class round_rubin_scheduler_class final
 	using run_queue_type = ktl::list<thread*>;
 
  public:
-	void enqueue(thread* thread) TA_REQ(global_thread_lock, lk) override final;
+	void enqueue(thread* thread) TA_REQ(global_thread_lock) final;
 
-	void dequeue(thread* thread) TA_REQ(global_thread_lock, lk) override final;
+	void dequeue(thread* thread) TA_REQ(global_thread_lock) final;
 
-	thread* pick_next() TA_REQ(global_thread_lock, lk) override final;
+	thread* pick_next() TA_REQ(global_thread_lock) final;
 
-	void timer_tick() TA_REQ(global_thread_lock, lk) override final;
+	void timer_tick() TA_REQ(global_thread_lock) final;
 
  private:
 

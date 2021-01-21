@@ -47,7 +47,7 @@ class scheduler
 	void enqueue(thread* t) TA_REQ(global_thread_lock);
 	void dequeue(thread* t) TA_REQ(global_thread_lock);
 	thread* pick_next() TA_REQ(global_thread_lock);
-	void timer_tick(thread* t) TA_REQ(global_thread_lock);
+	void timer_tick(thread* t) TA_REQ(global_thread_lock, timer_lock);
 
  public:
 	friend class thread;

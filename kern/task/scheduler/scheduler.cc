@@ -39,7 +39,11 @@ void task::scheduler::schedule()
 
 	thread* next = nullptr;
 
-	cur_thread->need_reschedule = false;
+	{
+		lock_guard g{ cur_thread->lock };
+		cur_thread->need_reschedule = false;
+	}
+
 	if (cur_thread->state == thread::thread_states::READY)
 	{
 		enqueue(cur_thread.get());
@@ -70,7 +74,7 @@ void task::scheduler::handle_timer_tick()
 	timer_tick(cur_thread.get());
 }
 
-void task::scheduler::unblock(task::thread* t) TA_REQ(global_thread_lock)
+void task::scheduler::unblock(task::thread* t)
 {
 	// TODO: cpu affinity
 
@@ -114,6 +118,7 @@ void task::scheduler::timer_tick(task::thread* t)
 	}
 	else
 	{
+		lock_guard g_t{ t->lock };
 		t->need_reschedule = true;
 	}
 

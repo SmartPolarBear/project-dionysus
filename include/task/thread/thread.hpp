@@ -134,7 +134,7 @@ class thread final
 
 	void finish_dead_transition();
 
-	ktl::unique_ptr<kernel_stack> kstack{ nullptr };
+	kernel_stack* kstack{ nullptr };
 
 	user_stack* ustack TA_GUARDED(lock){ nullptr };
 
@@ -173,7 +173,7 @@ class kernel_stack final
 	static constexpr size_t MAX_PAGE_COUNT = MAX_SIZE / PAGE_SIZE;
 
  public:
-	[[nodiscard]] static ktl::unique_ptr<kernel_stack> create(thread* parent,
+	[[nodiscard]] static kernel_stack* create(thread* parent,
 		thread::routine_type start_routine,
 		void* arg,
 		thread::trampoline_type tpl);

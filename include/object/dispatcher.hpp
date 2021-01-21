@@ -8,26 +8,23 @@
 
 #include "kbl/data/list_base.hpp"
 
-
-
 namespace object
 {
-	using right_type = uint64_t;
+using right_type = uint64_t;
 
-	template<typename TDispatcher, right_type default_rights>
-	class dispatcher
-		: public object
+template<typename TDispatcher, right_type default_rights>
+class dispatcher
+	: public object
+{
+ public:
+	virtual ~dispatcher() = default;
+
+ protected:
+	[[nodiscard]]lock::spinlock* get_lock()
 	{
-	 public:
-		virtual ~dispatcher() = default;
+		return &lock;
+	}
 
-	 protected:
-		[[nodiscard]]lock::spinlock* get_lock()
-		{
-			return &lock;
-		}
-
-
-		mutable lock::spinlock lock;
-	};
+	mutable lock::spinlock lock{ "dispatcher" };
+};
 }

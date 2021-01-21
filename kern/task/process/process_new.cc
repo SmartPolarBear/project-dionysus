@@ -311,9 +311,7 @@ void task::process::remove_thread(task::thread* t)
 
 error_code_with_result<void*> task::process::make_next_user_stack()
 {
-	lock_guard g{ lock };
-
-	const uintptr_t current_top = USTACK_TOTAL_SIZE * busy_list.size();
+	const uintptr_t current_top = USER_STACK_TOP - USTACK_TOTAL_SIZE * busy_list.size();
 
 	auto ret = vmm::mm_map(this->mm,
 		current_top - process::USTACK_TOTAL_SIZE - 1, //TODO -1?
@@ -363,8 +361,6 @@ error_code_with_result<void*> task::process::make_next_user_stack()
 
 error_code_with_result<user_stack*> task::process::allocate_ustack(thread* t)
 {
-	lock_guard g{ lock };
-
 	if (!free_list.empty())
 	{
 		auto stack = free_list.front();
@@ -399,7 +395,6 @@ error_code_with_result<user_stack*> task::process::allocate_ustack(thread* t)
 	busy_list.push_back(stack);
 
 	{
-		lock_guard g2{ t->lock };
 		t->ustack = stack;
 	}
 
@@ -464,6 +459,13 @@ error_code_with_result<ktl::shared_ptr<task::process>> task::process::create(con
 	}
 
 	proc->threads.push_back(main_thread);
+
+	{
+		lock_guard g2{ global_thread_lock };
+		cpu->scheduler.unblock(main_thread);
+	}
+
+	proc->parent->add_child_process(proc);
 
 	return proc;
 }

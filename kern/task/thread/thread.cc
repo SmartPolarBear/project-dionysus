@@ -24,7 +24,7 @@ lock::spinlock task::global_thread_lock{ "gtl" };
 cls_item<thread*, CLS_CUR_THREAD_PTR> task::cur_thread TA_GUARDED(global_thread_lock);
 thread::thread_list_type task::global_thread_list TA_GUARDED(global_thread_lock);
 
-ktl::unique_ptr<kernel_stack> task::kernel_stack::create(thread* parent,
+kernel_stack* task::kernel_stack::create(thread* parent,
 	thread::routine_type start_routine,
 	void* arg,
 	thread::trampoline_type tpl)
@@ -32,7 +32,7 @@ ktl::unique_ptr<kernel_stack> task::kernel_stack::create(thread* parent,
 	kbl::allocate_checker ck{};
 
 	auto stack_mem = memory::kmalloc(MAX_SIZE, 0);
-	ktl::unique_ptr<kernel_stack> ret{ new(&ck) kernel_stack{ parent, stack_mem, start_routine, arg, tpl }};
+	auto ret = new(&ck) kernel_stack{ parent, stack_mem, start_routine, arg, tpl };
 
 	if (!ck.check())
 	{

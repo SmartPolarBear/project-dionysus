@@ -182,7 +182,7 @@ class process final
 
  private:
 
-	[[nodiscard]] error_code_with_result<void*> make_next_user_stack();
+	[[nodiscard]] error_code_with_result<void*> make_next_user_stack() TA_REQ(lock);
 
 	[[nodiscard]] process(std::span<char> name,
 		pid_type id,
@@ -195,7 +195,7 @@ class process final
 
 	void kill_all_threads_locked() noexcept TA_REQ(lock);
 
-	[[nodiscard]] error_code_with_result<user_stack*> allocate_ustack(thread* t);
+	[[nodiscard]] error_code_with_result<user_stack*> allocate_ustack(thread* t) TA_REQ(lock);
 
 	void free_ustack(user_stack* ustack);
 

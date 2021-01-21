@@ -39,49 +39,54 @@
 // std::variant is usable with the pseudo-syscalls
 // std::span is usable unconditionally
 
-error_code test_routine(void* arg)
-{
-	write_format("%d\n", cpu->id);
-//	while (true) write_format("%d\n", cpu->id);
 
-	return 20011204;
-}
 
 extern std::shared_ptr<task::job> root_job;
 
-static inline void run(char* name)
+static inline void run(ktl::string_view name)
 {
-//	if (auto ret = task::thread::create(nullptr, "test", test_routine, nullptr);has_error(ret))
-//	{
-//		KDEBUG_GERNERALPANIC_CODE(get_error_code(ret));
-//	}
-//	else
-//	{
-//		ktl::mutex::lock_guard g{ task::global_thread_lock };
-//		cpu->scheduler.unblock(get_result(ret));
-//	}
-
-	return;
 
 	uint8_t* bin = nullptr;
 	size_t size = 0;
 
-	auto ret = multiboot::find_module_by_cmdline(name, &size, &bin);
+	auto ret = multiboot::find_module_by_cmdline(name.data(), &size, &bin);
 
 	KDEBUG_ASSERT(ret == ERROR_SUCCESS);
 
-	auto create_ret = task::process::create(name, root_job);
+	auto create_ret = task::process::create(name.data(), bin, size, root_job);
 	if (has_error(create_ret))
 	{
 		KDEBUG_GERNERALPANIC_CODE(get_error_code(create_ret));
 	}
+
 	auto proc = get_result(create_ret);
+//	auto create_ret = task::process::create(name, root_job);
+//	if (has_error(create_ret))
+//	{
+//		KDEBUG_GERNERALPANIC_CODE(get_error_code(create_ret));
+//	}
+//	auto proc = get_result(create_ret);
+//
+//	task::process_load_binary(proc.get(), bin, size,
+//		task::BINARY_ELF,
+//		task::LOAD_BINARY_RUN_IMMEDIATELY);
 
-	task::process_load_binary(proc.get(), bin, size,
-		task::BINARY_ELF,
-		task::LOAD_BINARY_RUN_IMMEDIATELY);
+	write_format("[cpu %d]load binary: %s\n", cpu->id, name);
+}
 
-	write_format("[cpu %d]load binary: %s, pid %d\n", cpu->id, name, proc->get_id());
+error_code init_routine([[maybe_unused]]void* arg)
+{
+	write_format("%d\n", cpu->id);
+//	while (true) write_format("%d\n", cpu->id);
+
+	if (cpu->id == 0)
+	{
+		run("/ipctest");
+		run("/hello");
+		int a = 0;
+	}
+
+	return 20011204;
 }
 
 static inline void init_servers()
@@ -140,9 +145,6 @@ extern "C" [[noreturn]] void kmain()
 
 	write_format("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
 
-	run("/ipctest");
-	run("/hello");
-
 	// start kernel servers in user space
 //	init_servers();
 
@@ -161,7 +163,7 @@ void ap::all_processor_main()
 
 	KDEBUG_GERNERALPANIC_CODE(task::thread::create_idle());
 
-	if (auto ret = task::thread::create(nullptr, "init", test_routine, nullptr);has_error(ret))
+	if (auto ret = task::thread::create(nullptr, "init", init_routine, nullptr);has_error(ret))
 	{
 		KDEBUG_GERNERALPANIC_CODE(get_error_code(ret));
 	}
