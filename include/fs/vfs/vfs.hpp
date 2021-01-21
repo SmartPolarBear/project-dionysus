@@ -572,7 +572,7 @@ namespace file_system
 	class vfs_io_context
 	{
 	 private:
-		static constexpr size_t LINK_MAX = 32;
+		static constexpr size_t VFS_LINK_MAX = 32;
 	 private:
 		vnode_base* cwd_vnode{};
 		uid_type uid{};

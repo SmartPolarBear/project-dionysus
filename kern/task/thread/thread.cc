@@ -22,7 +22,8 @@ using ktl::mutex::lock_guard;
 
 lock::spinlock task::global_thread_lock{ "gtl" };
 cls_item<thread*, CLS_CUR_THREAD_PTR> task::cur_thread TA_GUARDED(global_thread_lock);
-thread::thread_list_type task::global_thread_list TA_GUARDED(global_thread_lock);
+
+ktl::list<thread*> task::global_thread_list TA_GUARDED(global_thread_lock);
 
 kernel_stack* task::kernel_stack::create(thread* parent,
 	thread::routine_type start_routine,
@@ -137,7 +138,7 @@ error_code_with_result<task::thread*> thread::create(process* parent,
 
 	ret->state = thread_states::READY;
 
-	global_thread_list.push_back(*ret);
+	global_thread_list.push_back(ret);
 
 	return ret;
 }
@@ -241,7 +242,7 @@ thread::thread(process* prt,
 
 void thread::remove_from_lists()
 {
-	global_thread_list.erase(thread_list_type::iterator_type{ &this->thread_link });
+	global_thread_list.remove(this);
 }
 
 void thread::finish_dead_transition()
@@ -323,6 +324,7 @@ error_code thread::join(error_code* out_err_code)
 
 void thread::current::exit(error_code code)
 {
+
 	{
 		lock_guard g1{ global_thread_lock };
 

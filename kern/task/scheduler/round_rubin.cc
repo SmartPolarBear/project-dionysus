@@ -18,19 +18,18 @@ void task::round_rubin_scheduler_class::enqueue(task::thread* thread)
 
 void task::round_rubin_scheduler_class::dequeue(task::thread* thread)
 {
-//	run_queue.remove(thread);
+	run_queue.remove(thread);
 }
 
 task::thread* task::round_rubin_scheduler_class::pick_next()
 {
 	auto ret = run_queue.front();
 	run_queue.pop_front();
+
 	return ret;
 }
 
 void task::round_rubin_scheduler_class::timer_tick()
 {
-	lock_guard g{ cur_thread->lock };
-
 	cur_thread->need_reschedule = true;
 }

@@ -43,17 +43,17 @@
 
 extern std::shared_ptr<task::job> root_job;
 
-static inline void run(ktl::string_view name)
+static inline void run(const char* name)
 {
 
 	uint8_t* bin = nullptr;
 	size_t size = 0;
 
-	auto ret = multiboot::find_module_by_cmdline(name.data(), &size, &bin);
+	auto ret = multiboot::find_module_by_cmdline(name, &size, &bin);
 
 	KDEBUG_ASSERT(ret == ERROR_SUCCESS);
 
-	auto create_ret = task::process::create(name.data(), bin, size, root_job);
+	auto create_ret = task::process::create(name, bin, size, root_job);
 	if (has_error(create_ret))
 	{
 		KDEBUG_GERNERALPANIC_CODE(get_error_code(create_ret));

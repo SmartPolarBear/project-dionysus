@@ -11,7 +11,9 @@
 using namespace ktl::mutex;
 using namespace trap;
 
-// TODO: multi-core scheduler ( load balance )
+// TODO: cpu scheduler ( load balance )
+
+// FIXME: maybe use the intrusive list to fix?
 
 void task::scheduler::reschedule()
 {
@@ -98,6 +100,11 @@ task::thread* task::scheduler::pick_next()
 	return scheduler_class.pick_next();
 }
 
+void task::scheduler::insert(task::thread* t)
+{
+	enqueue(t);
+}
+
 void task::scheduler::timer_tick(task::thread* t)
 {
 	pushcli();
@@ -121,9 +128,4 @@ void task::scheduler::timer_tick(task::thread* t)
 	}
 
 	popcli();
-}
-
-void task::scheduler::insert(task::thread* t)
-{
-	enqueue(t);
 }

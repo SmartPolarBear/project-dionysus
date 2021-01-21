@@ -106,7 +106,14 @@ error_code handle_pgfault([[maybe_unused]] trap::trap_frame info)
 	uintptr_t addr = rcr2();
 	mm_struct* mm = cur_proc != nullptr ? cur_proc->get_mm() : nullptr;
 
-	KDEBUG_ASSERT(cur_proc != nullptr && cur_proc->get_mm() != nullptr);
+	if(cur_proc == nullptr || cur_proc->get_mm() == nullptr)
+	{
+		KDEBUG_RICHPANIC("cur_proc == nullptr || cur_proc->get_mm() == nullptr",
+			"KERNEL PANIC: PAGE FAULT",
+			false,
+			"Address: 0x%p\n", addr);
+	}
+
 
 	// The address belongs to the kernel.
 	if (mm == nullptr)

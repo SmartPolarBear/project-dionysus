@@ -134,26 +134,22 @@ class thread final
 
 	user_stack* ustack{ nullptr };
 
-	process* parent { nullptr };
+	process* parent{ nullptr };
 
-	ktl::string_view name { "" };
+	ktl::string_view name{ "" };
 
 	thread_states state{ thread_states::INITIAL };
 
 	error_code exit_code{ ERROR_SUCCESS };
 
-	bool need_reschedule { false };
+	bool need_reschedule{ false };
 
-	bool critical { false };
+	bool critical{ false };
 
-	uint64_t flags { 0 };
+	uint64_t flags{ 0 };
 
-	uint64_t signals { 0 };
+	uint64_t signals{ 0 };
 
-	kbl::doubly_linked_node_state<thread> thread_link{};
-
- public:
-	using thread_list_type = kbl::intrusive_doubly_linked_list<thread, &thread::thread_link>;
 };
 
 class kernel_stack final
@@ -207,7 +203,6 @@ class user_stack
  public:
 	friend class process;
 	friend class thread;
-	using ns_type = kbl::doubly_linked_node_state<user_stack>;
 
  public:
 
@@ -231,7 +226,7 @@ class user_stack
 	thread* owner_thread{ nullptr };
 };
 
-extern thread::thread_list_type global_thread_list;
+extern ktl::list<thread*> global_thread_list;
 extern cls_item<thread*, CLS_CUR_THREAD_PTR> cur_thread;
 
 }

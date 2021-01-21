@@ -9,7 +9,7 @@ class round_rubin_scheduler_class final
  public:
 	friend class thread;
 
-	using run_queue_type = ktl::list<thread*>;
+	using run_queue_type = ktl::ktl_list<thread*>;
 
  public:
 	void enqueue(thread* thread) TA_REQ(global_thread_lock) final;
@@ -22,7 +22,8 @@ class round_rubin_scheduler_class final
 
  private:
 
-	run_queue_type run_queue TA_GUARDED(global_thread_lock) {};
+	run_queue_type run_queue TA_GUARDED(global_thread_lock);
+
 };
 
 }
