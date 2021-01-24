@@ -74,8 +74,7 @@ class job;
 class user_stack;
 
 class process final
-	: public object::dispatcher<process, 0>,
-	  public kbl::linked_list_base<process*>
+	: public object::dispatcher<process, 0>
 {
  public:
 	static constexpr size_t PROC_MAX_NAME_LEN = 64;

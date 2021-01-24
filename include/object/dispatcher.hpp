@@ -6,7 +6,6 @@
 
 #include "kbl/lock/spinlock.h"
 
-#include "kbl/data/list_base.hpp"
 
 namespace object
 {

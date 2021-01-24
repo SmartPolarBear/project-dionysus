@@ -10,7 +10,6 @@
 #include "ktl/string_view.hpp"
 #include "ktl/list.hpp"
 
-#include "kbl/data/list_base.hpp"
 #include "kbl/data/list.hpp"
 
 namespace task

@@ -9,7 +9,6 @@
 #include "system/types.h"
 
 #include "kbl/lock/spinlock.h"
-#include "kbl/data/list_base.hpp"
 #include "kbl/ref_count/ref_count_base.hpp"
 
 #include "ktl/mutex/lock_guard.hpp"

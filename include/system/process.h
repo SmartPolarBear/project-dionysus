@@ -13,7 +13,6 @@
 #include "kbl/lock/spinlock.h"
 
 #include "kbl/data/pod_list.h"
-#include "kbl/data/list_base.hpp"
 
 #include "task/process/process.hpp"
 #include "task/job/job.hpp"
