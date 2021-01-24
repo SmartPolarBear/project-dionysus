@@ -26,7 +26,7 @@ xv6 inspired me to start the project to build a kernel, with which I got knowled
 A series of papers and the book about the development of minix 3 not only let me know about what is microkernel and how it works but also have a deep influence on the goal and development of this project.
 
 ## License
-Copyright (c) 2020 SmartPolarBear
+Copyright (c) 2021 SmartPolarBear
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted.

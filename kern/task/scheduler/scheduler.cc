@@ -13,7 +13,7 @@ using namespace trap;
 
 // TODO: cpu scheduler ( load balance )
 
-// FIXME: maybe use the intrusive list to fix?
+// FIXME: maybe use the intrusive list to fix? another bad situation is memory overwriting
 
 void task::scheduler::reschedule()
 {

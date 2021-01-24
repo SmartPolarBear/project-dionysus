@@ -18,12 +18,12 @@ void task::round_rubin_scheduler_class::enqueue(task::thread* thread)
 
 void task::round_rubin_scheduler_class::dequeue(task::thread* thread)
 {
-	run_queue.remove(thread);
+	run_queue.remove(*thread);
 }
 
 task::thread* task::round_rubin_scheduler_class::pick_next()
 {
-	auto ret = run_queue.front();
+	auto ret = run_queue.front_ptr();
 	run_queue.pop_front();
 
 	return ret;

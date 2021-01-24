@@ -11,6 +11,7 @@
 #include "ktl/list.hpp"
 
 #include "kbl/data/list_base.hpp"
+#include "kbl/data/list.hpp"
 
 namespace task
 {
@@ -19,10 +20,11 @@ struct scheduler_timer
 {
 	size_t expires{ 0 };
 	thread* owner{ nullptr };
-	kbl::doubly_linked_node_state<scheduler_timer> ns;
+
+	kbl::list_head<scheduler_timer> link{ this };
 };
 
-using timer_list_type = kbl::intrusive_doubly_linked_list<scheduler_timer, &scheduler_timer::ns>;
+using timer_list_type = kbl::intrusive_list<scheduler_timer, &scheduler_timer::link>;
 
 class scheduler
 {
@@ -54,7 +56,7 @@ class scheduler
 	timer_list_type timer_list TA_GUARDED(timer_lock) {};
 	mutable lock::spinlock timer_lock{ "scheduler timer" };
 
-	mutable lock::spinlock test{"fuck!!"};
+	mutable lock::spinlock test{ "fuck!!" };
 };
 
 }

@@ -8,6 +8,7 @@
 #include "kbl/lock/spinlock.h"
 #include "kbl/atomic/atomic.hpp"
 #include "kbl/data/list_base.hpp"
+#include "kbl/data/list.hpp"
 
 #include "ktl/shared_ptr.hpp"
 #include "ktl/unique_ptr.hpp"
@@ -150,6 +151,7 @@ class thread final
 
 	uint64_t signals{ 0 };
 
+	kbl::list_head<thread, lock::spinlock> run_queue_link{ this };
 };
 
 class kernel_stack final
