@@ -138,7 +138,7 @@ bool lock::spinlock::try_lock() noexcept
 }
 bool lock::spinlock::holding() noexcept
 {
-	if (cpu.get_valid())
+	if (cpu.is_valid())
 	{
 		return spinlock_.locked && spinlock_.cpu == cpu.get();
 	}

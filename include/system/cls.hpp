@@ -69,26 +69,34 @@ requires ktl::Pointer<T>
 
 #pragma clang diagnostic pop
 
-template<typename T, CLS_ADDRESS addr>
-requires ktl::Pointer<T>
+template<typename T, CLS_ADDRESS Address>
+requires ktl::Pointer<T> || ktl::TriviallyCopiable<T>
 class cls_item
 {
- private:
-	lock::spinlock_struct lk{};
-	bool use_lock{ true };
-	bool valid{ false };
  public:
 	[[nodiscard]] cls_item()
 	{
-		lock::spinlock_initialize_lock(&lk, "clslock");
+		lock::spinlock_initialize_lock(&lk, "cls");
 	}
 
-	[[nodiscard]]explicit cls_item(bool _use_lock) : use_lock(_use_lock)
+	cls_item(const cls_item&) = delete;
+	cls_item& operator=(const cls_item&) = delete;
+
+	cls_item(cls_item&& another) noexcept
 	{
-		lock::spinlock_initialize_lock(&lk, "clslock");
+		this->valid = another.valid;
+		this->use_lock = another.use_lock;
+
+		another.valid = false;
 	}
 
-	[[nodiscard]]bool get_valid() const
+	[[nodiscard]]explicit cls_item(bool _use_lock)
+		: use_lock(_use_lock)
+	{
+		lock::spinlock_initialize_lock(&lk, "cls");
+	}
+
+	[[nodiscard]]bool is_valid() const
 	{
 		return valid;
 	}
@@ -103,19 +111,24 @@ class cls_item
 		return use_lock;
 	}
 
-	T get()
+	[[nodiscard]]T get() const
 	{
-		if (!valid)return nullptr;
-		return cls_get<T>(addr);
+		if (!valid)
+		{
+			if constexpr (ktl::Pointer<T>)
+			{
+				return nullptr;
+			}
+			else
+			{
+				return T{};
+			}
+		}
+
+		return cls_get<T>(Address);
 	}
 
-	T operator->()
-	{
-		if (!valid)return nullptr;
-		return cls_get<T>(addr);
-	}
-
-	void operator=(T src)
+	void set(T val)
 	{
 		if (use_lock)
 		{
@@ -123,7 +136,7 @@ class cls_item
 		}
 
 		valid = true;
-		cls_put(addr, src);
+		cls_put(Address, val);
 
 		if (use_lock)
 		{
@@ -131,77 +144,66 @@ class cls_item
 		}
 	}
 
+	T operator->()
+	{
+		return get();
+	}
+
+	cls_item& operator=(const T& src)
+	{
+		set(src);
+		return *this;
+	}
+
+	bool operator==(const cls_item& another) const
+	{
+		return get() == another.get();
+	}
+
+	bool operator!=(const cls_item& another) const
+	{
+		return !(*this == another);
+	}
+
+	bool operator==(const T& another) const
+	{
+		return get() == another;
+	}
+
+	bool operator!=(const T& another) const
+	{
+		return get() != another;
+	}
+
+	bool operator==(nullptr_t)
+	{
+		if constexpr (ktl::Pointer<T>)
+		{
+			return get() == nullptr;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	bool operator!=(nullptr_t)
+	{
+		if constexpr (ktl::Pointer<T>)
+		{
+			return get() != nullptr;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+ private:
+	lock::spinlock_struct lk{};
+	bool use_lock{ true };
+
+	bool valid{ false };
+
 };
-
-template<typename T, CLS_ADDRESS addr>
-requires ktl::Pointer<T>
-static inline bool operator==(cls_item<T, addr> lhs, cls_item<T, addr> rhs)
-{
-	return lhs.get() == rhs.get();
-}
-
-template<typename T, CLS_ADDRESS addr>
-requires ktl::Pointer<T>
-static inline bool operator!=(cls_item<T, addr> lhs, cls_item<T, addr> rhs)
-{
-	return !(lhs.get() == rhs.get());
-}
-
-template<typename T, CLS_ADDRESS addr>
-requires ktl::Pointer<T>
-static inline bool operator==(T lhs, cls_item<T, addr> rhs)
-{
-	return lhs == rhs.get();
-}
-
-template<typename T, CLS_ADDRESS addr>
-requires ktl::Pointer<T>
-static inline bool operator!=(T lhs, cls_item<T, addr> rhs)
-{
-	return !(lhs == rhs.get());
-}
-
-template<typename T, CLS_ADDRESS addr>
-requires ktl::Pointer<T>
-static inline bool operator==(cls_item<T, addr> lhs, T rhs)
-{
-	return lhs.get() == rhs;
-}
-
-template<typename T, CLS_ADDRESS addr>
-requires ktl::Pointer<T>
-static inline bool operator!=(cls_item<T, addr> lhs, T rhs)
-{
-	return !(lhs.get() == rhs);
-}
-
-template<typename T, CLS_ADDRESS addr>
-requires ktl::Pointer<T>
-static inline bool operator==(cls_item<T, addr> lhs, [[maybe_unused]] nullptr_t rhs)
-{
-	return lhs.get() == nullptr;
-}
-
-template<typename T, CLS_ADDRESS addr>
-requires ktl::Pointer<T>
-static inline bool operator!=(cls_item<T, addr> lhs, [[maybe_unused]]nullptr_t rhs)
-{
-	return !(lhs.get() == nullptr);
-}
-
-template<typename T, CLS_ADDRESS addr>
-requires ktl::Pointer<T>
-static inline bool operator==([[maybe_unused]]nullptr_t lhs, cls_item<T, addr> rhs)
-{
-	return nullptr == rhs.get();
-}
-
-template<typename T, CLS_ADDRESS addr>
-requires ktl::Pointer<T>
-static inline bool operator!=([[maybe_unused]]nullptr_t lhs, cls_item<T, addr> rhs)
-{
-	return !(nullptr == rhs.get());
-}
-
-
 

@@ -11,4 +11,7 @@ concept Pointer = std::is_pointer_v<T>;
 template<typename TFrom, typename TTo>
 concept Convertible=std::is_convertible_v<TFrom, TTo>;
 
+template<typename T>
+concept TriviallyCopiable=std::is_trivially_copyable_v<T>;
+
 }

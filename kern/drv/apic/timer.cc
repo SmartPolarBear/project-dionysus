@@ -91,14 +91,6 @@ error_code trap_handle_tick([[maybe_unused]] trap::trap_frame info)
 
 		cpu->scheduler.handle_timer_tick();
 
-//		if (cur_proc != nullptr && cur_proc->get_state() == task::PROC_STATE_RUNNING)
-//		{
-//			if (task::cur_thread->get_need_reschedule())
-//			{
-//				cpu->scheduler.yield();
-//			}
-////			scheduler::scheduler_yield();
-//		}
 	}
 
 	return ERROR_SUCCESS;
