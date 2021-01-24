@@ -46,30 +46,7 @@ class TA_CAP("mutex") spinlock final
 
  private:
 	spinlock_struct spinlock_{};
-	bool intr_{false};
-};
-
-class TA_CAP("mutex") spinlock_lockable final
-	: public lockable
-{
- private:
-	spinlock_struct* lk;
-
- public:
-	spinlock_lockable() = delete;
-
-	[[maybe_unused]] explicit spinlock_lockable(spinlock_struct& _lk) : lk(&_lk)
-	{
-	}
-
-	void lock() noexcept final
-	TA_ACQ();
-
-	void unlock() noexcept final
-	TA_TRY_ACQ(false);
-
-	bool try_lock() noexcept final
-	TA_REL();
+	bool intr_{ false };
 };
 
 } // namespace lock

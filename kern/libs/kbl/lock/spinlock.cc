@@ -93,7 +93,7 @@ void lock::spinlock::unlock() noexcept
 
 bool lock::spinlock::try_lock() noexcept
 {
-	if (spinlock_holding(&this->spinlock_))
+	if (spinlock_.locked)
 	{
 		return false;
 	}
@@ -105,5 +105,5 @@ bool lock::spinlock::try_lock() noexcept
 }
 bool lock::spinlock::holding() noexcept
 {
-	return spinlock_holding(&this->spinlock_);
+	return spinlock_.locked;
 }
