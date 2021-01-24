@@ -15,12 +15,10 @@ void lock::arch_spinlock_initialize_lock(arch_spinlock* lk, const char* name)
 
 void lock::arch_spinlock_acquire(arch_spinlock* lock)
 {
-	trap::pushcli();
 	while (xchg(&lock->locked, 1u) != 0);
 }
 
 void lock::arch_spinlock_release(arch_spinlock* lock)
 {
 	xchg(&lock->locked, 0u);
-	trap::popcli();
 }

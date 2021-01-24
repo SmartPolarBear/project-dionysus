@@ -16,59 +16,60 @@ struct cpu_struct;
 
 namespace lock
 {
-	using spinlock_struct = arch_spinlock;
+using spinlock_struct = arch_spinlock;
 
-	void spinlock_acquire(spinlock_struct* lock);
-	bool spinlock_holding(spinlock_struct* lock);
-	void spinlock_initialize_lock(spinlock_struct* lk, const char* name);
-	void spinlock_release(spinlock_struct* lock);
+void spinlock_acquire(spinlock_struct* lock, bool pres_intr = true);
+void spinlock_release(spinlock_struct* lock, bool pres_intr = true);
+bool spinlock_holding(spinlock_struct* lock);
+void spinlock_initialize_lock(spinlock_struct* lk, const char* name);
 
-	class TA_CAP("mutex") spinlock final
-		: public mutex
+class TA_CAP("mutex") spinlock final
+	: public mutex
+{
+ public:
+	constexpr spinlock() = default;
+	constexpr explicit spinlock(const char* name)
 	{
-	 public:
-		constexpr spinlock() = default;
-		constexpr explicit spinlock(const char* name)
-		{
-			_spinlock.name = name;
-		}
+		spinlock_.name = name;
+	}
 
-		void lock() noexcept final
-		TA_ACQ();
+	void lock() noexcept final
+	TA_ACQ();
 
-		void unlock() noexcept final
-		TA_TRY_ACQ(false);
+	void unlock() noexcept final
+	TA_TRY_ACQ(false);
 
-		bool try_lock() noexcept final
-		TA_REL();
+	bool try_lock() noexcept final
+	TA_REL();
 
-		bool holding() noexcept final;
+	bool holding() noexcept final;
 
-	 private:
-		spinlock_struct _spinlock{};
-	};
+ private:
+	spinlock_struct spinlock_{};
+	bool intr_{false};
+};
 
-	class TA_CAP("mutex") spinlock_lockable final
-		: public lockable
+class TA_CAP("mutex") spinlock_lockable final
+	: public lockable
+{
+ private:
+	spinlock_struct* lk;
+
+ public:
+	spinlock_lockable() = delete;
+
+	[[maybe_unused]] explicit spinlock_lockable(spinlock_struct& _lk) : lk(&_lk)
 	{
-	 private:
-		spinlock_struct* lk;
+	}
 
-	 public:
-		spinlock_lockable() = delete;
+	void lock() noexcept final
+	TA_ACQ();
 
-		[[maybe_unused]] explicit spinlock_lockable(spinlock_struct& _lk) : lk(&_lk)
-		{
-		}
+	void unlock() noexcept final
+	TA_TRY_ACQ(false);
 
-		void lock() noexcept final
-		TA_ACQ();
-
-		void unlock() noexcept final
-		TA_TRY_ACQ(false);
-
-		bool try_lock() noexcept final
-		TA_REL();
-	};
+	bool try_lock() noexcept final
+	TA_REL();
+};
 
 } // namespace lock

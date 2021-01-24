@@ -24,12 +24,13 @@ struct scheduler_timer
 	kbl::list_link<scheduler_timer, lock::spinlock> link{ this };
 };
 
-using timer_list_type = kbl::intrusive_list<scheduler_timer, lock::spinlock, &scheduler_timer::link, true, false>;
 
 class scheduler
 {
  public:
 	using scheduler_class_type = round_rubin_scheduler_class;
+	using timer_list_type = kbl::intrusive_list<scheduler_timer, lock::spinlock, &scheduler_timer::link, true, false>;
+
 	friend class thread;
 
  public:

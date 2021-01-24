@@ -35,7 +35,7 @@ void lock::spinlock_initialize_lock(spinlock_struct* lk, const char* name)
 	arch_spinlock_initialize_lock(lk, name);
 }
 
-void lock::spinlock_acquire(spinlock_struct* lock)
+void lock::spinlock_acquire(spinlock_struct* lock, bool pres_intr)
 {
 	if (spinlock_holding(lock))
 	{
@@ -44,13 +44,14 @@ void lock::spinlock_acquire(spinlock_struct* lock)
 
 	kdebug::kdebug_get_caller_pcs(16, lock->pcs);
 
+	if (pres_intr)trap::pushcli();
 	arch_spinlock_acquire(lock);
 
 	lock->cpu = cpu.get();
 
 }
 
-void lock::spinlock_release(spinlock_struct* lock)
+void lock::spinlock_release(spinlock_struct* lock, bool pres_intr)
 {
 	if (!spinlock_holding(lock))
 	{
@@ -64,6 +65,8 @@ void lock::spinlock_release(spinlock_struct* lock)
 	lock->cpu = nullptr;
 
 	arch_spinlock_release(lock);
+
+	if (pres_intr)trap::popcli();
 }
 
 bool lock::spinlock_holding(spinlock_struct* lock)
@@ -73,17 +76,24 @@ bool lock::spinlock_holding(spinlock_struct* lock)
 
 void lock::spinlock::lock() noexcept
 {
-	spinlock_acquire(&this->_spinlock);
+	// hack: cpu.get_use_lock() is true after it become usable
+	intr_ = !arch_ints_disabled();
+	if (intr_)cli();
+
+	arch_spinlock_acquire(&spinlock_);
 }
 
 void lock::spinlock::unlock() noexcept
 {
-	spinlock_release(&this->_spinlock);
+	arch_spinlock_release(&spinlock_);
+
+	if (intr_)sti();
+	intr_ = false;
 }
 
 bool lock::spinlock::try_lock() noexcept
 {
-	if (spinlock_holding(&this->_spinlock))
+	if (spinlock_holding(&this->spinlock_))
 	{
 		return false;
 	}
@@ -95,5 +105,5 @@ bool lock::spinlock::try_lock() noexcept
 }
 bool lock::spinlock::holding() noexcept
 {
-	return spinlock_holding(&this->_spinlock);
+	return spinlock_holding(&this->spinlock_);
 }
