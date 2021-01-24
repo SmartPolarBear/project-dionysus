@@ -152,6 +152,11 @@ class thread final
 	uint64_t signals{ 0 };
 
 	kbl::list_link<thread, lock::spinlock> run_queue_link{ this };
+	kbl::list_link<thread, lock::spinlock> master_list_link{ this };
+
+ public:
+	using master_list_type = kbl::intrusive_list<thread, lock::spinlock, &thread::master_list_link, true, false>;
+
 };
 
 class kernel_stack final
@@ -228,7 +233,7 @@ class user_stack
 	thread* owner_thread{ nullptr };
 };
 
-extern ktl::list<thread*> global_thread_list;
+extern thread::master_list_type global_thread_list;
 extern cls_item<thread*, CLS_CUR_THREAD_PTR> cur_thread;
 
 }

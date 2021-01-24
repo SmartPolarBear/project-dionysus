@@ -21,9 +21,10 @@ using namespace task;
 using ktl::mutex::lock_guard;
 
 lock::spinlock task::global_thread_lock{ "gtl" };
+
 cls_item<thread*, CLS_CUR_THREAD_PTR> task::cur_thread TA_GUARDED(global_thread_lock);
 
-ktl::list<thread*> task::global_thread_list TA_GUARDED(global_thread_lock);
+thread::master_list_type task::global_thread_list TA_GUARDED(global_thread_lock);
 
 kernel_stack* task::kernel_stack::create(thread* parent,
 	thread::routine_type start_routine,
@@ -243,7 +244,7 @@ thread::thread(process* prt,
 
 void thread::remove_from_lists()
 {
-	global_thread_list.remove(this);
+	global_thread_list.remove(*this);
 }
 
 void thread::finish_dead_transition()
