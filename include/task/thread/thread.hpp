@@ -7,13 +7,11 @@
 
 #include "kbl/lock/spinlock.h"
 #include "kbl/atomic/atomic.hpp"
-#include "kbl/data/list_base.hpp"
 #include "kbl/data/list.hpp"
 
 #include "ktl/shared_ptr.hpp"
 #include "ktl/unique_ptr.hpp"
 #include "ktl/string_view.hpp"
-#include "ktl/list.hpp"
 #include "ktl/concepts.hpp"
 #include "ktl/mutex/lock_guard.hpp"
 
@@ -23,6 +21,8 @@
 
 namespace task
 {
+
+using context = arch_task_context_registers;
 
 extern lock::spinlock global_thread_lock;
 
@@ -201,8 +201,7 @@ class kernel_stack final
 
 	trap::trap_frame* tf{ nullptr };
 
-	arch_task_context_registers* context{ nullptr };
-
+	task::context* context{ nullptr };
 };
 
 class user_stack

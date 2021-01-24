@@ -10,7 +10,6 @@
 
 #include "task/scheduler/scheduler.hpp"
 
-using context = arch_task_context_registers;
 
 struct cpu_struct
 {
