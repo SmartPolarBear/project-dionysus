@@ -14,6 +14,8 @@
 #include "fs/device/ata_devices.hpp"
 #include "fs/device/device.hpp"
 
+#include "ktl/algorithm.hpp"
+
 #include "../../libs/basic_io/include/builtin_text_io.hpp"
 
 #include <cstring>
@@ -45,13 +47,15 @@ error_code file_system::vnode_init()
 
 error_code file_system::vnode_base::attach(file_system::vnode_base* child)
 {
-	return this->add_node(child);
+	child_list.push_back(child);
+	return ERROR_SUCCESS;
 }
 
 error_code file_system::vnode_base::detach(file_system::vnode_base* node)
 {
 	node->parent = nullptr;
-	return this->remove_node(node);
+	child_list.remove(*node);
+	return ERROR_SUCCESS;
 }
 
 error_code_with_result<file_system::vnode_base*> file_system::vnode_base::lookup_child(const char* name)
@@ -61,17 +65,13 @@ error_code_with_result<file_system::vnode_base*> file_system::vnode_base::lookup
 		return -ERROR_INVALID;
 	}
 
-	auto ret = this->find_first([](vnode_base* vn, const void* key)
+	for (auto& vn:child_list)
 	{
-	  return strncmp(vn->name_buf, (char*)key, VNODE_NAME_MAX) == 0;
-	}, name);
+		if (strncmp(vn.name_buf, name, VNODE_NAME_MAX) == 0)
+		{
+			return &vn;
+		}
+	}
 
-	if (ret == nullptr)
-	{
-		return -ERROR_NO_ENTRY;
-	}
-	else
-	{
-		return ret;
-	}
+	return -ERROR_NO_ENTRY;
 }

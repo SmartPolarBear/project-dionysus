@@ -260,7 +260,7 @@ error_code vfs_io_context::open_directory(file_object* fd)
 	{
 		fd->flags |= FO_FLAG_PSEUDO_DIR | FO_FLAG_PSEUDO_DIR_DOT;
 
-		fd->pos = (size_t)fd->vnode->get_first();
+		fd->pos = (size_t)fd->vnode->child_list.front_ptr();
 
 		fd->vnode->increase_open_count();
 	}
@@ -995,7 +995,7 @@ error_code_with_result<size_t> vfs_io_context::read_directory(file_object* fd, d
 		strncpy(ent->name, item->get_name(), VFS_MAX_PATH_LEN);
 		ent->reclen = sizeof(directory_entry) + strnlen(item->get_name(), VFS_MAX_PATH_LEN);
 
-		fd->pos = (size_t)item->get_next();
+		fd->pos = (size_t)item->child_link.next->parent;
 
 		return (size_t)ent->reclen;
 	}

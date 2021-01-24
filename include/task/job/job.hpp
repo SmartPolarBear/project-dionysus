@@ -92,8 +92,7 @@ namespace task
 	};
 
 	class job final
-		: public object::dispatcher<job, 0>,
-		  public kbl::single_linked_child_list_base<job*>
+		: public object::dispatcher<job, 0>
 	{
 	 public:
 		enum class [[clang::enum_extensibility(closed)]] job_status

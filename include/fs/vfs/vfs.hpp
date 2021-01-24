@@ -271,7 +271,6 @@ static inline constexpr mode_type vnode_type_to_mode_type(vnode_types type)
 }
 
 class vnode_base
-	: public kbl::single_linked_child_list_base<vnode_base*>
 {
  protected:
 	static constexpr size_t VNODE_NAME_MAX = 64;
@@ -306,7 +305,15 @@ class vnode_base
 
 	lock::spinlock lockable{ "vnode_base" };
 
+	kbl::list_link<vnode_base, lock::spinlock> child_link{ this };
+
+	using child_list_type = kbl::intrusive_list<vnode_base, lock::spinlock, &vnode_base::child_link, true, false>;
+
+	child_list_type child_list;
+
  public:
+	friend class vfs_io_context;
+
 	virtual ~vnode_base() = default;
 
 	vnode_base(vnode_types t, const char* n)
