@@ -42,7 +42,7 @@ static inline void kdebug_print_impl_v(const char* fmt, bool topleft, color_sche
 
 //	constexpr size_t PCS_BUFLEN = 16;
 //	uintptr_t pcs[PCS_BUFLEN] = { 0 };
-//	kdebug::kdebug_get_caller_pcs(PCS_BUFLEN, pcs);
+//	kdebug::kdebug_get_backtrace(PCS_BUFLEN, pcs);
 //
 //	write_format("\n");
 //	for (auto pc : pcs)

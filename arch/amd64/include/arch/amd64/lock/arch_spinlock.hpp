@@ -13,7 +13,7 @@ namespace lock
 
 		const char* name;
 		cpu_struct* cpu;
-		uintptr_t pcs[16];
+		uintptr_t pcs[21];
 	};
 
 	void arch_spinlock_acquire(arch_spinlock* lock);

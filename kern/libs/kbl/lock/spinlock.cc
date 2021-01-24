@@ -24,6 +24,7 @@ using lock::spinlock_struct;
 
 	for (auto cs : lock->pcs)
 	{
+		if (cs == 0)break;
 		write_format("%p ", cs);
 	}
 
@@ -44,7 +45,7 @@ void lock::spinlock_acquire(spinlock_struct* lock, bool pres_intr)
 		dump_lock_panic(lock);
 	}
 
-	kdebug::kdebug_get_caller_pcs(16, lock->pcs);
+	kdebug::kdebug_get_backtrace(lock->pcs);
 
 	if (pres_intr)trap::pushcli();
 	arch_spinlock_acquire(lock);
@@ -78,6 +79,11 @@ bool lock::spinlock_holding(spinlock_struct* lock)
 
 void lock::spinlock::lock() noexcept
 {
+	if(holding())
+	{
+		dump_lock_panic(&spinlock_);
+	}
+
 	// hack: cpu.get_use_lock() is true after it become usable
 	intr_ = !arch_ints_disabled();
 	if (intr_)cli();
@@ -87,6 +93,14 @@ void lock::spinlock::lock() noexcept
 
 void lock::spinlock::unlock() noexcept
 {
+	if(!holding())
+	{
+		KDEBUG_RICHPANIC("Release a not-held spinlock_struct.\n",
+			"KERNEL PANIC",
+			false,
+			"Lock's name: %s", spinlock_.name);
+	}
+
 	arch_spinlock_release(&spinlock_);
 
 	if (intr_)sti();

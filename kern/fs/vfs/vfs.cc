@@ -107,7 +107,7 @@ error_code_with_result<const char*> vfs_io_context::separate_parent_name(const c
 
 error_code file_system::vfs_init()
 {
-	KDEBUG_GERNERALPANIC_CODE(1);
+
 
 	vfs_root = nullptr;
 

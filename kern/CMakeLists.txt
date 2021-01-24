@@ -29,6 +29,7 @@ set_target_properties(kernel PROPERTIES
 
 target_compile_options(kernel BEFORE
         PRIVATE -g
+        PRIVATE -gdwarf
         PRIVATE --target=x86_64-pc-linux-elf
         PRIVATE -fno-pie
         PRIVATE -fno-exceptions

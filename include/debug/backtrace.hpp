@@ -5,6 +5,6 @@
 namespace kdebug
 {
 void kdebug_print_backtrace();
-void kdebug_get_caller_pcs(size_t buflen, uintptr_t* pcs);
+size_t kdebug_get_backtrace(uintptr_t* pcs);
 
 }
