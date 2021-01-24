@@ -8,7 +8,6 @@
 
 #include "task/thread/thread.hpp"
 
-#include "kbl/data/queue.hpp"
 #include "kbl/lock/spinlock.h"
 
 #include "ktl/list.hpp"
@@ -24,13 +23,7 @@ extern cls_item<task::process*, CLS_PROC_STRUCT_PTR> cur_proc;
 struct process_list_struct
 {
 	lock::spinlock lock{"TaskLock"};
-
-	[[deprecated("use new head")]] list_head active_head;
-
-	size_t proc_count  TA_GUARDED(lock);
-	task::process::head_type head TA_GUARDED(lock);
-	kbl::queue<task::process*> zombie_queue TA_GUARDED(lock);
-
+	// FIXME: to be delete soon
 };
 
 extern process_list_struct proc_list;

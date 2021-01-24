@@ -21,10 +21,10 @@ struct scheduler_timer
 	size_t expires{ 0 };
 	thread* owner{ nullptr };
 
-	kbl::list_head<scheduler_timer> link{ this };
+	kbl::list_link<scheduler_timer, lock::spinlock> link{ this };
 };
 
-using timer_list_type = kbl::intrusive_list<scheduler_timer, &scheduler_timer::link>;
+using timer_list_type = kbl::intrusive_list<scheduler_timer, lock::spinlock, &scheduler_timer::link, true, false>;
 
 class scheduler
 {

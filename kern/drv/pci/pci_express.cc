@@ -32,7 +32,7 @@ struct dev_list
 	}
 
 	dev_list() : dev_head(list_head{}),
-				 count(0)
+	             count(0)
 	{
 		list_init(&this->dev_head);
 	}
@@ -155,20 +155,20 @@ static inline void pcie_enumerate_entry(acpi::mcfg_entry entry)
 
 static inline void print_devices_debug_info()
 {
-	list_for_each(&pci_devices.dev_head, [](list_head* head)
+	list_head* iter = nullptr;
+	list_for(iter, &pci_devices.dev_head)
 	{
-	  auto entry = list_entry(head, pci_device, list);
+		auto entry = list_entry(iter, pci_device, list);
 
-	  auto class_reg = entry->read_dword_as<pci_class_reg*>(PCIE_HEADER_OFFSET_CLASS);
+		auto class_reg = entry->read_dword_as<pci_class_reg*>(PCIE_HEADER_OFFSET_CLASS);
 
-	  kdebug::kdebug_log("Found %s device %s MSI(-X) support : class 0x%x, subclass 0x%x, prog IF 0x%x\n",
-		  entry->is_pcie ? "PCIe" : "PCI",
-		  (entry->msi_support || entry->msix_support) ? "with" : "without",
-		  class_reg->class_code,
-		  class_reg->subclass,
-		  class_reg->programming_interface);
-
-	});
+		kdebug::kdebug_log("Found %s device %s MSI(-X) support : class 0x%x, subclass 0x%x, prog IF 0x%x\n",
+			entry->is_pcie ? "PCIe" : "PCI",
+			(entry->msi_support || entry->msix_support) ? "with" : "without",
+			class_reg->class_code,
+			class_reg->subclass,
+			class_reg->programming_interface);
+	}
 }
 
 error_code pci::express::pcie_init(acpi::acpi_mcfg* mcfg)

@@ -23,7 +23,7 @@
 //struct vnode_child_node
 //{
 //	file_system::vnode_base* vnode;
-//	list_head list;
+//	list_link list;
 //};
 
 using namespace memory::kmem;

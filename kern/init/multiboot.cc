@@ -13,7 +13,6 @@
 using namespace multiboot;
 
 using kbl::list_add;
-using kbl::list_for_each;
 using kbl::list_init;
 using kbl::list_remove;
 

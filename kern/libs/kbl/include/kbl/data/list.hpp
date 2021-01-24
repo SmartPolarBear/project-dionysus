@@ -6,19 +6,19 @@ namespace kbl
 {
 // linked list head_
 template<typename TParent, typename TMutex>
-struct list_head
+struct list_link
 {
 	TParent* parent;
 	bool is_head;
-	list_head* next, * prev;
+	list_link* next, * prev;
 
 	mutable TMutex lock;
 
-	list_head() : parent{ nullptr }, is_head{ false }, next{ this }, prev{ this }
+	list_link() : parent{ nullptr }, is_head{ false }, next{ this }, prev{ this }
 	{
 	}
 
-	list_head(list_head&& another) noexcept
+	list_link(list_link&& another) noexcept
 	{
 		parent = another.parent;
 		is_head = another.is_head;
@@ -31,7 +31,7 @@ struct list_head
 		another.prev = &another;
 	}
 
-	list_head(const list_head& another)
+	list_link(const list_link& another)
 	{
 		parent = another.parent;
 		is_head = another.is_head;
@@ -39,7 +39,7 @@ struct list_head
 		prev = another.prev;
 	}
 
-	list_head& operator=(const list_head& another)
+	list_link& operator=(const list_link& another)
 	{
 		if (this == &another)return *this;
 
@@ -49,16 +49,16 @@ struct list_head
 		prev = another.prev;
 	}
 
-	explicit list_head(TParent* p) : parent{ p }, is_head{ false }, next{ this }, prev{ this }
+	explicit list_link(TParent* p) : parent{ p }, is_head{ false }, next{ this }, prev{ this }
 	{
 	}
 
-	explicit list_head(TParent& p) : parent{ &p }, is_head{ false }, next{ this }, prev{ this }
+	explicit list_link(TParent& p) : parent{ &p }, is_head{ false }, next{ this }, prev{ this }
 	{
 	}
 
 
-	bool operator==(const list_head& that) const
+	bool operator==(const list_link& that) const
 	{
 		return parent == that.parent &&
 			is_head == that.is_head &&
@@ -66,7 +66,7 @@ struct list_head
 			prev == that.prev;
 	}
 
-	bool operator!=(const list_head& that) const
+	bool operator!=(const list_link& that) const
 	{
 		return !(*this == that);
 	}
@@ -77,13 +77,13 @@ class intrusive_list_iterator
 {
  public:
 
-	template<typename S, typename SMutex, list_head<S, SMutex> S::*, bool E, bool D>
+	template<typename S, typename SMutex, list_link<S, SMutex> S::*, bool E, bool D>
 	friend
 	class intrusive_list;
 
 	using value_type = T;
 	using mutex_type = TMutex;
-	using head_type = list_head<value_type, mutex_type>;
+	using head_type = list_link<value_type, mutex_type>;
 	using size_type = size_t;
 	using dummy_type = int;
 
@@ -179,12 +179,15 @@ class intrusive_list_iterator
 	mutable mutex_type lock;
 };
 
+#pragma push_macro("list_for")
+#pragma push_macro("list_for_safe")
+
 #ifdef list_for
-#error "list_for has been defined"
+#undef list_for
 #endif
 
 #ifdef list_for_safe
-#error "list_for_safe has been defined"
+#undef list_for_safe
 #endif
 
 #define list_for(pos, head) \
@@ -195,7 +198,7 @@ class intrusive_list_iterator
 
 template<typename T,
 	typename TMutex,
-	list_head<T, TMutex> T::*Link,
+	list_link<T, TMutex> T::*Link,
 	bool EnableLock = false,
 	bool CallDeleteOnRemoval = false>
 class intrusive_list
@@ -203,7 +206,7 @@ class intrusive_list
  public:
 	using value_type = T;
 	using mutex_type = TMutex;
-	using head_type = list_head<value_type, mutex_type>;
+	using head_type = list_link<value_type, mutex_type>;
 	using size_type = size_t;
 	using container_type = intrusive_list<T, TMutex, Link, EnableLock, CallDeleteOnRemoval>;
 	using iterator_type = intrusive_list_iterator<T, TMutex, false, EnableLock>;
@@ -1076,5 +1079,7 @@ class intrusive_list
 #undef list_for
 #undef list_for_safe
 
+#pragma pop_macro("list_for")
+#pragma pop_macro("list_for_safe")
 } // namespace
 
