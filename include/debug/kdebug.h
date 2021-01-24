@@ -13,7 +13,6 @@ namespace kdebug
 {
 extern bool panicked;
 
-void kdebug_get_caller_pcs(size_t buflen, uintptr_t* pcs);
 
 // use uint32_t for the bool value to make va_args happy.
 [[noreturn]] void kdebug_panic(const char* fmt, uint32_t topleft, ...);

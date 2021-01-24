@@ -30,25 +30,6 @@ SECTIONS
 	/* Adjust the address for the data segment to the next page */
 	. = ALIGN(0x1000);
 
-	/* Include debugging information in kernel memory */
-    .stab : {
-        PROVIDE(__STAB_BEGIN__ = .);
-        *(.stab);
-        PROVIDE(__STAB_END__ = .);
-        BYTE(0)     /* Force the linker to allocate space
-                   for this section */
-    }
-
-    .stabstr : {
-        PROVIDE(__STABSTR_BEGIN__ = .);
-        *(.stabstr);
-        PROVIDE(__STABSTR_END__ = .);
-        BYTE(0)     /* Force the linker to allocate space
-                   for this section */
-    }
-
-    . = ALIGN(0x1000);
-
 	/* Conventionally, Unix linkers provide pseudo-symbols
 	 * etext, edata, and end, at the end of the text, data, and bss.
 	 * For the kernel mapping, we need the address at the beginning

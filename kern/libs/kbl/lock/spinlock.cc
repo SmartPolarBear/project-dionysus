@@ -1,5 +1,7 @@
 #include "arch/amd64/cpu/x86.h"
 
+#include "debug/backtrace.hpp"
+
 #include "drivers/apic/traps.h"
 #include "drivers/console/console.h"
 #include "drivers/acpi/cpu.h"

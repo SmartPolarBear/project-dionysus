@@ -34,6 +34,11 @@ constexpr uintptr_t KERNEL_SIZE = KERNEL_VIRTUALEND - KERNEL_VIRTUALBASE + 1;
 // Be greatly cautious not to overwrite it !!!!
 constexpr uintptr_t KERNEL_VIRTUALLINK = 0xFFFFFFFF80100000;
 
+static inline constexpr bool VALID_KERNEL_PTR(uintptr_t ptr)
+{
+	return KERNEL_VIRTUALBASE <= ptr && ptr <= KERNEL_VIRTUALEND;
+}
+
 constexpr bool VALID_KERNEL_REGION(uintptr_t start, uintptr_t end)
 {
 	return (KERNEL_VIRTUALBASE < start) && (start < end) && (end <= KERNEL_VIRTUALEND);

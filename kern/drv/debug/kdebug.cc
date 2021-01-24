@@ -2,6 +2,7 @@
 
 #include "drivers/console/console.h"
 #include "debug/kdebug.h"
+#include "debug/backtrace.hpp"
 
 #include "drivers/acpi/cpu.h"
 
@@ -39,15 +40,16 @@ static inline void kdebug_print_impl_v(const char* fmt, bool topleft, color_sche
 
 	valist_write_format(fmt, ap);
 
-	constexpr size_t PCS_BUFLEN = 16;
-	uintptr_t pcs[PCS_BUFLEN] = { 0 };
-	kdebug::kdebug_get_caller_pcs(PCS_BUFLEN, pcs);
-
-	write_format("\n");
-	for (auto pc : pcs)
-	{
-		write_format("%p ", pc);
-	}
+//	constexpr size_t PCS_BUFLEN = 16;
+//	uintptr_t pcs[PCS_BUFLEN] = { 0 };
+//	kdebug::kdebug_get_caller_pcs(PCS_BUFLEN, pcs);
+//
+//	write_format("\n");
+//	for (auto pc : pcs)
+//	{
+//		write_format("%p ", pc);
+//	}
+	kdebug_print_backtrace();
 
 	// restore cga color
 	console::console_set_color(cs_default.first, cs_default.second);
@@ -55,29 +57,7 @@ static inline void kdebug_print_impl_v(const char* fmt, bool topleft, color_sche
 	write_format("\n");
 }
 
-// read information from %rbp and retrive pcs
-void kdebug::kdebug_get_caller_pcs(size_t buflen, uintptr_t* pcs)
-{
-	uintptr_t* ebp = nullptr;
-	asm volatile("mov %%rbp, %0"
-	: "=r"(ebp));
 
-	size_t i = 0;
-	for (; i < buflen; i++)
-	{
-		if (ebp == nullptr || ebp < (uintptr_t*)KERNEL_VIRTUALBASE || ebp == (uintptr_t*)VIRTUALADDR_LIMIT)
-		{
-			break;
-		}
-		pcs[i] = ebp[1];           // saved %eip
-		ebp = (uintptr_t*)ebp[0]; // saved %ebp
-	}
-
-	for (; i < buflen; i++)
-	{
-		pcs[i] = 0;
-	}
-}
 
 [[noreturn]] void kdebug::kdebug_panic(const char* fmt, uint32_t topleft, ...)
 {
