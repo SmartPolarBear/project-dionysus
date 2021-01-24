@@ -57,7 +57,6 @@ struct list_link
 	{
 	}
 
-
 	bool operator==(const list_link& that) const
 	{
 		return parent == that.parent &&
@@ -112,7 +111,6 @@ class intrusive_list_iterator
 		h_ = another.h_;
 		return *this;
 	}
-
 
 	T& operator*()
 	{
@@ -356,7 +354,6 @@ class intrusive_list
 			++size_;
 		}
 
-
 	}
 
 	void insert(riterator_type iter, T& item)
@@ -435,7 +432,6 @@ class intrusive_list
 	void remove(T& val, bool call_delete = CallDeleteOnRemoval)
 	{
 		if (list_empty(&head_))return;
-
 
 		if constexpr (EnableLock)
 		{
@@ -656,7 +652,6 @@ class intrusive_list
 
 	}
 
-
 	/// Join two lists, insert other 's item after the pos
 	/// \param pos insert after it
 	/// \param other
@@ -731,7 +726,6 @@ class intrusive_list
 	}
 
  private:
-
 
 	void do_clear(bool call_delete = false)
 	{
@@ -994,14 +988,14 @@ class intrusive_list
 
 			auto* pos = e2->prev;
 			list_remove_init<true>(e2);
-			list_replace<true>(e1, e2);
+			list_replace < true > (e1, e2);
 
 			if (pos == e1)
 			{
 				pos = e2;
 			}
 
-			list_add<true>(e1, pos);
+			list_add < true > (e1, pos);
 		}
 		else
 		{
@@ -1028,7 +1022,7 @@ class intrusive_list
 			lock_guard_type g1{ list->lock };
 			lock_guard_type g2{ head->lock };
 
-			if (!list_empty<true>(list))
+			if (!list_empty < true > (list))
 			{
 				util_list_splice(list, head, head->next);
 			}
@@ -1052,7 +1046,7 @@ class intrusive_list
 			lock_guard_type g1{ list->lock };
 			lock_guard_type g2{ head->lock };
 
-			if (!list_empty<true>(list))
+			if (!list_empty < true > (list))
 			{
 				util_list_splice(list, head, head->next);
 				util_list_init(list);
@@ -1068,13 +1062,11 @@ class intrusive_list
 		}
 	}
 
-
 	head_type head_{ nullptr };
 	size_type size_{ 0 };
 
 	mutable mutex_type lock;
 };
-
 
 #undef list_for
 #undef list_for_safe

@@ -1,9 +1,11 @@
 #pragma once
 
-#include "ktl/concepts.hpp"
 #include "system/types.h"
 
 #include "kbl/lock/spinlock.h"
+
+#include "ktl/mutex/lock_guard.hpp"
+#include "ktl/concepts.hpp"
 
 static_assert(sizeof(uintptr_t) == 0x08);
 
@@ -74,10 +76,7 @@ requires ktl::Pointer<T> || ktl::TriviallyCopiable<T>
 class cls_item
 {
  public:
-	[[nodiscard]] cls_item()
-	{
-		lock::spinlock_initialize_lock(&lk, "cls");
-	}
+	[[nodiscard]] cls_item() = default;
 
 	cls_item(const cls_item&) = delete;
 	cls_item& operator=(const cls_item&) = delete;
@@ -93,7 +92,6 @@ class cls_item
 	[[nodiscard]]explicit cls_item(bool _use_lock)
 		: use_lock(_use_lock)
 	{
-		lock::spinlock_initialize_lock(&lk, "cls");
 	}
 
 	[[nodiscard]]bool is_valid() const
@@ -111,7 +109,7 @@ class cls_item
 		return use_lock;
 	}
 
-	[[nodiscard]]T get() const
+	[[nodiscard]]T get() const TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if (!valid)
 		{
@@ -128,19 +126,16 @@ class cls_item
 		return cls_get<T>(Address);
 	}
 
-	void set(T val)
+	void set(T val) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if (use_lock)
 		{
-			lock::spinlock_acquire(&this->lk);
+			ktl::mutex::lock_guard g{ lock };
+			do_set(val);
 		}
-
-		valid = true;
-		cls_put(Address, val);
-
-		if (use_lock)
+		else
 		{
-			lock::spinlock_release(&this->lk);
+			do_set(val);
 		}
 	}
 
@@ -200,10 +195,17 @@ class cls_item
 	}
 
  private:
-	lock::spinlock_struct lk{};
+	void do_set(T val)
+	{
+		valid = true;
+		cls_put(Address, val);
+	}
+
 	bool use_lock{ true };
 
 	bool valid{ false };
+
+	mutable lock::spinlock lock{ "cls" };
 
 };
 
