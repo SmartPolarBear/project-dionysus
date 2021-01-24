@@ -15,10 +15,13 @@ void lock::arch_spinlock_initialize_lock(arch_spinlock* lk, const char* name)
 
 void lock::arch_spinlock_acquire(arch_spinlock* lock)
 {
+	__sync_synchronize();
+
 	while (xchg(&lock->locked, 1u) != 0);
 }
 
 void lock::arch_spinlock_release(arch_spinlock* lock)
 {
+	__sync_synchronize();
 	xchg(&lock->locked, 0u);
 }

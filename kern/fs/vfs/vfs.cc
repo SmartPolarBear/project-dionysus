@@ -185,7 +185,7 @@ error_code_with_result<vnode_base*> vfs_io_context::do_link_resolve(vnode_base* 
 	vnode_base* target = nullptr;
 	if (lnk->has_flags(VNF_PER_PROCESS))
 	{
-		target = lnk->get_link_getter_func()(cur_proc(), lnk, nullptr, 0);
+		target = lnk->get_link_getter_func()(cur_proc.get(), lnk, nullptr, 0);
 	}
 	else
 	{

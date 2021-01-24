@@ -89,6 +89,9 @@ bool lock::spinlock_holding(spinlock_struct* lock)
 
 void lock::spinlock::lock() noexcept
 {
+	intr_ = !arch_ints_disabled();
+	if (intr_)cli();
+
 	if (holding())
 	{
 		dump_lock_panic(&spinlock_);
@@ -96,11 +99,10 @@ void lock::spinlock::lock() noexcept
 
 	kdebug::kdebug_get_backtrace(spinlock_.pcs);
 
-	// hack: cpu.get_use_lock() is true after it become usable
-	intr_ = !arch_ints_disabled();
-	if (intr_)cli();
-
 	arch_spinlock_acquire(&spinlock_);
+
+	spinlock_.cpu = cpu.get();
+
 }
 
 void lock::spinlock::unlock() noexcept
@@ -110,14 +112,15 @@ void lock::spinlock::unlock() noexcept
 		KDEBUG_RICHPANIC("Release a not-held spinlock_struct.\n",
 			"KERNEL PANIC",
 			false,
-			"Lock's name: %s", spinlock_.name);
+			"Lock's name: %s\n", spinlock_.name);
 	}
 
-	memset(spinlock_.pcs, 0, sizeof(spinlock_.pcs));
+	spinlock_.pcs[0] = 0;
+	spinlock_.cpu = nullptr;
 
 	arch_spinlock_release(&spinlock_);
 
-	if (intr_)sti();
+	if (intr_) sti();
 	intr_ = false;
 }
 
@@ -135,7 +138,7 @@ bool lock::spinlock::try_lock() noexcept
 }
 bool lock::spinlock::holding() noexcept
 {
-	if (cpu.get_use_lock())
+	if (cpu.get_valid())
 	{
 		return spinlock_.locked && spinlock_.cpu == cpu.get();
 	}

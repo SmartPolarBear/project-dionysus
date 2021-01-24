@@ -76,7 +76,6 @@ static inline void run(const char* name)
 error_code init_routine([[maybe_unused]]void* arg)
 {
 	write_format("%d\n", cpu->id);
-//	while (true) write_format("%d\n", cpu->id);
 
 	if (cpu->id == 0)
 	{

@@ -122,7 +122,7 @@ void task::scheduler::timer_tick(task::thread* t)
 	{
 		scheduler_class.timer_tick();
 	}
-	else
+	else if (t != nullptr)
 	{
 		t->need_reschedule = true;
 	}

@@ -44,7 +44,7 @@ bool enable_irq[CPU_COUNT_LIMIT] = { false };
 
 static inline spinlock_struct* ticks_lock()
 {
-	return &tickslocks[cpu()->id];
+	return &tickslocks[cpu->id];
 }
 
 // defined below
@@ -73,7 +73,7 @@ PANIC void timer::init_apic_timer()
 
 error_code trap_handle_tick([[maybe_unused]] trap::trap_frame info)
 {
-	size_t id = cpu()->id;
+	size_t id = cpu->id;
 
 	if (kdebug::panicked)
 	{
@@ -110,5 +110,5 @@ void timer::set_enable_on_cpu(size_t cpuid, bool enable)
 }
 uint64_t timer::get_ticks()
 {
-	return ticks[cpu()->id];
+	return ticks[cpu->id];
 }

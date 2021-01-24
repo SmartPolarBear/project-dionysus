@@ -108,8 +108,6 @@ error_code_with_result<task::thread*> thread::create(process* parent,
 	void* arg,
 	trampoline_type trampoline)
 {
-	lock_guard g2{ global_thread_lock };
-
 	kbl::allocate_checker ck{};
 	auto ret = new(&ck) thread{ parent, name };
 
@@ -138,7 +136,11 @@ error_code_with_result<task::thread*> thread::create(process* parent,
 
 	ret->state = thread_states::READY;
 
-	global_thread_list.push_back(ret);
+	{
+		lock_guard g2{ global_thread_lock };
+
+		global_thread_list.push_back(ret);
+	}
 
 	return ret;
 }
@@ -187,7 +189,6 @@ extern cls_item<task::process*, CLS_PROC_STRUCT_PTR> cur_proc;
 
 void thread::switch_to() TA_REQ(global_thread_lock)
 {
-//	kdebug::kdebug_log("[cpu %d]%s->%s", cpu->id, cur_thread->name.data(), this->name.data());
 
 	KDEBUG_ASSERT(this->state == thread_states::READY);
 
