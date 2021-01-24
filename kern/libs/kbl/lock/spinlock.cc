@@ -12,7 +12,7 @@
 
 using lock::spinlock_struct;
 
-[[noreturn]]static inline void dump_lock_panic(lock::spinlock_struct* lock)
+[[noreturn]] static inline void dump_lock_panic(lock::spinlock_struct* lock)
 {
 	// disable the lock of console
 	console::console_set_lock(false);
@@ -20,17 +20,27 @@ using lock::spinlock_struct;
 
 	console::console_set_color(console::CONSOLE_COLOR_BLUE, console::CONSOLE_COLOR_LIGHT_BROWN);
 
-	write_format("lock %s has been held.\nCall stack:\n", lock->name);
+	write_format("[cpu %d]lock %s has been held.\nCall stack of lock:\n", cpu->id, lock->name);
 
-	for (auto cs : lock->pcs)
 	{
-		if (cs == 0)break;
-		write_format("%p ", cs);
+		size_t counter = 0;
+		for (auto cs : lock->pcs)
+		{
+			if (cs == 0)break;
+			write_format("%p ", cs);
+			if ((++counter) % 4 == 0)write_format("\n");
+		}
 	}
 
-	write_format("\n");
+	write_format("\nCall stack of panic:\n");
 
-	KDEBUG_FOLLOWPANIC("acquire");
+	kdebug::kdebug_print_backtrace();
+
+	// set global panic state for other cpu
+	kdebug::panicked = true;
+
+	// infinite loop
+	for (;;);
 }
 
 void lock::spinlock_initialize_lock(spinlock_struct* lk, const char* name)
@@ -79,10 +89,12 @@ bool lock::spinlock_holding(spinlock_struct* lock)
 
 void lock::spinlock::lock() noexcept
 {
-	if(holding())
+	if (holding())
 	{
 		dump_lock_panic(&spinlock_);
 	}
+
+	kdebug::kdebug_get_backtrace(spinlock_.pcs);
 
 	// hack: cpu.get_use_lock() is true after it become usable
 	intr_ = !arch_ints_disabled();
@@ -93,13 +105,15 @@ void lock::spinlock::lock() noexcept
 
 void lock::spinlock::unlock() noexcept
 {
-	if(!holding())
+	if (!holding())
 	{
 		KDEBUG_RICHPANIC("Release a not-held spinlock_struct.\n",
 			"KERNEL PANIC",
 			false,
 			"Lock's name: %s", spinlock_.name);
 	}
+
+	memset(spinlock_.pcs, 0, sizeof(spinlock_.pcs));
 
 	arch_spinlock_release(&spinlock_);
 
@@ -121,5 +135,12 @@ bool lock::spinlock::try_lock() noexcept
 }
 bool lock::spinlock::holding() noexcept
 {
-	return spinlock_.locked;
+	if (cpu.get_use_lock())
+	{
+		return spinlock_.locked && spinlock_.cpu == cpu.get();
+	}
+	else
+	{
+		return spinlock_.locked;
+	}
 }
