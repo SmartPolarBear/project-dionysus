@@ -139,6 +139,11 @@ class cls_item
 		}
 	}
 
+	void reset()
+	{
+		valid = false;
+	}
+
 	T operator->()
 	{
 		return get();
@@ -147,6 +152,12 @@ class cls_item
 	cls_item& operator=(const T& src)
 	{
 		set(src);
+		return *this;
+	}
+
+	cls_item& operator=(nullptr_t)
+	{
+		reset();
 		return *this;
 	}
 
