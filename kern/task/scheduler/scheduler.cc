@@ -28,11 +28,13 @@ void task::scheduler::reschedule()
 
 void task::scheduler::yield()
 {
+
 	lock_guard g{ global_thread_lock };
 
 	cur_thread->state = thread::thread_states::READY;
 
 	cur_thread->need_reschedule = true;
+
 }
 
 void task::scheduler::schedule()
