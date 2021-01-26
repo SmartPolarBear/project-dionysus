@@ -25,7 +25,13 @@ void task::round_rubin_scheduler_class::enqueue(task::thread* thread)
 
 void task::round_rubin_scheduler_class::dequeue(task::thread* thread)
 {
-	run_queue.remove(*thread);
+	KDEBUG_ASSERT(thread->run_queue_link.next != nullptr && thread->run_queue_link.prev != nullptr);
+
+	if (thread->run_queue_link.next != &thread->run_queue_link
+		&& thread->run_queue_link.prev != &thread->run_queue_link)
+	{
+		run_queue.remove(*thread);
+	}
 }
 
 task::thread* task::round_rubin_scheduler_class::pick_next()

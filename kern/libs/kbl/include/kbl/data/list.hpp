@@ -245,7 +245,7 @@ class intrusive_list
 
 			list_for_safe(iter, t, &another.head_)
 			{
-				list_remove(iter);
+				list_remove_init(iter);
 				list_add(iter, this->head_);
 			}
 
@@ -261,7 +261,7 @@ class intrusive_list
 
 			list_for_safe(iter, t, &another.head_)
 			{
-				list_remove(iter);
+				list_remove_init(iter);
 				list_add(iter, this->head_);
 			}
 
@@ -395,13 +395,13 @@ class intrusive_list
 		{
 			lock_guard_type g{ lock };
 
-			list_remove(it.h_);
+			list_remove_init(it.h_);
 			if (call_delete)delete it.h_->parent;
 			--size_;
 		}
 		else
 		{
-			list_remove(it.h_);
+			list_remove_init(it.h_);
 			if (call_delete)delete it.h_->parent;
 			--size_;
 		}
@@ -415,13 +415,13 @@ class intrusive_list
 		{
 			lock_guard_type g{ lock };
 
-			list_remove(it.h_);
+			list_remove_init(it.h_);
 			if (call_delete)delete it.h_->parent;
 			--size_;
 		}
 		else
 		{
-			list_remove(it.h_);
+			list_remove_init(it.h_);
 			if (call_delete)delete it.h_->parent;
 			--size_;
 		}
@@ -436,13 +436,14 @@ class intrusive_list
 		if constexpr (EnableLock)
 		{
 			lock_guard_type g{ lock };
-			list_remove(&(val.*Link));
+
+			list_remove_init(&(val.*Link));
 			if (call_delete)delete &val;
 			--size_;
 		}
 		else
 		{
-			list_remove(&(val.*Link));
+			list_remove_init(&(val.*Link));
 			if (call_delete)delete &val;
 			--size_;
 		}
@@ -457,16 +458,15 @@ class intrusive_list
 		{
 			lock_guard_type g{ lock };
 			auto entry = head_.prev;
-			list_remove(entry);
+			list_remove_init(entry);
 			--size_;
 
 			if (call_delete)delete entry->parent;
 		}
 		else
 		{
-			list_remove(head_.prev);
 			auto entry = head_.prev;
-			list_remove(entry);
+			list_remove_init(entry);
 			--size_;
 
 			if (call_delete)delete entry->parent;
@@ -514,7 +514,7 @@ class intrusive_list
 		{
 			lock_guard_type g{ lock };
 			auto entry = head_.next;
-			list_remove(entry);
+			list_remove_init(entry);
 			--size_;
 
 			if (call_delete)delete entry->parent;
@@ -522,7 +522,7 @@ class intrusive_list
 		else
 		{
 			auto entry = head_.next;
-			list_remove(entry);
+			list_remove_init(entry);
 			--size_;
 
 			if (call_delete)delete entry->parent;
@@ -734,7 +734,7 @@ class intrusive_list
 			head_type* iter = nullptr, * t = nullptr;
 			list_for_safe(iter, t, &head_)
 			{
-				list_remove(iter);
+				list_remove_init(iter);
 				if (call_delete && iter->parent)
 				{
 					delete iter->parent;
@@ -769,14 +769,14 @@ class intrusive_list
 			if (cmp(*(i1->parent), *(i2->parent)))
 			{
 				auto next = i1->next;
-				list_remove(i1);
+				list_remove_init(i1);
 				list_add_tail(i1, &t_head);
 				i1 = next;
 			}
 			else
 			{
 				auto next = i2->next;
-				list_remove(i2);
+				list_remove_init(i2);
 				list_add_tail(i2, &t_head);
 				i2 = next;
 			}

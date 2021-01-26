@@ -36,6 +36,7 @@
 #include "debug/kdebug.h"
 
 #include "task/process/process.hpp"
+#include "task/thread//thread.hpp"
 
 #include <cstring>
 #include <algorithm>
@@ -111,7 +112,11 @@ error_code handle_pgfault([[maybe_unused]] trap::trap_frame info)
 		KDEBUG_RICHPANIC("cur_proc == nullptr || cur_proc->get_mm() == nullptr",
 			"KERNEL PANIC: PAGE FAULT",
 			false,
-			"Address: 0x%p\n", addr);
+			"Address: 0x%p, PC= 0x%p, thread name %s on CPU %d\n",
+			addr,
+			info.rip,
+			task::cur_thread->get_name_raw(),
+			cpu->id);
 	}
 
 

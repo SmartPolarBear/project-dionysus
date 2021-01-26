@@ -338,6 +338,7 @@ thread::~thread()
 
 void thread::current::exit(error_code code)
 {
+	trap::pushcli();
 
 	{
 		lock_guard g1{ global_thread_lock };
@@ -356,10 +357,13 @@ void thread::current::exit(error_code code)
 		}
 		else
 		{
+			cur_thread->remove_from_lists();
+
 			// TODO: waiting queue
 		}
 	}
 
+	trap::popcli();
 	cpu->scheduler.reschedule();
 
 	__UNREACHABLE;

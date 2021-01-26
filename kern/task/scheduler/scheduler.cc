@@ -40,6 +40,8 @@ void task::scheduler::schedule()
 	KDEBUG_ASSERT(!global_thread_list.empty());
 	KDEBUG_ASSERT(global_thread_lock.holding());
 
+	trap::pushcli();
+
 	thread* next = nullptr;
 
 	cur_thread->need_reschedule = false;
@@ -59,6 +61,8 @@ void task::scheduler::schedule()
 	{
 		next = cpu->idle;
 	}
+
+	trap::popcli();
 
 	if (next != cur_thread.get())
 	{

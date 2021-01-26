@@ -123,6 +123,11 @@ class thread final
 	// FIXME: should be private
 	void switch_to() TA_REQ(global_thread_lock);
 
+	const char* get_name_raw() const
+	{
+		return name.data();
+	}
+
  private:
 	[[noreturn]]static error_code idle_routine(void* arg);
 	static_assert(ktl::Convertible<decltype(idle_routine), routine_type>);
