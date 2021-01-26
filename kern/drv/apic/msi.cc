@@ -14,7 +14,8 @@
 #include "system/pmm.h"
 #include "system/segmentation.hpp"
 #include "system/vmm.h"
-#include "system/process.h"
+#include "task/process/process.hpp"
+
 
 #include "../../libs/basic_io/include/builtin_text_io.hpp"
 #include <cstring>

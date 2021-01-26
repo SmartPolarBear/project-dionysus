@@ -1,7 +1,6 @@
 #include "syscall.h"
 
 #include "system/mmu.h"
-#include "system/process.h"
 #include "system/syscall.h"
 
 #include "debug/kdebug.h"
@@ -13,6 +12,8 @@
 #include "arch/amd64/cpu/regs.h"
 
 #include "builtin_text_io.hpp"
+
+#include "task/process/process.hpp"
 
 using namespace syscall;
 

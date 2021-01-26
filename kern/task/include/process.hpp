@@ -4,7 +4,6 @@
 
 #include "arch/amd64/cpu/regs.h"
 
-#include "system/process.h"
 
 #include "task/thread/thread.hpp"
 

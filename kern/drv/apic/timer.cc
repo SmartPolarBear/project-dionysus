@@ -2,7 +2,6 @@
 
 #include "system/error.hpp"
 #include "system/scheduler.h"
-#include "system/process.h"
 #include "system/types.h"
 
 #include "drivers/apic/timer.h"
@@ -16,6 +15,7 @@
 
 #include "task/scheduler/scheduler.hpp"
 #include "task/thread/thread.hpp"
+#include "task/process/process.hpp"
 
 #include "../../libs/basic_io/include/builtin_text_io.hpp"
 

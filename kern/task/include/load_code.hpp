@@ -1,9 +1,10 @@
 #pragma once
 
-#include "system/process.h"
 #include "system/types.h"
 
 #include "elf/elf.hpp"
+
+#include "task/process/process.hpp"
 
 error_code load_binary(IN task::process* proc,
 	IN uint8_t* bin,

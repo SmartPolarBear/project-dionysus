@@ -7,9 +7,11 @@
 
 #include "system/memlayout.h"
 #include "system/types.h"
-#include "system/process.h"
 #include "system/multiboot.h"
 #include "system/pmm.h"
+
+#include "task/process/process.hpp"
+
 
 #include "../../libs/basic_io/include/builtin_text_io.hpp"
 

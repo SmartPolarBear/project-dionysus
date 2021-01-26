@@ -15,8 +15,12 @@
 #include "drivers/acpi/cpu.h"
 #include "drivers/apic/traps.h"
 
+extern cls_item<task::process*, CLS_PROC_STRUCT_PTR> cur_proc;
 namespace task
 {
+
+void process_init();
+
 enum [[clang::enum_extensibility(closed)]]task_return_code : int64_t
 {
 	TASK_RETCODE_NORMAL = 0,
@@ -167,7 +171,6 @@ class process final
 		flags = _flags;
 	}
 
-
 	/// \brief Get status of this process
 	/// \return the status
 	[[nodiscard]] Status get_status() const
@@ -192,7 +195,7 @@ class process final
 
 	void kill_all_threads_locked() noexcept TA_REQ(lock);
 
-	void add_child_thread(thread *t) noexcept TA_EXCL(lock);
+	void add_child_thread(thread* t) noexcept TA_EXCL(lock);
 
 	[[nodiscard]] error_code_with_result<user_stack*> allocate_ustack(thread* t) TA_EXCL(lock);
 	void free_ustack(user_stack* ustack) TA_EXCL(lock);

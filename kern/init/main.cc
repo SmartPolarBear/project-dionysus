@@ -20,7 +20,6 @@
 #include "system/multiboot.h"
 #include "system/param.h"
 #include "system/pmm.h"
-#include "system/process.h"
 #include "system/scheduler.h"
 #include "system/syscall.h"
 #include "system/vmm.h"

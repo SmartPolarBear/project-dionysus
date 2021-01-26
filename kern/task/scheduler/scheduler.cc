@@ -21,6 +21,7 @@ void task::scheduler::reschedule()
 
 	ktl::mutex::lock_guard guard{ global_thread_lock };
 
+
 	schedule();
 
 	__UNREACHABLE;

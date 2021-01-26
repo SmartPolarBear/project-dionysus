@@ -17,7 +17,8 @@
 #include "system/pmm.h"
 #include "system/segmentation.hpp"
 #include "system/vmm.h"
-#include "system/process.h"
+
+#include "task/process/process.hpp"
 
 #include "../../libs/basic_io/include/builtin_text_io.hpp"
 #include <cstring>
@@ -199,9 +200,7 @@ extern "C" void trap_body(trap::trap_frame info)
 	// if rescheduling needed, reschedule
 	if (task::cur_thread != nullptr && task::cur_thread->get_need_reschedule())
 	{
-//		task::scheduler::yield();
 		cpu->scheduler.yield();
-
 	}
 
 	if (error != ERROR_SUCCESS)

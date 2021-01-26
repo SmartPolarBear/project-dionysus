@@ -35,13 +35,15 @@
 #include "system/memlayout.h"
 #include "system/multiboot.h"
 #include "system/pmm.h"
-#include "system/process.h"
 #include "system/scheduler.h"
 #include "system/types.h"
 #include "system/vmm.h"
+#include "system/syscall.h"
 
 #include "../../../libs/basic_io/include/builtin_text_io.hpp"
 #include <cstring>
+
+#include "task/process/process.hpp"
 
 // in boot.S
 extern "C" void entry32mp(void);

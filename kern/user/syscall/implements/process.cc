@@ -1,7 +1,6 @@
 #include "syscall.h"
 
 #include "system/mmu.h"
-#include "system/process.h"
 #include "system/syscall.h"
 
 #include "debug/kdebug.h"
@@ -10,6 +9,8 @@
 #include "arch/amd64/cpu/cpuid.h"
 #include "arch/amd64/cpu/msr.h"
 #include "arch/amd64/cpu/regs.h"
+
+#include "task/process/process.hpp"
 
 #include "builtin_text_io.hpp"
 

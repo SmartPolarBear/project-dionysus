@@ -15,7 +15,6 @@
 #include "system/kmalloc.hpp"
 #include "system/memlayout.h"
 #include "system/pmm.h"
-#include "system/process.h"
 #include "system/vmm.h"
 #include "system/scheduler.h"
 
@@ -29,6 +28,10 @@
 #include "ktl/mutex/lock_guard.hpp"
 #include "ktl/algorithm.hpp"
 #include "ktl/shared_ptr.hpp"
+
+#include "task/process/process.hpp"
+#include "task/job/job.hpp"
+
 
 using namespace kbl;
 using namespace lock;

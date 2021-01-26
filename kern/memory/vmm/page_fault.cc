@@ -25,7 +25,6 @@
 #include "system/memlayout.h"
 #include "system/mmu.h"
 #include "system/pmm.h"
-#include "system/process.h"
 #include "system/vmm.h"
 
 #include "arch/amd64/cpu/x86.h"
@@ -35,6 +34,8 @@
 #include "drivers/apic/traps.h"
 #include "drivers/console/console.h"
 #include "debug/kdebug.h"
+
+#include "task/process/process.hpp"
 
 #include <cstring>
 #include <algorithm>
@@ -105,7 +106,7 @@ error_code handle_pgfault([[maybe_unused]] trap::trap_frame info)
 	uintptr_t addr = rcr2();
 	mm_struct* mm = cur_proc != nullptr ? cur_proc->get_mm() : nullptr;
 
-	if(cur_proc == nullptr || cur_proc->get_mm() == nullptr)
+	if (cur_proc == nullptr || cur_proc->get_mm() == nullptr)
 	{
 		KDEBUG_RICHPANIC("cur_proc == nullptr || cur_proc->get_mm() == nullptr",
 			"KERNEL PANIC: PAGE FAULT",
