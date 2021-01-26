@@ -252,6 +252,13 @@ void thread::finish_dead_transition()
 	{
 		this->state = thread_states::DEAD;
 
+		if (is_user_thread())
+		{
+			this->parent->free_ustack(this->ustack);
+		}
+
+		delete this->kstack;
+
 		if (critical)
 		{
 			// TODO: notify the process
@@ -322,6 +329,11 @@ error_code thread::join(error_code* out_err_code)
 {
 
 	return 0;
+}
+
+thread::~thread()
+{
+
 }
 
 void thread::current::exit(error_code code)

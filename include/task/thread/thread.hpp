@@ -86,6 +86,8 @@ class thread final
 
 	[[nodiscard]]static error_code create_idle();
  public:
+	~thread();
+
 	thread(const thread&) = delete;
 	thread& operator=(const thread&) = delete;
 

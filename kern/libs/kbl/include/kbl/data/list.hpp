@@ -233,7 +233,7 @@ class intrusive_list
 	intrusive_list& operator=(const intrusive_list&) = delete;
 
 	/// Move constructor
-	intrusive_list(intrusive_list&& another) noexcept
+	intrusive_list(intrusive_list&& another) noexcept TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if constexpr (EnableLock)
 		{
@@ -324,7 +324,7 @@ class intrusive_list
 		return riterator_type{ &head_ };
 	}
 
-	void insert(const_iterator_type iter, T& item)
+	void insert(const_iterator_type iter, T& item) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if constexpr (EnableLock)
 		{
@@ -340,7 +340,7 @@ class intrusive_list
 
 	}
 
-	void insert(const_iterator_type iter, T* item)
+	void insert(const_iterator_type iter, T* item) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if constexpr (EnableLock)
 		{
@@ -356,7 +356,7 @@ class intrusive_list
 
 	}
 
-	void insert(riterator_type iter, T& item)
+	void insert(riterator_type iter, T& item) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if constexpr (EnableLock)
 		{
@@ -371,7 +371,7 @@ class intrusive_list
 		}
 	}
 
-	void insert(riterator_type iter, T* item)
+	void insert(riterator_type iter, T* item) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if constexpr (EnableLock)
 		{
@@ -387,7 +387,7 @@ class intrusive_list
 		}
 	}
 
-	void erase(iterator_type it, bool call_delete = CallDeleteOnRemoval)
+	void erase(iterator_type it, bool call_delete = CallDeleteOnRemoval) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if (list_empty(&head_))return;
 
@@ -407,7 +407,7 @@ class intrusive_list
 		}
 	}
 
-	void erase(riterator_type it, bool call_delete = CallDeleteOnRemoval)
+	void erase(riterator_type it, bool call_delete = CallDeleteOnRemoval) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if (list_empty(&head_))return;
 
@@ -429,7 +429,7 @@ class intrusive_list
 
 	/// Remove item by value. **it takes liner time**
 	/// \param val
-	void remove(T& val, bool call_delete = CallDeleteOnRemoval)
+	void remove(T& val, bool call_delete = CallDeleteOnRemoval) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if (list_empty(&head_))return;
 
@@ -449,7 +449,7 @@ class intrusive_list
 
 	}
 
-	void pop_back(bool call_delete = CallDeleteOnRemoval)
+	void pop_back(bool call_delete = CallDeleteOnRemoval) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if (list_empty(&head_))return;
 
@@ -474,7 +474,7 @@ class intrusive_list
 
 	}
 
-	void push_back(T& item)
+	void push_back(T& item) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if constexpr (EnableLock)
 		{
@@ -490,7 +490,7 @@ class intrusive_list
 
 	}
 
-	void push_back(T* item)
+	void push_back(T* item) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if constexpr (EnableLock)
 		{
@@ -506,7 +506,7 @@ class intrusive_list
 
 	}
 
-	void pop_front(bool call_delete = CallDeleteOnRemoval)
+	void pop_front(bool call_delete = CallDeleteOnRemoval) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if (list_empty(&head_))return;
 
@@ -562,7 +562,7 @@ class intrusive_list
 
 	}
 
-	void clear(bool call_delete = CallDeleteOnRemoval)
+	void clear(bool call_delete = CallDeleteOnRemoval) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if constexpr (EnableLock)
 		{
@@ -577,7 +577,7 @@ class intrusive_list
 
 	/// swap this and another
 	/// \param another
-	void swap(container_type& another) noexcept
+	void swap(container_type& another) noexcept TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if constexpr (EnableLock)
 		{
@@ -601,7 +601,7 @@ class intrusive_list
 
 	/// Merge two **sorted** list, after that another becomes empty
 	/// \param another
-	void merge(container_type& another)
+	void merge(container_type& another) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		merge(another, [](const T& a, const T& b)
 		{
@@ -614,7 +614,7 @@ class intrusive_list
 	/// \param another
 	/// \param cmp
 	template<typename Compare>
-	void merge(container_type& another, Compare cmp)
+	void merge(container_type& another, Compare cmp) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if constexpr (EnableLock)
 		{
@@ -631,7 +631,7 @@ class intrusive_list
 
 	/// join two lists
 	/// \param other
-	void splice(intrusive_list& other)
+	void splice(intrusive_list& other) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if constexpr (EnableLock)
 		{
@@ -655,7 +655,7 @@ class intrusive_list
 	/// Join two lists, insert other 's item after the pos
 	/// \param pos insert after it
 	/// \param other
-	void splice(const_iterator_type pos, intrusive_list& other)
+	void splice(const_iterator_type pos, intrusive_list& other) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if constexpr (EnableLock)
 		{
@@ -680,7 +680,7 @@ class intrusive_list
 	/// Join two lists, insert other 's item after the pos
 	/// \param pos insert after it
 	/// \param other
-	void splice(riterator_type pos, intrusive_list& other)
+	void splice(riterator_type pos, intrusive_list& other) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if constexpr (EnableLock)
 		{
@@ -706,7 +706,7 @@ class intrusive_list
 		return size_;
 	}
 
-	[[nodiscard]] size_type size_slow() const
+	[[nodiscard]] size_type size_slow() const TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if constexpr (EnableLock)
 		{
