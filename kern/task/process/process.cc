@@ -32,7 +32,6 @@
 #include "task/process/process.hpp"
 #include "task/job/job.hpp"
 
-
 using namespace kbl;
 using namespace lock;
 using namespace memory;

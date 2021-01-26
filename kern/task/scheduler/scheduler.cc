@@ -21,7 +21,6 @@ void task::scheduler::reschedule()
 
 	ktl::mutex::lock_guard guard{ global_thread_lock };
 
-
 	schedule();
 
 	__UNREACHABLE;
@@ -85,7 +84,16 @@ void task::scheduler::unblock(task::thread* t)
 
 void task::scheduler::enqueue(task::thread* t)
 {
-	if (t != cpu->idle)
+	if (t->state == thread::thread_states::DYING)
+	{
+		if (t == cpu->idle)
+		{
+			KDEBUG_GENERALPANIC("idle thread exiting.\n");
+		}
+
+		scheduler_class.enqueue(t);
+	}
+	else if (t != cpu->idle)
 	{
 		scheduler_class.enqueue(t);
 	}

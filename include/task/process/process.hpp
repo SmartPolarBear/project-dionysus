@@ -124,7 +124,7 @@ class process final
 
 	~process() override = default;
 
-	void exit(task_return_code code) noexcept;
+	[[maybe_unused]] void exit(task_return_code code) noexcept;
 	void kill(task_return_code code) noexcept;
 	void finish_dead_transition() noexcept;
 

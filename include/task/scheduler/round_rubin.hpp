@@ -9,6 +9,7 @@ class round_rubin_scheduler_class final
  public:
 	friend class thread;
 	using run_queue_list_type = kbl::intrusive_list<thread, lock::spinlock, &thread::run_queue_link, true, false>;
+	using zombie_queue_list_type = kbl::intrusive_list<thread, lock::spinlock, &thread::zombie_queue_link, true, false>;
 
  public:
 	void enqueue(thread* thread) TA_REQ(global_thread_lock) final;
@@ -22,7 +23,7 @@ class round_rubin_scheduler_class final
  private:
 
 	run_queue_list_type run_queue TA_GUARDED(global_thread_lock);
-
+	zombie_queue_list_type zombie_queue TA_GUARDED(global_thread_lock);
 };
 
 }

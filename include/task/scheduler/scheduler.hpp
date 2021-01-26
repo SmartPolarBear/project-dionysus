@@ -54,6 +54,7 @@ class scheduler
 	void timer_tick(thread* t) TA_REQ(global_thread_lock) TA_EXCL(timer_lock);
 
 	timer_list_type timer_list TA_GUARDED(timer_lock) {};
+
 	mutable lock::spinlock timer_lock{ "scheduler timer" };
 
 	mutable lock::spinlock test{ "fuck!!" };
