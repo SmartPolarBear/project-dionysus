@@ -78,14 +78,8 @@ error_code init_routine([[maybe_unused]]void* arg)
 
 	if (cpu->id == 0)
 	{
-		trap::pushcli();
-
 		run("/ipctest");
 		run("/hello");
-
-		trap::popcli();
-
-		return ERROR_SUCCESS;
 	}
 	else
 	{
