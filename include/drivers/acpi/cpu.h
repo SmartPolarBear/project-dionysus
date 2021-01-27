@@ -10,7 +10,6 @@
 
 #include "task/scheduler/scheduler.hpp"
 
-
 struct cpu_struct
 {
 	uint8_t id{ 0 };                // index into cpus[] below
@@ -24,8 +23,8 @@ struct cpu_struct
 	void* local_fs{ nullptr };
 	void* kernel_gs{ nullptr };
 
-	task::thread *idle;
-	task::scheduler scheduler{};
+	task::thread* idle;
+	task::scheduler scheduler{ this };
 
 	task_state_segment tss{};
 	gdt_table gdt_table{};

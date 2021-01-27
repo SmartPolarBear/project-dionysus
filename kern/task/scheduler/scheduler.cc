@@ -15,11 +15,18 @@ using namespace trap;
 
 // FIXME: maybe use the intrusive list to fix? another bad situation is memory overwriting
 
+size_t task::scheduler::called_count = 0;
+
 void task::scheduler::reschedule()
 {
 	KDEBUG_ASSERT(!global_thread_lock.holding());
 
 	ktl::mutex::lock_guard guard{ global_thread_lock };
+
+	if (cur_thread->state == thread::thread_states::RUNNING)
+	{
+		cur_thread->state = thread::thread_states::READY;
+	}
 
 	schedule();
 
@@ -28,7 +35,6 @@ void task::scheduler::reschedule()
 
 void task::scheduler::yield()
 {
-
 	lock_guard g{ global_thread_lock };
 
 	cur_thread->state = thread::thread_states::READY;
@@ -53,6 +59,7 @@ void task::scheduler::schedule()
 		enqueue(cur_thread.get());
 	}
 
+	KDEBUG_ASSERT(this->owner_cpu);
 	next = pick_next();
 	if (next != nullptr)
 	{

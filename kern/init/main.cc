@@ -81,13 +81,6 @@ error_code init_routine([[maybe_unused]]void* arg)
 		run("/ipctest");
 		run("/hello");
 	}
-	else
-	{
-		while (true);
-	}
-//	else if (cpu->id == 1)
-//	{
-//	}
 
 	return ERROR_SUCCESS;
 }

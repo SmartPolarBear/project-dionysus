@@ -3,22 +3,6 @@
 
 #include "system/memlayout.h"
 
-static __always_inline uint64_t
-read_rbp()
-{
-	uint64_t rbp;
-	asm volatile ("movq %%rbp, %0" : "=r" (rbp));
-	return rbp;
-}
-
-static __noinline uint64_t
-read_rip()
-{
-	uint64_t rip;
-	asm volatile("movq 8(%%rbp), %0" : "=r" (rip));
-	return rip;
-}
-
 void kdebug::kdebug_print_backtrace()
 {
 	auto valid_or_print = [](void* addr)
@@ -27,7 +11,7 @@ void kdebug::kdebug_print_backtrace()
 
 	  if (!ret)
 	  {
-		  kdebug::kdebug_log(" Invalid stack frame at 0x%p", addr);
+		  kdebug::kdebug_log("\nInvalid stack frame at 0x%p\n", addr);
 	  }
 
 	  return ret;

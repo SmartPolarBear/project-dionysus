@@ -74,3 +74,10 @@ static inline bool arch_ints_disabled()
 	auto rflags = read_rflags();
 	return !(rflags & (1 << 9));
 }
+
+static inline uint64_t read_rbp()
+{
+	uint64_t rbp;
+	asm volatile ("movq %%rbp, %0" : "=r" (rbp));
+	return rbp;
+}

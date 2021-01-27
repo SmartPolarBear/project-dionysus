@@ -60,7 +60,7 @@ void kdebug_log(const char* fmt, ...);
             KDEBUG_RICHPANIC("Assertion failed",                            \
                              "ASSERT_PANIC",                                \
                              true,                                          \
-                             "The expression \" %s \" is expected to be 1", \
+                             "The expression \" %s \" is expected to be 1\n", \
                              #cond);                                        \
         }                                                                   \
     } while (0)

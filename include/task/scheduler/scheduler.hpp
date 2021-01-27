@@ -23,7 +23,6 @@ struct scheduler_timer
 	kbl::list_link<scheduler_timer, lock::spinlock> link{ this };
 };
 
-
 class scheduler
 {
  public:
@@ -33,6 +32,18 @@ class scheduler
 	friend class thread;
 
  public:
+
+	static size_t called_count;
+
+	scheduler() = delete;
+
+	explicit scheduler(cpu_struct* cpu)
+		: scheduler_class(cpu, this),
+		  owner_cpu(cpu)
+	{
+		called_count++;
+	}
+
 	void schedule() TA_REQ(global_thread_lock);
 
 	[[noreturn]]void reschedule() TA_EXCL(global_thread_lock);
@@ -44,9 +55,11 @@ class scheduler
 
 	void handle_timer_tick() TA_EXCL(global_thread_lock, timer_lock);
 
- private:
+	// FIXME
+	scheduler_class_type scheduler_class{ nullptr, this };
+	cpu_struct* owner_cpu{ nullptr };
 
-	scheduler_class_type scheduler_class{};
+ private:
 
 	void enqueue(thread* t) TA_REQ(global_thread_lock);
 	void dequeue(thread* t) TA_REQ(global_thread_lock);

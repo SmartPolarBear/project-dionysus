@@ -188,20 +188,12 @@ extern "C" void trap_body(trap::trap_frame info)
 	// finish the trap handle
 	local_apic::write_eoi();
 
-	// If in the user space, directly kill it
-	if (cur_proc.get() != nullptr
-		&& (cur_proc->get_flags() & task::PROC_EXITING)
-		&& ((info.cs & 0b11) == DPL_USER))
-	{
-		//FIXME
-		KDEBUG_NOT_IMPLEMENTED;
-	}
-
 	// if rescheduling needed, reschedule
 	if ((info.cs & 0b11) == DPL_USER &&
 		task::cur_thread != nullptr &&
 		task::cur_thread->get_need_reschedule())
 	{
+		KDEBUG_ASSERT(cpu->scheduler.owner_cpu);
 		cpu->scheduler.reschedule();
 	}
 

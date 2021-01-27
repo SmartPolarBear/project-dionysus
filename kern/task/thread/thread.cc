@@ -338,7 +338,11 @@ thread::~thread()
 
 void thread::current::exit(error_code code)
 {
-	trap::pushcli();
+	bool intr_disabled = arch_ints_disabled();
+	if (!intr_disabled)
+	{
+		cli();
+	}
 
 	{
 		lock_guard g1{ global_thread_lock };
@@ -363,7 +367,11 @@ void thread::current::exit(error_code code)
 		}
 	}
 
-	trap::popcli();
+	if (!intr_disabled)
+	{
+		sti();
+	}
+
 	cpu->scheduler.reschedule();
 
 	__UNREACHABLE;
