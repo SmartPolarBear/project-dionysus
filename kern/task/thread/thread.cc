@@ -148,7 +148,7 @@ error_code_with_result<task::thread*> thread::create(process* parent,
 
 error_code thread::create_idle()
 {
-	[[maybe_unused]]auto ret = create(nullptr, "idle", idle_routine, nullptr, default_trampoline);
+	[[maybe_unused]]auto ret = create(nullptr, "idle", scheduler::idle, nullptr, default_trampoline);
 	if (has_error(ret))
 	{
 		return get_error_code(ret);
@@ -267,16 +267,6 @@ void thread::finish_dead_transition()
 	}
 
 	delete this;
-}
-
-[[noreturn]] error_code thread::idle_routine(void* arg __UNUSED)
-{
-	for (;;)
-	{
-		cpu->scheduler->yield();
-	}
-
-	__UNREACHABLE; // do not do return -ERROR_SHOULD_NOT_REACH_HERE;
 }
 
 void thread::kill()

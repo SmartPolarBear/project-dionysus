@@ -130,10 +130,7 @@ class thread final
 
 	thread_states state{ thread_states::INITIAL };
 
-
  private:
-	[[noreturn]]static error_code idle_routine(void* arg);
-	static_assert(ktl::Convertible<decltype(idle_routine), routine_type>);
 
 	thread(process* parent, ktl::string_view name);
 
@@ -158,7 +155,6 @@ class thread final
 	uint64_t flags{ 0 };
 
 	uint64_t signals{ 0 };
-
 
 	kbl::list_link<thread, lock::spinlock> run_queue_link{ this };
 	kbl::list_link<thread, lock::spinlock> zombie_queue_link{ this };

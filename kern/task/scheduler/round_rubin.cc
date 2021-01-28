@@ -13,11 +13,9 @@
 
 using namespace ktl::mutex;
 
-size_t task::round_rubin_scheduler_class::called_count = 0;
 
 void task::round_rubin_scheduler_class::enqueue(task::thread* thread)
 {
-
 	if (thread->state == thread::thread_states::DYING)
 	{
 		zombie_queue.push_back(thread);
@@ -55,7 +53,6 @@ task::thread* task::round_rubin_scheduler_class::fetch()
 
 void task::round_rubin_scheduler_class::tick()
 {
-
 	while (!zombie_queue.empty())
 	{
 		auto t = zombie_queue.front_ptr();
@@ -69,5 +66,18 @@ void task::round_rubin_scheduler_class::tick()
 
 task::thread* task::round_rubin_scheduler_class::steal()
 {
+	KDEBUG_ASSERT(global_thread_lock.holding());
+
+	if (run_queue.size() > 1)
+	{
+		auto back = run_queue.back_ptr();
+		run_queue.pop_back();
+		return back;
+	}
+
 	return nullptr;
+}
+task::scheduler_class_base::size_type task::round_rubin_scheduler_class::workload_size() const
+{
+	return run_queue.size();
 }

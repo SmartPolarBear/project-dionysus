@@ -13,9 +13,6 @@ using namespace trap;
 
 // TODO: cpu scheduler ( load balance )
 
-// FIXME: maybe use the intrusive list to fix? another bad situation is memory overwriting
-
-size_t task::scheduler::called_count = 0;
 
 void task::scheduler::reschedule()
 {
@@ -60,7 +57,7 @@ void task::scheduler::schedule()
 		enqueue(cur_thread.get());
 	}
 
-	next = pick_next();
+	next = fetch();
 	if (next != nullptr)
 	{
 		dequeue(next);
@@ -84,7 +81,7 @@ void task::scheduler::handle_timer_tick()
 {
 	lock_guard g1{ global_thread_lock };
 
-	timer_tick(cur_thread.get());
+	tick(cur_thread.get());
 }
 
 void task::scheduler::unblock(task::thread* t)
@@ -117,7 +114,7 @@ void task::scheduler::dequeue(task::thread* t)
 	scheduler_class.dequeue(t);
 }
 
-task::thread* task::scheduler::pick_next()
+task::thread* task::scheduler::fetch()
 {
 	return scheduler_class.fetch();
 }
@@ -127,7 +124,7 @@ void task::scheduler::insert(task::thread* t)
 	enqueue(t);
 }
 
-void task::scheduler::timer_tick(task::thread* t)
+void task::scheduler::tick(task::thread* t)
 {
 	pushcli();
 
@@ -151,3 +148,53 @@ void task::scheduler::timer_tick(task::thread* t)
 
 	popcli();
 }
+
+task::scheduler::size_type task::scheduler::workload_size() const
+{
+	return scheduler_class.workload_size();
+}
+
+error_code task::scheduler::idle(void* arg)
+{
+	for (;;)
+	{
+		auto intr = arch_ints_disabled();
+
+		if (!intr)
+		{
+			cli();
+		}
+
+		{
+			lock_guard g{ global_thread_lock };
+
+			cpu_struct* max_cpu = &valid_cpus[0];
+			for (auto& c:valid_cpus)
+			{
+				if (c.scheduler->workload_size() > max_cpu->scheduler->workload_size() &&
+					cpu.get() != &c)
+				{
+					max_cpu = &c;
+				}
+			}
+
+			cpu->scheduler->enqueue(max_cpu->scheduler->steal());
+		}
+
+		if (!intr)
+		{
+			sti();
+		}
+
+		cpu->scheduler->yield();
+
+	}
+
+	__UNREACHABLE; // do not do return -ERROR_SHOULD_NOT_REACH_HERE;
+}
+
+task::thread* task::scheduler::steal() TA_REQ(global_thread_lock)
+{
+	return scheduler_class.steal();
+}
+

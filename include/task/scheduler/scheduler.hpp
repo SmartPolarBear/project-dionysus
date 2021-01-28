@@ -28,12 +28,11 @@ class scheduler
  public:
 	using scheduler_class_type = round_rubin_scheduler_class;
 	using timer_list_type = kbl::intrusive_list<scheduler_timer, lock::spinlock, &scheduler_timer::link, true, false>;
+	using size_type = size_t;
 
 	friend class thread;
 
  public:
-
-	static size_t called_count;
 
 	scheduler() = delete;
 
@@ -44,8 +43,10 @@ class scheduler
 		: scheduler_class(this),
 		  owner_cpu(cpu)
 	{
-		called_count++;
 	}
+
+	[[noreturn]]static error_code idle(void* arg __UNUSED);
+	static_assert(ktl::Convertible<decltype(idle), task::thread::routine_type>);
 
 	void schedule() TA_REQ(global_thread_lock);
 
@@ -58,12 +59,15 @@ class scheduler
 
 	void handle_timer_tick() TA_EXCL(global_thread_lock, timer_lock);
 
+	[[nodiscard]] size_type workload_size() const;
+
  private:
 
 	void enqueue(thread* t) TA_REQ(global_thread_lock);
 	void dequeue(thread* t) TA_REQ(global_thread_lock);
-	thread* pick_next() TA_REQ(global_thread_lock);
-	void timer_tick(thread* t) TA_REQ(global_thread_lock) TA_EXCL(timer_lock);
+	thread* fetch() TA_REQ(global_thread_lock);
+	thread* steal() TA_REQ(global_thread_lock);
+	void tick(thread* t) TA_REQ(global_thread_lock) TA_EXCL(timer_lock);
 
 	timer_list_type timer_list TA_GUARDED(timer_lock) {};
 

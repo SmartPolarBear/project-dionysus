@@ -9,8 +9,12 @@ class scheduler_class_base
 {
  public:
 	friend class thread;
+
+	using size_type = size_t;
  public:
 	virtual ~scheduler_class_base() = default;
+
+	[[nodiscard]] virtual size_type workload_size() const = 0;
 
 	/// \brief add a thread to the run queue
 	/// \param t
