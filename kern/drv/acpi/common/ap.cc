@@ -70,7 +70,7 @@ constexpr uintptr_t AP_CODE_LOAD_ADDR = 0x7000;
 	size_t code_size = tag->mod_end - tag->mod_start;
 	memmove(code, reinterpret_cast<decltype(code)>(P2V_KERNEL(tag->mod_start)), code_size);
 
-	for (const auto& core : cpus)
+	for (const auto& core : valid_cpus)
 	{
 		if (core.present && core.id != local_apic::get_cpunum())
 		{

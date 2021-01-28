@@ -10,6 +10,8 @@
 
 #include "task/scheduler/scheduler.hpp"
 
+#include "ktl/span.hpp"
+
 struct cpu_struct
 {
 	uint8_t id{ 0 };                // index into cpus[] below
@@ -43,8 +45,9 @@ struct cpu_struct
 
 constexpr size_t CPU_COUNT_LIMIT = 8;
 
-extern cpu_struct cpus[CPU_COUNT_LIMIT];
 extern uint8_t cpu_count;
+extern cpu_struct cpus[CPU_COUNT_LIMIT];
+extern ktl::span<cpu_struct> valid_cpus;
 
 extern cls_item<cpu_struct*, CLS_CPU_STRUCT_PTR> cpu;
 

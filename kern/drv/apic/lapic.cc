@@ -78,7 +78,7 @@ PANIC void local_apic::init_lapic(void)
 // it can be dangerous to call this, getting short-lasting results
 // NOTICE: this can cause even tripple fault
 //          can be highly relavant to lock aquire and release
-size_t local_apic::get_cpunum(void)
+size_t local_apic::get_cpunum()
 {
 	if (read_eflags() & trap::EFLAG_IF)
 	{

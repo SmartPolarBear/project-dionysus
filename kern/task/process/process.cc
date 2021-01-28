@@ -58,10 +58,10 @@ void task::process_init()
 		root_job = get_result(create_ret);
 	}
 
-	for (size_t i = 0; i < cpu_count; i++)
+	for (auto& cpu:valid_cpus)
 	{
 		allocate_checker ck{};
-		cpus[i].scheduler = new(&ck) scheduler{ &cpus[i] };
+		cpu.scheduler = new(&ck) scheduler{ &cpu };
 
 		if (!ck.check())
 		{
@@ -250,8 +250,8 @@ void process::exit(task_return_code code) noexcept
 		kill_all_threads_locked();
 	}
 
-	__UNREACHABLE;
 }
+
 void process::kill(task_return_code code) noexcept
 {
 	bool finish_dying = false;

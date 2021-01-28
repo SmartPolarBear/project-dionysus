@@ -25,7 +25,6 @@ void task::round_rubin_scheduler_class::enqueue(task::thread* thread)
 	else
 	{
 		run_queue.push_back(thread);
-		int a = 0;
 	}
 }
 
@@ -37,7 +36,6 @@ void task::round_rubin_scheduler_class::dequeue(task::thread* thread)
 		&& thread->run_queue_link.prev != &thread->run_queue_link)
 	{
 		run_queue.remove(thread);
-		int a = 0;
 	}
 }
 

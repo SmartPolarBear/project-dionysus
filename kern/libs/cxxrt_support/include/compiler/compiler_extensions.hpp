@@ -162,6 +162,7 @@
 #define __ISCONSTANT(x) __builtin_constant_p(x)
 
 // Assume this branch of code cannot be reached.
+// THIS CAN BE ESPECIALLY DANGEROUS
 #define __UNREACHABLE __builtin_unreachable()
 
 // Get the offset of `field` from the beginning of the struct or class `type`.
