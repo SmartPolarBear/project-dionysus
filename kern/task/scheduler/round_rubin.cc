@@ -39,7 +39,7 @@ void task::round_rubin_scheduler_class::dequeue(task::thread* thread)
 	}
 }
 
-task::thread* task::round_rubin_scheduler_class::pick_next()
+task::thread* task::round_rubin_scheduler_class::fetch()
 {
 
 	if (run_queue.empty())
@@ -53,7 +53,7 @@ task::thread* task::round_rubin_scheduler_class::pick_next()
 	return ret;
 }
 
-void task::round_rubin_scheduler_class::timer_tick()
+void task::round_rubin_scheduler_class::tick()
 {
 
 	while (!zombie_queue.empty())
@@ -65,4 +65,9 @@ void task::round_rubin_scheduler_class::timer_tick()
 	}
 
 	cur_thread->need_reschedule = true;
+}
+
+task::thread* task::round_rubin_scheduler_class::steal()
+{
+	return nullptr;
 }

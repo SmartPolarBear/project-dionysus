@@ -119,7 +119,7 @@ void task::scheduler::dequeue(task::thread* t)
 
 task::thread* task::scheduler::pick_next()
 {
-	return scheduler_class.pick_next();
+	return scheduler_class.fetch();
 }
 
 void task::scheduler::insert(task::thread* t)
@@ -142,7 +142,7 @@ void task::scheduler::timer_tick(task::thread* t)
 
 	if (t != cpu->idle)
 	{
-		scheduler_class.timer_tick();
+		scheduler_class.tick();
 	}
 	else if (t != nullptr)
 	{

@@ -42,6 +42,7 @@ using namespace task;
 using namespace task;
 
 cls_item<process*, CLS_PROC_STRUCT_PTR> cur_proc;
+
 std::shared_ptr<job> root_job;
 
 void task::process_init()

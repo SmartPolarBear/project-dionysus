@@ -14,7 +14,7 @@ class round_rubin_scheduler_class final
 
 	using run_queue_list_type = kbl::intrusive_list<thread, lock::spinlock, &thread::run_queue_link, true, false>;
 	using zombie_queue_list_type = kbl::intrusive_list<thread, lock::spinlock, &thread::zombie_queue_link, true, false>;
-
+	thread* steal() TA_REQ(global_thread_lock) override;
 	static size_t called_count;
 
 	explicit round_rubin_scheduler_class(class scheduler* pa) : parent(pa)
@@ -33,9 +33,9 @@ class round_rubin_scheduler_class final
 
 	void dequeue(thread* thread) TA_REQ(global_thread_lock) final;
 
-	thread* pick_next() TA_REQ(global_thread_lock) final;
+	thread* fetch() TA_REQ(global_thread_lock) final;
 
-	void timer_tick() TA_REQ(global_thread_lock) final;
+	void tick() TA_REQ(global_thread_lock) final;
 
  private:
 	cpu_struct* owner_cpu{ nullptr };
