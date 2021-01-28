@@ -37,6 +37,9 @@ class scheduler
 
 	scheduler() = delete;
 
+	scheduler(const scheduler&) = delete;
+	scheduler& operator=(const scheduler&) = delete;
+
 	explicit scheduler(cpu_struct* cpu)
 		: scheduler_class(cpu, this),
 		  owner_cpu(cpu)

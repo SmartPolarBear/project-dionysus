@@ -21,11 +21,24 @@ void task::scheduler::reschedule()
 {
 	KDEBUG_ASSERT(!global_thread_lock.holding());
 
-	ktl::mutex::lock_guard guard{ global_thread_lock };
+//	ktl::mutex::lock_guard guard{ global_thread_lock };
+	global_thread_lock.lock();
 
 	if (cur_thread->state == thread::thread_states::RUNNING)
 	{
 		cur_thread->state = thread::thread_states::READY;
+	}
+
+	if (!this->owner_cpu)
+	{
+		for (size_t i = 0; cpus[i].scheduler; i++)
+		{
+			kdebug::kdebug_log("*cpu %d:%d\n" + (this != cpus[i].scheduler),
+				i,
+				cpus[i].scheduler->scheduler_class.run_queue.size());
+		}
+
+		int a = 0;
 	}
 
 	schedule();
@@ -57,6 +70,17 @@ void task::scheduler::schedule()
 	if (cur_thread->state == thread::thread_states::READY)
 	{
 		enqueue(cur_thread.get());
+	}
+
+	if (!this->owner_cpu)
+	{
+		for (size_t i = 0; cpus[i].scheduler; i++)
+		{
+			kdebug::kdebug_log("*cpu %d:%d\n" + (this != cpus[i].scheduler),
+				i,
+				cpus[i].scheduler->scheduler_class.run_queue.size());
+		}
+		KDEBUG_GENERALPANIC("FUCK");
 	}
 
 	KDEBUG_ASSERT(this->owner_cpu);
@@ -92,7 +116,7 @@ void task::scheduler::unblock(task::thread* t)
 	// TODO: cpu affinity
 
 	t->state = thread::thread_states::READY;
-	cpu->scheduler.insert(t);
+	cpu->scheduler->insert(t);
 }
 
 void task::scheduler::enqueue(task::thread* t)

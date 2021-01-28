@@ -22,6 +22,7 @@
 
 #include "kbl/lock/spinlock.h"
 #include "kbl/data/pod_list.h"
+#include "kbl/checker/allocate_checker.hpp"
 
 #include "../../libs/basic_io/include/builtin_text_io.hpp"
 
@@ -57,6 +58,16 @@ void task::process_init()
 		root_job = get_result(create_ret);
 	}
 
+	for (size_t i = 0; i < cpu_count; i++)
+	{
+		allocate_checker ck{};
+		cpus[i].scheduler = new(&ck) scheduler{ &cpus[i] };
+
+		if (!ck.check())
+		{
+			KDEBUG_GERNERALPANIC_CODE(ERROR_MEMORY_ALLOC);
+		}
+	}
 }
 
 kbl::integral_atomic<pid_type> process::pid_counter;
@@ -129,7 +140,7 @@ error_code_with_result<ktl::shared_ptr<task::process>> task::process::create(con
 	{
 		lock_guard g{ global_thread_lock };
 
-		cpu->scheduler.unblock(main_thread);
+		cpu->scheduler->unblock(main_thread);
 	}
 
 	proc->add_child_thread(main_thread);

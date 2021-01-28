@@ -10,8 +10,9 @@ class round_rubin_scheduler_class final
 {
  public:
 	friend class thread;
+	friend class scheduler;
+
 	using run_queue_list_type = kbl::intrusive_list<thread, lock::spinlock, &thread::run_queue_link, true, false>;
-//	using run_queue_list_type = ktl::list<thread*>;
 	using zombie_queue_list_type = kbl::intrusive_list<thread, lock::spinlock, &thread::zombie_queue_link, true, false>;
 
 	static size_t called_count;

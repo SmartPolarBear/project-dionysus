@@ -273,7 +273,7 @@ void thread::finish_dead_transition()
 {
 	for (;;)
 	{
-		cpu->scheduler.yield();
+		cpu->scheduler->yield();
 	}
 
 	__UNREACHABLE; // do not do return -ERROR_SHOULD_NOT_REACH_HERE;
@@ -293,7 +293,7 @@ void thread::kill()
 	}
 	// TODO: wakeup
 
-	cpu->scheduler.yield();
+	cpu->scheduler->yield();
 }
 
 void thread::resume()
@@ -372,7 +372,7 @@ void thread::current::exit(error_code code)
 		sti();
 	}
 
-	cpu->scheduler.reschedule();
+	cpu->scheduler->reschedule();
 
 	__UNREACHABLE;
 }

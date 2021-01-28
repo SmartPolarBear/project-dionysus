@@ -23,8 +23,8 @@ struct cpu_struct
 	void* local_fs{ nullptr };
 	void* kernel_gs{ nullptr };
 
-	task::thread* idle;
-	task::scheduler scheduler{ this };
+	task::thread* idle{ nullptr };
+	task::scheduler* scheduler{ nullptr };
 
 	task_state_segment tss{};
 	gdt_table gdt_table{};

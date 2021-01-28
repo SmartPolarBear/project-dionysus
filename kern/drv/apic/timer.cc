@@ -89,7 +89,7 @@ error_code trap_handle_tick([[maybe_unused]] trap::trap_frame info)
 
 		local_apic::write_eoi();
 
-		cpu->scheduler.handle_timer_tick();
+		cpu->scheduler->handle_timer_tick();
 
 	}
 

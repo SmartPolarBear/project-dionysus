@@ -193,8 +193,8 @@ extern "C" void trap_body(trap::trap_frame info)
 		task::cur_thread != nullptr &&
 		task::cur_thread->get_need_reschedule())
 	{
-		KDEBUG_ASSERT(cpu->scheduler.owner_cpu);
-		cpu->scheduler.reschedule();
+		KDEBUG_ASSERT(cpu->scheduler->owner_cpu);
+		cpu->scheduler->reschedule();
 	}
 
 	if (error != ERROR_SUCCESS)

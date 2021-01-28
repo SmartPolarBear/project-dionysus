@@ -50,12 +50,6 @@ task::thread* task::round_rubin_scheduler_class::pick_next()
 //	}
 	if (run_queue.empty())
 	{
-		for (size_t i = 0; i < CPU_COUNT_LIMIT; i++)
-		{
-			kdebug::kdebug_log("*cpu %d:%d\n" + (this->owner_cpu != cpus[i].scheduler.scheduler_class.owner_cpu),
-				i,
-				cpus[i].scheduler.scheduler_class.run_queue.size());
-		}
 		return nullptr;
 	}
 
