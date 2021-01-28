@@ -128,6 +128,9 @@ class thread final
 		return name.data();
 	}
 
+	thread_states state{ thread_states::INITIAL };
+
+
  private:
 	[[noreturn]]static error_code idle_routine(void* arg);
 	static_assert(ktl::Convertible<decltype(idle_routine), routine_type>);
@@ -146,8 +149,6 @@ class thread final
 
 	ktl::string_view name{ "" };
 
-	thread_states state{ thread_states::INITIAL };
-
 	error_code exit_code{ ERROR_SUCCESS };
 
 	bool need_reschedule{ false };
@@ -157,6 +158,7 @@ class thread final
 	uint64_t flags{ 0 };
 
 	uint64_t signals{ 0 };
+
 
 	kbl::list_link<thread, lock::spinlock> run_queue_link{ this };
 	kbl::list_link<thread, lock::spinlock> zombie_queue_link{ this };

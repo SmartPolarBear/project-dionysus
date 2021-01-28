@@ -43,11 +43,7 @@ void task::round_rubin_scheduler_class::dequeue(task::thread* thread)
 
 task::thread* task::round_rubin_scheduler_class::pick_next()
 {
-//	if (run_queue.size_ == 0 && !run_queue.empty())
-//	{
-//		run_queue.head_.next = &run_queue.head_;
-//		run_queue.head_.prev = &run_queue.head_;
-//	}
+
 	if (run_queue.empty())
 	{
 		return nullptr;

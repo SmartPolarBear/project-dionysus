@@ -17,7 +17,7 @@ class round_rubin_scheduler_class final
 
 	static size_t called_count;
 
-	explicit round_rubin_scheduler_class(cpu_struct* cpu, class scheduler* pa) : owner_cpu(cpu), parent(pa)
+	explicit round_rubin_scheduler_class(class scheduler* pa) : parent(pa)
 	{
 		magic = ++called_count;
 	}

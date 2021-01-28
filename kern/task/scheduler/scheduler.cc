@@ -21,29 +21,15 @@ void task::scheduler::reschedule()
 {
 	KDEBUG_ASSERT(!global_thread_lock.holding());
 
-//	ktl::mutex::lock_guard guard{ global_thread_lock };
-	global_thread_lock.lock();
+	ktl::mutex::lock_guard guard{ global_thread_lock };
 
+	// terminate current thread
 	if (cur_thread->state == thread::thread_states::RUNNING)
 	{
 		cur_thread->state = thread::thread_states::READY;
 	}
 
-	if (!this->owner_cpu)
-	{
-		for (size_t i = 0; cpus[i].scheduler; i++)
-		{
-			kdebug::kdebug_log("*cpu %d:%d\n" + (this != cpus[i].scheduler),
-				i,
-				cpus[i].scheduler->scheduler_class.run_queue.size());
-		}
-
-		int a = 0;
-	}
-
-	schedule();
-
-	__UNREACHABLE;
+	this->schedule();
 }
 
 void task::scheduler::yield()
@@ -58,6 +44,8 @@ void task::scheduler::yield()
 
 void task::scheduler::schedule()
 {
+	KDEBUG_ASSERT(this->owner_cpu);
+
 	KDEBUG_ASSERT(!global_thread_list.empty());
 	KDEBUG_ASSERT(global_thread_lock.holding());
 
@@ -72,18 +60,6 @@ void task::scheduler::schedule()
 		enqueue(cur_thread.get());
 	}
 
-	if (!this->owner_cpu)
-	{
-		for (size_t i = 0; cpus[i].scheduler; i++)
-		{
-			kdebug::kdebug_log("*cpu %d:%d\n" + (this != cpus[i].scheduler),
-				i,
-				cpus[i].scheduler->scheduler_class.run_queue.size());
-		}
-		KDEBUG_GENERALPANIC("FUCK");
-	}
-
-	KDEBUG_ASSERT(this->owner_cpu);
 	next = pick_next();
 	if (next != nullptr)
 	{

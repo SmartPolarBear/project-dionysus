@@ -41,7 +41,7 @@ class scheduler
 	scheduler& operator=(const scheduler&) = delete;
 
 	explicit scheduler(cpu_struct* cpu)
-		: scheduler_class(cpu, this),
+		: scheduler_class(this),
 		  owner_cpu(cpu)
 	{
 		called_count++;
@@ -49,7 +49,7 @@ class scheduler
 
 	void schedule() TA_REQ(global_thread_lock);
 
-	[[noreturn]]void reschedule() TA_EXCL(global_thread_lock);
+	void reschedule() TA_EXCL(global_thread_lock);
 
 	void yield() TA_EXCL(global_thread_lock);
 
@@ -57,10 +57,6 @@ class scheduler
 	void insert(thread* t) TA_REQ(global_thread_lock);
 
 	void handle_timer_tick() TA_EXCL(global_thread_lock, timer_lock);
-
-	// FIXME
-	scheduler_class_type scheduler_class{ nullptr, this };
-	cpu_struct* owner_cpu{ nullptr };
 
  private:
 
@@ -71,9 +67,11 @@ class scheduler
 
 	timer_list_type timer_list TA_GUARDED(timer_lock) {};
 
-	mutable lock::spinlock timer_lock{ "scheduler timer" };
+	scheduler_class_type scheduler_class{ this };
 
-	mutable lock::spinlock test{ "fuck!!" };
+	cpu_struct* owner_cpu{ (cpu_struct*)0xdeadbeef };
+
+	mutable lock::spinlock timer_lock{ "scheduler timer" };
 };
 
 }
