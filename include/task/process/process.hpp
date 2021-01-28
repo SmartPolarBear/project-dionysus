@@ -16,6 +16,7 @@
 #include "drivers/apic/traps.h"
 
 extern cls_item<task::process*, CLS_PROC_STRUCT_PTR> cur_proc;
+
 namespace task
 {
 
