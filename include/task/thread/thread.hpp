@@ -19,6 +19,8 @@
 
 #include "drivers/apic/traps.h"
 
+#include <compare>
+
 namespace task
 {
 
@@ -30,6 +32,19 @@ class process;
 
 class kernel_stack;
 class user_stack;
+
+enum class [[clang::enum_extensibility(closed)]] cpu_affinity_type
+{
+	SOFT, HARD
+};
+
+struct cpu_affinity final
+{
+	cpu_num_type cpu;
+	cpu_affinity_type type;
+
+	auto operator<=>(const cpu_affinity&) const = default;
+};
 
 class thread final
 	: object::dispatcher<thread, 0>
@@ -57,7 +72,8 @@ class thread final
 	{
 		FLAG_DETACHED = 0b1,
 		FLAG_IDLE = 0b10,
-		FLAG_DEFERRED_FREE = 0b100,
+		FLAG_INIT = 0b100,
+		FLAG_DEFERRED_FREE = 0b1000,
 	};
 
 	enum [[clang::flag_enum, clang::enum_extensibility(open)]] thread_signals : uint64_t
@@ -82,7 +98,8 @@ class thread final
 		ktl::string_view name,
 		routine_type routine,
 		void* arg,
-		trampoline_type trampoline = default_trampoline);
+		trampoline_type trampoline = default_trampoline,
+		cpu_affinity aff = cpu_affinity{ CPU_NUM_INVALID, cpu_affinity_type::SOFT });
 
 	[[nodiscard]]static error_code create_idle();
  public:
@@ -101,6 +118,16 @@ class thread final
 	[[nodiscard]] bool is_user_thread() const
 	{
 		return parent != nullptr;
+	}
+
+	[[nodiscard]] uint64_t get_flags() const
+	{
+		return flags;
+	}
+
+	void set_flags(uint64_t fl)
+	{
+		flags = fl;
 	}
 
 	void kill();
@@ -132,7 +159,7 @@ class thread final
 
  private:
 
-	thread(process* parent, ktl::string_view name);
+	thread(process* parent, ktl::string_view name, cpu_affinity affinity);
 
 	void remove_from_lists() TA_REQ(global_thread_lock);
 
@@ -151,6 +178,8 @@ class thread final
 	bool need_reschedule{ false };
 
 	bool critical{ false };
+
+	cpu_affinity affinity{ CPU_NUM_INVALID, cpu_affinity_type::SOFT };
 
 	uint64_t flags{ 0 };
 

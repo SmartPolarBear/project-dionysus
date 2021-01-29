@@ -57,9 +57,20 @@ class scheduler
 	void unblock(thread* t) TA_REQ(global_thread_lock);
 	void insert(thread* t) TA_REQ(global_thread_lock);
 
-	void handle_timer_tick() TA_EXCL(global_thread_lock, timer_lock);
+	void timer_tick_handle() TA_EXCL(global_thread_lock, timer_lock);
 
-	[[nodiscard]] size_type workload_size() const;
+ public:
+
+	struct current
+	{
+		static void reschedule() TA_EXCL(global_thread_lock);
+
+		static void yield() TA_EXCL(global_thread_lock);
+
+		static void unblock(thread* t) TA_REQ(global_thread_lock);
+
+		static void insert(thread* t) TA_REQ(global_thread_lock);
+	};
 
  private:
 
@@ -68,6 +79,7 @@ class scheduler
 	thread* fetch() TA_REQ(global_thread_lock);
 	thread* steal() TA_REQ(global_thread_lock);
 	void tick(thread* t) TA_REQ(global_thread_lock) TA_EXCL(timer_lock);
+	[[nodiscard]] size_type workload_size() const TA_REQ(global_thread_lock)  ;
 
 	timer_list_type timer_list TA_GUARDED(timer_lock) {};
 

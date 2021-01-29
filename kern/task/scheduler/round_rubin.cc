@@ -70,14 +70,36 @@ task::thread* task::round_rubin_scheduler_class::steal()
 {
 	KDEBUG_ASSERT(global_thread_lock.holding());
 
-	if (run_queue.size() > 1)
+	if (!run_queue.empty())
 	{
 		for (auto& t:run_queue | reversed)
 		{
-			if (cur_thread.get() != &t && t.state == thread::thread_states::READY)
+			if (cur_thread.get() != &t &&
+				t.state == thread::thread_states::READY &&
+				(t.flags & thread::thread_flags::FLAG_IDLE) != 0 &&
+				(t.flags & thread::thread_flags::FLAG_INIT) != 0)
 			{
-				run_queue.remove(t);
-				return &t;
+				if (t.affinity.type == cpu_affinity_type::SOFT)
+				{
+					run_queue.remove(t);
+					return &t;
+				}
+			}
+		}
+
+		// No soft-affinity thread available, we use hard
+		for (auto& t:run_queue | reversed)
+		{
+			if (cur_thread.get() != &t &&
+				t.state == thread::thread_states::READY &&
+				(t.flags & thread::thread_flags::FLAG_IDLE) != 0 &&
+				(t.flags & thread::thread_flags::FLAG_INIT) != 0)
+			{
+				if (t.affinity.type == cpu_affinity_type::HARD)
+				{
+					run_queue.remove(t);
+					return &t;
+				}
 			}
 		}
 	}

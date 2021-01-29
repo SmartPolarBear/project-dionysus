@@ -107,10 +107,11 @@ error_code_with_result<task::thread*> thread::create(process* parent,
 	ktl::string_view name,
 	routine_type routine,
 	void* arg,
-	trampoline_type trampoline)
+	trampoline_type trampoline,
+	cpu_affinity aff)
 {
 	kbl::allocate_checker ck{};
-	auto ret = new(&ck) thread{ parent, name };
+	auto ret = new(&ck) thread{ parent, name, aff };
 
 	if (!ck.check())
 	{
@@ -148,7 +149,9 @@ error_code_with_result<task::thread*> thread::create(process* parent,
 
 error_code thread::create_idle()
 {
-	[[maybe_unused]]auto ret = create(nullptr, "idle", scheduler::idle, nullptr, default_trampoline);
+	[[maybe_unused]]auto ret = create(nullptr, "idle", scheduler::idle, nullptr, default_trampoline,
+		cpu_affinity{ cpu->id, cpu_affinity_type::HARD });
+	
 	if (has_error(ret))
 	{
 		return get_error_code(ret);
@@ -163,6 +166,7 @@ error_code thread::create_idle()
 	th->need_reschedule = true;
 
 	cpu->idle = th;
+
 	cur_thread = cpu->idle;
 
 	return ERROR_SUCCESS;
@@ -235,10 +239,10 @@ void thread::switch_to() TA_REQ(global_thread_lock)
 	}
 }
 
-thread::thread(process* prt,
-	ktl::string_view nm)
+thread::thread(process* prt, ktl::string_view nm, cpu_affinity aff)
 	: parent{ prt },
-	  name{ nm }
+	  name{ nm },
+	  affinity{ aff }
 {
 }
 

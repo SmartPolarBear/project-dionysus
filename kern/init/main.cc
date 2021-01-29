@@ -167,8 +167,11 @@ void ap::all_processor_main()
 	{
 		ktl::mutex::lock_guard g{ task::global_thread_lock };
 
-		cpu->scheduler->unblock(get_result(ret));
+		auto init_thread = get_result(ret);
+		init_thread->set_flags(init_thread->get_flags() | task::thread::thread_flags::FLAG_INIT);
+		cpu->scheduler->unblock(init_thread);
 	}
+
 
 	{
 		ktl::mutex::lock_guard g{ task::global_thread_lock };

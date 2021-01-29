@@ -37,10 +37,10 @@ class TA_CAP("mutex") spinlock final
 	TA_ACQ();
 
 	void unlock() noexcept final
-	TA_TRY_ACQ(false);
+	TA_REL();
 
 	bool try_lock() noexcept final
-	TA_REL();
+	TA_TRY_ACQ(false);
 
 	bool holding() noexcept final;
 

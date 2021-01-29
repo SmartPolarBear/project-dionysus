@@ -77,7 +77,7 @@ void task::scheduler::schedule()
 
 }
 
-void task::scheduler::handle_timer_tick()
+void task::scheduler::timer_tick_handle()
 {
 	lock_guard g1{ global_thread_lock };
 
@@ -126,6 +126,7 @@ void task::scheduler::insert(task::thread* t)
 
 void task::scheduler::tick(task::thread* t)
 {
+	KDEBUG_ASSERT(global_thread_lock.holding());
 	pushcli();
 
 	{
@@ -134,6 +135,21 @@ void task::scheduler::tick(task::thread* t)
 		if (!timer_list.empty())
 		{
 			// TODO
+		}
+	}
+
+	// Push migrating approach to load balancing
+	cpu_struct* max_cpu = &(*valid_cpus.begin()), * min_cpu = &(*valid_cpus.begin());
+	for (auto& c:valid_cpus)
+	{
+		if (c.scheduler->workload_size() > max_cpu->scheduler->workload_size())
+		{
+			max_cpu = &c;
+		}
+
+		if (c.scheduler->workload_size() < min_cpu->scheduler->workload_size())
+		{
+			min_cpu = &c;
 		}
 	}
 
@@ -147,6 +163,17 @@ void task::scheduler::tick(task::thread* t)
 	}
 
 	popcli();
+
+	if (max_cpu != min_cpu && max_cpu->scheduler->workload_size() > min_cpu->scheduler->workload_size())
+	{
+		if (auto victim = max_cpu->scheduler->steal();victim != nullptr)
+		{
+			min_cpu->scheduler->enqueue(victim);
+
+			global_thread_lock.unlock();
+			min_cpu->scheduler->reschedule();
+		}
+	}
 }
 
 task::scheduler::size_type task::scheduler::workload_size() const
@@ -156,8 +183,12 @@ task::scheduler::size_type task::scheduler::workload_size() const
 
 error_code task::scheduler::idle(void* arg)
 {
+	kdebug::kdebug_log("idle");
+
 	for (;;)
 	{
+
+		// Pull migration approach to load balancing
 		auto intr = arch_ints_disabled();
 
 		if (!intr)
@@ -189,11 +220,11 @@ error_code task::scheduler::idle(void* arg)
 			sti();
 		}
 
-		cpu->scheduler->yield();
+		cpu->scheduler->reschedule();
 
 	}
 
-	__UNREACHABLE; // do not do return -ERROR_SHOULD_NOT_REACH_HERE;
+	return -ERROR_SHOULD_NOT_REACH_HERE;
 }
 
 task::thread* task::scheduler::steal() TA_REQ(global_thread_lock)
@@ -201,3 +232,22 @@ task::thread* task::scheduler::steal() TA_REQ(global_thread_lock)
 	return scheduler_class.steal();
 }
 
+void task::scheduler::current::reschedule() TA_EXCL(global_thread_lock)
+{
+
+}
+
+void task::scheduler::current::yield() TA_EXCL(global_thread_lock)
+{
+
+}
+
+void task::scheduler::current::unblock(task::thread* t) TA_REQ(global_thread_lock)
+{
+
+}
+
+void task::scheduler::current::insert(task::thread* t) TA_REQ(global_thread_lock)
+{
+
+}
