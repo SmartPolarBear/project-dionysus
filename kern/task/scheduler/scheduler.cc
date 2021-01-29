@@ -178,7 +178,10 @@ error_code task::scheduler::idle(void* arg)
 				}
 			}
 
-			cpu->scheduler->enqueue(max_cpu->scheduler->steal());
+			if (auto t = max_cpu->scheduler->steal();t != nullptr)
+			{
+				cpu->scheduler->enqueue(t);
+			}
 		}
 
 		if (!intr)

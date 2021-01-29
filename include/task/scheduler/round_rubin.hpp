@@ -30,7 +30,7 @@ class round_rubin_scheduler_class final
 
 	void enqueue(thread* thread) TA_REQ(global_thread_lock) final;
 
-	size_type workload_size() const override;
+	size_type workload_size() const TA_REQ(global_thread_lock) final;
 
 	void dequeue(thread* thread) TA_REQ(global_thread_lock) final;
 

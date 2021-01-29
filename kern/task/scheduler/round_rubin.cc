@@ -7,12 +7,14 @@
 
 #include "system/scheduler.h"
 
-#include "ktl/mutex/lock_guard.hpp"
+#include "kbl/data/utility.hpp"
 
+#include "ktl/mutex/lock_guard.hpp"
 #include "ktl/algorithm.hpp"
 
 using namespace ktl::mutex;
 
+using namespace kbl;
 
 void task::round_rubin_scheduler_class::enqueue(task::thread* thread)
 {
@@ -70,9 +72,14 @@ task::thread* task::round_rubin_scheduler_class::steal()
 
 	if (run_queue.size() > 1)
 	{
-		auto back = run_queue.back_ptr();
-		run_queue.pop_back();
-		return back;
+		for (auto& t:run_queue | reversed)
+		{
+			if (cur_thread.get() != &t && t.state == thread::thread_states::READY)
+			{
+				run_queue.remove(t);
+				return &t;
+			}
+		}
 	}
 
 	return nullptr;
