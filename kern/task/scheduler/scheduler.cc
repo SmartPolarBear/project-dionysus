@@ -80,16 +80,15 @@ void task::scheduler::schedule()
 void task::scheduler::timer_tick_handle()
 {
 	lock_guard g1{ global_thread_lock };
+	lock_guard g2{ timer_lock };
 
 	tick(cur_thread.get());
 }
 
 void task::scheduler::unblock(task::thread* t)
 {
-	// TODO: cpu affinity
-
 	t->state = thread::thread_states::READY;
-	cpu->scheduler->insert(t);
+	insert(t);
 }
 
 void task::scheduler::enqueue(task::thread* t)
@@ -121,6 +120,8 @@ task::thread* task::scheduler::fetch()
 
 void task::scheduler::insert(task::thread* t)
 {
+	lock_guard g{ global_thread_lock };
+
 	enqueue(t);
 }
 
@@ -130,7 +131,6 @@ void task::scheduler::tick(task::thread* t)
 	pushcli();
 
 	{
-		lock_guard g2{ timer_lock };
 
 		if (!timer_list.empty())
 		{
@@ -139,19 +139,27 @@ void task::scheduler::tick(task::thread* t)
 	}
 
 	// Push migrating approach to load balancing
-	cpu_struct* max_cpu = &(*valid_cpus.begin()), * min_cpu = &(*valid_cpus.begin());
-	for (auto& c:valid_cpus)
-	{
-		if (c.scheduler->workload_size() > max_cpu->scheduler->workload_size())
-		{
-			max_cpu = &c;
-		}
-
-		if (c.scheduler->workload_size() < min_cpu->scheduler->workload_size())
-		{
-			min_cpu = &c;
-		}
-	}
+//	cpu_struct* max_cpu = &(*valid_cpus.begin()), * min_cpu = &(*valid_cpus.begin());
+//	for (auto& c:valid_cpus)
+//	{
+//		if (c.scheduler->workload_size() > max_cpu->scheduler->workload_size())
+//		{
+//			max_cpu = &c;
+//		}
+//
+//		if (c.scheduler->workload_size() < min_cpu->scheduler->workload_size())
+//		{
+//			min_cpu = &c;
+//		}
+//	}
+//
+//	if (max_cpu != min_cpu && max_cpu->scheduler->workload_size() > min_cpu->scheduler->workload_size())
+//	{
+//		if (auto victim = max_cpu->scheduler->steal();victim != nullptr)
+//		{
+//			min_cpu->scheduler->enqueue(victim);
+//		}
+//	}
 
 	if (t != cpu->idle)
 	{
@@ -163,21 +171,11 @@ void task::scheduler::tick(task::thread* t)
 	}
 
 	popcli();
-
-	if (max_cpu != min_cpu && max_cpu->scheduler->workload_size() > min_cpu->scheduler->workload_size())
-	{
-		if (auto victim = max_cpu->scheduler->steal();victim != nullptr)
-		{
-			min_cpu->scheduler->enqueue(victim);
-
-			global_thread_lock.unlock();
-			min_cpu->scheduler->reschedule();
-		}
-	}
 }
 
 task::scheduler::size_type task::scheduler::workload_size() const
 {
+	lock_guard g{ global_thread_lock };
 	return scheduler_class.workload_size();
 }
 
@@ -196,23 +194,19 @@ error_code task::scheduler::idle(void* arg)
 			cli();
 		}
 
+		cpu_struct* max_cpu = &valid_cpus[0];
+		for (auto& c:valid_cpus)
 		{
-			lock_guard g{ global_thread_lock };
-
-			cpu_struct* max_cpu = &valid_cpus[0];
-			for (auto& c:valid_cpus)
+			if (c.scheduler->workload_size() > max_cpu->scheduler->workload_size() &&
+				cpu.get() != &c)
 			{
-				if (c.scheduler->workload_size() > max_cpu->scheduler->workload_size() &&
-					cpu.get() != &c)
-				{
-					max_cpu = &c;
-				}
+				max_cpu = &c;
 			}
+		}
 
-			if (auto t = max_cpu->scheduler->steal();t != nullptr)
-			{
-				cpu->scheduler->enqueue(t);
-			}
+		if (auto t = max_cpu->scheduler->steal();t != nullptr)
+		{
+			scheduler::current::insert(t);
 		}
 
 		if (!intr)
@@ -220,34 +214,63 @@ error_code task::scheduler::idle(void* arg)
 			sti();
 		}
 
-		cpu->scheduler->reschedule();
-
+		scheduler::current::reschedule();
 	}
 
 	return -ERROR_SHOULD_NOT_REACH_HERE;
 }
 
-task::thread* task::scheduler::steal() TA_REQ(global_thread_lock)
+task::thread* task::scheduler::steal()
 {
+	lock_guard g{ global_thread_lock };
 	return scheduler_class.steal();
 }
 
-void task::scheduler::current::reschedule() TA_EXCL(global_thread_lock)
+void task::scheduler::current::reschedule()
 {
-
+	cpu->scheduler->reschedule();
 }
 
-void task::scheduler::current::yield() TA_EXCL(global_thread_lock)
+void task::scheduler::current::yield()
 {
-
+	cpu->scheduler->yield();
 }
 
-void task::scheduler::current::unblock(task::thread* t) TA_REQ(global_thread_lock)
+void task::scheduler::current::unblock(task::thread* t)
 {
 
+	if (t->affinity.cpu != CPU_NUM_INVALID)
+	{
+		KDEBUG_ASSERT(t->affinity.cpu < valid_cpus.size());
+		valid_cpus[t->affinity.cpu].scheduler->unblock(t);
+	}
+
+	cpu->scheduler->unblock(t);
 }
 
-void task::scheduler::current::insert(task::thread* t) TA_REQ(global_thread_lock)
+void task::scheduler::current::insert(task::thread* t)
 {
+	if (t->affinity.cpu != CPU_NUM_INVALID)
+	{
+		KDEBUG_ASSERT(t->affinity.cpu < valid_cpus.size());
+		valid_cpus[t->affinity.cpu].scheduler->insert(t);
+	}
+	cpu->scheduler->insert(t);
+}
 
+void task::scheduler::current::timer_tick_handle()
+{
+	cpu->scheduler->timer_tick_handle();
+}
+
+void task::scheduler::current::schedule()
+{
+	lock_guard g{ global_thread_lock };
+
+	cpu->scheduler->schedule();
+}
+
+task::scheduler::size_type task::scheduler::current::workload_size() TA_EXCL(global_thread_lock)
+{
+	return cpu->scheduler->workload_size();
 }

@@ -76,8 +76,8 @@ task::thread* task::round_rubin_scheduler_class::steal()
 		{
 			if (cur_thread.get() != &t &&
 				t.state == thread::thread_states::READY &&
-				(t.flags & thread::thread_flags::FLAG_IDLE) != 0 &&
-				(t.flags & thread::thread_flags::FLAG_INIT) != 0)
+				(t.flags & thread::thread_flags::FLAG_IDLE) == 0 &&
+				(t.flags & thread::thread_flags::FLAG_INIT) == 0)
 			{
 				if (t.affinity.type == cpu_affinity_type::SOFT)
 				{
@@ -92,8 +92,8 @@ task::thread* task::round_rubin_scheduler_class::steal()
 		{
 			if (cur_thread.get() != &t &&
 				t.state == thread::thread_states::READY &&
-				(t.flags & thread::thread_flags::FLAG_IDLE) != 0 &&
-				(t.flags & thread::thread_flags::FLAG_INIT) != 0)
+				(t.flags & thread::thread_flags::FLAG_IDLE) == 0 &&
+				(t.flags & thread::thread_flags::FLAG_INIT) == 0)
 			{
 				if (t.affinity.type == cpu_affinity_type::HARD)
 				{

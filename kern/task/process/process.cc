@@ -138,9 +138,8 @@ error_code_with_result<ktl::shared_ptr<task::process>> task::process::create(con
 	main_thread->critical = true;
 
 	{
-		lock_guard g{ global_thread_lock };
 
-		cpu->scheduler->unblock(main_thread);
+		scheduler::current::unblock(main_thread);
 	}
 
 	proc->add_child_thread(main_thread);

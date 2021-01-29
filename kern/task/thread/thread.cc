@@ -151,7 +151,7 @@ error_code thread::create_idle()
 {
 	[[maybe_unused]]auto ret = create(nullptr, "idle", scheduler::idle, nullptr, default_trampoline,
 		cpu_affinity{ cpu->id, cpu_affinity_type::HARD });
-	
+
 	if (has_error(ret))
 	{
 		return get_error_code(ret);
@@ -182,7 +182,7 @@ vmm::mm_struct* task::thread::get_mm()
 	return nullptr;
 }
 
-void thread::default_trampoline()
+void thread::default_trampoline() TA_REQ(global_thread_lock)
 {
 	global_thread_lock.unlock();
 
@@ -287,7 +287,7 @@ void thread::kill()
 	}
 	// TODO: wakeup
 
-	cpu->scheduler->yield();
+	scheduler::current::yield();
 }
 
 void thread::resume()
@@ -366,7 +366,7 @@ void thread::current::exit(error_code code)
 		sti();
 	}
 
-	cpu->scheduler->reschedule();
+	scheduler::current::reschedule();
 
 	__UNREACHABLE;
 }

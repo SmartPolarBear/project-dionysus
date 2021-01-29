@@ -45,7 +45,7 @@ class scheduler
 	{
 	}
 
-	[[noreturn]]static error_code idle(void* arg __UNUSED);
+	[[noreturn]]  static error_code idle(void* arg __UNUSED);
 	static_assert(ktl::Convertible<decltype(idle), task::thread::routine_type>);
 
 	void schedule() TA_REQ(global_thread_lock);
@@ -54,22 +54,26 @@ class scheduler
 
 	void yield() TA_EXCL(global_thread_lock);
 
-	void unblock(thread* t) TA_REQ(global_thread_lock);
-	void insert(thread* t) TA_REQ(global_thread_lock);
-
-	void timer_tick_handle() TA_EXCL(global_thread_lock, timer_lock);
+	void unblock(thread* t) TA_EXCL(global_thread_lock);
+	void insert(thread* t) TA_EXCL(global_thread_lock);
 
  public:
 
 	struct current
 	{
+		static void schedule() TA_EXCL(global_thread_lock);
+
 		static void reschedule() TA_EXCL(global_thread_lock);
 
 		static void yield() TA_EXCL(global_thread_lock);
 
-		static void unblock(thread* t) TA_REQ(global_thread_lock);
+		static void unblock(thread* t) TA_EXCL(global_thread_lock);
 
-		static void insert(thread* t) TA_REQ(global_thread_lock);
+		static void insert(thread* t) TA_EXCL(global_thread_lock);
+
+		static size_type workload_size() TA_EXCL(global_thread_lock);
+
+		static void timer_tick_handle() TA_EXCL(global_thread_lock, timer_lock);
 	};
 
  private:
@@ -77,9 +81,12 @@ class scheduler
 	void enqueue(thread* t) TA_REQ(global_thread_lock);
 	void dequeue(thread* t) TA_REQ(global_thread_lock);
 	thread* fetch() TA_REQ(global_thread_lock);
-	thread* steal() TA_REQ(global_thread_lock);
-	void tick(thread* t) TA_REQ(global_thread_lock) TA_EXCL(timer_lock);
-	[[nodiscard]] size_type workload_size() const TA_REQ(global_thread_lock)  ;
+	thread* steal() TA_EXCL(global_thread_lock);
+	void tick(thread* t)  TA_REQ(global_thread_lock, timer_lock);
+
+	[[nodiscard]] size_type workload_size() const TA_EXCL(global_thread_lock);
+
+	void timer_tick_handle() TA_EXCL(global_thread_lock, timer_lock);
 
 	timer_list_type timer_list TA_GUARDED(timer_lock) {};
 
