@@ -71,8 +71,6 @@ class scheduler
 
 		static void insert(thread* t) TA_EXCL(global_thread_lock);
 
-		static size_type workload_size() TA_EXCL(global_thread_lock);
-
 		static void timer_tick_handle() TA_EXCL(global_thread_lock, timer_lock);
 	};
 
@@ -81,10 +79,10 @@ class scheduler
 	void enqueue(thread* t) TA_REQ(global_thread_lock);
 	void dequeue(thread* t) TA_REQ(global_thread_lock);
 	thread* fetch() TA_REQ(global_thread_lock);
-	thread* steal() TA_EXCL(global_thread_lock);
+	thread* steal() TA_REQ(global_thread_lock);
 	void tick(thread* t)  TA_REQ(global_thread_lock, timer_lock);
 
-	[[nodiscard]] size_type workload_size() const TA_EXCL(global_thread_lock);
+	[[nodiscard]] size_type workload_size() const TA_REQ(global_thread_lock);
 
 	void timer_tick_handle() TA_EXCL(global_thread_lock, timer_lock);
 

@@ -172,7 +172,7 @@ void ap::all_processor_main()
 	}
 
 	{
-		task::scheduler::current::schedule();
+		cpu->scheduler->idle(nullptr);
 	}
 
 	for (;;);
