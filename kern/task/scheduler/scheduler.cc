@@ -178,7 +178,7 @@ task::scheduler::size_type task::scheduler::workload_size() const
 	return scheduler_class.workload_size();
 }
 
-error_code task::scheduler::idle(void* arg)
+error_code task::scheduler::idle(void* arg __UNUSED) TA_NO_THREAD_SAFETY_ANALYSIS
 {
 	for (;;)
 	{

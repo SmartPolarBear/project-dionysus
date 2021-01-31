@@ -130,7 +130,7 @@ class thread final
 		flags = fl;
 	}
 
-	void kill();
+	void kill() TA_REQ(!global_thread_lock);
 
 	void resume();
 
@@ -145,7 +145,7 @@ class thread final
 
 	/// \brief forcibly remove the thread from global thread list and free the thread
 	[[deprecated("We rarely force terminate a thread using this."), maybe_unused]]
-	void forget();
+	void forget() TA_REQ(!global_thread_lock);
 
 	// FIXME: should be private
 	void switch_to() TA_REQ(global_thread_lock);
