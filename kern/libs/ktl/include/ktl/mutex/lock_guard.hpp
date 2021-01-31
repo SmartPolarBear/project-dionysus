@@ -99,7 +99,7 @@ class TA_SCOPED_CAP lock_guard //<TMutex>
 		m->try_lock();
 	}
 
-	[[nodiscard]]explicit lock_guard(adopt_lock_tag, mutex_type& _m) noexcept TA_ACQ(_m)
+	[[nodiscard]]explicit lock_guard(adopt_lock_tag, mutex_type& _m) noexcept TA_REQ(_m)
 		: m(&_m)
 	{
 	}

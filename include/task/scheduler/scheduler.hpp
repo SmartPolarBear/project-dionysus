@@ -72,6 +72,8 @@ class scheduler
 		static void insert(thread* t) TA_EXCL(global_thread_lock);
 
 		static void timer_tick_handle() TA_EXCL(global_thread_lock, timer_lock);
+
+		[[noreturn]]static void enter() TA_REQ(!global_thread_lock, !timer_lock);
 	};
 
  private:
@@ -84,7 +86,7 @@ class scheduler
 
 	[[nodiscard]] size_type workload_size() const TA_REQ(global_thread_lock);
 
-	void timer_tick_handle() TA_EXCL(global_thread_lock, timer_lock);
+	void timer_tick_handle() TA_REQ(!global_thread_lock, !timer_lock);
 
 	timer_list_type timer_list TA_GUARDED(timer_lock) {};
 

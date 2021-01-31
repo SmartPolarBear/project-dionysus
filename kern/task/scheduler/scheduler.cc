@@ -272,3 +272,9 @@ void task::scheduler::current::schedule()
 
 	cpu->scheduler->schedule();
 }
+
+void task::scheduler::current::enter()
+{
+	// enter scheduler by directly calling the idle routine
+	cpu->scheduler->idle(nullptr);
+}

@@ -40,9 +40,16 @@ class TA_CAP("mutex") spinlock final
 	TA_REL();
 
 	bool try_lock() noexcept final
-	TA_TRY_ACQ(false);
+	TA_TRY_ACQ(true);
 
-	bool holding() noexcept final;
+	bool holding() noexcept final
+	TA_ASSERT(this);
+
+	// for negative capabilities
+	const spinlock& operator!() const
+	{
+		return *this;
+	}
 
  private:
 	spinlock_struct spinlock_{};

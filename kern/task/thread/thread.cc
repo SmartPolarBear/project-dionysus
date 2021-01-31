@@ -182,7 +182,7 @@ vmm::mm_struct* task::thread::get_mm()
 	return nullptr;
 }
 
-void thread::default_trampoline() TA_REQ(global_thread_lock)
+void thread::default_trampoline() TA_NO_THREAD_SAFETY_ANALYSIS
 {
 	global_thread_lock.unlock();
 
