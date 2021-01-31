@@ -310,8 +310,6 @@ void process::set_status_locked(process::Status st) noexcept TA_REQ(lock)
 
 void process::kill_all_threads_locked() noexcept TA_REQ(lock)
 {
-	lock_guard g{ global_thread_lock };
-
 	for (auto& t:threads)
 	{
 		t->kill();

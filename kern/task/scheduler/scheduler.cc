@@ -82,6 +82,7 @@ void task::scheduler::timer_tick_handle()
 	lock_guard g1{ global_thread_lock };
 	lock_guard g2{ timer_lock };
 
+	check_timers();
 	tick(cur_thread.get());
 }
 
@@ -225,6 +226,69 @@ task::thread* task::scheduler::steal()
 	return scheduler_class.steal(cpu.get());
 }
 
+void task::scheduler::add_timer(task::scheduler_timer* timer)
+{
+	lock_guard g{ timer_lock };
+
+	auto iter = timer_list.begin();
+	while (iter != timer_list.end())
+	{
+		if (timer->expires < iter->expires)
+		{
+			iter->expires -= timer->expires;
+			break;
+		}
+
+		timer->expires -= iter->expires;
+		iter++;
+	}
+
+	if (iter != timer_list.begin())iter--;
+
+	timer_list.insert(iter, timer);
+}
+
+void task::scheduler::remove_timer(task::scheduler_timer* timer)
+{
+	lock_guard g{ timer_lock };
+
+	if (timer_list.empty())return;
+
+	if (timer->expires != 0)
+	{
+		auto next = timer->link.next->parent;
+		if (next != nullptr)
+		{
+			next->expires += timer->expires;
+		}
+	}
+
+	timer_list.remove(timer);
+}
+
+void task::scheduler::check_timers()
+{
+	if (timer_list.empty())return;
+
+	auto timer = timer_list.front_ptr();
+	--timer->expires;
+
+	while (!timer->expires)
+	{
+		auto next = timer->link.next->parent;
+
+		auto t = timer->owner;
+
+		// TODO: status checking?
+
+		unblock(t);
+
+		remove_timer(timer);
+		if (!next) break;
+		timer = next;
+	}
+}
+
 void task::scheduler::current::reschedule()
 {
 	cpu->scheduler->reschedule();
@@ -260,13 +324,6 @@ void task::scheduler::current::insert(task::thread* t)
 void task::scheduler::current::timer_tick_handle()
 {
 	cpu->scheduler->timer_tick_handle();
-}
-
-void task::scheduler::current::schedule()
-{
-	lock_guard g{ global_thread_lock };
-
-	cpu->scheduler->schedule();
 }
 
 void task::scheduler::current::enter()

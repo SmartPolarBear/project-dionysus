@@ -17,7 +17,7 @@ namespace task
 
 struct scheduler_timer
 {
-	size_t expires{ 0 };
+	int64_t expires{ 0 };
 	thread* owner{ nullptr };
 
 	kbl::list_link<scheduler_timer, lock::spinlock> link{ this };
@@ -57,12 +57,14 @@ class scheduler
 	void unblock(thread* t) TA_EXCL(global_thread_lock);
 	void insert(thread* t) TA_EXCL(global_thread_lock);
 
+	void add_timer(scheduler_timer* timer);
+
+	void remove_timer(scheduler_timer* timer);
+
  public:
 
 	struct current
 	{
-		static void schedule() TA_EXCL(global_thread_lock);
-
 		static void reschedule() TA_EXCL(global_thread_lock);
 
 		static void yield() TA_REQ(!global_thread_lock);
@@ -83,16 +85,17 @@ class scheduler
 	thread* fetch() TA_REQ(global_thread_lock);
 	thread* steal() TA_REQ(global_thread_lock);
 	void tick(thread* t)  TA_REQ(global_thread_lock, timer_lock);
+	void check_timers() TA_REQ(timer_lock);
 
 	[[nodiscard]] size_type workload_size() const TA_REQ(global_thread_lock);
 
 	void timer_tick_handle() TA_REQ(!global_thread_lock, !timer_lock);
 
-	timer_list_type timer_list TA_GUARDED(timer_lock) {};
-
 	scheduler_class_type scheduler_class{ this };
 
 	cpu_struct* owner_cpu{ (cpu_struct*)0xdeadbeef };
+
+	timer_list_type timer_list TA_GUARDED(timer_lock) {};
 
 	mutable lock::spinlock timer_lock{ "scheduler timer" };
 };
