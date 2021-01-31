@@ -64,6 +64,8 @@ class thread final
 		READY,
 		RUNNING,
 		SUSPENDED,
+		BLOCKED,
+		BLOCKED_READ_LOCK,
 		DYING,
 		DEAD,
 	};
@@ -78,7 +80,8 @@ class thread final
 
 	enum [[clang::flag_enum, clang::enum_extensibility(open)]] thread_signals : uint64_t
 	{
-		SIGNAL_KILLED
+		SIGNAL_KILLED,
+		SIGNAL_SUSPEND
 	};
 
 	struct current
@@ -134,14 +137,18 @@ class thread final
 
 	void resume();
 
-	void suspend();
+	error_code suspend();
 
 	error_code detach();
+
+	error_code detach_and_resume();
 
 	/// \brief wait until the thread complete
 	/// \param out_err_code the exit code of the thread
 	/// \return whether the joining is succeeded.
 	error_code join(error_code* out_err_code);
+
+	error_code join(error_code* out_err_code, time_type deadline);
 
 	/// \brief forcibly remove the thread from global thread list and free the thread
 	[[deprecated("We rarely force terminate a thread using this."), maybe_unused]]
@@ -153,6 +160,11 @@ class thread final
 	const char* get_name_raw() const
 	{
 		return name.data();
+	}
+
+	bool is_idle() const
+	{
+		return flags & FLAG_IDLE;
 	}
 
 	thread_states state{ thread_states::INITIAL };

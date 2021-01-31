@@ -69,7 +69,7 @@ class scheduler
 
 		static void yield() TA_REQ(!global_thread_lock);
 
-		static void unblock(thread* t) TA_EXCL(global_thread_lock);
+		static bool unblock(thread* t) TA_EXCL(global_thread_lock);
 
 		static void insert(thread* t) TA_EXCL(global_thread_lock);
 

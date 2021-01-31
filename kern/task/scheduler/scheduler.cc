@@ -299,15 +299,18 @@ void task::scheduler::current::yield()
 	cpu->scheduler->yield();
 }
 
-void task::scheduler::current::unblock(task::thread* t)
+bool task::scheduler::current::unblock(task::thread* t)
 {
 	if (t->affinity.cpu != CPU_NUM_INVALID)
 	{
 		KDEBUG_ASSERT(t->affinity.cpu < valid_cpus.size());
 		valid_cpus[t->affinity.cpu].scheduler->unblock(t);
+
+		return t->affinity.cpu == cpu->id;
 	}
 
 	cpu->scheduler->unblock(t);
+	return false;
 }
 
 void task::scheduler::current::insert(task::thread* t)

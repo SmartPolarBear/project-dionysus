@@ -272,6 +272,7 @@ void thread::finish_dead_transition()
 
 void thread::kill()
 {
+
 	{
 		lock_guard g1{ global_thread_lock };
 
@@ -282,9 +283,38 @@ void thread::kill()
 			return;
 		}
 	}
-	// TODO: wakeup
 
-	scheduler::current::yield();
+	bool reschedule_needed = false;
+
+	switch (state)
+	{
+
+	case thread_states::INITIAL:
+		break;
+	case thread_states::READY:
+		break;
+	case thread_states::RUNNING:
+		break;
+	case thread_states::SUSPENDED:
+		reschedule_needed = scheduler::current::unblock(this);
+		break;
+	case thread_states::BLOCKED:
+	case thread_states::BLOCKED_READ_LOCK:
+		// TODO: wakeup
+		break;
+	case thread_states::DYING:
+		break;
+	case thread_states::DEAD:
+		return;
+
+	default:
+		KDEBUG_GERNERALPANIC_CODE(ERROR_INVALID);
+	}
+
+	if (reschedule_needed)
+	{
+		scheduler::current::reschedule();
+	}
 }
 
 void thread::resume()
@@ -292,8 +322,49 @@ void thread::resume()
 
 }
 
-void thread::suspend()
+error_code thread::suspend()
 {
+	KDEBUG_ASSERT(!is_idle());
+
+	{
+		lock_guard g{ global_thread_lock };
+
+		if (state == thread_states::DEAD)
+		{
+			return -ERROR_INVALID;
+		}
+
+		signals |= SIGNAL_KILLED;
+	}
+
+	bool reschedule_needed = false;
+
+	switch (state)
+	{
+	case thread_states::INITIAL:
+		reschedule_needed = scheduler::current::unblock(this);
+		break;
+	case thread_states::READY:
+		break;
+	case thread_states::RUNNING:
+		break;
+	case thread_states::SUSPENDED:
+		break;
+	case thread_states::BLOCKED:
+	case thread_states::BLOCKED_READ_LOCK:
+		// TODO wake up wait queue
+		break;
+	case thread_states::DYING:
+		break;
+	default:
+	case thread_states::DEAD:
+		KDEBUG_GERNERALPANIC_CODE(ERROR_INVALID);
+	}
+
+	if (need_reschedule)
+	{
+		scheduler::current::reschedule();
+	}
 
 }
 
@@ -313,19 +384,53 @@ void thread::forget()
 
 error_code thread::detach()
 {
-	return 0;
+	lock_guard g{ global_thread_lock };
+
+	// TODO: wakeup joiners with BAD_STATE
+
+	if (state == thread_states::DEAD)
+	{
+		flags &= ~FLAG_DETACHED;
+		g.unlock();
+		return join(nullptr, 0);
+	}
+	else
+	{
+		flags |= FLAG_DETACHED;
+		return ERROR_SUCCESS;
+	}
+
+	return -ERROR_SHOULD_NOT_REACH_HERE;
 }
 
 error_code thread::join(error_code* out_err_code)
 {
+	// wait util this finished all work
+	while (state != thread_states::DYING && state != thread_states::DEAD)
+	{
+		scheduler::current::reschedule();
+	}
 
+	// TODO: wake up those who wait for the ret code
+
+	if (out_err_code)
+	{
+		*out_err_code = this->exit_code;
+	}
 	return 0;
 }
 
-thread::~thread()
+error_code thread::join(error_code* out_err_code, time_type deadline)
 {
-
+	return 0;
 }
+
+error_code thread::detach_and_resume()
+{
+	return 0;
+}
+
+thread::~thread() = default;
 
 void thread::current::exit(error_code code)
 {
