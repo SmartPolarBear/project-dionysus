@@ -11,3 +11,4 @@ set(USER_INSTALL_PREFIX  ${CMAKE_BINARY_DIR}/external/third_party_root_user)
 
 add_subdirectory(llvm-project)
 add_subdirectory(newlib)
+add_subdirectory(ms-gsl)

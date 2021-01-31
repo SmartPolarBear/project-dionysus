@@ -138,19 +138,6 @@
 //#define __EXPORT __attribute__((__visibility__("default")))
 //#define __LOCAL __attribute__((__visibility__("hidden")))
 
-//
-// Builtin functions.
-//
-
-// Provide a hint to the compiler that the given expression is likely/unlikely
-// to be true.
-//
-//   if (unlikely(status != ZX_OK)) {
-//     error(...);
-//   }
-//
-#define likely(x) __builtin_expect(!!(x), 1)
-#define unlikely(x) __builtin_expect(!!(x), 0)
 
 // Return the program counter of the calling function.
 #define __GET_CALLER(x) __builtin_return_address(0)

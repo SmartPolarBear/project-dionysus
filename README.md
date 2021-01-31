@@ -5,18 +5,26 @@ The project "Dionysus" aims at applying theories and practices concerning operat
 
 The techniques used and concepts of programming and design of operation system have changed over time. That's why I want to adapt the advanced and exciting ones in a project as an attempt to do further researches in this field.
 
-## Tech/framework used
-<b>Built with</b>
-- CMake
-- Clang version 10
+## Technologies
 
-## API Reference
+- Modern C++ (C++20)
+  
+- [Guidelines Support Library](https://github.com/microsoft/GSL.git)
+
+- Limited usage of STL
+
+- CMake, 3.16 or newer
+
+
+## Features
 
 // TO BE DONE
 
-## Contribute
+## Contributing
 
-// TO BE DONE
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.  
+
+Please make sure to update tests as appropriate. 
 
 ## Credits
 The project mostly refers to, and sometimes borrows some techniques, designs and codes from the following project:  

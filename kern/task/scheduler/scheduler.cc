@@ -165,7 +165,7 @@ void task::scheduler::tick(task::thread* t)
 	{
 		scheduler_class.tick();
 	}
-	else if (t != nullptr)
+	else if (t != nullptr) // idle is running
 	{
 		t->need_reschedule = true;
 	}
