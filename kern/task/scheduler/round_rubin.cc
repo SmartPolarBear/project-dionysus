@@ -66,12 +66,28 @@ void task::round_rubin_scheduler_class::tick()
 	cur_thread->need_reschedule = true;
 }
 
-task::thread* task::round_rubin_scheduler_class::steal()
+task::thread* task::round_rubin_scheduler_class::steal(cpu_struct* stealer_cpu)
 {
 	KDEBUG_ASSERT(global_thread_lock.holding());
 
 	if (!run_queue.empty())
 	{
+		// check affinity
+		for (auto& t:run_queue | reversed)
+		{
+			if (cur_thread.get() != &t &&
+				t.state == thread::thread_states::READY &&
+				(t.flags & thread::thread_flags::FLAG_IDLE) == 0 &&
+				(t.flags & thread::thread_flags::FLAG_INIT) == 0)
+			{
+				if (t.affinity.cpu == stealer_cpu->id)
+				{
+					run_queue.remove(t);
+					return &t;
+				}
+			}
+		}
+
 		for (auto& t:run_queue | reversed)
 		{
 			if (cur_thread.get() != &t &&

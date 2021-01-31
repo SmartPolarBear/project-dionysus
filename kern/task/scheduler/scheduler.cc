@@ -222,7 +222,7 @@ error_code task::scheduler::idle(void* arg __UNUSED) TA_NO_THREAD_SAFETY_ANALYSI
 
 task::thread* task::scheduler::steal()
 {
-	return scheduler_class.steal();
+	return scheduler_class.steal(cpu.get());
 }
 
 void task::scheduler::current::reschedule()

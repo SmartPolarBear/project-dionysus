@@ -30,7 +30,7 @@ class scheduler_class_base
 
 	/// \brief get a thread, generally for migrating to another CPU's scheduler
 	/// \return
-	virtual thread* steal() TA_REQ(global_thread_lock) = 0;
+	virtual thread* steal(cpu_struct* stealer_cpu) TA_REQ(global_thread_lock) = 0;
 
 	/// \brief handle the timer tick
 	virtual void tick() TA_REQ(global_thread_lock) = 0;

@@ -26,7 +26,7 @@ class round_rubin_scheduler_class final
 	round_rubin_scheduler_class& operator=(const round_rubin_scheduler_class&) = delete;
 	round_rubin_scheduler_class& operator=(round_rubin_scheduler_class&&) = delete;
 
-	thread* steal() TA_REQ(global_thread_lock) override;
+	thread* steal(cpu_struct* stealer_cpu) TA_REQ(global_thread_lock) override;
 
 	void enqueue(thread* thread) TA_REQ(global_thread_lock) final;
 
