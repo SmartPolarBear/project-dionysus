@@ -182,15 +182,12 @@ vmm::mm_struct* task::thread::get_mm()
 	return nullptr;
 }
 
-void thread::default_trampoline() TA_NO_THREAD_SAFETY_ANALYSIS
+void thread::default_trampoline()  TA_REL(global_thread_lock) //TA_NO_THREAD_SAFETY_ANALYSIS
 {
 	global_thread_lock.unlock();
 
 	// will return to thread_entry
 }
-
-//FIXME
-extern cls_item<task::process*, CLS_PROC_STRUCT_PTR> cur_proc;
 
 void thread::switch_to() TA_REQ(global_thread_lock)
 {
@@ -368,7 +365,6 @@ void thread::current::exit(error_code code)
 
 	scheduler::current::reschedule();
 
-	__UNREACHABLE;
 }
 
 user_stack::user_stack(process* p, thread* t, void* stack_ptr)

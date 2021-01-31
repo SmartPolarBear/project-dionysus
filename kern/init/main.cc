@@ -171,9 +171,7 @@ void ap::all_processor_main()
 		task::scheduler::current::unblock(init_thread);
 	}
 
-	{
-		cpu->scheduler->idle(nullptr);
-	}
+	task::scheduler::current::enter();
 
 	for (;;);
 

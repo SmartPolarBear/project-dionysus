@@ -178,23 +178,19 @@ task::scheduler::size_type task::scheduler::workload_size() const
 	return scheduler_class.workload_size();
 }
 
-lock::spinlock idle_lock{ "idle" };
-
 error_code task::scheduler::idle(void* arg)
 {
 	for (;;)
 	{
-//		lock_guard g1{ idle_lock };
-
 		// Pull migration approach to load balancing
-		auto intr = arch_ints_disabled();
-
-		if (!intr)
 		{
-			cli();
-		}
+			auto intr = arch_ints_disabled();
 
-		{
+			if (!intr)
+			{
+				cli();
+			}
+
 			lock_guard g2{ global_thread_lock };
 			cpu_struct* max_cpu = &valid_cpus[0];
 
@@ -211,17 +207,17 @@ error_code task::scheduler::idle(void* arg)
 			{
 				cpu->scheduler->enqueue(t);
 			}
-		}
 
-		if (!intr)
-		{
-			sti();
+			if (!intr)
+			{
+				sti();
+			}
 		}
-
 		scheduler::current::reschedule();
 	}
 
-	return -ERROR_SHOULD_NOT_REACH_HERE;
+	// assert no return
+	KDEBUG_ASSERT(ERROR_SHOULD_NOT_REACH_HERE);
 }
 
 task::thread* task::scheduler::steal()
