@@ -94,6 +94,8 @@ class thread final
 
 	using routine_type = error_code (*)(void* arg);
 
+	using link_type = kbl::list_link<thread, lock::spinlock>;
+
 	static void default_trampoline();
 
 	static_assert(ktl::Convertible<decltype(default_trampoline), trampoline_type>);
@@ -198,13 +200,13 @@ class thread final
 
 	uint64_t signals{ 0 };
 
-	kbl::list_link<thread, lock::spinlock> run_queue_link{ this };
-	kbl::list_link<thread, lock::spinlock> zombie_queue_link{ this };
-	kbl::list_link<thread, lock::spinlock> master_list_link{ this };
-
+	link_type run_queue_link{ this };
+	link_type zombie_queue_link{ this };
+	link_type wait_queue_link{ this };
+	link_type master_list_link{ this };
  public:
 	using master_list_type = kbl::intrusive_list<thread, lock::spinlock, &thread::master_list_link, true, false>;
-
+	using wait_queue_list_type = kbl::intrusive_list<thread, lock::spinlock, &thread::wait_queue_link, true, false>;
 };
 
 class kernel_stack final
@@ -280,7 +282,57 @@ class user_stack
 	thread* owner_thread{ nullptr };
 };
 
+class wait_queue
+{
+ public:
+	enum class [[clang::enum_extensibility(closed)]] Interruptible : bool
+	{
+		No, Yes
+	};
+
+	enum class [[clang::enum_extensibility(closed)]] ResourceOwnership
+	{
+		Normal,
+		Reader
+	};
+
+	constexpr wait_queue()
+	{
+
+	}
+
+	wait_queue(wait_queue&) = delete;
+	wait_queue(wait_queue&&) = delete;
+
+	wait_queue& operator=(wait_queue&) = delete;
+	wait_queue& operator=(wait_queue&&) = delete;
+
+	static error_code unblock_thread(thread* t, error_code code) TA_REQ(global_thread_lock);
+
+	error_code block(const timer_t& deadline, Interruptible intr) TA_REQ(global_thread_lock);
+
+	error_code block_etc(const timer_t& deadline,
+		uint32_t signal_mask,
+		ResourceOwnership reason,
+		Interruptible intr) TA_REQ(global_thread_lock);
+
+	thread* peek() TA_REQ(global_thread_lock);
+
+	bool wake_one(bool reschedule, error_code code) TA_REQ(global_thread_lock);
+	void wake_all(bool reschedule, error_code code) TA_REQ(global_thread_lock);
+
+	bool empty() const TA_REQ(global_thread_lock);
+
+	size_t size() const TA_REQ(global_thread_lock)
+	{
+		return list.size();
+	}
+ private:
+	thread::wait_queue_list_type list;
+};
+
 extern thread::master_list_type global_thread_list;
+
 extern cls_item<thread*, CLS_CUR_THREAD_PTR> cur_thread;
 
 }

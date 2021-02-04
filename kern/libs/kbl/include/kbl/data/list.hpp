@@ -244,8 +244,6 @@ class intrusive_list
 		{
 			list_init(&head_);
 		}
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
-
 	}
 
 	/// Isn't copiable
