@@ -120,7 +120,7 @@ void ext2_data::print_debug_message()
 		this->superblock.version_minor,
 
 		strnlen(reinterpret_cast<const char*>(this->superblock.volume_name), 256) == 0 ?
-		"[no name]" :
+		"[no name_]" :
 		(char*)this->superblock.volume_name);
 
 	kdebug_log(

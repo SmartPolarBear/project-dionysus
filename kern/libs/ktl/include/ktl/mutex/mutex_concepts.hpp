@@ -5,7 +5,7 @@ namespace ktl
 {
 	namespace mutex
 	{
-		/// \brief the concept that constraints the name requirement BasicLockable
+		/// \brief the concept that constraints the name_ requirement BasicLockable
 		/// https://en.cppreference.com/w/cpp/named_req/BasicLockable
 		/// \tparam
 		template<typename T>

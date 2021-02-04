@@ -47,7 +47,7 @@ static inline constexpr size_t PAGE_ROUNDDOWN(size_t addr)
 	return (((addr)) & ~((size_t)(PAGE_SIZE - 1)));
 }
 
-// Page table/directory entry flags
+// Page table/directory entry flags_
 enum pde_flags
 {
 	PG_P = 0x001,   // Present

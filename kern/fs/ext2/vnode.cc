@@ -361,7 +361,7 @@ error_code file_system::ext2_vnode::make_directory(const char* name, uid_type ui
 	inode->gid = gid;
 	inode->type = EXT2_IFDIR;
 	inode->flags = mode & 0xFFF;
-	inode->hard_link_count = 2;// "." and parent directory entry
+	inode->hard_link_count = 2;// "." and parent_ directory entry
 
 	// setup . and ..
 	if (auto ret = ext2_directory_inode_insert(fs, ino, inode, ".", ino, vnode_types::VNT_DIR);ret != ERROR_SUCCESS)
@@ -375,7 +375,7 @@ error_code file_system::ext2_vnode::make_directory(const char* name, uid_type ui
 		return ret;
 	}
 
-	// insert to parent
+	// insert to parent_
 	if (auto ret = ext2_directory_inode_insert(fs, this->inode_id, at_inode, name, ino, vnode_types::VNT_DIR);ret
 		!= ERROR_SUCCESS)
 	{

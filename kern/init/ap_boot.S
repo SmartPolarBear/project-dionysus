@@ -27,7 +27,7 @@ start32:
     movw    %ax, %fs
     movw    %ax, %gs
 
-// flags for AP booting in boot.S
+// flags_ for AP booting in boot.S
     mov     $0x3f3f3f3f, %ebx
 
     

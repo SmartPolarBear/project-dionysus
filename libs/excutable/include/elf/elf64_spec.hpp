@@ -33,18 +33,18 @@ namespace executable
 		Elf64_Addr e_entry; /* Entry point address */
 		Elf64_Off e_phoff; /* Program header offset */
 		Elf64_Off e_shoff; /* Section header offset */
-		Elf64_Word e_flags; /* Processor-specific flags */
+		Elf64_Word e_flags; /* Processor-specific flags_ */
 		Elf64_Half e_ehsize; /* ELF header size */
 		Elf64_Half e_phentsize; /* Size of program header entry */
 		Elf64_Half e_phnum; /* Number of program header entries */
 		Elf64_Half e_shentsize; /* Size of section header entry */
 		Elf64_Half e_shnum; /* Number of section header entries */
-		Elf64_Half e_shstrndx; /* Section name string table index */
+		Elf64_Half e_shstrndx; /* Section name_ string table index */
 	}__attribute__((__packed__));
 
 	struct Elf64_Shdr
 	{
-		Elf64_Word sh_name; /* Section name */
+		Elf64_Word sh_name; /* Section name_ */
 		Elf64_Word sh_type; /* Section type */
 		Elf64_Xword sh_flags; /* Section attributes */
 		Elf64_Addr sh_addr; /* Virtual address in memory */
@@ -58,7 +58,7 @@ namespace executable
 
 	struct Elf64_Sym
 	{
-		Elf64_Word st_name; /* Symbol name */
+		Elf64_Word st_name; /* Symbol name_ */
 		unsigned char st_info; /* Type and Binding attributes */
 		unsigned char st_other; /* Reserved */
 		Elf64_Half st_shndx; /* Section table index */
@@ -185,7 +185,7 @@ namespace executable
 		PT_NULL = 0,// Unused entry
 		PT_LOAD = 1,// Loadable segment
 		PT_DYNAMIC = 2,// Dynamic linking tables
-		PT_INTERP = 3,// Program interpreter path name
+		PT_INTERP = 3,// Program interpreter path name_
 		PT_NOTE = 4 //Note sections
 	};
 
@@ -194,7 +194,7 @@ namespace executable
 		PF_X = 0x1,//Execute permission
 		PF_W = 0x2,//Write permission
 		PF_R = 0x4,//Read permission
-		PF_MASKOS = 0x00FF0000,//These flags bits are reserved for environment-specific use
-		PF_MASKPROC = 0xFF000000,//These flags bits are reserved for processor-specific use
+		PF_MASKOS = 0x00FF0000,//These flags_ bits are reserved for environment-specific use
+		PF_MASKPROC = 0xFF000000,//These flags_ bits are reserved for processor-specific use
 	};
 }

@@ -18,15 +18,15 @@
 
 // To be finished
 //int close(int file);
-//int execve(char *name, char **argv, char **env);
+//int execve(char *name_, char **argv, char **env);
 //int fstat(int file, struct stat *st);
 //int isatty(int file);
 //int link(char *old, char *new);
 //int lseek(int file, int ptr, int dir);
-//int open(const char *name, int flags, ...);
+//int open(const char *name_, int flags_, ...);
 //int read(int file, char *ptr, int len);
 //int stat(const char *file, struct stat *st);
-//int unlink(char *name);
+//int unlink(char *name_);
 //int write(int file, char *ptr, int len);
 
 

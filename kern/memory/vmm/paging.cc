@@ -55,7 +55,7 @@ using kbl::list_remove;
 // global variable for the sake of access and dynamically mapping
 pde_ptr_t vmm::g_kpml4t;
 
-// remove all flags in entries to expose the address of the next level
+// remove all flags_ in entries to expose the address of the next level
 static inline constexpr size_t remove_flags(vmm::pde_t pde)
 {
 	constexpr size_t FLAGS_SHIFT = 8;

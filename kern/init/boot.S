@@ -60,7 +60,7 @@ req_tag_end:
 
 .align 8
     .short MULTIBOOT_HEADER_TAG_END
-    .short 8    //no flags set
+    .short 8    //no flags_ set
     .long 8     //self-containing size
 mboot_header_end:
 
@@ -227,7 +227,7 @@ spin:
   jmp spin
 
 entry64mp:
-// obtain kstack from kbl superblock before entryother
+// obtain kstack_ from kbl superblock before entryother
     mov $0x7000, %rax
     mov -16(%rax), %rsp
     jmp ap_enter

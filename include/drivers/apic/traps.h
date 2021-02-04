@@ -72,7 +72,7 @@ namespace trap
 		EFLAG_AC = 0x00040000,        // Alignment Check
 		EFLAG_VIF = 0x00080000,       // Virtual Interrupt Flag
 		EFLAG_VIP = 0x00100000,       // Virtual Interrupt Pending
-		EFLAG_ID = 0x00200000,        // ID flags
+		EFLAG_ID = 0x00200000,        // ID flags_
 	};
 
 	struct trap_frame

@@ -87,7 +87,7 @@ kernel_stack::kernel_stack(thread* parent_thread,
 	tf->rip = reinterpret_cast<uintptr_t >(thread_entry);
 
 	// setup registers
-	if (parent_thread->parent != nullptr) // the thread is for user
+	if (parent_thread->parent_ != nullptr) // the thread is for user
 	{
 		tf->cs = SEGMENT_VAL(SEGMENTSEL_UCODE, DPL_USER);
 		tf->ss = SEGMENT_VAL(SEGMENTSEL_UDATA, DPL_USER);
@@ -118,9 +118,9 @@ error_code_with_result<task::thread*> thread::create(process* parent,
 		return -ERROR_MEMORY_ALLOC;
 	}
 
-	ret->kstack = kernel_stack::create(ret, routine, arg, trampoline);
+	ret->kstack_ = kernel_stack::create(ret, routine, arg, trampoline);
 
-	if (ret->kstack == nullptr)
+	if (ret->kstack_ == nullptr)
 	{
 		delete ret;
 		return -ERROR_MEMORY_ALLOC;
@@ -133,7 +133,7 @@ error_code_with_result<task::thread*> thread::create(process* parent,
 			return get_error_code(alloc_ret);
 		}
 
-		ret->kstack->tf->rsp = reinterpret_cast<uintptr_t>(ret->ustack->get_top());
+		ret->kstack_->tf->rsp = reinterpret_cast<uintptr_t>(ret->ustack_->get_top());
 	}
 
 	ret->state = thread_states::READY;
@@ -161,9 +161,9 @@ error_code thread::create_idle()
 
 	lock_guard g1{ global_thread_lock };
 
-	th->flags |= FLAG_IDLE;
+	th->flags_ |= FLAG_IDLE;
 
-	th->need_reschedule = true;
+	th->need_reschedule_ = true;
 
 	cpu->idle = th;
 
@@ -174,9 +174,9 @@ error_code thread::create_idle()
 
 vmm::mm_struct* task::thread::get_mm()
 {
-	if (parent != nullptr)
+	if (parent_ != nullptr)
 	{
-		return parent->get_mm();
+		return parent_->get_mm();
 	}
 
 	return nullptr;
@@ -205,13 +205,13 @@ void thread::switch_to() TA_REQ(global_thread_lock)
 			state = thread_states::RUNNING;
 
 			//FIXME
-			if (this->parent)
+			if (this->parent_)
 			{
-				cur_proc = this->parent;
+				cur_proc = this->parent_;
 			}
 		}
 
-		uintptr_t kstack_addr = this->kstack->get_address();
+		uintptr_t kstack_addr = this->kstack_->get_address();
 		cpu->tss.rsp0 = kstack_addr + kernel_stack::MAX_SIZE;
 
 		// Set gs. without calling swapgs to ensure atomic
@@ -231,15 +231,15 @@ void thread::switch_to() TA_REQ(global_thread_lock)
 
 		trap::popcli();
 
-		context_switch(&prev->kstack->context, this->kstack->context);
+		context_switch(&prev->kstack_->context, this->kstack_->context);
 
 	}
 }
 
 thread::thread(process* prt, ktl::string_view nm, cpu_affinity aff)
-	: parent{ prt },
-	  name{ nm },
-	  affinity{ aff }
+	: parent_{ prt },
+	  name_{ nm },
+	  affinity_{ aff }
 {
 }
 
@@ -255,12 +255,12 @@ void thread::finish_dead_transition()
 
 		if (is_user_thread())
 		{
-			this->parent->free_ustack(this->ustack);
+			this->parent_->free_ustack(this->ustack_);
 		}
 
-		delete this->kstack;
+		delete this->kstack_;
 
-		if (critical)
+		if (critical_)
 		{
 			// TODO: notify the process
 			KDEBUG_NOT_IMPLEMENTED;
@@ -276,7 +276,7 @@ void thread::kill()
 	{
 		lock_guard g1{ global_thread_lock };
 
-		signals |= SIGNAL_KILLED;
+		signals_ |= SIGNAL_KILLED;
 
 		if (this == cur_thread)
 		{
@@ -334,7 +334,7 @@ error_code thread::suspend()
 			return -ERROR_INVALID;
 		}
 
-		signals |= SIGNAL_KILLED;
+		signals_ |= SIGNAL_KILLED;
 	}
 
 	bool reschedule_needed = false;
@@ -361,7 +361,7 @@ error_code thread::suspend()
 		KDEBUG_GERNERALPANIC_CODE(ERROR_INVALID);
 	}
 
-	if (need_reschedule)
+	if (need_reschedule_)
 	{
 		scheduler::current::reschedule();
 	}
@@ -390,13 +390,13 @@ error_code thread::detach()
 
 	if (state == thread_states::DEAD)
 	{
-		flags &= ~FLAG_DETACHED;
+		flags_ &= ~FLAG_DETACHED;
 		g.unlock();
 		return join(nullptr, 0);
 	}
 	else
 	{
-		flags |= FLAG_DETACHED;
+		flags_ |= FLAG_DETACHED;
 		return ERROR_SUCCESS;
 	}
 
@@ -415,7 +415,7 @@ error_code thread::join(error_code* out_err_code)
 
 	if (out_err_code)
 	{
-		*out_err_code = this->exit_code;
+		*out_err_code = this->exit_code_;
 	}
 	return 0;
 }
@@ -443,15 +443,15 @@ void thread::current::exit(error_code code)
 	{
 		lock_guard g1{ global_thread_lock };
 
-		if (cur_thread->parent != nullptr)
+		if (cur_thread->parent_ != nullptr)
 		{
-			cur_thread->parent->remove_thread(cur_thread.get());
+			cur_thread->parent_->remove_thread(cur_thread.get());
 		}
 
 		cur_thread->state = thread_states::DYING;
-		cur_thread->exit_code = code;
+		cur_thread->exit_code_ = code;
 
-		if (cur_thread->flags & FLAG_DETACHED)
+		if (cur_thread->flags_ & FLAG_DETACHED)
 		{
 			cur_thread->remove_from_lists();
 		}

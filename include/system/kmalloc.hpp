@@ -13,7 +13,7 @@
 
 namespace memory
 {
-// flags is reserved for future usage
+// flags_ is reserved for future usage
 void* kmalloc(size_t sz, [[maybe_unused]] size_t flags);
 void kfree(void* ptr);
 

@@ -21,7 +21,7 @@ void kdebug_warning(const char* fmt, ...);
 
 void kdebug_log(const char* fmt, ...);
 
-// panic with line number and file name
+// panic with line number and file name_
 // to make __FILE__ and __LINE__ macros works right, this must be a macro as well.
 
 #define KDEBUG_RICHPANIC(msg, title, topleft, add_fmt, args...) \

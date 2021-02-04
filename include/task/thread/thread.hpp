@@ -33,6 +33,7 @@ class process;
 
 class kernel_stack;
 class user_stack;
+class wait_queue;
 
 enum class [[clang::enum_extensibility(closed)]] cpu_affinity_type
 {
@@ -118,22 +119,22 @@ class thread final
 
 	[[nodiscard]] bool get_need_reschedule() const
 	{
-		return need_reschedule;
+		return need_reschedule_;
 	}
 
 	[[nodiscard]] bool is_user_thread() const
 	{
-		return parent != nullptr;
+		return parent_ != nullptr;
 	}
 
 	[[nodiscard]] uint64_t get_flags() const
 	{
-		return flags;
+		return flags_;
 	}
 
 	void set_flags(uint64_t fl)
 	{
-		flags = fl;
+		flags_ = fl;
 	}
 
 	void kill() TA_REQ(!global_thread_lock);
@@ -162,12 +163,12 @@ class thread final
 
 	const char* get_name_raw() const
 	{
-		return name.data();
+		return name_.data();
 	}
 
 	bool is_idle() const
 	{
-		return flags & FLAG_IDLE;
+		return flags_ & FLAG_IDLE;
 	}
 
 	thread_states state{ thread_states::INITIAL };
@@ -180,25 +181,29 @@ class thread final
 
 	void finish_dead_transition();
 
-	kernel_stack* kstack{ nullptr };
+	kernel_stack* kstack_{ nullptr };
 
-	user_stack* ustack{ nullptr };
+	user_stack* ustack_{ nullptr };
 
-	process* parent{ nullptr };
+	process* parent_{ nullptr };
 
-	ktl::string_view name{ "" };
+	kbl::name<64> name_{ "" };
 
-	error_code exit_code{ ERROR_SUCCESS };
+	error_code exit_code_{ ERROR_SUCCESS };
 
-	bool need_reschedule{ false };
+	bool need_reschedule_{ false };
 
-	bool critical{ false };
+	bool critical_{ false };
 
-	cpu_affinity affinity{ CPU_NUM_INVALID, cpu_affinity_type::SOFT };
+	cpu_affinity affinity_{ CPU_NUM_INVALID, cpu_affinity_type::SOFT };
 
-	uint64_t flags{ 0 };
+	uint64_t flags_{ 0 };
 
-	uint64_t signals{ 0 };
+	uint64_t signals_{ 0 };
+
+	wait_queue* blocking_on_{ nullptr };
+
+	wait_queue* exit_code_wait_queue_{ nullptr };
 
 	link_type run_queue_link{ this };
 	link_type zombie_queue_link{ this };

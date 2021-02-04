@@ -63,7 +63,7 @@ void task::round_rubin_scheduler_class::tick()
 		t->finish_dead_transition();
 	}
 
-	cur_thread->need_reschedule = true;
+	cur_thread->need_reschedule_ = true;
 }
 
 task::thread* task::round_rubin_scheduler_class::steal(cpu_struct* stealer_cpu)
@@ -72,15 +72,15 @@ task::thread* task::round_rubin_scheduler_class::steal(cpu_struct* stealer_cpu)
 
 	if (!run_queue.empty())
 	{
-		// check affinity
+		// check affinity_
 		for (auto& t:run_queue | reversed)
 		{
 			if (cur_thread.get() != &t &&
 				t.state == thread::thread_states::READY &&
-				(t.flags & thread::thread_flags::FLAG_IDLE) == 0 &&
-				(t.flags & thread::thread_flags::FLAG_INIT) == 0)
+				(t.flags_ & thread::thread_flags::FLAG_IDLE) == 0 &&
+				(t.flags_ & thread::thread_flags::FLAG_INIT) == 0)
 			{
-				if (t.affinity.cpu == stealer_cpu->id)
+				if (t.affinity_.cpu == stealer_cpu->id)
 				{
 					run_queue.remove(t);
 					return &t;
@@ -92,10 +92,10 @@ task::thread* task::round_rubin_scheduler_class::steal(cpu_struct* stealer_cpu)
 		{
 			if (cur_thread.get() != &t &&
 				t.state == thread::thread_states::READY &&
-				(t.flags & thread::thread_flags::FLAG_IDLE) == 0 &&
-				(t.flags & thread::thread_flags::FLAG_INIT) == 0)
+				(t.flags_ & thread::thread_flags::FLAG_IDLE) == 0 &&
+				(t.flags_ & thread::thread_flags::FLAG_INIT) == 0)
 			{
-				if (t.affinity.type == cpu_affinity_type::SOFT)
+				if (t.affinity_.type == cpu_affinity_type::SOFT)
 				{
 					run_queue.remove(t);
 					return &t;
@@ -103,15 +103,15 @@ task::thread* task::round_rubin_scheduler_class::steal(cpu_struct* stealer_cpu)
 			}
 		}
 
-		// No soft-affinity thread available, we use hard
+		// No soft-affinity_ thread available, we use hard
 		for (auto& t:run_queue | reversed)
 		{
 			if (cur_thread.get() != &t &&
 				t.state == thread::thread_states::READY &&
-				(t.flags & thread::thread_flags::FLAG_IDLE) == 0 &&
-				(t.flags & thread::thread_flags::FLAG_INIT) == 0)
+				(t.flags_ & thread::thread_flags::FLAG_IDLE) == 0 &&
+				(t.flags_ & thread::thread_flags::FLAG_INIT) == 0)
 			{
-				if (t.affinity.type == cpu_affinity_type::HARD)
+				if (t.affinity_.type == cpu_affinity_type::HARD)
 				{
 					run_queue.remove(t);
 					return &t;

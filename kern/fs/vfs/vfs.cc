@@ -76,7 +76,7 @@ error_code_with_result<const char*> vfs_io_context::separate_parent_name(const c
 		return -ERROR_INVALID;
 	}
 
-	// path name like "file.ext"
+	// path name_ like "file.ext"
 	if (sep == nullptr)
 	{
 		path[0] = '.';
@@ -84,7 +84,7 @@ error_code_with_result<const char*> vfs_io_context::separate_parent_name(const c
 
 		return full_path;
 	}
-		// path name like "/a/b/c/file.ext
+		// path name_ like "/a/b/c/file.ext
 	else if (sep == full_path)
 	{
 		path[0] = '/';

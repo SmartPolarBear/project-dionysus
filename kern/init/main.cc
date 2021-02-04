@@ -58,7 +58,7 @@ static inline void run(const char* name)
 	}
 
 	auto proc = get_result(create_ret);
-//	auto create_ret = task::process::create(name, root_job);
+//	auto create_ret = task::process::create(name_, root_job);
 //	if (has_error(create_ret))
 //	{
 //		KDEBUG_GERNERALPANIC_CODE(get_error_code(create_ret));

@@ -324,7 +324,7 @@ class vnode_base
 			strncpy(name_buf, n, strnlen(n, VNODE_NAME_MAX));
 		}
 
-		kdebug::kdebug_log("Create vnode: type %d, name %s\n", (uint32_t)t, n);
+		kdebug::kdebug_log("Create vnode: type %d, name_ %s\n", (uint32_t)t, n);
 	}
 
  public:

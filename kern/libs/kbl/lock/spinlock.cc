@@ -71,7 +71,7 @@ void lock::spinlock_release(spinlock_struct* lock, bool pres_intr)
 		KDEBUG_RICHPANIC("Release a not-held spinlock_struct.\n",
 			"KERNEL PANIC",
 			false,
-			"Lock's name: %s", lock->name);
+			"Lock's name_: %s", lock->name);
 	}
 
 	lock->pcs[0] = 0;
@@ -112,7 +112,7 @@ void lock::spinlock::unlock() noexcept
 		KDEBUG_RICHPANIC("Release a not-held spinlock_struct.\n",
 			"KERNEL PANIC",
 			false,
-			"Lock's name: %s\n", spinlock_.name);
+			"Lock's name_: %s\n", spinlock_.name);
 	}
 
 	spinlock_.pcs[0] = 0;

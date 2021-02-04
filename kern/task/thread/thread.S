@@ -31,7 +31,7 @@ context_switch:
 
 .global user_entry
 user_entry:
-    popq %rsi   // pop kstack address, we currently do nothing for it.
+    popq %rsi   // pop kstack_ address, we currently do nothing for it.
 
     popq %rax
     popq %rbx

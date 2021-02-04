@@ -51,7 +51,7 @@ static inline error_code load_monitor_executable()
 	}
 
 	// FIXME
-//	ret = task::create_process(name, task::PROC_SYS_SERVER, false, &g_monitor_proc);
+//	ret = task::create_process(name_, task::PROC_SYS_SERVER, false, &g_monitor_proc);
 //
 //	if (ret != ERROR_SUCCESS)
 //	{

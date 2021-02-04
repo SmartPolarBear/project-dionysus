@@ -138,7 +138,7 @@ bool task::job::is_ready_for_dead_transition() TA_REQ(lock)
 
 bool task::job::finish_dead_transition() TA_EXCL(lock)
 {
-	// there must be big problem is parent die before its successor jobs
+	// there must be big problem is parent_ die before its successor jobs
 	KDEBUG_ASSERT(parent == nullptr || parent->get_status() != job_status::DEAD);
 
 	// locked scope

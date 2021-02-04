@@ -79,14 +79,14 @@
 #endif
 
 
-// Optimize the given function using custom flags.
+// Optimize the given function using custom flags_.
 //
 // For example,
 //
 //  __OPTIMIZE("O3") int myfunction() { ... }
 //
 // will cause GCC to optimize the function at the O3 level, independent
-// of what the compiler optimization flags are.
+// of what the compiler optimization flags_ are.
 #if !defined(__clang__)
 #define __OPTIMIZE(x) __attribute__((__optimize__(x)))
 #else

@@ -124,7 +124,7 @@ error_code_with_result<ktl::shared_ptr<task::process>> task::process::create(con
 
 	thread* main_thread = nullptr;
 
-	// name the main thread with the parent's name
+	// name_ the main thread with the parent_'s name_
 	if (auto ret = thread::create(proc.get(), name, (thread::routine_type)entry_addr, nullptr);has_error(ret))
 	{
 		return get_error_code(ret);
@@ -134,8 +134,8 @@ error_code_with_result<ktl::shared_ptr<task::process>> task::process::create(con
 		main_thread = get_result(ret);
 	}
 
-	// the thread is critical to the process
-	main_thread->critical = true;
+	// the thread is critical_ to the process
+	main_thread->critical_ = true;
 
 	{
 
@@ -411,7 +411,7 @@ error_code_with_result<user_stack*> task::process::allocate_ustack(thread* t)
 	busy_list.push_back(stack);
 
 	{
-		t->ustack = stack;
+		t->ustack_ = stack;
 	}
 
 	return stack;

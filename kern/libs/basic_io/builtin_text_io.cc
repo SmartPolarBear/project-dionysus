@@ -109,7 +109,7 @@ void valist_write_format(const char *fmt, va_list ap)
         case 'f':
         {
             //FIXME: va_arg(ap, double) always return wrong value
-            KDEBUG_RICHPANIC("%f flags is disabled because va_arg(ap, double) always return wrong value",
+            KDEBUG_RICHPANIC("%f flags_ is disabled because va_arg(ap, double) always return wrong value",
                              "KERNEL PANIC: BUILTIN CONSOLE",
                              false,
                              "");
