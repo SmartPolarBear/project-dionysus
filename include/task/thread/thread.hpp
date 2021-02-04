@@ -59,6 +59,8 @@ class thread final
 	friend class round_rubin_scheduler_class;
 
 	friend class kernel_stack;
+	friend class user_stack;
+	friend class wait_queue;
 
 	enum class [[clang::enum_extensibility(closed)]] thread_states
 	{
@@ -290,12 +292,12 @@ class user_stack
 class wait_queue
 {
  public:
-	enum class [[clang::enum_extensibility(closed)]] Interruptible : bool
+	enum class [[clang::enum_extensibility(closed)]] interruptible : bool
 	{
 		No, Yes
 	};
 
-	enum class [[clang::enum_extensibility(closed)]] ResourceOwnership
+	enum class [[clang::enum_extensibility(closed)]] resource_ownership
 	{
 		Normal,
 		Reader
@@ -314,12 +316,9 @@ class wait_queue
 
 	static error_code unblock_thread(thread* t, error_code code) TA_REQ(global_thread_lock);
 
-	error_code block(const timer_t& deadline, Interruptible intr) TA_REQ(global_thread_lock);
+	error_code block(interruptible intr) TA_REQ(global_thread_lock);
 
-	error_code block_etc(const timer_t& deadline,
-		uint32_t signal_mask,
-		ResourceOwnership reason,
-		Interruptible intr) TA_REQ(global_thread_lock);
+	error_code block_etc(uint32_t signal_mask, resource_ownership reason, interruptible intr) TA_REQ(global_thread_lock);
 
 	thread* peek() TA_REQ(global_thread_lock);
 

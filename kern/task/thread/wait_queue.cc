@@ -7,15 +7,12 @@ error_code wait_queue::unblock_thread(thread* t, error_code code) TA_REQ(global_
 	return 0;
 }
 
-error_code wait_queue::block(const timer_t& deadline, wait_queue::Interruptible intr) TA_REQ(global_thread_lock)
+error_code wait_queue::block(interruptible intr) TA_REQ(global_thread_lock)
 {
 	return 0;
 }
 
-error_code wait_queue::block_etc(const timer_t& deadline,
-	uint32_t signal_mask,
-	wait_queue::ResourceOwnership reason,
-	wait_queue::Interruptible intr) TA_REQ(global_thread_lock)
+error_code wait_queue::block_etc(uint32_t signal_mask, resource_ownership reason, interruptible intr) TA_REQ(global_thread_lock)
 {
 	return 0;
 }
@@ -37,5 +34,5 @@ void wait_queue::wake_all(bool reschedule, error_code code) TA_REQ(global_thread
 
 bool wait_queue::empty() const TA_REQ(global_thread_lock)
 {
-	return false;
+	return list.empty();
 }

@@ -49,7 +49,7 @@ target_compile_options(kernel BEFORE
         PRIVATE -mno-red-zone
         PRIVATE -nostdlibinc
         PRIVATE -Wthread-safety
-        PRIVATE -Wthread-safety-negative
+        #PRIVATE -Wthread-safety-negative
         PRIVATE -Wthread-safety-beta
         PRIVATE -D__ELF__
         PRIVATE -D_LDBL_EQ_DBL
