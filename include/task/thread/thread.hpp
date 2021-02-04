@@ -8,6 +8,7 @@
 #include "kbl/lock/spinlock.h"
 #include "kbl/atomic/atomic.hpp"
 #include "kbl/data/list.hpp"
+#include "kbl/data/name.hpp"
 
 #include "ktl/shared_ptr.hpp"
 #include "ktl/unique_ptr.hpp"
