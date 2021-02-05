@@ -5,8 +5,17 @@
 
 #include "kbl/data/utility.hpp"
 
+//#define ENABLE_DEBUG_MACRO
+#ifndef ENABLE_DEBUG_MACRO
+#ifdef KDEBUG_ASSERT
+#undef KDEBUG_ASSERT
+#endif
+#define KDEBUG_ASSERT(...)
+#endif
+
 namespace kbl
 {
+
 // linked list head_
 template<typename TParent, typename TMutex>
 struct list_link

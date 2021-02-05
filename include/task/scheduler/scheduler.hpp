@@ -15,10 +15,13 @@
 namespace task
 {
 
+using scheduler_timer_callback = void (*)(struct scheduler_timer* timer, time_type time, void* arg);
+
 struct scheduler_timer
 {
 	int64_t expires{ 0 };
-	thread* owner{ nullptr };
+	void *arg;
+	scheduler_timer_callback callback;
 
 	kbl::list_link<scheduler_timer, lock::spinlock> link{ this };
 };

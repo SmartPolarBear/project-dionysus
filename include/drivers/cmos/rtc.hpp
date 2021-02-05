@@ -1,6 +1,7 @@
 #pragma once
 
 #include "system/types.h"
+#include "system/time.hpp"
 
 #include <compare>
 

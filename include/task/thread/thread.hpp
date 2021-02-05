@@ -17,6 +17,7 @@
 #include "ktl/mutex/lock_guard.hpp"
 
 #include "system/cls.hpp"
+#include "system/time.hpp"
 
 #include "drivers/apic/traps.h"
 
@@ -34,6 +35,7 @@ class process;
 class kernel_stack;
 class user_stack;
 class wait_queue;
+class wait_queue_state;
 
 enum class [[clang::enum_extensibility(closed)]] cpu_affinity_type
 {
@@ -61,6 +63,7 @@ class thread final
 	friend class kernel_stack;
 	friend class user_stack;
 	friend class wait_queue;
+	friend class wait_queue_state;
 
 	enum class [[clang::enum_extensibility(closed)]] thread_states
 	{
@@ -183,15 +186,19 @@ class thread final
 
 	void finish_dead_transition();
 
+	kbl::name<64> name_{ "" };
+
+	error_code exit_code_{ ERROR_SUCCESS };
+
+	ktl::unique_ptr<wait_queue> exit_code_wait_queue_{ nullptr };
+
+	ktl::unique_ptr<wait_queue_state> wait_queue_state_{ nullptr };
+
 	kernel_stack* kstack_{ nullptr };
 
 	user_stack* ustack_{ nullptr };
 
 	process* parent_{ nullptr };
-
-	kbl::name<64> name_{ "" };
-
-	error_code exit_code_{ ERROR_SUCCESS };
 
 	bool need_reschedule_{ false };
 
@@ -202,10 +209,6 @@ class thread final
 	uint64_t flags_{ 0 };
 
 	uint64_t signals_{ 0 };
-
-	wait_queue* blocking_on_{ nullptr };
-
-	wait_queue* exit_code_wait_queue_{ nullptr };
 
 	link_type run_queue_link{ this };
 	link_type zombie_queue_link{ this };
@@ -303,10 +306,7 @@ class wait_queue
 		Reader
 	};
 
-	constexpr wait_queue()
-	{
-
-	}
+	wait_queue() = default;
 
 	wait_queue(wait_queue&) = delete;
 	wait_queue(wait_queue&&) = delete;
@@ -318,7 +318,9 @@ class wait_queue
 
 	error_code block(interruptible intr) TA_REQ(global_thread_lock);
 
-	error_code block_etc(uint32_t signal_mask, resource_ownership reason, interruptible intr) TA_REQ(global_thread_lock);
+	error_code block_etc(uint32_t signal_mask,
+		resource_ownership reason,
+		interruptible intr) TA_REQ(global_thread_lock);
 
 	thread* peek() TA_REQ(global_thread_lock);
 
@@ -329,10 +331,44 @@ class wait_queue
 
 	size_t size() const TA_REQ(global_thread_lock)
 	{
-		return list.size();
+		return block_list_.size();
 	}
  private:
-	thread::wait_queue_list_type list;
+	thread::wait_queue_list_type block_list_;
+};
+
+class wait_queue_state
+{
+ public:
+	friend class wait_queue;
+	friend class thread;
+
+	wait_queue_state() = delete;
+	wait_queue_state(const wait_queue_state&) = delete;
+	wait_queue_state& operator=(const wait_queue_state&) = delete;
+
+	explicit wait_queue_state(thread* pa)
+		: parent_(pa)
+	{
+	}
+
+	bool holding() TA_REQ(global_thread_lock);
+
+	void block(wait_queue::interruptible intr, error_code status) TA_REQ(global_thread_lock);
+
+	void unblock_if_interruptible(thread* t, error_code status) TA_REQ(global_thread_lock);
+
+	bool unsleep(thread* thread, error_code status) TA_REQ(global_thread_lock);
+	bool unsleep_if_interruptible(thread* thread, error_code status) TA_REQ(global_thread_lock);
+
+ private:
+
+
+	thread* parent_{ nullptr };
+
+	wait_queue* blocking_on_{ nullptr };
+	error_code block_code_{ ERROR_SUCCESS };
+	wait_queue::interruptible interruptible_{ wait_queue::interruptible::No };
 };
 
 extern thread::master_list_type global_thread_list;

@@ -123,9 +123,6 @@ using byte_t = uint8_t;
 using word_t = uint16_t;
 using dword_t = uint32_t;
 
-using timestamp_t = uint64_t;
-
-using time_type = int64_t;
 
 // FIXME
 using cpu_num_type = uint16_t;

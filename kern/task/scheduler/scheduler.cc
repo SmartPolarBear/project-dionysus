@@ -4,6 +4,8 @@
 
 #include "system/scheduler.h"
 
+#include "drivers/cmos/rtc.hpp"
+
 #include "ktl/mutex/lock_guard.hpp"
 
 #include "ktl/algorithm.hpp"
@@ -277,11 +279,7 @@ void task::scheduler::check_timers()
 	{
 		auto next = timer->link.next->parent;
 
-		auto t = timer->owner;
-
-		// TODO: status checking?
-
-		unblock(t);
+		timer->callback(timer, cmos::cmos_read_rtc_timestamp(), timer->arg);
 
 		remove_timer(timer);
 		if (!next) break;
