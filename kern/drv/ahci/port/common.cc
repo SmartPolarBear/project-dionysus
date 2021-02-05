@@ -150,7 +150,7 @@ error_code ahci::ahci_port_send_command(ahci_port* port,
 	if (spin == AHCI_SPIN_WAIT_MAX)
 	{
 		kdebug::kdebug_log("AHCI: Device hang.\n");
-		return -ERROR_DEV_TIMEOUT;
+		return -ERROR_TIMEOUT;
 	}
 
 	port->ci |= (1u << slot);

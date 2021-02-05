@@ -7,7 +7,7 @@
 // declaration to avoid fucking circle reference of headers
 namespace kdebug
 {
-	void kdebug_warning(const char* fmt, ...);
+void kdebug_warning(const char* fmt, ...);
 }
 
 // use negative value to indicate errors
@@ -29,7 +29,7 @@ enum error_code_values : error_code
 	ERROR_CANNOT_WAKEUP,            // task's state isn't valid for waking up
 	ERROR_HAS_KILLED,               // task to be killed has been killed
 	ERROR_BUSY,                    // device is busy
-	ERROR_DEV_TIMEOUT,                // device operation time out
+	ERROR_TIMEOUT,                // device operation time out
 	ERROR_IO,                        // IO error
 	ERROR_OBSOLETE,          // Out of date
 	ERROR_OUT_OF_BOUND,
@@ -74,8 +74,8 @@ template<typename T>
 static inline error_code get_error_code(error_code_with_result<T> ret) noexcept
 {
 	return std::holds_alternative<error_code>(ret)
-		   ? std::get<error_code>(ret)
-		   : ERROR_SUCCESS;
+	       ? std::get<error_code>(ret)
+	       : ERROR_SUCCESS;
 }
 
 template<typename T>

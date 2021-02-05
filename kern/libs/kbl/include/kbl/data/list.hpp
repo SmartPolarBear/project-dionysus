@@ -276,7 +276,7 @@ class intrusive_list
 			list_for_safe(iter, t, &another.head_)
 			{
 				list_remove_init(iter);
-				list_add(iter, this->head_);
+				list_add(iter, &this->head_);
 			}
 
 			size_ = another.size_;

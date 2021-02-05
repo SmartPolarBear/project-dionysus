@@ -308,6 +308,8 @@ class wait_queue
 
 	wait_queue() = default;
 
+	~wait_queue();
+
 	wait_queue(wait_queue&) = delete;
 	wait_queue(wait_queue&&) = delete;
 
@@ -334,6 +336,10 @@ class wait_queue
 		return block_list_.size();
 	}
  private:
+	static void timeout_handle(struct scheduler_timer*, time_type now, void* arg);
+
+	void dequeue(thread* t, error_code err) TA_REQ(global_thread_lock);
+
 	thread::wait_queue_list_type block_list_;
 };
 
@@ -362,7 +368,6 @@ class wait_queue_state
 	bool unsleep_if_interruptible(thread* thread, error_code status) TA_REQ(global_thread_lock);
 
  private:
-
 
 	thread* parent_{ nullptr };
 

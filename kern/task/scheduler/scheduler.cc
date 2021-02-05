@@ -332,3 +332,13 @@ void task::scheduler::current::enter()
 	// enter scheduler by directly calling the idle routine
 	cpu->scheduler->idle(nullptr);
 }
+
+void task::scheduler::current::block()
+{
+
+}
+
+bool task::scheduler::current::unblock(task::thread::wait_queue_list_type threads)
+{
+	return false;
+}

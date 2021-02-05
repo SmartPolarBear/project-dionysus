@@ -74,7 +74,11 @@ class scheduler
 
 		static bool unblock(thread* t) TA_EXCL(global_thread_lock);
 
+		static bool unblock(thread::wait_queue_list_type threads);
+
 		static void insert(thread* t) TA_EXCL(global_thread_lock);
+
+		static void block();
 
 		static void timer_tick_handle() TA_REQ(!global_thread_lock, !timer_lock);
 
