@@ -5,6 +5,8 @@
 
 #include "kbl/data/utility.hpp"
 
+#pragma push_macro("KDEBUG_ASSERT")
+
 //#define ENABLE_DEBUG_MACRO
 #ifndef ENABLE_DEBUG_MACRO
 #ifdef KDEBUG_ASSERT
@@ -1093,3 +1095,5 @@ class intrusive_list
 #pragma pop_macro("list_for_safe")
 
 } // namespace
+
+#pragma pop_macro("KDEBUG_ASSERT")

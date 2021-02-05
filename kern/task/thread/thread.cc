@@ -237,8 +237,8 @@ void thread::switch_to() TA_REQ(global_thread_lock)
 }
 
 thread::thread(process* prt, ktl::string_view nm, cpu_affinity aff)
-	: parent_{ prt },
-	  name_{ nm },
+	: name_{ nm },
+	  parent_{ prt },
 	  affinity_{ aff }
 {
 }
@@ -365,7 +365,8 @@ error_code thread::suspend()
 	{
 		scheduler::current::reschedule();
 	}
-
+	//FIXME:
+	KDEBUG_NOT_IMPLEMENTED;
 }
 
 void thread::forget()

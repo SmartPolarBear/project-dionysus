@@ -3,5 +3,6 @@ cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 target_sources(kernel
         PRIVATE thread.S
         PRIVATE thread.cc
-        PRIVATE wait_queue.cc)
+        PRIVATE wait_queue.cc
+        PRIVATE deadline.cc)
 
