@@ -343,6 +343,8 @@ class wait_queue
 	thread::wait_queue_list_type block_list_;
 };
 
+
+
 class wait_queue_state
 {
  public:
@@ -357,6 +359,8 @@ class wait_queue_state
 		: parent_(pa)
 	{
 	}
+
+	~wait_queue_state();
 
 	bool holding() TA_REQ(global_thread_lock);
 

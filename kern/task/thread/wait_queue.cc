@@ -162,7 +162,7 @@ void wait_queue::timeout_handle(scheduler_timer* timer, time_type time, void* ar
 
 	cpu->scheduler->remove_timer(timer);
 
-	unblock_thread(t,ERROR_TIMEOUT);
+	unblock_thread(t, ERROR_TIMEOUT);
 
 	global_thread_lock.unlock();
 }
@@ -175,6 +175,11 @@ wait_queue::~wait_queue()
 	}
 }
 
+wait_queue_state::~wait_queue_state()
+{
+	KDEBUG_ASSERT(blocking_on_ == nullptr);
+}
+
 bool wait_queue_state::holding() TA_REQ(global_thread_lock)
 {
 	return parent_->wait_queue_link.next != &parent_->wait_queue_link;
@@ -182,20 +187,31 @@ bool wait_queue_state::holding() TA_REQ(global_thread_lock)
 
 void wait_queue_state::block(wait_queue::interruptible intr, error_code status) TA_REQ(global_thread_lock)
 {
-
+	block_code_ = status;
+	interruptible_ = intr;
+	scheduler::current::block();
+	interruptible_ = wait_queue::interruptible::No;
 }
 
 void wait_queue_state::unblock_if_interruptible(thread* t, error_code status) TA_REQ(global_thread_lock)
 {
-
+	if (interruptible_ == wait_queue::interruptible::Yes)
+	{
+		wait_queue::unblock_thread(t, status);
+	}
 }
 
 bool wait_queue_state::unsleep(thread* thread, error_code status) TA_REQ(global_thread_lock)
 {
-	return false;
+	block_code_ = status;
+	return scheduler::current::unblock(thread);
 }
 
 bool wait_queue_state::unsleep_if_interruptible(thread* thread, error_code status) TA_REQ(global_thread_lock)
 {
+	if (interruptible_ == wait_queue::interruptible::Yes)
+	{
+		return unsleep(thread, status);
+	}
 	return false;
 }
