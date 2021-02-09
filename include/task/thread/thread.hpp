@@ -163,9 +163,6 @@ class thread final
 	[[deprecated("We rarely force terminate a thread using this."), maybe_unused]]
 	void forget() TA_REQ(!global_thread_lock);
 
-	// FIXME: should be private
-	void switch_to() TA_REQ(global_thread_lock);
-
 	const char* get_name_raw() const
 	{
 		return name_.data();
@@ -179,6 +176,7 @@ class thread final
 	thread_states state{ thread_states::INITIAL };
 
  private:
+	void switch_to() TA_REQ(global_thread_lock);
 
 	thread(process* parent, ktl::string_view name, cpu_affinity affinity);
 

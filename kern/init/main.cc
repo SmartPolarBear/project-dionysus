@@ -72,14 +72,54 @@ static inline void run(const char* name)
 	write_format("[cpu %d]load binary: %s\n", cpu->id, name);
 }
 
+error_code routine_a(void* arg)
+{
+	uint64_t buf[3] = { 0, 1, 1 };
+	for (int i = 2; i <= 1000000; i++)
+	{
+		buf[i % 3] = buf[(i - 1) % 3] + buf[(i - 2) % 3];
+		write_format("\n%d " + (i % 5 != 0), buf[i % 3]);
+	}
+	write_format("\n");
+	return ERROR_SUCCESS;
+}
+
+error_code routine_b(void* arg)
+{
+	auto t = reinterpret_cast<task::thread*>(arg);
+	error_code retcode = 0;
+	t->join(&retcode);
+	write_format("routine b: a exit with code %lld\n", retcode);
+	return retcode;
+}
+
 error_code init_routine([[maybe_unused]]void* arg)
 {
 	write_format("%d\n", cpu->id);
 
 	if (cpu->id == 0)
 	{
-		run("/ipctest");
-		run("/hello");
+//		run("/ipctest");
+//		run("/hello");
+
+		auto ta = task::thread::create(nullptr, "a", routine_a, nullptr);
+		if (has_error(ta))
+		{
+			KDEBUG_GERNERALPANIC_CODE(get_error_code(ta));
+		}
+
+		auto tb = task::thread::create(nullptr, "b", routine_b, (void*)get_result(ta));
+		if (has_error(tb))
+		{
+			KDEBUG_GERNERALPANIC_CODE(get_error_code(tb));
+		}
+
+		{
+			ktl::mutex::lock_guard g{ task::global_thread_lock };
+			task::scheduler::current::unblock(get_result(ta));
+			task::scheduler::current::unblock(get_result(tb));
+			int a = 0;
+		}
 	}
 
 	return ERROR_SUCCESS;

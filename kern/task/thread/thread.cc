@@ -9,6 +9,7 @@
 #include "system/vmm.h"
 #include "system/kmalloc.hpp"
 #include "system/scheduler.h"
+#include "system/deadline.hpp"
 
 #include "drivers/acpi/cpu.h"
 
@@ -224,7 +225,8 @@ void thread::switch_to() TA_REQ(global_thread_lock)
 		}
 		else
 		{
-			lcr3(V2P((uintptr_t)this->get_mm()->pgdir));
+			lcr3(V2P((uintptr_t)
+			this->get_mm()->pgdir));
 		}
 
 		cur_thread = this;
@@ -238,6 +240,7 @@ void thread::switch_to() TA_REQ(global_thread_lock)
 
 thread::thread(process* prt, ktl::string_view nm, cpu_affinity aff)
 	: name_{ nm },
+	  exit_code_wait_queue_{ new wait_queue },
 	  parent_{ prt },
 	  affinity_{ aff }
 {
@@ -399,7 +402,7 @@ error_code thread::detach()
 	{
 		flags_ &= ~FLAG_DETACHED;
 		g.unlock();
-		return join(nullptr, 0);
+		return join(nullptr);
 	}
 	else
 	{
@@ -412,19 +415,8 @@ error_code thread::detach()
 
 error_code thread::join(error_code* out_err_code)
 {
-	// wait util this finished all work
-	while (state != thread_states::DYING && state != thread_states::DEAD)
-	{
-		scheduler::current::reschedule();
-	}
 
-	// TODO: wake up those who wait for the ret code
-
-	if (out_err_code)
-	{
-		*out_err_code = this->exit_code_;
-	}
-	return 0;
+	return exit_code_wait_queue_->block(wait_queue::interruptible::No);
 }
 
 error_code thread::join(error_code* out_err_code, time_type deadline)
