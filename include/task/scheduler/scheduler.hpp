@@ -20,7 +20,7 @@ using scheduler_timer_callback = void (*)(struct scheduler_timer* timer, time_ty
 struct scheduler_timer
 {
 	int64_t expires{ 0 };
-	void *arg;
+	void* arg;
 	scheduler_timer_callback callback;
 
 	kbl::list_link<scheduler_timer, lock::spinlock> link{ this };
@@ -53,12 +53,16 @@ class scheduler
 
 	void schedule() TA_REQ(global_thread_lock);
 
-	void reschedule() TA_EXCL(global_thread_lock);
+	void reschedule() TA_REQ(!global_thread_lock);
+	void reschedule_locked() TA_REQ(global_thread_lock);
 
-	void yield() TA_EXCL(global_thread_lock);
+	void yield() TA_REQ(!global_thread_lock);
+	void yield_locked() TA_REQ(global_thread_lock);
 
-	void unblock(thread* t) TA_REQ(global_thread_lock);
-	void insert(thread* t) TA_EXCL(global_thread_lock);
+	void unblock_locked(thread* t) TA_REQ(global_thread_lock);
+
+	void insert(thread* t) TA_REQ(!global_thread_lock);
+	void insert_locked(thread* t) TA_REQ(global_thread_lock);
 
 	void add_timer(scheduler_timer* timer);
 
@@ -69,6 +73,8 @@ class scheduler
 	struct current
 	{
 		static void reschedule() TA_EXCL(global_thread_lock);
+
+		static void reschedule_locked()TA_REQ(global_thread_lock);
 
 		static void yield() TA_REQ(!global_thread_lock);
 

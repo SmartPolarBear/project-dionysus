@@ -22,7 +22,12 @@ void task::scheduler::reschedule()
 
 	ktl::mutex::lock_guard guard{ global_thread_lock };
 
-	// terminate current thread
+	reschedule_locked();
+}
+
+void task::scheduler::reschedule_locked() TA_REQ(global_thread_lock)
+{
+// terminate current thread
 	if (cur_thread->state == thread::thread_states::RUNNING)
 	{
 		cur_thread->state = thread::thread_states::READY;
@@ -35,10 +40,14 @@ void task::scheduler::yield()
 {
 	lock_guard g{ global_thread_lock };
 
+	yield_locked();
+}
+
+void task::scheduler::yield_locked() TA_REQ(global_thread_lock)
+{
 	cur_thread->state = thread::thread_states::READY;
 
 	cur_thread->need_reschedule_ = true;
-
 }
 
 void task::scheduler::schedule()
@@ -88,7 +97,7 @@ void task::scheduler::timer_tick_handle()
 	tick(cur_thread.get());
 }
 
-void task::scheduler::unblock(task::thread* t)
+void task::scheduler::unblock_locked(task::thread* t)
 {
 	t->state = thread::thread_states::READY;
 	enqueue(t);
@@ -124,7 +133,11 @@ task::thread* task::scheduler::fetch()
 void task::scheduler::insert(task::thread* t)
 {
 	lock_guard g{ global_thread_lock };
+	insert_locked(t);
+}
 
+void task::scheduler::insert_locked(task::thread* t) TA_REQ(global_thread_lock)
+{
 	enqueue(t);
 }
 
@@ -292,6 +305,11 @@ void task::scheduler::current::reschedule()
 	cpu->scheduler->reschedule();
 }
 
+void task::scheduler::current::reschedule_locked() TA_REQ(global_thread_lock)
+{
+	cpu->scheduler->reschedule_locked();
+}
+
 void task::scheduler::current::yield()
 {
 	cpu->scheduler->yield();
@@ -302,12 +320,12 @@ bool task::scheduler::current::unblock(task::thread* t)
 	if (t->affinity_.cpu != CPU_NUM_INVALID)
 	{
 		KDEBUG_ASSERT(t->affinity_.cpu < valid_cpus.size());
-		valid_cpus[t->affinity_.cpu].scheduler->unblock(t);
+		valid_cpus[t->affinity_.cpu].scheduler->unblock_locked(t);
 
 		return t->affinity_.cpu == cpu->id;
 	}
 
-	cpu->scheduler->unblock(t);
+	cpu->scheduler->unblock_locked(t);
 	return false;
 }
 
