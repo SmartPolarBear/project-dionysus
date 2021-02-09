@@ -138,7 +138,7 @@ error_code_with_result<ktl::shared_ptr<task::process>> task::process::create(con
 	main_thread->critical_ = true;
 
 	{
-
+		ktl::mutex::lock_guard g{ task::global_thread_lock };
 		scheduler::current::unblock(main_thread);
 	}
 

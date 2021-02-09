@@ -296,8 +296,11 @@ void thread::kill()
 	case thread_states::RUNNING:
 		break;
 	case thread_states::SUSPENDED:
+	{
+		ktl::mutex::lock_guard g{ task::global_thread_lock };
 		reschedule_needed = scheduler::current::unblock(this);
 		break;
+	}
 	case thread_states::BLOCKED:
 	case thread_states::BLOCKED_READ_LOCK:
 		// TODO: wakeup
@@ -342,8 +345,11 @@ error_code thread::suspend()
 	switch (state)
 	{
 	case thread_states::INITIAL:
+	{
+		ktl::mutex::lock_guard g{ task::global_thread_lock };
 		reschedule_needed = scheduler::current::unblock(this);
 		break;
+	}
 	case thread_states::READY:
 		break;
 	case thread_states::RUNNING:

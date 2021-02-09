@@ -91,7 +91,7 @@ void task::scheduler::timer_tick_handle()
 void task::scheduler::unblock(task::thread* t)
 {
 	t->state = thread::thread_states::READY;
-	scheduler::current::insert(t);
+	enqueue(t);
 }
 
 void task::scheduler::enqueue(task::thread* t)
