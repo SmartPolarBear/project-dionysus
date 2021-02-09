@@ -26,7 +26,7 @@ error_code wait_queue::unblock_thread(thread* t, error_code code) TA_REQ(global_
 
 	if (scheduler::current::unblock(t))
 	{
-		scheduler::current::reschedule();
+		scheduler::current::reschedule_locked();
 	}
 
 	return ERROR_SUCCESS;
@@ -106,7 +106,7 @@ bool wait_queue::wake_one(bool reschedule, error_code code) TA_REQ(global_thread
 
 		if (reschedule && local_reschedule)
 		{
-			scheduler::current::reschedule();
+			scheduler::current::reschedule_locked();
 			woke = true;
 		}
 	}
@@ -135,7 +135,7 @@ void wait_queue::wake_all(bool reschedule, error_code code) TA_REQ(global_thread
 	bool local_resched = scheduler::current::unblock(ktl::move(list));
 	if (reschedule && local_resched)
 	{
-		scheduler::current::reschedule();
+		scheduler::current::reschedule_locked();
 	}
 }
 

@@ -336,7 +336,7 @@ class wait_queue
 		return block_list_.size();
 	}
  private:
-	static void timeout_handle(struct scheduler_timer*, time_type now, void* arg) TA_REQ(global_thread_lock);
+	static void timeout_handle(struct scheduler_timer*, time_type now, void* arg) TA_REL(global_thread_lock);
 
 	void dequeue(thread* t, error_code err) TA_REQ(global_thread_lock);
 
