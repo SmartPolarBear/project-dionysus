@@ -132,7 +132,7 @@ void wait_queue::wake_all(bool reschedule, error_code code) TA_REQ(global_thread
 		list.push_back(t);
 	}
 
-	bool local_resched = scheduler::current::unblock(ktl::move(list));
+	bool local_resched = scheduler::current::unblock_locked(ktl::move(list));
 	if (reschedule && local_resched)
 	{
 		scheduler::current::reschedule_locked();

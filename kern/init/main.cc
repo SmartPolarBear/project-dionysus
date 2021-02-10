@@ -119,10 +119,9 @@ error_code init_routine([[maybe_unused]]void* arg)
 		}
 
 		{
-//			ktl::mutex::lock_guard g{ task::global_thread_lock };
+			ktl::mutex::lock_guard g{ task::global_thread_lock };
 			task::scheduler::current::unblock(get_result(ta));
 			task::scheduler::current::unblock(get_result(tb));
-			int a = 0;
 		}
 	}
 

@@ -356,7 +356,20 @@ void task::scheduler::current::block_locked()
 	cpu->scheduler->reschedule_locked();
 }
 
-bool task::scheduler::current::unblock(task::thread::wait_queue_list_type threads)
+bool task::scheduler::current::unblock_locked(task::thread::wait_queue_list_type threads)
 {
-	return false;
+	KDEBUG_ASSERT(global_thread_lock.holding());
+
+	while (!threads.empty())
+	{
+		auto t = threads.front_ptr();
+		threads.pop_front();
+
+		KDEBUG_ASSERT(!t->is_idle());
+
+		t->state = thread::thread_states::READY;
+		scheduler::current::unblock(t);
+	}
+
+	return true;
 }

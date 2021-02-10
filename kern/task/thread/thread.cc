@@ -447,7 +447,7 @@ error_code thread::join(error_code* out_err_code)
 			}
 		}
 
-		KDEBUG_ASSERT(state == thread_states::DEAD);
+		KDEBUG_ASSERT(state == thread_states::DYING || state == thread_states::DEAD);
 		KDEBUG_ASSERT(!wait_queue_state_->holding());
 
 		if (out_err_code)
@@ -501,9 +501,7 @@ void thread::current::exit(error_code code)
 		}
 		else
 		{
-			cur_thread->remove_from_lists();
-
-			// TODO: waiting queue
+			cur_thread->exit_code_wait_queue_->wake_all(false, code);
 		}
 	}
 
