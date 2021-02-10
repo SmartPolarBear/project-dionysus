@@ -84,7 +84,7 @@ class scheduler
 
 		static void insert(thread* t) TA_EXCL(global_thread_lock);
 
-		static void block();
+		static void block_locked() TA_REQ(global_thread_lock);
 
 		static void timer_tick_handle() TA_REQ(!global_thread_lock, !timer_lock);
 

@@ -75,9 +75,12 @@ static inline void run(const char* name)
 error_code routine_a(void* arg)
 {
 	uint64_t buf[3] = { 0, 1, 1 };
-	for (int i = 2; i <= 1000000; i++)
+	for (int i = 1; i <= 20; i++)
 	{
-		buf[i % 3] = buf[(i - 1) % 3] + buf[(i - 2) % 3];
+		if(i>=2)
+		{
+			buf[i % 3] = buf[(i - 1) % 3] + buf[(i - 2) % 3];
+		}
 		write_format("\n%d " + (i % 5 != 0), buf[i % 3]);
 	}
 	write_format("\n");
@@ -86,6 +89,7 @@ error_code routine_a(void* arg)
 
 error_code routine_b(void* arg)
 {
+	write_format("enter routine b.\n");
 	auto t = reinterpret_cast<task::thread*>(arg);
 	error_code retcode = 0;
 	t->join(&retcode);
@@ -115,7 +119,7 @@ error_code init_routine([[maybe_unused]]void* arg)
 		}
 
 		{
-			ktl::mutex::lock_guard g{ task::global_thread_lock };
+//			ktl::mutex::lock_guard g{ task::global_thread_lock };
 			task::scheduler::current::unblock(get_result(ta));
 			task::scheduler::current::unblock(get_result(tb));
 			int a = 0;

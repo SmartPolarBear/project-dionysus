@@ -73,7 +73,7 @@ error_code wait_queue::block_etc(uint32_t signal_mask, resource_ownership reason
 	cur_thread->wait_queue_state_->blocking_on_ = this;
 	cur_thread->wait_queue_state_->block_code_ = ERROR_SUCCESS;
 
-	scheduler::current::block();
+	scheduler::current::block_locked();
 
 	current_thread->wait_queue_state_->interruptible_ = interruptible::No;
 
@@ -189,7 +189,7 @@ void wait_queue_state::block(wait_queue::interruptible intr, error_code status) 
 {
 	block_code_ = status;
 	interruptible_ = intr;
-	scheduler::current::block();
+	scheduler::current::block_locked();
 	interruptible_ = wait_queue::interruptible::No;
 }
 

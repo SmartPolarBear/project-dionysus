@@ -226,7 +226,7 @@ void thread::switch_to() TA_REQ(global_thread_lock)
 		else
 		{
 			lcr3(V2P((uintptr_t)
-			this->get_mm()->pgdir));
+				this->get_mm()->pgdir));
 		}
 
 		cur_thread = this;
@@ -240,10 +240,23 @@ void thread::switch_to() TA_REQ(global_thread_lock)
 
 thread::thread(process* prt, ktl::string_view nm, cpu_affinity aff)
 	: name_{ nm },
-	  exit_code_wait_queue_{ new wait_queue },
 	  parent_{ prt },
 	  affinity_{ aff }
 {
+	kbl::allocate_checker ck{};
+
+	wait_queue_state_ = ktl::unique_ptr<wait_queue_state>(new(&ck) wait_queue_state{ this });
+	if (!ck.check())
+	{
+		KDEBUG_GERNERALPANIC_CODE(ERROR_MEMORY_ALLOC);
+	}
+
+	exit_code_wait_queue_ = ktl::unique_ptr<wait_queue>(new(&ck) wait_queue);
+	if (!ck.check())
+	{
+		KDEBUG_GERNERALPANIC_CODE(ERROR_MEMORY_ALLOC);
+	}
+
 }
 
 void thread::remove_from_lists()
@@ -415,8 +428,40 @@ error_code thread::detach()
 
 error_code thread::join(error_code* out_err_code)
 {
+	KDEBUG_ASSERT(exit_code_wait_queue_);
 
-	return exit_code_wait_queue_->block(wait_queue::interruptible::No);
+	{
+		lock_guard g{ global_thread_lock };
+
+		if (flags_ & FLAG_DETACHED)
+		{
+			return ERROR_INVALID;
+		}
+
+		if (state != thread_states::DEAD)
+		{
+			auto ret = exit_code_wait_queue_->block(wait_queue::interruptible::No);
+			if (ret != ERROR_SUCCESS)
+			{
+				return ret;
+			}
+		}
+
+		KDEBUG_ASSERT(state == thread_states::DEAD);
+		KDEBUG_ASSERT(!wait_queue_state_->holding());
+
+		if (out_err_code)
+		{
+			*out_err_code = exit_code_;
+		}
+
+		this->remove_from_lists();
+
+	}
+
+	delete this;
+
+	return ERROR_SUCCESS;
 }
 
 error_code thread::join(error_code* out_err_code, time_type deadline)

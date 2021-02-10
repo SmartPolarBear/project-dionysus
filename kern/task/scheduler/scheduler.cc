@@ -351,9 +351,9 @@ void task::scheduler::current::enter()
 	cpu->scheduler->idle(nullptr);
 }
 
-void task::scheduler::current::block()
+void task::scheduler::current::block_locked()
 {
-
+	cpu->scheduler->reschedule_locked();
 }
 
 bool task::scheduler::current::unblock(task::thread::wait_queue_list_type threads)
