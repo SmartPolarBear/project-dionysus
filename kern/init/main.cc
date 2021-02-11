@@ -77,14 +77,15 @@ error_code routine_a(void* arg)
 	uint64_t buf[3] = { 0, 1, 1 };
 	for (int i = 1; i <= 20; i++)
 	{
-		if(i>=2)
+		if (i >= 2)
 		{
 			buf[i % 3] = buf[(i - 1) % 3] + buf[(i - 2) % 3];
 		}
 		write_format("\n%d " + (i % 5 != 0), buf[i % 3]);
 	}
 	write_format("\n");
-	return ERROR_SUCCESS;
+	auto ret = kbl::magic("fuck");
+	return ret;
 }
 
 error_code routine_b(void* arg)
@@ -92,7 +93,12 @@ error_code routine_b(void* arg)
 	write_format("enter routine b.\n");
 	auto t = reinterpret_cast<task::thread*>(arg);
 	error_code retcode = 0;
-	t->join(&retcode);
+	auto ret = t->join(&retcode);
+	if (ret != ERROR_SUCCESS)
+	{
+		write_format("routine b: a exit with code %lld\n", ret);
+		return ret;
+	}
 	write_format("routine b: a exit with code %lld\n", retcode);
 	return retcode;
 }
