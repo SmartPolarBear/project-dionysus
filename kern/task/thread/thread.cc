@@ -336,12 +336,40 @@ void thread::kill()
 
 void thread::resume()
 {
+	canary.assert();
 
+	bool intr_disable = arch_ints_disabled();
+	bool resched = false;
+	if (intr_disable)
+	{
+		resched = true;
+	}
+
+	{
+		lock_guard g{ global_thread_lock };
+
+		if (state == thread_states::DEAD || state == thread_states::DYING)
+		{
+			return;
+		}
+
+		signals_ &= ~SIGNAL_SUSPEND;
+
+		if (state == thread_states::INITIAL || state == thread_states::SUSPENDED)
+		{
+			bool local_reschedule = scheduler::current::unblock(this);
+			if (resched && local_reschedule)
+			{
+				scheduler::current::reschedule_locked();
+			}
+		}
+	}
 }
 
 error_code thread::suspend()
 {
 	KDEBUG_ASSERT(!is_idle());
+	bool local_reschedule = false;
 
 	{
 		lock_guard g{ global_thread_lock };
@@ -352,41 +380,41 @@ error_code thread::suspend()
 		}
 
 		signals_ |= SIGNAL_KILLED;
+
+		switch (state)
+		{
+		case thread_states::INITIAL:
+		{
+			ktl::mutex::lock_guard g{ task::global_thread_lock };
+			local_reschedule = scheduler::current::unblock(this);
+			break;
+		}
+		case thread_states::READY:
+			break;
+		case thread_states::RUNNING:
+			break;
+		case thread_states::SUSPENDED:
+			break;
+		case thread_states::BLOCKED:
+		case thread_states::BLOCKED_READ_LOCK:
+			wait_queue_state_->unblock_if_interruptible(this, ERROR_INTERNAL_INTR_RETRY);
+			break;
+		case thread_states::SLEEPING:
+			local_reschedule = wait_queue_state_->unsleep_if_interruptible(this, ERROR_INTERNAL_INTR_RETRY);
+			break;
+		default:
+		case thread_states::DYING:
+		case thread_states::DEAD:
+			KDEBUG_GERNERALPANIC_CODE(ERROR_INVALID);
+		}
 	}
 
-	bool reschedule_needed = false;
-
-	switch (state)
-	{
-	case thread_states::INITIAL:
-	{
-		ktl::mutex::lock_guard g{ task::global_thread_lock };
-		reschedule_needed = scheduler::current::unblock(this);
-		break;
-	}
-	case thread_states::READY:
-		break;
-	case thread_states::RUNNING:
-		break;
-	case thread_states::SUSPENDED:
-		break;
-	case thread_states::BLOCKED:
-	case thread_states::BLOCKED_READ_LOCK:
-		// TODO wake up wait queue
-		break;
-	case thread_states::DYING:
-		break;
-	default:
-	case thread_states::DEAD:
-		KDEBUG_GERNERALPANIC_CODE(ERROR_INVALID);
-	}
-
-	if (need_reschedule_)
+	if (need_reschedule_ && local_reschedule)
 	{
 		scheduler::current::reschedule();
 	}
-	//FIXME:
-	KDEBUG_NOT_IMPLEMENTED;
+
+	return ERROR_SUCCESS;
 }
 
 void thread::forget()
@@ -405,10 +433,12 @@ void thread::forget()
 
 error_code thread::detach()
 {
+	canary.assert();
+
 	lock_guard g{ global_thread_lock };
 
-	// TODO: wakeup joiners with BAD_STATE
-
+	exit_code_wait_queue_->wake_all(false, ERROR_INVALID);
+	
 	if (state == thread_states::DEAD)
 	{
 		flags_ &= ~FLAG_DETACHED;
@@ -476,7 +506,13 @@ error_code thread::join(error_code* out_err_code, time_type deadline)
 
 error_code thread::detach_and_resume()
 {
-	return 0;
+	auto ret = detach();
+	if (ret != ERROR_SUCCESS)
+	{
+		return ret;
+	}
+	resume();
+	return ERROR_SUCCESS;
 }
 
 thread::~thread()

@@ -74,6 +74,7 @@ class thread final
 		SUSPENDED,
 		BLOCKED,
 		BLOCKED_READ_LOCK,
+		SLEEPING,
 		DYING,
 		DEAD,
 	};
