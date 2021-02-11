@@ -19,6 +19,7 @@
 
 #include "system/cls.hpp"
 #include "system/time.hpp"
+#include "system/deadline.hpp"
 
 #include "drivers/apic/traps.h"
 
@@ -186,7 +187,9 @@ class thread final
 
 	void finish_dead_transition();
 
-	kbl::canary<kbl::magic("thrd")> canary;
+	void process_pending_signals();
+
+	kbl::canary<kbl::magic("thrd")> canary_;
 
 	kbl::name<64> name_{ "" };
 
@@ -216,6 +219,7 @@ class thread final
 	link_type zombie_queue_link{ this };
 	link_type wait_queue_link{ this };
 	link_type master_list_link{ this };
+
  public:
 	using master_list_type = kbl::intrusive_list<thread, lock::spinlock, &thread::master_list_link, true, false>;
 	using wait_queue_list_type = kbl::intrusive_list<thread, lock::spinlock, &thread::wait_queue_link, true, false>;
@@ -322,7 +326,10 @@ class wait_queue
 
 	error_code block(interruptible intr) TA_REQ(global_thread_lock);
 
-	error_code block_etc(uint32_t signal_mask,
+	error_code block(interruptible intr, const deadline& deadline)TA_REQ(global_thread_lock);
+
+	error_code block_etc(const deadline& deadline,
+		uint32_t signal_mask,
 		resource_ownership reason,
 		interruptible intr) TA_REQ(global_thread_lock);
 

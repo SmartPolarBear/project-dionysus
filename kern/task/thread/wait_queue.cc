@@ -4,6 +4,8 @@
 
 #include "system/deadline.hpp"
 
+#include "drivers/cmos/rtc.hpp"
+
 #include "ktl/move.hpp"
 
 using namespace task;
@@ -34,16 +36,29 @@ error_code wait_queue::unblock_thread(thread* t, error_code code) TA_REQ(global_
 
 error_code wait_queue::block(interruptible intr) TA_REQ(global_thread_lock)
 {
-	return block_etc(0, resource_ownership::Normal, intr);
+	return block_etc(deadline::infinite(), 0, resource_ownership::Normal, intr);
 }
 
-error_code wait_queue::block_etc(uint32_t signal_mask, resource_ownership reason, interruptible intr) TA_REQ(
+error_code wait_queue::block(wait_queue::interruptible intr, const deadline& ddl) TA_REQ(global_thread_lock)
+{
+	return block_etc(ddl, 0, resource_ownership::Normal, intr);
+}
+
+error_code wait_queue::block_etc(const deadline& ddl,
+	uint32_t signal_mask,
+	resource_ownership reason,
+	interruptible intr) TA_REQ(
 	global_thread_lock)
 {
 	auto current_thread = cur_thread.get();
 
 	KDEBUG_ASSERT(arch_ints_disabled());
 	KDEBUG_ASSERT(current_thread->state == thread::thread_states::RUNNING);
+
+	if (ddl.when() != TIME_INFINITE && ddl.when() < cmos::cmos_read_rtc_timestamp())
+	{
+		return ERROR_TIMEOUT;
+	}
 
 	if (intr == interruptible::Yes && (cur_thread->signals_ & ~signal_mask))[[unlikely]]
 	{
@@ -72,6 +87,17 @@ error_code wait_queue::block_etc(uint32_t signal_mask, resource_ownership reason
 
 	cur_thread->wait_queue_state_->blocking_on_ = this;
 	cur_thread->wait_queue_state_->block_code_ = ERROR_SUCCESS;
+
+	if (ddl.when() != TIME_INFINITE)
+	{
+		scheduler_timer timer;
+
+		timer.arg = current_thread;
+		timer.callback = timeout_handle;
+		timer.expires = ddl.when() - cmos::cmos_read_rtc_timestamp();
+
+		cpu->scheduler->add_timer(&timer);
+	}
 
 	scheduler::current::block_locked();
 

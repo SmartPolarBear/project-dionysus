@@ -286,6 +286,7 @@ void thread::finish_dead_transition()
 
 void thread::kill()
 {
+	canary_.assert();
 
 	{
 		lock_guard g1{ global_thread_lock };
@@ -336,7 +337,7 @@ void thread::kill()
 
 void thread::resume()
 {
-	canary.assert();
+	canary_.assert();
 
 	bool intr_disable = arch_ints_disabled();
 	bool resched = false;
@@ -433,12 +434,12 @@ void thread::forget()
 
 error_code thread::detach()
 {
-	canary.assert();
+	canary_.assert();
 
 	lock_guard g{ global_thread_lock };
 
 	exit_code_wait_queue_->wake_all(false, ERROR_INVALID);
-	
+
 	if (state == thread_states::DEAD)
 	{
 		flags_ &= ~FLAG_DETACHED;
@@ -456,7 +457,7 @@ error_code thread::detach()
 
 error_code thread::join(error_code* out_err_code)
 {
-	canary.assert();
+	canary_.assert();
 
 	KDEBUG_ASSERT(exit_code_wait_queue_);
 
@@ -477,7 +478,7 @@ error_code thread::join(error_code* out_err_code)
 			}
 		}
 
-		canary.assert();
+		canary_.assert();
 
 		KDEBUG_ASSERT(state == thread_states::DYING || state == thread_states::DEAD);
 		KDEBUG_ASSERT(!wait_queue_state_->holding());
@@ -522,6 +523,14 @@ thread::~thread()
 	delete kstack_;
 }
 
+void thread::process_pending_signals()
+{
+	if (signals_ == 0)[[likely]]
+	{
+		return;
+	}
+}
+
 void thread::current::exit(error_code code)
 {
 	bool intr_disabled = arch_ints_disabled();
@@ -529,6 +538,8 @@ void thread::current::exit(error_code code)
 	{
 		cli();
 	}
+
+	cur_thread->canary_.assert();
 
 	{
 		lock_guard g1{ global_thread_lock };
@@ -547,7 +558,7 @@ void thread::current::exit(error_code code)
 		}
 		else
 		{
-			cur_thread->canary.assert();
+			cur_thread->canary_.assert();
 			cur_thread->exit_code_wait_queue_->wake_all(false, code);
 		}
 	}
