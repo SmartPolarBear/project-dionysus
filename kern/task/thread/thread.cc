@@ -245,13 +245,13 @@ thread::thread(process* prt, ktl::string_view nm, cpu_affinity aff)
 {
 	kbl::allocate_checker ck{};
 
-	wait_queue_state_ = ktl::unique_ptr<wait_queue_state>(new(&ck) wait_queue_state{ this });
+	wait_queue_state_ = new(&ck) wait_queue_state{ this };
 	if (!ck.check())
 	{
 		KDEBUG_GERNERALPANIC_CODE(ERROR_MEMORY_ALLOC);
 	}
 
-	exit_code_wait_queue_ = ktl::unique_ptr<wait_queue>(new(&ck) wait_queue);
+	exit_code_wait_queue_ = new(&ck) wait_queue;
 	if (!ck.check())
 	{
 		KDEBUG_GERNERALPANIC_CODE(ERROR_MEMORY_ALLOC);
@@ -273,8 +273,6 @@ void thread::finish_dead_transition()
 		{
 			this->parent_->free_ustack(this->ustack_);
 		}
-
-		delete this->kstack_;
 
 		if (critical_)
 		{
@@ -481,7 +479,12 @@ error_code thread::detach_and_resume()
 	return 0;
 }
 
-thread::~thread() = default;
+thread::~thread()
+{
+	delete wait_queue_state_;
+	delete exit_code_wait_queue_;
+	delete kstack_;
+}
 
 void thread::current::exit(error_code code)
 {
@@ -508,6 +511,7 @@ void thread::current::exit(error_code code)
 		}
 		else
 		{
+			cur_thread->canary.assert();
 			cur_thread->exit_code_wait_queue_->wake_all(false, code);
 		}
 	}

@@ -153,7 +153,7 @@ void wait_queue::dequeue(thread* t, error_code err) TA_REQ(global_thread_lock)
 
 	block_list_.remove(t);
 	t->wait_queue_state_->block_code_ = err;
-	t->exit_code_wait_queue_ = nullptr;
+	t->wait_queue_state_->blocking_on_ = nullptr;
 }
 
 void wait_queue::timeout_handle(scheduler_timer* timer, time_type time, void* arg)

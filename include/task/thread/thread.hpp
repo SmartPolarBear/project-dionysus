@@ -191,9 +191,9 @@ class thread final
 
 	error_code exit_code_{ ERROR_SUCCESS };
 
-	ktl::unique_ptr<wait_queue> exit_code_wait_queue_{ nullptr };
+	wait_queue* exit_code_wait_queue_{ nullptr };
 
-	ktl::unique_ptr<wait_queue_state> wait_queue_state_{ nullptr };
+	wait_queue_state* wait_queue_state_{ nullptr };
 
 	kernel_stack* kstack_{ nullptr };
 
