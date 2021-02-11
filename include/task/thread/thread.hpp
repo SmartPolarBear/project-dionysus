@@ -9,6 +9,7 @@
 #include "kbl/atomic/atomic.hpp"
 #include "kbl/data/list.hpp"
 #include "kbl/data/name.hpp"
+#include "kbl/checker/canary.hpp"
 
 #include "ktl/shared_ptr.hpp"
 #include "ktl/unique_ptr.hpp"
@@ -184,6 +185,8 @@ class thread final
 
 	void finish_dead_transition();
 
+	kbl::canary<kbl::magic("thrd")> canary;
+
 	kbl::name<64> name_{ "" };
 
 	error_code exit_code_{ ERROR_SUCCESS };
@@ -340,8 +343,6 @@ class wait_queue
 
 	thread::wait_queue_list_type block_list_;
 };
-
-
 
 class wait_queue_state
 {

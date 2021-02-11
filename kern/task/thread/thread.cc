@@ -428,6 +428,8 @@ error_code thread::detach()
 
 error_code thread::join(error_code* out_err_code)
 {
+	canary.assert();
+
 	KDEBUG_ASSERT(exit_code_wait_queue_);
 
 	{
@@ -447,6 +449,8 @@ error_code thread::join(error_code* out_err_code)
 			}
 		}
 
+		canary.assert();
+
 		KDEBUG_ASSERT(state == thread_states::DYING || state == thread_states::DEAD);
 		KDEBUG_ASSERT(!wait_queue_state_->holding());
 
@@ -459,7 +463,10 @@ error_code thread::join(error_code* out_err_code)
 
 	}
 
-	delete this;
+	if (zombie_queue_link.next == &zombie_queue_link) // not in zombie list
+	{
+		delete this;
+	}
 
 	return ERROR_SUCCESS;
 }
