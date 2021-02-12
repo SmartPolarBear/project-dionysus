@@ -284,13 +284,17 @@ void thread::finish_dead_transition()
 	delete this;
 }
 
-void thread::kill()
+void thread::kill() TA_REQ(!global_thread_lock)
+{
+	lock_guard g{ global_thread_lock };
+	kill_locked();
+}
+
+void thread::kill_locked()
 {
 	canary_.assert();
 
 	{
-		lock_guard g1{ global_thread_lock };
-
 		signals_ |= SIGNAL_KILLED;
 
 		if (this == cur_thread)
@@ -312,13 +316,16 @@ void thread::kill()
 		break;
 	case thread_states::SUSPENDED:
 	{
-		ktl::mutex::lock_guard g{ task::global_thread_lock };
 		reschedule_needed = scheduler::current::unblock(this);
 		break;
 	}
 	case thread_states::BLOCKED:
 	case thread_states::BLOCKED_READ_LOCK:
-		// TODO: wakeup
+		wait_queue_state_->unblock_if_interruptible(this, ERROR_INTERNAL_INTR_KILLED);
+		break;
+
+	case thread_states::SLEEPING:
+		reschedule_needed = wait_queue_state_->unsleep_if_interruptible(this, ERROR_INTERNAL_INTR_KILLED);
 		break;
 	case thread_states::DYING:
 		break;
@@ -331,7 +338,7 @@ void thread::kill()
 
 	if (reschedule_needed)
 	{
-		scheduler::current::reschedule();
+		scheduler::current::reschedule_locked();
 	}
 }
 
@@ -461,6 +468,15 @@ error_code thread::join(error_code* out_err_code)
 
 	KDEBUG_ASSERT(exit_code_wait_queue_);
 
+	return join(out_err_code, deadline::infinite());
+}
+
+error_code thread::join(error_code* out_err_code, deadline ddl)
+{
+	canary_.assert();
+
+	KDEBUG_ASSERT(exit_code_wait_queue_);
+
 	{
 		lock_guard g{ global_thread_lock };
 
@@ -471,7 +487,7 @@ error_code thread::join(error_code* out_err_code)
 
 		if (state != thread_states::DEAD)
 		{
-			auto ret = exit_code_wait_queue_->block(wait_queue::interruptible::No);
+			auto ret = exit_code_wait_queue_->block(wait_queue::interruptible::No, ddl);
 			if (ret != ERROR_SUCCESS)
 			{
 				return ret;
@@ -498,11 +514,6 @@ error_code thread::join(error_code* out_err_code)
 	}
 
 	return ERROR_SUCCESS;
-}
-
-error_code thread::join(error_code* out_err_code, time_type deadline)
-{
-	return 0;
 }
 
 error_code thread::detach_and_resume()

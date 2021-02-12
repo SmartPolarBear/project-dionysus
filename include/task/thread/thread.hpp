@@ -118,7 +118,7 @@ class thread final
 
 	[[nodiscard]]static error_code create_idle();
  public:
-	~thread();
+	~thread() override;
 
 	thread(const thread&) = delete;
 	thread& operator=(const thread&) = delete;
@@ -146,6 +146,7 @@ class thread final
 	}
 
 	void kill() TA_REQ(!global_thread_lock);
+	void kill_locked() TA_REQ(global_thread_lock);
 
 	void resume();
 
@@ -160,7 +161,7 @@ class thread final
 	/// \return whether the joining is succeeded.
 	error_code join(error_code* out_err_code);
 
-	error_code join(error_code* out_err_code, time_type deadline);
+	error_code join(error_code* out_err_code, deadline deadline);
 
 	/// \brief forcibly remove the thread from global thread list and free the thread
 	[[deprecated("We rarely force terminate a thread using this."), maybe_unused]]
