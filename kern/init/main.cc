@@ -109,8 +109,6 @@ error_code init_routine([[maybe_unused]]void* arg)
 
 	if (cpu->id == 0)
 	{
-//		run("/ipctest");
-//		run("/hello");
 
 		auto ta = task::thread::create(nullptr, "a", routine_a, nullptr);
 		if (has_error(ta))
@@ -129,6 +127,11 @@ error_code init_routine([[maybe_unused]]void* arg)
 			task::scheduler::current::unblock(get_result(ta));
 			task::scheduler::current::unblock(get_result(tb));
 		}
+	}
+	else if (cpu->id == 1)
+	{
+		run("/ipctest");
+		run("/hello");
 	}
 
 	return ERROR_SUCCESS;
