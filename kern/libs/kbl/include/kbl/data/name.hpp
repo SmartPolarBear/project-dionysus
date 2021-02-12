@@ -7,7 +7,7 @@
 #include "ktl/algorithm.hpp"
 #include "ktl/string_view.hpp"
 #include "ktl/span.hpp"
-#include "ktl/mutex/lock_guard.hpp"
+#include "kbl/lock/lock_guard.hpp"
 
 namespace kbl
 {
@@ -38,25 +38,27 @@ class name
 
 	const char* data() const TA_REQ(!lk_)
 	{
-		ktl::mutex::lock_guard g{ lk_ };
+		lock::lock_guard g{ lk_ };
 		return name_;
 	}
 
 	void set(const char* name, size_t len)  TA_REQ(!lk_)
 	{
-		ktl::mutex::lock_guard g{ lk_ };
+		lock::lock_guard g{ lk_ };
 		strncpy(name_, name, ktl::min(len, Size));
 	}
 
 	void set(ktl::string_view sv)  TA_REQ(!lk_)
 	{
-		ktl::mutex::lock_guard g{ lk_ };
+		lock::lock_guard g{ lk_ };
+
 		ktl::copy(sv.begin(), sv.end(), name_);
 	}
 
 	void set(ktl::span<char> sp)  TA_REQ(!lk_)
 	{
-		ktl::mutex::lock_guard g{ lk_ };
+		lock::lock_guard g{ lk_ };
+
 		ktl::copy(sp.begin(), sp.end(), name_);
 	}
 

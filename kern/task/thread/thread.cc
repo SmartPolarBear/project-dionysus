@@ -13,13 +13,13 @@
 
 #include "drivers/acpi/cpu.h"
 
-#include "ktl/mutex/lock_guard.hpp"
+#include "kbl/lock/lock_guard.hpp"
 
 #include <utility>
 
 using namespace task;
 
-using ktl::mutex::lock_guard;
+using lock::lock_guard;
 
 lock::spinlock task::global_thread_lock{ "gtl" };
 

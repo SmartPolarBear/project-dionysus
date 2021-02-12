@@ -11,7 +11,7 @@
 #include "kbl/lock/spinlock.h"
 #include "kbl/ref_count/ref_count_base.hpp"
 
-#include "ktl/mutex/lock_guard.hpp"
+#include "kbl/lock/lock_guard.hpp"
 #include "ktl/unique_ptr.hpp"
 #include "ktl/list.hpp"
 #include "ktl/concepts.hpp"
@@ -134,7 +134,7 @@ namespace task
 
 		[[nodiscard]] job_status get_status() const
 		{
-			ktl::mutex::lock_guard g{ this->lock };
+			lock::lock_guard g{ this->lock };
 			return status;
 		}
 

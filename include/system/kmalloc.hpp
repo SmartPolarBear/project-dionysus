@@ -9,7 +9,7 @@
 
 #include "debug/kdebug.h"
 
-#include "ktl/mutex/lock_guard.hpp"
+#include "kbl/lock/lock_guard.hpp"
 
 namespace memory
 {

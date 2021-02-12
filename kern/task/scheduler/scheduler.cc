@@ -6,11 +6,11 @@
 
 #include "drivers/cmos/rtc.hpp"
 
-#include "ktl/mutex/lock_guard.hpp"
+#include "kbl/lock/lock_guard.hpp"
 
 #include "ktl/algorithm.hpp"
 
-using namespace ktl::mutex;
+using namespace lock;
 using namespace trap;
 
 // TODO: cpu scheduler ( load balance )
@@ -20,7 +20,7 @@ void task::scheduler::reschedule()
 {
 	KDEBUG_ASSERT(!global_thread_lock.holding());
 
-	ktl::mutex::lock_guard guard{ global_thread_lock };
+	lock_guard guard{ global_thread_lock };
 
 	reschedule_locked();
 }

@@ -125,7 +125,7 @@ error_code init_routine([[maybe_unused]]void* arg)
 		}
 
 		{
-			ktl::mutex::lock_guard g{ task::global_thread_lock };
+			lock::lock_guard g{ task::global_thread_lock };
 			task::scheduler::current::unblock(get_result(ta));
 			task::scheduler::current::unblock(get_result(tb));
 		}
@@ -217,7 +217,7 @@ void ap::all_processor_main()
 		auto init_thread = get_result(ret);
 		init_thread->set_flags(init_thread->get_flags() | task::thread::thread_flags::FLAG_INIT);
 
-		ktl::mutex::lock_guard g{ task::global_thread_lock };
+		lock::lock_guard g{ task::global_thread_lock };
 		task::scheduler::current::unblock(init_thread);
 	}
 

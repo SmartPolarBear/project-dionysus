@@ -1,10 +1,10 @@
 #include "kbl/lock/semaphore.hpp"
 
-#include "ktl/mutex/lock_guard.hpp"
+#include "kbl/lock/lock_guard.hpp"
 
 error_code kbl::semaphore::wait(const deadline& ddl)
 {
-	ktl::mutex::lock_guard g{ task::global_thread_lock };
+	lock::lock_guard g{ task::global_thread_lock };
 
 	KDEBUG_ASSERT(count_ == 0 || wait_queue_.empty());
 
@@ -19,7 +19,7 @@ error_code kbl::semaphore::wait(const deadline& ddl)
 
 void kbl::semaphore::signal()
 {
-	ktl::mutex::lock_guard g{ task::global_thread_lock };
+	lock::lock_guard g{ task::global_thread_lock };
 	KDEBUG_ASSERT(count_ == 0 || wait_queue_.empty());
 
 	if (wait_queue_.empty())

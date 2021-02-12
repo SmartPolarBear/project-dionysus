@@ -13,7 +13,7 @@
 #include "drivers/pci/pci_capability.hpp"
 #include "drivers/ahci/ahci.hpp"
 
-#include "ktl/mutex/lock_guard.hpp"
+#include "kbl/lock/lock_guard.hpp"
 
 #include "../libs/basic_io/include/builtin_text_io.hpp"
 

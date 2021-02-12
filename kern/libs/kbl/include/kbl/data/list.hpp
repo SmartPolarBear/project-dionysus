@@ -1,7 +1,7 @@
 #pragma once
 #include "debug/nullability.hpp"
 
-#include "ktl/mutex/lock_guard.hpp"
+#include "kbl/lock/lock_guard.hpp"
 
 #include "kbl/data/utility.hpp"
 
@@ -202,7 +202,7 @@ class intrusive_list_iterator
 	}
 
  private:
-	using lock_guard_type = ktl::mutex::lock_guard<TMutex>;
+	using lock_guard_type = lock::lock_guard<TMutex>;
 
 	head_type* NONNULL h_;
 	mutable mutex_type lock;
@@ -1078,7 +1078,7 @@ class intrusive_list
 		}
 	}
 
-	using lock_guard_type = ktl::mutex::lock_guard<TMutex>;
+	using lock_guard_type = lock::lock_guard<TMutex>;
 
  public:
 	head_type head_{ nullptr };

@@ -4,7 +4,7 @@
 
 #include "kbl/lock/spinlock.h"
 
-#include "ktl/mutex/lock_guard.hpp"
+#include "kbl/lock/lock_guard.hpp"
 #include "ktl/concepts.hpp"
 
 static_assert(sizeof(uintptr_t) == 0x08);
@@ -130,7 +130,7 @@ class cls_item
 	{
 		if (use_lock)
 		{
-			ktl::mutex::lock_guard g{ lock };
+			lock::lock_guard g{ lock };
 			do_set(val);
 		}
 		else

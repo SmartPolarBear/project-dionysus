@@ -9,10 +9,9 @@
 
 #include "kbl/data/utility.hpp"
 
-#include "ktl/mutex/lock_guard.hpp"
+#include "kbl/lock/lock_guard.hpp"
 #include "ktl/algorithm.hpp"
 
-using namespace ktl::mutex;
 
 using namespace kbl;
 

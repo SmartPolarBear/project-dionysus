@@ -25,7 +25,7 @@
 
 #include "../../libs/basic_io/include/builtin_text_io.hpp"
 
-using namespace ktl::mutex;
+using namespace lock;
 
 task::job::job(uint64_t flags, std::shared_ptr<job> parent, job_policy _policy)
 	: dispatcher<job, 0>(),
@@ -89,7 +89,7 @@ void task::job::apply_basic_policy(uint64_t mode, std::span<policy_item> policie
 
 task::job_policy task::job::get_policy() const
 {
-	ktl::mutex::lock_guard guard{ lock };
+	lock::lock_guard guard{ lock };
 	return policy;
 }
 
@@ -104,7 +104,7 @@ void task::job::remove_child_job(task::job* jb)
 
 	// lock scope
 	{
-		ktl::mutex::lock_guard guard{ lock };
+		lock_guard guard{ lock };
 
 		auto iter = ktl::find_if(child_jobs.begin(), child_jobs.end(), [jb](auto ele)
 		{
@@ -143,7 +143,7 @@ bool task::job::finish_dead_transition() TA_EXCL(lock)
 
 	// locked scope
 	{
-		ktl::mutex::lock_guard guard{ lock };
+		lock::lock_guard guard{ lock };
 		status = job_status::DEAD;
 	}
 
@@ -165,7 +165,7 @@ size_t task::job::get_count<task::job()>() TA_REQ(lock)
 
 void task::job::add_child_process(std::shared_ptr<process> proc)
 {
-	ktl::mutex::lock_guard guard{ lock };
+	lock::lock_guard guard{ lock };
 
 	this->child_processes.insert(child_processes.begin(), proc);
 }

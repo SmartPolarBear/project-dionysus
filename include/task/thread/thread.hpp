@@ -15,7 +15,7 @@
 #include "ktl/unique_ptr.hpp"
 #include "ktl/string_view.hpp"
 #include "ktl/concepts.hpp"
-#include "ktl/mutex/lock_guard.hpp"
+#include "kbl/lock/lock_guard.hpp"
 
 #include "system/cls.hpp"
 #include "system/time.hpp"

@@ -8,14 +8,14 @@
 
 #include "drivers/cmos/rtc.hpp"
 
-#include "ktl/mutex/lock_guard.hpp"
+#include "kbl/lock/lock_guard.hpp"
 
 #include <algorithm>
 
 using std::min;
 using std::max;
 
-using ktl::mutex::lock_guard;
+using lock::lock_guard;
 
 error_code_with_result<file_system::vnode_base*> file_system::ext2_vnode::find(const char* name)
 {
@@ -759,7 +759,7 @@ error_code_with_result<size_t> file_system::ext2_vnode::write(file_system::file_
 	ext2_data* data = reinterpret_cast<ext2_data*>(ext2_fs->private_data);
 
 	// acquire the lock
-	ktl::mutex::lock_guard lk{ this->lockable };
+	lock::lock_guard lk{ this->lockable };
 
 	const size_t full_size = EXT2_INODE_SIZE(inode);
 	const size_t block_size = data->get_block_size();

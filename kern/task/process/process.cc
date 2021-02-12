@@ -25,7 +25,7 @@
 
 #include "../../libs/basic_io/include/builtin_text_io.hpp"
 
-#include "ktl/mutex/lock_guard.hpp"
+#include "kbl/lock/lock_guard.hpp"
 #include "ktl/algorithm.hpp"
 #include "ktl/shared_ptr.hpp"
 
@@ -36,7 +36,6 @@ using namespace kbl;
 using namespace lock;
 using namespace memory;
 using namespace vmm;
-using namespace ktl::mutex;
 using namespace task;
 
 using namespace task;
@@ -138,7 +137,7 @@ error_code_with_result<ktl::shared_ptr<task::process>> task::process::create(con
 	main_thread->critical_ = true;
 
 	{
-		ktl::mutex::lock_guard g{ task::global_thread_lock };
+		lock::lock_guard g{ task::global_thread_lock };
 		scheduler::current::unblock(main_thread);
 	}
 
@@ -235,7 +234,7 @@ void process::exit(task_return_code code) noexcept
 	KDEBUG_ASSERT(cur_proc == this);
 
 	{
-		ktl::mutex::lock_guard guard{ this->lock };
+		lock::lock_guard guard{ this->lock };
 
 		if (this->status == Status::DYING)
 		{

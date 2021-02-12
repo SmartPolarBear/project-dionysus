@@ -29,13 +29,14 @@ class semaphore final
 
 	uint64_t count() const
 	{
-		ktl::mutex::lock_guard g{ task::global_thread_lock };
+		lock::lock_guard g{ task::global_thread_lock };
 		return count_;
 	}
 
 	size_t waiter_count() const
 	{
-		ktl::mutex::lock_guard g{ task::global_thread_lock };
+		lock::lock_guard g{ task::global_thread_lock };
+
 		return wait_queue_.size();
 	}
 
