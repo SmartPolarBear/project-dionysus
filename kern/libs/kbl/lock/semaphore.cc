@@ -2,22 +2,32 @@
 
 #include "ktl/mutex/lock_guard.hpp"
 
-void kbl::semaphore::wait()
+error_code kbl::semaphore::wait(const deadline& ddl)
 {
-	count_.fetch_sub(1, memory_order_release);
-	if (_count_ < 0)
+	ktl::mutex::lock_guard g{ task::global_thread_lock };
+
+	KDEBUG_ASSERT(count_ == 0 || wait_queue_.empty());
+
+	if (count_ > 0)
 	{
-		ktl::mutex::lock_guard g{ task::global_thread_lock };
-		wait_queue_.block(task::wait_queue::interruptible::No);
+		--count_;
+		return ERROR_SUCCESS;
 	}
+
+	return wait_queue_.block(task::wait_queue::interruptible::Yes, ddl);
 }
 
 void kbl::semaphore::signal()
 {
-	count_.fetch_add(1, memory_order_release);
-	if (_count_ <= 0)
+	ktl::mutex::lock_guard g{ task::global_thread_lock };
+	KDEBUG_ASSERT(count_ == 0 || wait_queue_.empty());
+
+	if (wait_queue_.empty())
 	{
-		ktl::mutex::lock_guard g{ task::global_thread_lock };
+		++count_;
+	}
+	else
+	{
 		wait_queue_.wake_one(true, ERROR_SUCCESS);
 	}
 }
