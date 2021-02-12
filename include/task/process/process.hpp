@@ -125,7 +125,7 @@ class process final
 
 	~process() override = default;
 
-	[[maybe_unused]] void exit(task_return_code code) noexcept;
+	[[maybe_unused]] void exit(task_return_code code)  noexcept;
 	void kill(task_return_code code) noexcept;
 	void finish_dead_transition() noexcept;
 
@@ -194,7 +194,7 @@ class process final
 	/// \param st the new status
 	void set_status_locked(Status st) noexcept TA_REQ(lock);
 
-	void kill_all_threads_locked() noexcept TA_REQ(lock);
+	void kill_all_threads_locked() noexcept TA_REQ(lock, !global_thread_lock);
 
 	void add_child_thread(thread* t) noexcept TA_EXCL(lock);
 

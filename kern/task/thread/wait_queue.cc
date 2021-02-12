@@ -55,7 +55,7 @@ error_code wait_queue::block_etc(const deadline& ddl,
 	KDEBUG_ASSERT(arch_ints_disabled());
 	KDEBUG_ASSERT(current_thread->state == thread::thread_states::RUNNING);
 
-	if (ddl.when() != TIME_INFINITE && ddl.when() < cmos::cmos_read_rtc_timestamp())
+	if (ddl.when() != TIME_INFINITE && ddl.when() < (time_type)cmos::cmos_read_rtc_timestamp())
 	{
 		return ERROR_TIMEOUT;
 	}
@@ -182,7 +182,7 @@ void wait_queue::dequeue(thread* t, error_code err) TA_REQ(global_thread_lock)
 	t->wait_queue_state_->blocking_on_ = nullptr;
 }
 
-void wait_queue::timeout_handle(scheduler_timer* timer, time_type time, void* arg)
+void wait_queue::timeout_handle(scheduler_timer* timer, [[maybe_unused]] time_type time, void* arg)
 {
 	auto t = reinterpret_cast<thread*>(arg);
 

@@ -89,6 +89,7 @@ error_code trap_handle_tick([[maybe_unused]] trap::trap_frame info)
 
 		local_apic::write_eoi();
 
+		task::global_thread_lock.assert_not_held();
 		task::scheduler::current::timer_tick_handle();
 
 	}

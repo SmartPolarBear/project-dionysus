@@ -7,7 +7,7 @@
 
 // Finished:
 //void _exit();
-//int kill(int pid, int sig);
+//int kill_locked(int pid, int sig);
 //int getpid();
 //caddr_t sbrk(int incr);
 //char **environ; /* pointer to array of char * strings that define the current environment variables */
@@ -44,7 +44,7 @@ extern "C" char* environ[] =
 
 extern "C" [[maybe_unused]] int kill([[maybe_unused]]int pid, int sig)
 {
-	KDEBUG_RICHPANIC("Some of libraries called kill for kernel.", "KILL CALLED", true, "Signal %d", sig);
+	KDEBUG_RICHPANIC("Some of libraries called kill_locked for kernel.", "KILL CALLED", true, "Signal %d", sig);
 	return 0;
 }
 

@@ -246,6 +246,7 @@ void process::exit(task_return_code code) noexcept
 
 		set_status_locked(Status::DYING);
 
+		global_thread_lock.assert_not_held();
 		kill_all_threads_locked();
 	}
 
@@ -308,7 +309,7 @@ void process::set_status_locked(process::Status st) noexcept TA_REQ(lock)
 	}
 }
 
-void process::kill_all_threads_locked() noexcept TA_REQ(lock)
+void process::kill_all_threads_locked() noexcept
 {
 	for (auto& t:threads)
 	{

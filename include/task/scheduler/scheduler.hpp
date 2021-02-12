@@ -72,7 +72,7 @@ class scheduler
 
 	struct current
 	{
-		static void reschedule() TA_EXCL(global_thread_lock);
+		static void reschedule() TA_REQ(!global_thread_lock);
 
 		static void reschedule_locked()TA_REQ(global_thread_lock);
 
@@ -82,7 +82,7 @@ class scheduler
 
 		static bool unblock_locked(thread::wait_queue_list_type threads) TA_REQ(global_thread_lock);
 
-		static void insert(thread* t) TA_EXCL(global_thread_lock);
+		static void insert(thread* t) TA_REQ(!global_thread_lock);
 
 		static void block_locked() TA_REQ(global_thread_lock);
 

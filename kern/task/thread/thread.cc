@@ -393,7 +393,6 @@ error_code thread::suspend()
 		{
 		case thread_states::INITIAL:
 		{
-			ktl::mutex::lock_guard g{ task::global_thread_lock };
 			local_reschedule = scheduler::current::unblock(this);
 			break;
 		}
@@ -432,9 +431,10 @@ void thread::forget()
 		KDEBUG_ASSERT(this != cur_thread.get());
 
 		this->remove_from_lists();
-	}
 
-	// TODO if waiting?
+		KDEBUG_ASSERT(!wait_queue_state_->holding());
+
+	}
 
 	delete this;
 }
@@ -550,10 +550,10 @@ void thread::current::exit(error_code code)
 		cli();
 	}
 
-	cur_thread->canary_.assert();
-
 	{
 		lock_guard g1{ global_thread_lock };
+
+		cur_thread->canary_.assert();
 
 		if (cur_thread->parent_ != nullptr)
 		{

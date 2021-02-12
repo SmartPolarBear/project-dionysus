@@ -44,6 +44,14 @@ class TA_CAP("mutex") spinlock final
 
 	bool holding() noexcept final;
 
+	bool not_holding() noexcept;
+
+	// assertions
+	void assert_held()  TA_ASSERT(this);
+
+	void assert_not_held()  TA_ASSERT(!this);
+
+
 	// for negative capabilities
 	const spinlock& operator!() const
 	{

@@ -147,3 +147,18 @@ bool lock::spinlock::holding() noexcept
 		return spinlock_.locked;
 	}
 }
+
+bool lock::spinlock::not_holding() noexcept
+{
+	return !holding();
+}
+
+void lock::spinlock::assert_held() TA_ASSERT(this)
+{
+	KDEBUG_ASSERT(holding());
+}
+
+void lock::spinlock::assert_not_held() TA_ASSERT(!this)
+{
+	KDEBUG_ASSERT(not_holding());
+}
