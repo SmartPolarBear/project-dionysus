@@ -23,6 +23,8 @@
 
 #include "drivers/apic/traps.h"
 
+#include "task/thread/wait_queue.hpp"
+
 #include <compare>
 
 namespace task
@@ -30,14 +32,87 @@ namespace task
 
 using context = arch_task_context_registers;
 
+using thread_trampoline_type = void (*)();
+
+using thread_routine_type = error_code (*)(void* arg);
+
 extern lock::spinlock global_thread_lock;
 
 class process;
+class thread;
 
-class kernel_stack;
-class user_stack;
-class wait_queue;
-class wait_queue_state;
+class kernel_stack final
+{
+ public:
+	friend class thread;
+	friend class process;
+
+	friend
+	class scheduler;
+
+	static constexpr size_t MAX_SIZE = 4_MB;
+	static constexpr size_t MAX_PAGE_COUNT = MAX_SIZE / PAGE_SIZE;
+
+ public:
+	[[nodiscard]] static kernel_stack* create(thread* parent,
+		thread_routine_type start_routine,
+		void* arg,
+		thread_trampoline_type tpl);
+
+	~kernel_stack();
+
+	[[nodiscard]] void* get_raw() const
+	{
+		return bottom;
+	}
+
+	[[nodiscard]] uintptr_t get_address() const
+	{
+		return reinterpret_cast<uintptr_t >(get_raw());
+	}
+ private:
+	[[nodiscard]] kernel_stack(thread* parent_thread,
+		void* stk_mem,
+		thread_routine_type routine,
+		void* arg,
+		thread_trampoline_type tpl);
+
+	thread* parent{ nullptr };
+
+	void* bottom{ nullptr };
+
+	trap::trap_frame* tf{ nullptr };
+
+	task::context* context{ nullptr };
+};
+
+class user_stack
+{
+ public:
+	friend class process;
+	friend class thread;
+
+ public:
+
+	user_stack() = delete;
+	user_stack(const user_stack&) = delete;
+	user_stack& operator=(const user_stack&) = delete;
+
+	[[nodiscard]] void* get_top();
+
+	int64_t operator<=>(const user_stack& rhs) const
+	{
+		return (uint8_t*)this->top - (uint8_t*)rhs.top;
+	}
+
+ private:
+	user_stack(process* p, thread* t, void* stack_ptr);
+
+	void* top{ nullptr };
+
+	process* owner_process{ nullptr };
+	thread* owner_thread{ nullptr };
+};
 
 enum class [[clang::enum_extensibility(closed)]] cpu_affinity_type
 {
@@ -66,6 +141,8 @@ class thread final
 	friend class user_stack;
 	friend class wait_queue;
 	friend class wait_queue_state;
+
+	friend struct wait_queue_list_node_trait;
 
 	enum class [[clang::enum_extensibility(closed)]] thread_states
 	{
@@ -99,21 +176,17 @@ class thread final
 		static void exit(error_code code);
 	};
 
-	using trampoline_type = void (*)();
-
-	using routine_type = error_code (*)(void* arg);
-
 	using link_type = kbl::list_link<thread, lock::spinlock>;
 
 	static void default_trampoline();
 
-	static_assert(ktl::convertible_to<decltype(default_trampoline), trampoline_type>);
+	static_assert(ktl::convertible_to<decltype(default_trampoline), thread_trampoline_type>);
 
 	[[nodiscard]]static error_code_with_result<task::thread*> create(process* parent,
 		ktl::string_view name,
-		routine_type routine,
+		thread_routine_type routine,
 		void* arg,
-		trampoline_type trampoline = default_trampoline,
+		thread_trampoline_type trampoline = default_trampoline,
 		cpu_affinity aff = cpu_affinity{ CPU_NUM_INVALID, cpu_affinity_type::SOFT });
 
 	[[nodiscard]]static error_code create_idle();
@@ -226,173 +299,6 @@ class thread final
 	                                                                lock::spinlock,
 	                                                                &thread::master_list_link,
 	                                                                true>;
-
-	using wait_queue_list_type = kbl::intrusive_list_with_default_trait<thread,
-	                                                                    lock::spinlock,
-	                                                                    &thread::wait_queue_link,
-	                                                                    true>;
-};
-
-class kernel_stack final
-{
- public:
-	friend class thread;
-	friend class process;
-
-	friend
-	class scheduler;
-
-	static constexpr size_t MAX_SIZE = 4_MB;
-	static constexpr size_t MAX_PAGE_COUNT = MAX_SIZE / PAGE_SIZE;
-
- public:
-	[[nodiscard]] static kernel_stack* create(thread* parent,
-		thread::routine_type start_routine,
-		void* arg,
-		thread::trampoline_type tpl);
-
-	~kernel_stack();
-
-	[[nodiscard]] void* get_raw() const
-	{
-		return bottom;
-	}
-
-	[[nodiscard]] uintptr_t get_address() const
-	{
-		return reinterpret_cast<uintptr_t >(get_raw());
-	}
- private:
-	[[nodiscard]] kernel_stack(thread* parent_thread,
-		void* stk_mem,
-		thread::routine_type routine,
-		void* arg,
-		thread::trampoline_type tpl);
-
-	thread* parent{ nullptr };
-
-	void* bottom{ nullptr };
-
-	trap::trap_frame* tf{ nullptr };
-
-	task::context* context{ nullptr };
-};
-
-class user_stack
-{
- public:
-	friend class process;
-	friend class thread;
-
- public:
-
-	user_stack() = delete;
-	user_stack(const user_stack&) = delete;
-	user_stack& operator=(const user_stack&) = delete;
-
-	[[nodiscard]] void* get_top();
-
-	int64_t operator<=>(const user_stack& rhs) const
-	{
-		return (uint8_t*)this->top - (uint8_t*)rhs.top;
-	}
-
- private:
-	user_stack(process* p, thread* t, void* stack_ptr);
-
-	void* top{ nullptr };
-
-	process* owner_process{ nullptr };
-	thread* owner_thread{ nullptr };
-};
-
-class wait_queue
-{
- public:
-	enum class [[clang::enum_extensibility(closed)]] interruptible : bool
-	{
-		No, Yes
-	};
-
-	enum class [[clang::enum_extensibility(closed)]] resource_ownership
-	{
-		Normal,
-		Reader
-	};
-
-	wait_queue() = default;
-
-	~wait_queue();
-
-	wait_queue(wait_queue&) = delete;
-	wait_queue(wait_queue&&) = delete;
-
-	wait_queue& operator=(wait_queue&) = delete;
-	wait_queue& operator=(wait_queue&&) = delete;
-
-	static error_code unblock_thread(thread* t, error_code code) TA_REQ(global_thread_lock);
-
-	error_code block(interruptible intr) TA_REQ(global_thread_lock);
-
-	error_code block(interruptible intr, const deadline& deadline)TA_REQ(global_thread_lock);
-
-	error_code block_etc(const deadline& deadline,
-		uint32_t signal_mask,
-		resource_ownership reason,
-		interruptible intr) TA_REQ(global_thread_lock);
-
-	thread* peek() TA_REQ(global_thread_lock);
-
-	bool wake_one(bool reschedule, error_code code) TA_REQ(global_thread_lock);
-	void wake_all(bool reschedule, error_code code) TA_REQ(global_thread_lock);
-
-	bool empty() const TA_REQ(global_thread_lock);
-
-	size_t size() const TA_REQ(global_thread_lock)
-	{
-		return block_list_.size();
-	}
- private:
-	static void timeout_handle(struct scheduler_timer*, time_type now, void* arg) TA_REL(global_thread_lock);
-
-	void dequeue(thread* t, error_code err) TA_REQ(global_thread_lock);
-
-	thread::wait_queue_list_type block_list_;
-};
-
-class wait_queue_state
-{
- public:
-	friend class wait_queue;
-	friend class thread;
-
-	wait_queue_state() = delete;
-	wait_queue_state(const wait_queue_state&) = delete;
-	wait_queue_state& operator=(const wait_queue_state&) = delete;
-
-	explicit wait_queue_state(thread* pa)
-		: parent_(pa)
-	{
-	}
-
-	~wait_queue_state();
-
-	bool holding() TA_REQ(global_thread_lock);
-
-	void block(wait_queue::interruptible intr, error_code status) TA_REQ(global_thread_lock);
-
-	void unblock_if_interruptible(thread* t, error_code status) TA_REQ(global_thread_lock);
-
-	bool unsleep(thread* thread, error_code status) TA_REQ(global_thread_lock);
-	bool unsleep_if_interruptible(thread* thread, error_code status) TA_REQ(global_thread_lock);
-
- private:
-
-	thread* parent_{ nullptr };
-
-	wait_queue* blocking_on_{ nullptr };
-	error_code block_code_{ ERROR_SUCCESS };
-	wait_queue::interruptible interruptible_{ wait_queue::interruptible::No };
 };
 
 extern thread::master_list_type global_thread_list;

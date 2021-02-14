@@ -28,9 +28,9 @@ cls_item<thread*, CLS_CUR_THREAD_PTR> task::cur_thread TA_GUARDED(global_thread_
 thread::master_list_type task::global_thread_list TA_GUARDED(global_thread_lock);
 
 kernel_stack* task::kernel_stack::create(thread* parent,
-	thread::routine_type start_routine,
+	task::thread_routine_type start_routine,
 	void* arg,
-	thread::trampoline_type tpl)
+	task::thread_trampoline_type tpl)
 {
 	kbl::allocate_checker ck{};
 
@@ -57,9 +57,9 @@ kernel_stack::~kernel_stack()
 
 kernel_stack::kernel_stack(thread* parent_thread,
 	void* stk_mem,
-	thread::routine_type routine,
+	task::thread_routine_type routine,
 	void* arg,
-	thread::trampoline_type tpl)
+	task::thread_trampoline_type tpl)
 	: parent(parent_thread), bottom(stk_mem)
 {
 	// setup initial kernel stack
@@ -106,9 +106,9 @@ kernel_stack::kernel_stack(thread* parent_thread,
 
 error_code_with_result<task::thread*> thread::create(process* parent,
 	ktl::string_view name,
-	routine_type routine,
+	thread_routine_type routine,
 	void* arg,
-	trampoline_type trampoline,
+	thread_trampoline_type trampoline,
 	cpu_affinity aff)
 {
 	kbl::allocate_checker ck{};

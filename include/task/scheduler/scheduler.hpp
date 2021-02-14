@@ -52,7 +52,7 @@ class scheduler
 	}
 
 	[[noreturn]]  static error_code idle(void* arg __UNUSED);
-	static_assert(ktl::convertible_to<decltype(idle), task::thread::routine_type>);
+	static_assert(ktl::convertible_to<decltype(idle), task::thread_routine_type>);
 
 	void schedule() TA_REQ(global_thread_lock);
 
@@ -83,7 +83,7 @@ class scheduler
 
 		static bool unblock(thread* t) TA_REQ(global_thread_lock);
 
-		static bool unblock_locked(thread::wait_queue_list_type threads) TA_REQ(global_thread_lock);
+		static bool unblock_locked(wait_queue::wait_queue_list_type threads) TA_REQ(global_thread_lock);
 
 		static void insert(thread* t) TA_REQ(!global_thread_lock);
 

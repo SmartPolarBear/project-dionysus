@@ -117,7 +117,7 @@ class reversed_range
 	{
 	}
 
-	auto begin() const
+	auto begin() const TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		return container.rbegin();
 	}

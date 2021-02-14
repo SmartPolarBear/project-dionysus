@@ -1,3 +1,6 @@
+
+#include <task/thread/wait_queue.hpp>
+
 #include "task/thread/thread.hpp"
 
 #include "drivers/acpi/cpu.h"
@@ -9,6 +12,16 @@
 #include "ktl/move.hpp"
 
 using namespace task;
+
+kbl::list_link<thread, lock::spinlock>& wait_queue_list_node_trait::node_link(thread& t)
+{
+	return t.wait_queue_link;
+}
+
+kbl::list_link<thread, lock::spinlock>& wait_queue_list_node_trait::node_link(thread* t)
+{
+	return t->wait_queue_link;
+}
 
 error_code wait_queue::unblock_thread(thread* t, error_code code) TA_REQ(global_thread_lock)
 {

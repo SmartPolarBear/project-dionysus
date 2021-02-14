@@ -124,7 +124,7 @@ error_code_with_result<ktl::shared_ptr<task::process>> task::process::create(con
 	thread* main_thread = nullptr;
 
 	// name_ the main thread with the parent_'s name_
-	if (auto ret = thread::create(proc.get(), name, (thread::routine_type)entry_addr, nullptr);has_error(ret))
+	if (auto ret = thread::create(proc.get(), name, (task::thread_routine_type)entry_addr, nullptr);has_error(ret))
 	{
 		return get_error_code(ret);
 	}

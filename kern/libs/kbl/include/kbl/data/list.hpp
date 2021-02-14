@@ -17,6 +17,21 @@
 #define KDEBUG_ASSERT(...)
 #endif
 
+//#define ENABLE_NULLABILITY_CHECK
+#ifndef ENABLE_NULLABILITY_CHECK
+#ifdef NULLABLE
+#undef NULLABLE
+#endif
+
+#ifdef NONNULL
+#undef NONNULL
+#endif
+
+#define NULLABLE
+#define NONNULL
+
+#endif
+
 namespace kbl
 {
 
@@ -393,27 +408,27 @@ class intrusive_list
 		return iterator_type{ head_.next };
 	}
 
-	iterator_type end()
+	iterator_type end() TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		return iterator_type{ &head_ };
 	}
 
-	const_iterator_type cbegin()
+	const_iterator_type cbegin() TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		return const_iterator_type{ head_.next };
 	}
 
-	const_iterator_type cend()
+	const_iterator_type cend() TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		return const_iterator_type{ &head_ };
 	}
 
-	riterator_type rbegin()
+	riterator_type rbegin() TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		return riterator_type{ head_.prev };
 	}
 
-	riterator_type rend()
+	riterator_type rend()TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		return riterator_type{ &head_ };
 	}
