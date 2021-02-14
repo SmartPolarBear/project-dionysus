@@ -24,6 +24,7 @@
 #include "drivers/apic/traps.h"
 
 #include "task/thread/wait_queue.hpp"
+#include "task/thread/cpu_affinity.hpp"
 
 #include <compare>
 
@@ -112,19 +113,6 @@ class user_stack
 
 	process* owner_process{ nullptr };
 	thread* owner_thread{ nullptr };
-};
-
-enum class [[clang::enum_extensibility(closed)]] cpu_affinity_type
-{
-	SOFT, HARD
-};
-
-struct cpu_affinity final
-{
-	cpu_num_type cpu;
-	cpu_affinity_type type;
-
-	auto operator<=>(const cpu_affinity&) const = default;
 };
 
 class thread final
