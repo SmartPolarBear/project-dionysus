@@ -304,6 +304,7 @@ void process::set_status_locked(process::Status st) noexcept TA_REQ(lock)
 	status = st;
 	if (st == Status::DYING)
 	{
+		global_thread_lock.assert_not_held();
 		kill_all_threads_locked();
 	}
 }
