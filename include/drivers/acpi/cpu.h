@@ -59,17 +59,17 @@ extern cls_item<cpu_struct*, CLS_CPU_STRUCT_PTR> cpu;
 #pragma clang diagnostic ignored "-Wunused-variable"
 #pragma clang diagnostic ignored "-Wunused-parameter"
 
-template<typename T>
-requires ktl::Convertible<T, uintptr_t>
+template<ktl::convertible_to<uintptr_t> T>
 static inline T gs_get_cpu_dependent(uintptr_t n)
 {
 	uintptr_t* target_gs_ptr = (uintptr_t*)(((uint8_t*)cpu->kernel_gs) + n);
 	uintptr_t ret = *target_gs_ptr;
-	return (T)(void*)ret;
+	return (T)(void * )
+	ret;
 }
 
-template<typename T>
-requires ktl::Convertible<T, uintptr_t>
+template<ktl::convertible_to<uintptr_t> T>
+
 static inline void gs_put_cpu_dependent(uintptr_t n, T v)
 {
 	uintptr_t val = (uintptr_t)v;

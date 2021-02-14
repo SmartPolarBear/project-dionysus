@@ -6,12 +6,12 @@
 namespace ktl
 {
 template<class T>
-concept Pointer = std::is_pointer_v<T>;
+concept is_pointer = std::is_pointer_v<T>;
 
 template<typename TFrom, typename TTo>
-concept Convertible=std::is_convertible_v<TFrom, TTo>;
+concept convertible_to=std::is_convertible_v<TFrom, TTo>;
 
 template<typename T>
-concept TriviallyCopiable=std::is_trivially_copyable_v<T>;
+concept is_trivially_copyable=std::is_trivially_copyable_v<T>;
 
 }

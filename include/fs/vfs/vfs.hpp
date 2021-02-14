@@ -307,7 +307,10 @@ class vnode_base
 
 	kbl::list_link<vnode_base, lock::spinlock> child_link{ this };
 
-	using child_list_type = kbl::intrusive_list<vnode_base, lock::spinlock, &vnode_base::child_link, true, false>;
+	using child_list_type = kbl::intrusive_list_with_default_trait<vnode_base,
+	                                                               lock::spinlock,
+	                                                               &vnode_base::child_link,
+	                                                               true>;
 
 	child_list_type child_list;
 

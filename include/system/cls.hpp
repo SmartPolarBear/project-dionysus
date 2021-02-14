@@ -29,7 +29,7 @@ enum CLS_ADDRESS : uintptr_t
 
 template<typename T>
 static inline T cls_get(uintptr_t n)
-requires ktl::Pointer<T>
+requires ktl::is_pointer<T>
 {
 	uintptr_t ret = 0;
 	asm("mov %%fs:(%%rax),%0"
@@ -40,7 +40,7 @@ requires ktl::Pointer<T>
 
 template<typename T>
 static inline void cls_put(uintptr_t n, T v)
-requires ktl::Pointer<T>
+requires ktl::is_pointer<T>
 {
 	uintptr_t val = (uintptr_t)v;
 	asm("mov %0, %%fs:(%%rax)"
@@ -50,7 +50,7 @@ requires ktl::Pointer<T>
 
 template<typename T>
 static inline T gs_get(uintptr_t n)
-requires ktl::Pointer<T>
+requires ktl::is_pointer<T>
 {
 	uintptr_t ret = 0;
 	asm("mov %%gs:(%%rax),%0"
@@ -61,7 +61,7 @@ requires ktl::Pointer<T>
 
 template<typename T>
 static inline void gs_put(uintptr_t n, T v)
-requires ktl::Pointer<T>
+requires ktl::is_pointer<T>
 {
 	uintptr_t val = (uintptr_t)v;
 	asm("mov %0, %%gs:(%%rax)"
@@ -72,7 +72,7 @@ requires ktl::Pointer<T>
 #pragma clang diagnostic pop
 
 template<typename T, CLS_ADDRESS Address>
-requires ktl::Pointer<T> || ktl::TriviallyCopiable<T>
+requires ktl::is_pointer<T> || ktl::is_trivially_copyable<T>
 class cls_item
 {
  public:
@@ -113,7 +113,7 @@ class cls_item
 	{
 		if (!valid)
 		{
-			if constexpr (ktl::Pointer<T>)
+			if constexpr (ktl::is_pointer<T>)
 			{
 				return nullptr;
 			}
@@ -183,7 +183,7 @@ class cls_item
 
 	bool operator==(nullptr_t)
 	{
-		if constexpr (ktl::Pointer<T>)
+		if constexpr (ktl::is_pointer<T>)
 		{
 			return get() == nullptr;
 		}
@@ -195,7 +195,7 @@ class cls_item
 
 	bool operator!=(nullptr_t)
 	{
-		if constexpr (ktl::Pointer<T>)
+		if constexpr (ktl::is_pointer<T>)
 		{
 			return get() != nullptr;
 		}

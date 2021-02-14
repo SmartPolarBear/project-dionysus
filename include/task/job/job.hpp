@@ -160,7 +160,7 @@ namespace task
 		[[nodiscard]]size_t get_count() TA_REQ(lock);
 
 //		template<typename TChildrenList, typename TChild, typename TFunc>
-//		requires ktl::ListOfTWithBound<TChildrenList, TChild> && (!ktl::Pointer<TChild>)
+//		requires ktl::ListOfTWithBound<TChildrenList, TChild> && (!ktl::is_pointer<TChild>)
 //		[[nodiscard]]error_code_with_result<ktl::unique_ptr<TChild* []>> for_each_child(TChildrenList& children,
 //			TFunc func) TA_REQ(lock);
 

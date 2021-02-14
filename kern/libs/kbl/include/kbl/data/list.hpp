@@ -5,6 +5,8 @@
 
 #include "kbl/data/utility.hpp"
 
+#include "ktl/concepts.hpp"
+
 #pragma push_macro("KDEBUG_ASSERT")
 
 //#define ENABLE_DEBUG_MACRO
@@ -17,6 +19,13 @@
 
 namespace kbl
 {
+
+template<typename T, typename E>
+concept Deleter =
+requires(T del, E* ptr)
+{
+	del(ptr);
+};
 
 // linked list head_
 template<typename TParent, typename TMutex>
@@ -55,7 +64,10 @@ struct list_link
 
 	list_link& operator=(const list_link& another)
 	{
-		if (this == &another)return *this;
+		if (this == &another)
+		{
+			return *this;
+		}
 
 		parent = another.parent;
 		is_head = another.is_head;
@@ -85,14 +97,21 @@ struct list_link
 	}
 };
 
-template<typename T, typename TMutex, bool EnableLock = false>
+template<typename T, typename U, typename Mutex>
+concept NodeTrait =
+requires(U& u)
+{
+	{ T::node_link(u) }->ktl::convertible_to<list_link<U, Mutex>&>;
+	{ T::node_link(&u) }->ktl::convertible_to<list_link<U, Mutex>&>;
+	{ T::node_link_ptr(u) }->ktl::convertible_to<list_link<U, Mutex>*>;
+	{ T::node_link_ptr(&u) }->ktl::convertible_to<list_link<U, Mutex>*>;
+};
+
+template<typename T, typename TMutex, class Container, bool EnableLock = false>
 class intrusive_list_iterator
 {
  public:
-
-	template<typename S, typename SMutex, list_link<S, SMutex> S::*, bool E, bool D>
-	friend
-	class intrusive_list;
+	friend Container;
 
 	using value_type = T;
 	using mutex_type = TMutex;
@@ -121,11 +140,13 @@ class intrusive_list_iterator
 	intrusive_list_iterator& operator=(const intrusive_list_iterator& another) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if (this == &another)
+		{
 			return *this;
+		}
 
 		if constexpr(EnableLock)
 		{
-			lock_guard_type g{ lock };
+			lock_guard_type g{ lock_ };
 			h_ = another.h_;
 		}
 		else
@@ -142,7 +163,7 @@ class intrusive_list_iterator
 		return *operator->();
 	}
 
-	value_type* NONNULL operator->()
+	T* NULLABLE operator->()
 	{
 		return h_->parent;
 	}
@@ -161,7 +182,7 @@ class intrusive_list_iterator
 	{
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g{ lock };
+			lock_guard_type g{ lock_ };
 			h_ = h_->next;
 		}
 		else
@@ -176,7 +197,7 @@ class intrusive_list_iterator
 	{
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g{ lock };
+			lock_guard_type g{ lock_ };
 			h_ = h_->prev;
 		}
 		else
@@ -205,7 +226,49 @@ class intrusive_list_iterator
 	using lock_guard_type = lock::lock_guard<TMutex>;
 
 	head_type* NONNULL h_;
-	mutable mutex_type lock;
+	mutable mutex_type lock_;
+};
+
+template<typename T, typename TMut, list_link<T, TMut> T::*Link>
+struct default_list_node_trait
+{
+	static list_link<T, TMut>& node_link(T& element)
+	{
+		return element.*Link;
+	}
+
+	static list_link<T, TMut>& node_link(T* NONNULL element)
+	{
+		return element->*Link;
+	}
+
+	static list_link<T, TMut>* NONNULL node_link_ptr(T& element)
+	{
+		return &node_link(element);
+	}
+
+	static list_link<T, TMut>* NONNULL node_link_ptr(T* NONNULL element)
+	{
+		return &node_link(element);
+	}
+};
+
+template<typename T>
+struct default_list_deleter
+{
+	void operator()([[maybe_unused]]T* NONNULL ptr)
+	{
+		// do nothing
+	}
+};
+
+template<typename T>
+struct operator_delete_list_deleter
+{
+	void operator()(T* NONNULL ptr)
+	{
+		delete ptr;
+	}
 };
 
 #pragma push_macro("list_for")
@@ -227,9 +290,10 @@ class intrusive_list_iterator
 
 template<typename T,
 	typename TMutex,
-	list_link<T, TMutex> T::*Link,
+	NodeTrait<T, TMutex> Trait,
 	bool EnableLock = false,
-	bool CallDeleteOnRemoval = false>
+	Deleter<T> DeleterType = default_list_deleter<T>>
+
 class intrusive_list
 {
  public:
@@ -237,8 +301,8 @@ class intrusive_list
 	using mutex_type = TMutex;
 	using head_type = list_link<value_type, mutex_type>;
 	using size_type = size_t;
-	using container_type = intrusive_list<T, TMutex, Link, EnableLock, CallDeleteOnRemoval>;
-	using iterator_type = intrusive_list_iterator<T, TMutex, EnableLock>;
+	using container_type = intrusive_list;
+	using iterator_type = intrusive_list_iterator<T, TMutex, container_type, EnableLock>;
 	using riterator_type = kbl::reversed_iterator<iterator_type>;
 	using const_iterator_type = const iterator_type;
 
@@ -248,7 +312,7 @@ class intrusive_list
 	{
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g{ lock };
+			lock_guard_type g{ lock_ };
 			list_init(&head_);
 		}
 		else
@@ -267,11 +331,11 @@ class intrusive_list
 	{
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g{ lock };
+			lock_guard_type g{ lock_ };
 			list_init(&head_);
 
-			head_type* NONNULL iter = nullptr;
-			head_type* NONNULL t = nullptr;
+			head_type* iter = nullptr;
+			head_type* t = nullptr;
 
 			list_for_safe(iter, t, &another.head_)
 			{
@@ -286,8 +350,8 @@ class intrusive_list
 		{
 			list_init(&head_);
 
-			head_type* NONNULL iter = nullptr;
-			head_type* NONNULL t = nullptr;
+			head_type* iter = nullptr;
+			head_type* t = nullptr;
 
 			list_for_safe(iter, t, &another.head_)
 			{
@@ -298,102 +362,75 @@ class intrusive_list
 			size_ = another.size_;
 			another.size_ = 0;
 		}
-
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
-
 	}
 
 	/// First element
 	/// \return the reference to first element
-	T& front()
+	T& front() TA_NO_THREAD_SAFETY_ANALYSIS
 	{
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
-
 		return *head_.next->parent;
 	}
 
-	value_type* NONNULL front_ptr()
+	T* NULLABLE front_ptr() TA_NO_THREAD_SAFETY_ANALYSIS
 	{
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
-
 		return head_.next->parent;
 	}
 
 	/// Last element
 	/// \return the reference to first element
-	T& back()
+	T& back() TA_NO_THREAD_SAFETY_ANALYSIS
 	{
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
-
 		return *head_.prev->parent;
 	}
 
-	value_type* NONNULL back_ptr()
+	T* NULLABLE back_ptr() TA_NO_THREAD_SAFETY_ANALYSIS
 	{
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
-
 		return head_.prev->parent;
 	}
 
-	iterator_type begin()
+	iterator_type begin() TA_NO_THREAD_SAFETY_ANALYSIS
 	{
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
-
 		return iterator_type{ head_.next };
 	}
 
 	iterator_type end()
 	{
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
-
 		return iterator_type{ &head_ };
 	}
 
 	const_iterator_type cbegin()
 	{
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
-
 		return const_iterator_type{ head_.next };
 	}
 
 	const_iterator_type cend()
 	{
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
-
 		return const_iterator_type{ &head_ };
 	}
 
 	riterator_type rbegin()
 	{
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
-
 		return riterator_type{ head_.prev };
 	}
 
 	riterator_type rend()
 	{
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
-
 		return riterator_type{ &head_ };
 	}
 
-	void insert(const_iterator_type iter, value_type* NONNULL item) TA_NO_THREAD_SAFETY_ANALYSIS
+	void insert(const_iterator_type iter, T* NONNULL item) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
-
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g{ lock };
-			list_add(&(item->*Link), iter.h_);
+			lock_guard_type g{ lock_ };
+			list_add(Trait::node_link_ptr(item), iter.h_);
 			++size_;
 		}
 		else
 		{
-			list_add(&(item->*Link), iter.h_);
+			list_add(Trait::node_link_ptr(item), iter.h_);
 			++size_;
 		}
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
-
 	}
 
 	void insert(const_iterator_type iter, T& item)
@@ -406,86 +443,84 @@ class intrusive_list
 		insert(iter.get_iterator(), item);
 	}
 
-	void insert(riterator_type iter, value_type* NONNULL item)
+	void insert(riterator_type iter, T* NONNULL item)
 	{
 		insert(iter.get_iterator(), item);
 	}
 
-	void erase(iterator_type it, bool call_delete = CallDeleteOnRemoval) TA_NO_THREAD_SAFETY_ANALYSIS
+	void erase(iterator_type it) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
-
-		if (list_empty(&head_))return;
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
+		if (list_empty(&head_))
+		{
+			return;
+		}
 
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g{ lock };
+			lock_guard_type g{ lock_ };
 
 			list_remove_init(it.h_);
-			if (call_delete)delete it.h_->parent;
+			deleter_(it.h_->parent);
 			--size_;
 		}
 		else
 		{
 			list_remove_init(it.h_);
-			if (call_delete)delete it.h_->parent;
+			deleter_(it.h_->parent);
 			--size_;
 		}
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
-
 	}
 
-	void erase(riterator_type it, bool call_delete = CallDeleteOnRemoval)
+	void erase(riterator_type it)
 	{
-		erase(it.get_iterator(), call_delete);
+		erase(it.get_iterator());
 	}
 
 	/// Remove item by value. **it takes constant time**
 	/// \param val
-	void remove(value_type* NONNULL val, bool call_delete = CallDeleteOnRemoval) TA_NO_THREAD_SAFETY_ANALYSIS
+	void remove(T* NONNULL val) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
-
-		if (list_empty(&head_))return;
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
+		if (list_empty(&head_))
+		{
+			return;
+		}
 
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g{ lock };
-			list_remove_init(&(val->*Link));
-			if (call_delete)delete val;
+			lock_guard_type g{ lock_ };
+			list_remove_init(Trait::node_link_ptr(val));
+			deleter_(val);
 			--size_;
 		}
 		else
 		{
-			list_remove_init(&(val->*Link));
-			if (call_delete)delete val;
+			list_remove_init(Trait::node_link_ptr(val));
+			deleter_(val);
 			--size_;
 		}
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
 
 	}
 
-	void remove(T& val, bool call_delete = CallDeleteOnRemoval)
+	void remove(T& val)
 	{
-		remove(&val, call_delete);
+		remove(&val);
 	}
 
-	void pop_back(bool call_delete = CallDeleteOnRemoval) TA_NO_THREAD_SAFETY_ANALYSIS
+	void pop_back() TA_NO_THREAD_SAFETY_ANALYSIS
 	{
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
-		if (list_empty(&head_))return;
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
+		if (list_empty(&head_))
+		{
+			return;
+		}
 
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g{ lock };
+			lock_guard_type g{ lock_ };
 			auto entry = head_.prev;
 			list_remove_init(entry);
 			--size_;
 
-			if (call_delete)delete entry->parent;
+			deleter_(entry->parent);
 		}
 		else
 		{
@@ -493,28 +528,25 @@ class intrusive_list
 			list_remove_init(entry);
 			--size_;
 
-			if (call_delete)delete entry->parent;
+			deleter_(entry->parent);
+
 		}
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
 
 	}
 
-	void push_back(value_type* NONNULL item) TA_NO_THREAD_SAFETY_ANALYSIS
+	void push_back(T* NONNULL item) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
-
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g{ lock };
-			list_add_tail(&(item->*Link), &head_);
+			lock_guard_type g{ lock_ };
+			list_add_tail(Trait::node_link_ptr(item), &head_);
 			++size_;
 		}
 		else
 		{
-			list_add_tail(&(item->*Link), &head_);
+			list_add_tail(Trait::node_link_ptr(item), &head_);
 			++size_;
 		}
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
 
 	}
 
@@ -523,20 +555,21 @@ class intrusive_list
 		push_back(&item);
 	}
 
-	void pop_front(bool call_delete = CallDeleteOnRemoval) TA_NO_THREAD_SAFETY_ANALYSIS
+	void pop_front() TA_NO_THREAD_SAFETY_ANALYSIS
 	{
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
-		if (list_empty(&head_))return;
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
+		if (list_empty(&head_))
+		{
+			return;
+		}
 
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g{ lock };
+			lock_guard_type g{ lock_ };
 			auto entry = head_.next;
 			list_remove_init(entry);
 			--size_;
 
-			if (call_delete)delete entry->parent;
+			deleter_(entry->parent);
 		}
 		else
 		{
@@ -544,28 +577,25 @@ class intrusive_list
 			list_remove_init(entry);
 			--size_;
 
-			if (call_delete)delete entry->parent;
+			deleter_(entry->parent);
+
 		}
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
 
 	}
 
-	void push_front(value_type* NONNULL item) TA_NO_THREAD_SAFETY_ANALYSIS
+	void push_front(T* NONNULL item) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
-
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g{ lock };
-			list_add(&(item->*Link), &head_);
+			lock_guard_type g{ lock_ };
+			list_add(Trait::node_link_ptr(item), &head_);
 			++size_;
 		}
 		else
 		{
-			list_add(&(item->*Link), &head_);
+			list_add(Trait::node_link_ptr(item), &head_);
 			++size_;
 		}
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
 
 	}
 
@@ -574,32 +604,26 @@ class intrusive_list
 		push_front(&item);
 	}
 
-	void clear(bool call_delete = CallDeleteOnRemoval) TA_NO_THREAD_SAFETY_ANALYSIS
+	void clear() TA_NO_THREAD_SAFETY_ANALYSIS
 	{
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
-
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g{ lock };
-			do_clear(call_delete);
+			lock_guard_type g{ lock_ };
+			do_clear();
 		}
 		else
 		{
-			do_clear(call_delete);
+			do_clear();
 		}
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
-
 	}
 
 	/// swap this and another
 	/// \param another
 	void swap(container_type& another) noexcept TA_NO_THREAD_SAFETY_ANALYSIS
 	{
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
-
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g{ lock };
+			lock_guard_type g{ lock_ };
 			list_swap(&head_, &another.head_);
 
 			size_type t = size_;
@@ -614,7 +638,6 @@ class intrusive_list
 			size_ = another.size_;
 			another.size_ = t;
 		}
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
 
 	}
 
@@ -635,12 +658,10 @@ class intrusive_list
 	template<typename Compare>
 	void merge(container_type& another, Compare cmp) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
-
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g1{ lock };
-			lock_guard_type g2{ another.lock };
+			lock_guard_type g1{ lock_ };
+			lock_guard_type g2{ another.lock_ };
 
 			do_merge(another, cmp);
 		}
@@ -648,19 +669,15 @@ class intrusive_list
 		{
 			do_merge(another, cmp);
 		}
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
-
 	}
 
 	/// join two lists
 	/// \param other
 	void splice(intrusive_list& other) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
-
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g{ lock };
+			lock_guard_type g{ lock_ };
 
 			size_ += other.size_;
 			other.size_ = 0;
@@ -674,7 +691,6 @@ class intrusive_list
 
 			list_splice_init(&other.head_, &head_);
 		}
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
 
 	}
 
@@ -683,11 +699,9 @@ class intrusive_list
 	/// \param other
 	void splice(const_iterator_type pos, intrusive_list& other) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
-
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g{ lock };
+			lock_guard_type g{ lock_ };
 
 			size_ += other.size_;
 			other.size_ = 0;
@@ -702,7 +716,6 @@ class intrusive_list
 
 			list_splice_init(&other.head_, pos.h_);
 		}
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
 
 	}
 
@@ -721,18 +734,15 @@ class intrusive_list
 
 	[[nodiscard]] size_type size_slow() const TA_NO_THREAD_SAFETY_ANALYSIS
 	{
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
-
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g{ lock };
+			lock_guard_type g{ lock_ };
 			return do_size_slow();
 		}
 		else
 		{
 			return do_size_slow();
 		}
-		KDEBUG_ASSERT(head_.next != nullptr && head_.prev != nullptr);
 
 	}
 
@@ -743,17 +753,18 @@ class intrusive_list
 
  private:
 
-	void do_clear(bool call_delete = false)
+	void do_clear()
 	{
 		if (!list_empty(&head_))
 		{
-			head_type* NONNULL iter = nullptr, * t = nullptr;
+			head_type* iter = nullptr, * t = nullptr;
 			list_for_safe(iter, t, &head_)
 			{
-				list_remove_init(iter);
-				if (call_delete && iter->parent)
+				list_remove(iter);
+
+				if (iter->parent)
 				{
-					delete iter->parent;
+					deleter_(iter->parent);
 				}
 			}
 		}
@@ -763,7 +774,7 @@ class intrusive_list
 	size_type do_size_slow() const
 	{
 		size_type sz = 0;
-		head_type* NONNULL iter = nullptr;
+		head_type* iter = nullptr;
 		list_for(iter, &head_)
 		{
 			sz++;
@@ -774,12 +785,15 @@ class intrusive_list
 	template<typename Compare>
 	void do_merge(container_type& another, Compare cmp)
 	{
-		if (head_ == another.head_)return;
+		if (head_ == another.head_)
+		{
+			return;
+		}
 
 		size_ += another.size_;
 
 		head_type t_head{ nullptr };
-		head_type* NONNULL i1 = head_.next, * i2 = another.head_.next;
+		head_type* i1 = head_.next, * i2 = another.head_.next;
 		while (i1 != &head_ && i2 != &another.head_)
 		{
 			if (cmp(*(i1->parent), *(i2->parent)))
@@ -849,7 +863,7 @@ class intrusive_list
 	static inline void
 	util_list_splice(const head_type* NONNULL list, head_type* NONNULL prev, head_type* NONNULL next)
 	{
-		head_type* NONNULL first = list->next, * last = list->prev;
+		head_type* first = list->next, * last = list->prev;
 
 		first->prev = prev;
 		prev->next = first;
@@ -1080,12 +1094,13 @@ class intrusive_list
 
 	using lock_guard_type = lock::lock_guard<TMutex>;
 
- public:
-	head_type head_{ nullptr };
+	head_type head_   TA_GUARDED(lock_) { nullptr };
 
 	size_type size_{ 0 };
 
-	mutable mutex_type lock;
+	mutable DeleterType deleter_;
+
+	mutable mutex_type lock_;
 };
 
 #undef list_for
@@ -1094,6 +1109,19 @@ class intrusive_list
 #pragma pop_macro("list_for")
 #pragma pop_macro("list_for_safe")
 
+template<typename T,
+	typename TMutex,
+	list_link<T, TMutex> T::*Link,
+	bool EnableLock = false,
+	Deleter<T> DeleterType=default_list_deleter<T>>
+
+using intrusive_list_with_default_trait = intrusive_list<T,
+                                                         TMutex,
+                                                         default_list_node_trait<T, TMutex, Link>,
+                                                         EnableLock,
+                                                         DeleterType>;
+
 } // namespace
+
 
 #pragma pop_macro("KDEBUG_ASSERT")

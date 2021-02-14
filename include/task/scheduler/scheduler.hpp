@@ -30,7 +30,10 @@ class scheduler
 {
  public:
 	using scheduler_class_type = round_rubin_scheduler_class;
-	using timer_list_type = kbl::intrusive_list<scheduler_timer, lock::spinlock, &scheduler_timer::link, true, false>;
+	using timer_list_type = kbl::intrusive_list_with_default_trait<scheduler_timer,
+	                                                               lock::spinlock,
+	                                                               &scheduler_timer::link,
+	                                                               true>;
 	using size_type = size_t;
 
 	friend class thread;
@@ -49,7 +52,7 @@ class scheduler
 	}
 
 	[[noreturn]]  static error_code idle(void* arg __UNUSED);
-	static_assert(ktl::Convertible<decltype(idle), task::thread::routine_type>);
+	static_assert(ktl::convertible_to<decltype(idle), task::thread::routine_type>);
 
 	void schedule() TA_REQ(global_thread_lock);
 

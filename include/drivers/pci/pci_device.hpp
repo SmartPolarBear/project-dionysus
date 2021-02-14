@@ -32,8 +32,7 @@ struct pci_device
 		return (*(uint32_t*)(this->config + (off)));
 	}
 
-	template<typename TRegPtr>
-	requires ktl::Pointer<TRegPtr>
+	template<ktl::is_pointer TRegPtr>
 	[[nodiscard, maybe_unused]]
 	TRegPtr read_dword_as(size_t off) const
 	{

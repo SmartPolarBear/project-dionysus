@@ -107,7 +107,7 @@ class thread final
 
 	static void default_trampoline();
 
-	static_assert(ktl::Convertible<decltype(default_trampoline), trampoline_type>);
+	static_assert(ktl::convertible_to<decltype(default_trampoline), trampoline_type>);
 
 	[[nodiscard]]static error_code_with_result<task::thread*> create(process* parent,
 		ktl::string_view name,
@@ -222,8 +222,15 @@ class thread final
 	link_type master_list_link{ this };
 
  public:
-	using master_list_type = kbl::intrusive_list<thread, lock::spinlock, &thread::master_list_link, true, false>;
-	using wait_queue_list_type = kbl::intrusive_list<thread, lock::spinlock, &thread::wait_queue_link, true, false>;
+	using master_list_type = kbl::intrusive_list_with_default_trait<thread,
+	                                                                lock::spinlock,
+	                                                                &thread::master_list_link,
+	                                                                true>;
+
+	using wait_queue_list_type = kbl::intrusive_list_with_default_trait<thread,
+	                                                                    lock::spinlock,
+	                                                                    &thread::wait_queue_link,
+	                                                                    true>;
 };
 
 class kernel_stack final

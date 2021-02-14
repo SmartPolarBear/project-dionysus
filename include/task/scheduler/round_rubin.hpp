@@ -12,8 +12,14 @@ class round_rubin_scheduler_class final
 	friend class thread;
 	friend class scheduler;
 
-	using run_queue_list_type = kbl::intrusive_list<thread, lock::spinlock, &thread::run_queue_link, true, false>;
-	using zombie_queue_list_type = kbl::intrusive_list<thread, lock::spinlock, &thread::zombie_queue_link, true, false>;
+	using run_queue_list_type = kbl::intrusive_list_with_default_trait<thread,
+	                                                                   lock::spinlock,
+	                                                                   &thread::run_queue_link,
+	                                                                   true>;
+	using zombie_queue_list_type = kbl::intrusive_list_with_default_trait<thread,
+	                                                                      lock::spinlock,
+	                                                                      &thread::zombie_queue_link,
+	                                                                      true>;
 
  public:
 	explicit round_rubin_scheduler_class(class scheduler* pa) : parent(pa)
