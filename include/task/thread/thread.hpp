@@ -115,6 +115,80 @@ class user_stack
 	thread* owner_thread{ nullptr };
 };
 
+class wait_queue_state
+{
+ public:
+	friend class wait_queue;
+	friend class thread;
+
+	wait_queue_state() = delete;
+	wait_queue_state(const wait_queue_state&) = delete;
+	wait_queue_state& operator=(const wait_queue_state&) = delete;
+
+	explicit wait_queue_state(thread* pa)
+		: parent_(pa)
+	{
+	}
+
+	~wait_queue_state();
+
+	bool holding() TA_REQ(global_thread_lock);
+
+	void block(wait_queue::interruptible intr, error_code status) TA_REQ(global_thread_lock);
+
+	void unblock_if_interruptible(thread* t, error_code status) TA_REQ(global_thread_lock);
+
+	bool unsleep(thread* thread, error_code status) TA_REQ(global_thread_lock);
+	bool unsleep_if_interruptible(thread* thread, error_code status) TA_REQ(global_thread_lock);
+
+ private:
+
+	thread* parent_{ nullptr };
+
+	wait_queue* blocking_on_{ nullptr };
+	error_code block_code_{ ERROR_SUCCESS };
+	wait_queue::interruptible interruptible_{ wait_queue::interruptible::No };
+};
+
+class task_state
+{
+ public:
+	task_state() = default;
+
+	void init(thread_routine_type entry, void* arg);
+
+	[[nodiscard]] thread_routine_type get_routine()
+	{
+		return routine_;
+	}
+
+	[[nodiscard]] void* get_arg()
+	{
+		return arg_;
+	}
+
+	error_code get_exit_code() const
+	{
+		return exit_code_;
+	}
+	void set_exit_code(error_code exit_code)
+	{
+		exit_code_ = exit_code;
+	}
+
+	error_code join(const deadline &) TA_REQ(global_thread_lock);
+	void wake_joiners(error_code status) TA_REQ(global_thread_lock);
+
+ private:
+	thread_routine_type routine_{ nullptr };
+
+	void* arg_{ nullptr };
+
+	error_code exit_code_{ ERROR_SUCCESS };
+
+	wait_queue exit_code_wait_queue_{};
+};
+
 class thread final
 	: object::dispatcher<thread, 0>
 {
@@ -255,11 +329,9 @@ class thread final
 
 	kbl::name<64> name_{ "" };
 
-	error_code exit_code_{ ERROR_SUCCESS };
+	task_state task_state_{};
 
-	wait_queue* exit_code_wait_queue_{ nullptr };
-
-	wait_queue_state* wait_queue_state_{ nullptr };
+	wait_queue_state wait_queue_state_{ this };
 
 	kernel_stack* kstack_{ nullptr };
 

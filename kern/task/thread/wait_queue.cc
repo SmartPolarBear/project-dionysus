@@ -33,9 +33,9 @@ error_code wait_queue::unblock_thread(thread* t, error_code code) TA_REQ(global_
 		return ERROR_INVALID;
 	}
 
-	auto wq = t->wait_queue_state_->blocking_on_;
+	auto wq = t->wait_queue_state_.blocking_on_;
 	KDEBUG_ASSERT(wq != nullptr);
-	KDEBUG_ASSERT(t->wait_queue_state_->holding());
+	KDEBUG_ASSERT(t->wait_queue_state_.holding());
 
 	wq->dequeue(t, code);
 
@@ -85,7 +85,7 @@ error_code wait_queue::block_etc(const deadline& ddl,
 		}
 	}
 
-	cur_thread->wait_queue_state_->interruptible_ = intr;
+	cur_thread->wait_queue_state_.interruptible_ = intr;
 
 	block_list_.push_back(cur_thread.get());
 
@@ -98,8 +98,8 @@ error_code wait_queue::block_etc(const deadline& ddl,
 		cur_thread->state = thread::thread_states::BLOCKED_READ_LOCK;
 	}
 
-	cur_thread->wait_queue_state_->blocking_on_ = this;
-	cur_thread->wait_queue_state_->block_code_ = ERROR_SUCCESS;
+	cur_thread->wait_queue_state_.blocking_on_ = this;
+	cur_thread->wait_queue_state_.block_code_ = ERROR_SUCCESS;
 
 	if (ddl.when() != TIME_INFINITE)
 	{
@@ -114,9 +114,9 @@ error_code wait_queue::block_etc(const deadline& ddl,
 
 	scheduler::current::block_locked();
 
-	current_thread->wait_queue_state_->interruptible_ = interruptible::No;
+	current_thread->wait_queue_state_.interruptible_ = interruptible::No;
 
-	return current_thread->wait_queue_state_->block_code_;
+	return current_thread->wait_queue_state_.block_code_;
 }
 
 thread* wait_queue::peek() TA_REQ(global_thread_lock)
@@ -186,13 +186,13 @@ bool wait_queue::empty() const TA_REQ(global_thread_lock)
 void wait_queue::dequeue(thread* t, error_code err) TA_REQ(global_thread_lock)
 {
 	KDEBUG_ASSERT(t != nullptr);
-	KDEBUG_ASSERT(t->wait_queue_state_->holding());
+	KDEBUG_ASSERT(t->wait_queue_state_.holding());
 	KDEBUG_ASSERT(t->state == thread::thread_states::BLOCKED || t->state == thread::thread_states::BLOCKED_READ_LOCK);
-	KDEBUG_ASSERT(t->wait_queue_state_->blocking_on_ == this);
+	KDEBUG_ASSERT(t->wait_queue_state_.blocking_on_ == this);
 
 	block_list_.remove(t);
-	t->wait_queue_state_->block_code_ = err;
-	t->wait_queue_state_->blocking_on_ = nullptr;
+	t->wait_queue_state_.block_code_ = err;
+	t->wait_queue_state_.blocking_on_ = nullptr;
 }
 
 void wait_queue::timeout_handle(scheduler_timer* timer, [[maybe_unused]] time_type time, void* arg)

@@ -27,6 +27,22 @@ cls_item<thread*, CLS_CUR_THREAD_PTR> task::cur_thread TA_GUARDED(global_thread_
 
 thread::master_list_type task::global_thread_list TA_GUARDED(global_thread_lock);
 
+void task_state::init(thread_routine_type entry, void* arg)
+{
+	routine_ = entry;
+	arg_ = arg;
+}
+
+error_code task_state::join(const deadline& ddl) TA_REQ(global_thread_lock)
+{
+	return exit_code_wait_queue_.block(wait_queue::interruptible::No, ddl);
+}
+
+void task_state::wake_joiners(error_code status) TA_REQ(global_thread_lock)
+{
+	exit_code_wait_queue_.wake_all(false, status);
+}
+
 kernel_stack* task::kernel_stack::create(thread* parent,
 	task::thread_routine_type start_routine,
 	void* arg,
@@ -243,20 +259,6 @@ thread::thread(process* prt, ktl::string_view nm, cpu_affinity aff)
 	  parent_{ prt },
 	  affinity_{ aff }
 {
-	kbl::allocate_checker ck{};
-
-	wait_queue_state_ = new(&ck) wait_queue_state{ this };
-	if (!ck.check())
-	{
-		KDEBUG_GERNERALPANIC_CODE(ERROR_MEMORY_ALLOC);
-	}
-
-	exit_code_wait_queue_ = new(&ck) wait_queue;
-	if (!ck.check())
-	{
-		KDEBUG_GERNERALPANIC_CODE(ERROR_MEMORY_ALLOC);
-	}
-
 }
 
 void thread::remove_from_lists()
@@ -321,11 +323,11 @@ void thread::kill_locked()
 	}
 	case thread_states::BLOCKED:
 	case thread_states::BLOCKED_READ_LOCK:
-		wait_queue_state_->unblock_if_interruptible(this, ERROR_INTERNAL_INTR_KILLED);
+		wait_queue_state_.unblock_if_interruptible(this, ERROR_INTERNAL_INTR_KILLED);
 		break;
 
 	case thread_states::SLEEPING:
-		reschedule_needed = wait_queue_state_->unsleep_if_interruptible(this, ERROR_INTERNAL_INTR_KILLED);
+		reschedule_needed = wait_queue_state_.unsleep_if_interruptible(this, ERROR_INTERNAL_INTR_KILLED);
 		break;
 	case thread_states::DYING:
 		break;
@@ -404,10 +406,10 @@ error_code thread::suspend()
 			break;
 		case thread_states::BLOCKED:
 		case thread_states::BLOCKED_READ_LOCK:
-			wait_queue_state_->unblock_if_interruptible(this, ERROR_INTERNAL_INTR_RETRY);
+			wait_queue_state_.unblock_if_interruptible(this, ERROR_INTERNAL_INTR_RETRY);
 			break;
 		case thread_states::SLEEPING:
-			local_reschedule = wait_queue_state_->unsleep_if_interruptible(this, ERROR_INTERNAL_INTR_RETRY);
+			local_reschedule = wait_queue_state_.unsleep_if_interruptible(this, ERROR_INTERNAL_INTR_RETRY);
 			break;
 		default:
 		case thread_states::DYING:
@@ -432,7 +434,7 @@ void thread::forget()
 
 		this->remove_from_lists();
 
-		KDEBUG_ASSERT(!wait_queue_state_->holding());
+		KDEBUG_ASSERT(!wait_queue_state_.holding());
 
 	}
 
@@ -445,7 +447,7 @@ error_code thread::detach()
 
 	lock_guard g{ global_thread_lock };
 
-	exit_code_wait_queue_->wake_all(false, ERROR_INVALID);
+	task_state_.wake_joiners(ERROR_INVALID);
 
 	if (state == thread_states::DEAD)
 	{
@@ -466,16 +468,12 @@ error_code thread::join(error_code* out_err_code)
 {
 	canary_.assert();
 
-	KDEBUG_ASSERT(exit_code_wait_queue_);
-
 	return join(out_err_code, deadline::infinite());
 }
 
 error_code thread::join(error_code* out_err_code, deadline ddl)
 {
 	canary_.assert();
-
-	KDEBUG_ASSERT(exit_code_wait_queue_);
 
 	{
 		lock_guard g{ global_thread_lock };
@@ -487,7 +485,7 @@ error_code thread::join(error_code* out_err_code, deadline ddl)
 
 		if (state != thread_states::DEAD)
 		{
-			auto ret = exit_code_wait_queue_->block(wait_queue::interruptible::No, ddl);
+			auto ret = task_state_.join(ddl);
 			if (ret != ERROR_SUCCESS)
 			{
 				return ret;
@@ -497,11 +495,11 @@ error_code thread::join(error_code* out_err_code, deadline ddl)
 		canary_.assert();
 
 		KDEBUG_ASSERT(state == thread_states::DYING || state == thread_states::DEAD);
-		KDEBUG_ASSERT(!wait_queue_state_->holding());
+		KDEBUG_ASSERT(!wait_queue_state_.holding());
 
 		if (out_err_code)
 		{
-			*out_err_code = exit_code_;
+			*out_err_code = task_state_.get_exit_code();
 		}
 
 		this->remove_from_lists();
@@ -529,8 +527,6 @@ error_code thread::detach_and_resume()
 
 thread::~thread()
 {
-	delete wait_queue_state_;
-	delete exit_code_wait_queue_;
 	delete kstack_;
 }
 
@@ -561,7 +557,7 @@ void thread::current::exit(error_code code)
 		}
 
 		cur_thread->state = thread_states::DYING;
-		cur_thread->exit_code_ = code;
+		cur_thread->task_state_.set_exit_code(code);
 
 		if (cur_thread->flags_ & FLAG_DETACHED)
 		{
@@ -570,7 +566,7 @@ void thread::current::exit(error_code code)
 		else
 		{
 			cur_thread->canary_.assert();
-			cur_thread->exit_code_wait_queue_->wake_all(false, code);
+			cur_thread->task_state_.wake_joiners(code);
 		}
 	}
 

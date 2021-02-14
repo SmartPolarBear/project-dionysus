@@ -110,38 +110,4 @@ class wait_queue
 	wait_queue_list_type block_list_;
 };
 
-class wait_queue_state
-{
- public:
-	friend class wait_queue;
-	friend class thread;
-
-	wait_queue_state() = delete;
-	wait_queue_state(const wait_queue_state&) = delete;
-	wait_queue_state& operator=(const wait_queue_state&) = delete;
-
-	explicit wait_queue_state(thread* pa)
-		: parent_(pa)
-	{
-	}
-
-	~wait_queue_state();
-
-	bool holding() TA_REQ(global_thread_lock);
-
-	void block(wait_queue::interruptible intr, error_code status) TA_REQ(global_thread_lock);
-
-	void unblock_if_interruptible(thread* t, error_code status) TA_REQ(global_thread_lock);
-
-	bool unsleep(thread* thread, error_code status) TA_REQ(global_thread_lock);
-	bool unsleep_if_interruptible(thread* thread, error_code status) TA_REQ(global_thread_lock);
-
- private:
-
-	thread* parent_{ nullptr };
-
-	wait_queue* blocking_on_{ nullptr };
-	error_code block_code_{ ERROR_SUCCESS };
-	wait_queue::interruptible interruptible_{ wait_queue::interruptible::No };
-};
 }
