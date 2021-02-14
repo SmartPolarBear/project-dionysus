@@ -1,9 +1,10 @@
 [submodule "external/newlib/newlib"]
 	path = external/newlib/newlib
-	url = https://github.91chifun.workers.dev//https://github.com/mirror/newlib-cygwin.git
+	url = https://github.com/ourairquality/newlib.git
 [submodule "external/llvm-project/llvm-project"]
 	path = external/llvm-project/llvm-project
 	url = https://mirrors.tuna.tsinghua.edu.cn/git/llvm-project.git
+	branch = main
 [submodule "external/ms-gsl/ms-gsl"]
 	path = external/ms-gsl/ms-gsl
 	url = https://github.com/microsoft/GSL.git

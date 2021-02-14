@@ -530,7 +530,7 @@ error_code vfs_io_context::vnode_get_path(char* path, vnode_base* node)
 
 error_code_with_result<vnode_base*> vfs_io_context::link_resolve(vnode_base* lnk, bool link_itself)
 {
-	return do_link_resolve(lnk, link_itself, LINK_MAX);
+	return do_link_resolve(lnk, link_itself, VFS_LINK_MAX);
 }
 
 error_code_with_result<vnode_base*> vfs_io_context::find(vnode_base* rel, const char* path, bool link_itself)

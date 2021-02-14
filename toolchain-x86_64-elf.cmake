@@ -1,7 +1,7 @@
 SET(CMAKE_SYSTEM_NAME Generic)                                                                                                                
 
-set(CMAKE_C_COMPILER clang-11)
-set(CMAKE_CXX_COMPILER clang++-11)
+set(CMAKE_C_COMPILER clang)
+set(CMAKE_CXX_COMPILER clang++)
 
 set(CMAKE_GLD_LINKER_NAME clang++ CACHE STRING "Name of the clang++ linker")
 mark_as_advanced(CMAKE_GLD_LINKER_NAME)
