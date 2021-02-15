@@ -31,7 +31,6 @@
 #include "../libs/basic_io/include/builtin_text_io.hpp"
 
 
-
 // std::optional is usable unconditionally
 // std::any is usable with the pseudo-syscalls
 // std::variant is usable with the pseudo-syscalls

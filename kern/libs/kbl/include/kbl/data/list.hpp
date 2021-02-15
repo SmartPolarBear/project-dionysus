@@ -32,94 +32,112 @@
 
 #endif
 
+
 namespace kbl
 {
 
 template<typename T, typename E>
 concept Deleter =
-requires(T del, E* ptr)
+requires(T del, E *ptr)
 {
 	del(ptr);
 };
 
-// linked list head_
+// linked list head
 template<typename TParent, typename TMutex>
-struct list_link
+class list_link
 {
-	TParent* NULLABLE parent;
-	bool is_head;
-	list_link* NONNULL next, * NONNULL prev;
+ public:
 
-	mutable TMutex lock;
-
-	list_link() : parent{ nullptr }, is_head{ false }, next{ this }, prev{ this }
+	list_link() : parent_{nullptr}, next_{this}, prev_{this}
 	{
 	}
 
-	list_link(list_link&& another) noexcept
+	explicit list_link(TParent * p) : parent_{p}, next_{this}, prev_{this}
 	{
-		parent = another.parent;
-		is_head = another.is_head;
-		next = another.next;
-		prev = another.prev;
-
-		another.parent = nullptr;
-		another.is_head = false;
-		another.next = &another;
-		another.prev = &another;
 	}
 
-	list_link(const list_link& another)
+	explicit list_link(TParent &p) : parent_{&p}, next_{this}, prev_{this}
 	{
-		parent = another.parent;
-		is_head = another.is_head;
-		next = another.next;
-		prev = another.prev;
 	}
 
-	list_link& operator=(const list_link& another)
+	list_link(list_link &&another) noexcept
+		: parent_(std::move(another.parent_)),
+		  next_(std::move(another.next_)),
+		  prev_(std::move(another.prev_))
+	{
+		next_->prev_ = this;
+		prev_->next_ = this;
+
+		//put another in a valid empty state
+		another.parent_ = nullptr;
+		another.next_ = &another;
+		another.prev_ = &another;
+	}
+
+	list_link(const list_link &another)
+		: parent_(another.parent_),
+		  next_(another.next_),
+		  prev_(another.prev_)
+	{
+	}
+
+	list_link &operator=(const list_link &another)
 	{
 		if (this == &another)
 		{
 			return *this;
 		}
 
-		parent = another.parent;
-		is_head = another.is_head;
-		next = another.next;
-		prev = another.prev;
+		parent_ = another.parent_;
+		next_ = another.next_;
+		prev_ = another.prev_;
+
+		return *this;
 	}
 
-	explicit list_link(TParent* NULLABLE p) : parent{ p }, is_head{ false }, next{ this }, prev{ this }
+	bool operator==(const list_link &that) const
 	{
+		return parent_ == that.parent_ &&
+			next_ == that.next_ &&
+			prev_ == that.prev_;
 	}
 
-	explicit list_link(TParent& p) : parent{ &p }, is_head{ false }, next{ this }, prev{ this }
-	{
-	}
-
-	bool operator==(const list_link& that) const
-	{
-		return parent == that.parent &&
-			is_head == that.is_head &&
-			next == that.next &&
-			prev == that.prev;
-	}
-
-	bool operator!=(const list_link& that) const
+	bool operator!=(const list_link &that) const
 	{
 		return !(*this == that);
 	}
+
+	[[nodiscard]] bool is_empty_or_detached() const
+	{
+		return next_ == this && prev_ == this;
+	}
+
+	[[nodiscard]] bool is_head() const
+	{
+		return !parent_;
+	}
+
+	[[nodiscard]] bool is_valid() const
+	{
+		return next_ != nullptr && prev_ != nullptr;
+	}
+
+ public:
+	TParent * parent_;
+	list_link * next_, * prev_;
+
+	mutable TMutex lock_;
 };
 
 template<typename T, typename U, typename Mutex>
 concept NodeTrait =
-requires(U& u)
+requires(U &u)
 {
-	{ T::node_link(u) }->ktl::convertible_to<list_link<U, Mutex>&>;
-	{ T::node_link(&u) }->ktl::convertible_to<list_link<U, Mutex>&>;
-	{ T::node_link_ptr(u) }->ktl::convertible_to<list_link<U, Mutex>*>;
-	{ T::node_link_ptr(&u) }->ktl::convertible_to<list_link<U, Mutex>*>;
+	{ T::node_link(u) }->ktl::convertible_to<list_link<U, Mutex> &>;
+	{ T::node_link(&u) }->ktl::convertible_to<list_link<U, Mutex> &>;
+	{ T::node_link_ptr(u) }->ktl::convertible_to<list_link<U, Mutex> *>;
+	{ T::node_link_ptr(&u) }->ktl::convertible_to<list_link<U, Mutex> *>;
 };
 
 template<typename T, typename TMutex, class Container, bool EnableLock = false>
@@ -129,30 +147,39 @@ class intrusive_list_iterator
 	friend Container;
 
 	using value_type = T;
+
+	using reference = T &;
+	using pointer = T *;
+
+	using difference_type = std::ptrdiff_t;
+
+	using iterator_category = std::input_iterator_tag;
+
 	using mutex_type = TMutex;
 	using head_type = list_link<value_type, mutex_type>;
-	using size_type = size_t;
+
 	using dummy_type = int;
 
  public:
 	constexpr intrusive_list_iterator() = default;
+	~intrusive_list_iterator() = default;
 
-	constexpr explicit intrusive_list_iterator(head_type* NONNULL h) : h_(h)
+	constexpr explicit intrusive_list_iterator(head_type * h) : h_(h)
 	{
 	}
 
-	constexpr intrusive_list_iterator(intrusive_list_iterator&& another) noexcept
+	constexpr intrusive_list_iterator(intrusive_list_iterator &&another) noexcept
 	{
 		h_ = another.h_;
 		another.h_ = nullptr;
 	}
 
-	constexpr intrusive_list_iterator(const intrusive_list_iterator& another)
+	constexpr intrusive_list_iterator(const intrusive_list_iterator &another)
 	{
 		h_ = another.h_;
 	}
 
-	intrusive_list_iterator& operator=(const intrusive_list_iterator& another) TA_NO_THREAD_SAFETY_ANALYSIS
+	intrusive_list_iterator &operator=(const intrusive_list_iterator &another) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if (this == &another)
 		{
@@ -161,7 +188,7 @@ class intrusive_list_iterator
 
 		if constexpr(EnableLock)
 		{
-			lock_guard_type g{ lock_ };
+			lock_guard_type g{lock_};
 			h_ = another.h_;
 		}
 		else
@@ -173,96 +200,103 @@ class intrusive_list_iterator
 		return *this;
 	}
 
-	T& operator*()
+	// C++ named requirements: Swappable
+	void swap(intrusive_list_iterator &other)
+	{
+		std::swap(h_, other.h_);
+	}
+
+	reference operator*()
 	{
 		return *operator->();
 	}
 
-	T* NULLABLE operator->()
+	pointer  operator->()
 	{
-		return h_->parent;
+		return h_->parent_;
 	}
 
-	bool operator==(intrusive_list_iterator const& other) const
-	{
-		return h_ == other.h_;
-	}
-
-	bool operator!=(intrusive_list_iterator const& other) const
-	{
-		return !(*this == other);
-	}
-
-	intrusive_list_iterator& operator++() TA_NO_THREAD_SAFETY_ANALYSIS
+	constexpr intrusive_list_iterator &operator++() TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g{ lock_ };
-			h_ = h_->next;
+			lock_guard_type g{lock_};
+			h_ = h_->next_;
 		}
 		else
 		{
-			h_ = h_->next;
+			h_ = h_->next_;
 		}
 
 		return *this;
 	}
 
-	intrusive_list_iterator& operator--() TA_NO_THREAD_SAFETY_ANALYSIS
+	constexpr intrusive_list_iterator &operator--() TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g{ lock_ };
-			h_ = h_->prev;
+			lock_guard_type g{lock_};
+			h_ = h_->prev_;
 		}
 		else
 		{
-			h_ = h_->prev;
+			h_ = h_->prev_;
 		}
 
 		return *this;
 	}
 
-	intrusive_list_iterator operator++(dummy_type) noexcept
+	constexpr intrusive_list_iterator operator++(dummy_type) noexcept
 	{
 		intrusive_list_iterator rc(*this);
 		operator++();
 		return rc;
 	}
 
-	intrusive_list_iterator operator--(dummy_type) noexcept
+	constexpr intrusive_list_iterator operator--(dummy_type) noexcept
 	{
 		intrusive_list_iterator rc(*this);
 		operator--();
 		return rc;
 	}
 
+	friend constexpr bool operator==(const intrusive_list_iterator &lhs, const intrusive_list_iterator &rhs) noexcept
+	{
+		return lhs.h_ == rhs.h_;
+
+	}
+
+	friend constexpr bool operator!=(const intrusive_list_iterator &lhs, const intrusive_list_iterator &rhs) noexcept
+	{
+		return !(lhs == rhs);
+	}
+
  private:
 	using lock_guard_type = lock::lock_guard<TMutex>;
 
-	head_type* NONNULL h_;
+	head_type * h_;
 	mutable mutex_type lock_;
 };
 
 template<typename T, typename TMut, list_link<T, TMut> T::*Link>
 struct default_list_node_trait
 {
-	static list_link<T, TMut>& node_link(T& element)
+	static list_link<T, TMut> &node_link(T &element)
 	{
 		return element.*Link;
 	}
 
-	static list_link<T, TMut>& node_link(T* NONNULL element)
+	static list_link<T, TMut> &node_link(T * element)
 	{
 		return element->*Link;
 	}
 
-	static list_link<T, TMut>* NONNULL node_link_ptr(T& element)
+	static list_link<T, TMut> * node_link_ptr(T &element)
 	{
 		return &node_link(element);
 	}
 
-	static list_link<T, TMut>* NONNULL node_link_ptr(T* NONNULL element)
+	static list_link<T, TMut> * node_link_ptr(T * element)
 	{
 		return &node_link(element);
 	}
@@ -271,7 +305,7 @@ struct default_list_node_trait
 template<typename T>
 struct default_list_deleter
 {
-	void operator()([[maybe_unused]]T* NONNULL ptr)
+	void operator()([[maybe_unused]]T * ptr)
 	{
 		// do nothing
 	}
@@ -280,7 +314,7 @@ struct default_list_deleter
 template<typename T>
 struct operator_delete_list_deleter
 {
-	void operator()(T* NONNULL ptr)
+	void operator()(T * ptr)
 	{
 		delete ptr;
 	}
@@ -298,10 +332,10 @@ struct operator_delete_list_deleter
 #endif
 
 #define list_for(pos, head) \
-    for ((pos) = (head)->next; (pos) != (head); (pos) = (pos)->next)
+    for ((pos) = (head)->next_; (pos) != (head); (pos) = (pos)->next_)
 
 #define list_for_safe(pos, n, head) \
-    for (pos = (head)->next, n = pos->next; pos != (head); pos = n, n = pos->next)
+    for (pos = (head)->next_, n = pos->next_; pos != (head); pos = n, n = pos->next_)
 
 template<typename T,
 	typename TMutex,
@@ -327,7 +361,7 @@ class intrusive_list
 	{
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g{ lock_ };
+			lock_guard_type g{lock_};
 			list_init(&head_);
 		}
 		else
@@ -337,107 +371,85 @@ class intrusive_list
 	}
 
 	/// Isn't copiable
-	intrusive_list(const intrusive_list&) = delete;
+	intrusive_list(const intrusive_list &) = delete;
 
-	intrusive_list& operator=(const intrusive_list&) = delete;
+	intrusive_list &operator=(const intrusive_list &) = delete;
 
 	/// Move constructor
-	intrusive_list(intrusive_list&& another) noexcept TA_NO_THREAD_SAFETY_ANALYSIS
+	intrusive_list(intrusive_list &&another) noexcept
+		: head_(std::move(another.head_)),
+		  size_(std::move(another.size_))
 	{
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g{ lock_ };
-			list_init(&head_);
-
-			head_type* iter = nullptr;
-			head_type* t = nullptr;
-
-			list_for_safe(iter, t, &another.head_)
-			{
-				list_remove_init(iter);
-				list_add(iter, &this->head_);
-			}
-
-			size_ = another.size_;
+			lock_guard_type g{another.lock_};
 			another.size_ = 0;
 		}
 		else
 		{
-			list_init(&head_);
-
-			head_type* iter = nullptr;
-			head_type* t = nullptr;
-
-			list_for_safe(iter, t, &another.head_)
-			{
-				list_remove_init(iter);
-				list_add(iter, this->head_);
-			}
-
-			size_ = another.size_;
 			another.size_ = 0;
 		}
 	}
 
 	/// First element
 	/// \return the reference to first element
-	T& front() TA_NO_THREAD_SAFETY_ANALYSIS
+	T &front() TA_NO_THREAD_SAFETY_ANALYSIS
 	{
-		return *head_.next->parent;
+		return *head_.next_->parent_;
 	}
 
-	T* NULLABLE front_ptr() TA_NO_THREAD_SAFETY_ANALYSIS
+	T * front_ptr() TA_NO_THREAD_SAFETY_ANALYSIS
 	{
-		return head_.next->parent;
+		return head_.next_->parent_;
 	}
 
 	/// Last element
 	/// \return the reference to first element
-	T& back() TA_NO_THREAD_SAFETY_ANALYSIS
+	T &back() TA_NO_THREAD_SAFETY_ANALYSIS
 	{
-		return *head_.prev->parent;
+		return *head_.prev_->parent_;
 	}
 
-	T* NULLABLE back_ptr() TA_NO_THREAD_SAFETY_ANALYSIS
+	T * back_ptr() TA_NO_THREAD_SAFETY_ANALYSIS
 	{
-		return head_.prev->parent;
+		return head_.prev_->parent_;
 	}
 
 	iterator_type begin() TA_NO_THREAD_SAFETY_ANALYSIS
 	{
-		return iterator_type{ head_.next };
+		return iterator_type{head_.next_};
 	}
 
 	iterator_type end() TA_NO_THREAD_SAFETY_ANALYSIS
 	{
-		return iterator_type{ &head_ };
+		return iterator_type{&head_};
 	}
 
 	const_iterator_type cbegin() TA_NO_THREAD_SAFETY_ANALYSIS
 	{
-		return const_iterator_type{ head_.next };
+		return const_iterator_type{head_.next_};
 	}
 
 	const_iterator_type cend() TA_NO_THREAD_SAFETY_ANALYSIS
 	{
-		return const_iterator_type{ &head_ };
+		return const_iterator_type{&head_};
 	}
 
 	riterator_type rbegin() TA_NO_THREAD_SAFETY_ANALYSIS
 	{
-		return riterator_type{ head_.prev };
+		return riterator_type{head_.prev_};
 	}
 
 	riterator_type rend()TA_NO_THREAD_SAFETY_ANALYSIS
 	{
-		return riterator_type{ &head_ };
+		return riterator_type{&head_};
 	}
 
-	void insert(const_iterator_type iter, T* NONNULL item) TA_NO_THREAD_SAFETY_ANALYSIS
+	void insert(const_iterator_type iter, T * item) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g{ lock_ };
+			lock_guard_type g{lock_};
 			list_add(Trait::node_link_ptr(item), iter.h_);
 			++size_;
 		}
@@ -448,17 +460,17 @@ class intrusive_list
 		}
 	}
 
-	void insert(const_iterator_type iter, T& item)
+	void insert(const_iterator_type iter, T &item)
 	{
 		insert(iter, &item);
 	}
 
-	void insert(riterator_type iter, T& item)
+	void insert(riterator_type iter, T &item)
 	{
 		insert(iter.get_iterator(), item);
 	}
 
-	void insert(riterator_type iter, T* NONNULL item)
+	void insert(riterator_type iter, T * item)
 	{
 		insert(iter.get_iterator(), item);
 	}
@@ -472,16 +484,16 @@ class intrusive_list
 
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g{ lock_ };
+			lock_guard_type g{lock_};
 
 			list_remove_init(it.h_);
-			deleter_(it.h_->parent);
+			deleter_(it.h_->parent_);
 			--size_;
 		}
 		else
 		{
 			list_remove_init(it.h_);
-			deleter_(it.h_->parent);
+			deleter_(it.h_->parent_);
 			--size_;
 		}
 	}
@@ -493,7 +505,7 @@ class intrusive_list
 
 	/// Remove item by value. **it takes constant time**
 	/// \param val
-	void remove(T* NONNULL val) TA_NO_THREAD_SAFETY_ANALYSIS
+	void remove(T * val) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if (list_empty(&head_))
 		{
@@ -502,7 +514,7 @@ class intrusive_list
 
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g{ lock_ };
+			lock_guard_type g{lock_};
 			list_remove_init(Trait::node_link_ptr(val));
 			deleter_(val);
 			--size_;
@@ -516,7 +528,7 @@ class intrusive_list
 
 	}
 
-	void remove(T& val)
+	void remove(T &val)
 	{
 		remove(&val);
 	}
@@ -530,30 +542,30 @@ class intrusive_list
 
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g{ lock_ };
-			auto entry = head_.prev;
+			lock_guard_type g{lock_};
+			auto entry = head_.prev_;
 			list_remove_init(entry);
 			--size_;
 
-			deleter_(entry->parent);
+			deleter_(entry->parent_);
 		}
 		else
 		{
-			auto entry = head_.prev;
+			auto entry = head_.prev_;
 			list_remove_init(entry);
 			--size_;
 
-			deleter_(entry->parent);
+			deleter_(entry->parent_);
 
 		}
 
 	}
 
-	void push_back(T* NONNULL item) TA_NO_THREAD_SAFETY_ANALYSIS
+	void push_back(T * item) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g{ lock_ };
+			lock_guard_type g{lock_};
 			list_add_tail(Trait::node_link_ptr(item), &head_);
 			++size_;
 		}
@@ -565,12 +577,12 @@ class intrusive_list
 
 	}
 
-	void push_back(T& item)
+	void push_back(T &item)
 	{
 		push_back(&item);
 	}
 
-	void pop_front() TA_NO_THREAD_SAFETY_ANALYSIS
+	void pop_front()
 	{
 		if (list_empty(&head_))
 		{
@@ -579,30 +591,30 @@ class intrusive_list
 
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g{ lock_ };
-			auto entry = head_.next;
+			lock_guard_type g{lock_};
+			auto entry = head_.next_;
 			list_remove_init(entry);
 			--size_;
 
-			deleter_(entry->parent);
+			deleter_(entry->parent_);
 		}
 		else
 		{
-			auto entry = head_.next;
+			auto entry = head_.next_;
 			list_remove_init(entry);
 			--size_;
 
-			deleter_(entry->parent);
+			deleter_(entry->parent_);
 
 		}
 
 	}
 
-	void push_front(T* NONNULL item) TA_NO_THREAD_SAFETY_ANALYSIS
+	void push_front(T * item)
 	{
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g{ lock_ };
+			lock_guard_type g{lock_};
 			list_add(Trait::node_link_ptr(item), &head_);
 			++size_;
 		}
@@ -614,16 +626,16 @@ class intrusive_list
 
 	}
 
-	void push_front(T& item)
+	void push_front(T &item)
 	{
 		push_front(&item);
 	}
 
-	void clear() TA_NO_THREAD_SAFETY_ANALYSIS
+	void clear()
 	{
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g{ lock_ };
+			lock_guard_type g{lock_};
 			do_clear();
 		}
 		else
@@ -634,11 +646,11 @@ class intrusive_list
 
 	/// swap this and another
 	/// \param another
-	void swap(container_type& another) noexcept TA_NO_THREAD_SAFETY_ANALYSIS
+	void swap(container_type &another) noexcept
 	{
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g{ lock_ };
+			lock_guard_type g{lock_};
 			list_swap(&head_, &another.head_);
 
 			size_type t = size_;
@@ -658,9 +670,9 @@ class intrusive_list
 
 	/// Merge two **sorted** list, after that another becomes empty
 	/// \param another
-	void merge(container_type& another)
+	void merge(container_type &another)
 	{
-		merge(another, [](const T& a, const T& b)
+		merge(another, [](const T &a, const T &b)
 		{
 		  return a < b;
 		});
@@ -671,12 +683,12 @@ class intrusive_list
 	/// \param another
 	/// \param cmp
 	template<typename Compare>
-	void merge(container_type& another, Compare cmp) TA_NO_THREAD_SAFETY_ANALYSIS
+	void merge(container_type &another, Compare cmp)
 	{
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g1{ lock_ };
-			lock_guard_type g2{ another.lock_ };
+			lock_guard_type g1{lock_};
+			lock_guard_type g2{another.lock_};
 
 			do_merge(another, cmp);
 		}
@@ -688,11 +700,11 @@ class intrusive_list
 
 	/// join two lists
 	/// \param other
-	void splice(intrusive_list& other) TA_NO_THREAD_SAFETY_ANALYSIS
+	void splice(intrusive_list &other)
 	{
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g{ lock_ };
+			lock_guard_type g{lock_};
 
 			size_ += other.size_;
 			other.size_ = 0;
@@ -712,11 +724,11 @@ class intrusive_list
 	/// Join two lists, insert other 's item after the pos
 	/// \param pos insert after it
 	/// \param other
-	void splice(const_iterator_type pos, intrusive_list& other) TA_NO_THREAD_SAFETY_ANALYSIS
+	void splice(const_iterator_type pos, intrusive_list &other)
 	{
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g{ lock_ };
+			lock_guard_type g{lock_};
 
 			size_ += other.size_;
 			other.size_ = 0;
@@ -737,7 +749,7 @@ class intrusive_list
 	/// Join two lists, insert other 's item after the pos
 	/// \param pos insert after it
 	/// \param other
-	void splice(riterator_type pos, intrusive_list& other)
+	void splice(riterator_type pos, intrusive_list &other)
 	{
 		splice(pos.get_iterator(), other);
 	}
@@ -751,7 +763,7 @@ class intrusive_list
 	{
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g{ lock_ };
+			lock_guard_type g{lock_};
 			return do_size_slow();
 		}
 		else
@@ -768,28 +780,28 @@ class intrusive_list
 
  private:
 
-	void do_clear()
+	void do_clear() TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if (!list_empty(&head_))
 		{
-			head_type* iter = nullptr, * t = nullptr;
+			head_type *iter = nullptr, *t = nullptr;
 			list_for_safe(iter, t, &head_)
 			{
 				list_remove(iter);
 
-				if (iter->parent)
+				if (iter->parent_)
 				{
-					deleter_(iter->parent);
+					deleter_(iter->parent_);
 				}
 			}
 		}
 		size_ = 0;
 	}
 
-	size_type do_size_slow() const
+	size_type do_size_slow() const TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		size_type sz = 0;
-		head_type* iter = nullptr;
+		head_type *iter = nullptr;
 		list_for(iter, &head_)
 		{
 			sz++;
@@ -798,7 +810,7 @@ class intrusive_list
 	}
 
 	template<typename Compare>
-	void do_merge(container_type& another, Compare cmp)
+	void do_merge(container_type &another, Compare cmp) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if (head_ == another.head_)
 		{
@@ -807,20 +819,20 @@ class intrusive_list
 
 		size_ += another.size_;
 
-		head_type t_head{ nullptr };
-		head_type* i1 = head_.next, * i2 = another.head_.next;
+		head_type t_head{nullptr};
+		head_type *i1 = head_.next_, *i2 = another.head_.next_;
 		while (i1 != &head_ && i2 != &another.head_)
 		{
-			if (cmp(*(i1->parent), *(i2->parent)))
+			if (cmp(*(i1->parent_), *(i2->parent_)))
 			{
-				auto next = i1->next;
+				auto next = i1->next_;
 				list_remove_init(i1);
 				list_add_tail(i1, &t_head);
 				i1 = next;
 			}
 			else
 			{
-				auto next = i2->next;
+				auto next = i2->next_;
 				list_remove_init(i2);
 				list_add_tail(i2, &t_head);
 				i2 = next;
@@ -829,7 +841,7 @@ class intrusive_list
 
 		while (i1 != &head_)
 		{
-			auto next = i1->next;
+			auto next = i1->next_;
 			list_remove_init(i1);
 			list_add_tail(i1, &t_head);
 			i1 = next;
@@ -837,7 +849,7 @@ class intrusive_list
 
 		while (i2 != &another.head_)
 		{
-			auto next = i2->next;
+			auto next = i2->next_;
 			list_remove_init(i2);
 			list_add_tail(i2, &t_head);
 			i2 = next;
@@ -848,54 +860,54 @@ class intrusive_list
 	}
 
  private:
-	static inline void util_list_init(head_type* NONNULL head)
+	static inline void util_list_init(head_type * head)
 	{
-		head->next = head;
-		head->prev = head;
+		head->next_ = head;
+		head->prev_ = head;
 	}
 
 	static inline void
-	util_list_add(head_type* NONNULL newnode, head_type* NONNULL prev, head_type* NONNULL next)
+	util_list_add(head_type * newnode, head_type * prev, head_type * next)
 	{
-		prev->next = newnode;
-		next->prev = newnode;
+		prev->next_ = newnode;
+		next->prev_ = newnode;
 
-		newnode->next = next;
-		newnode->prev = prev;
+		newnode->next_ = next;
+		newnode->prev_ = prev;
 	}
 
-	static inline void util_list_remove(head_type* NONNULL prev, head_type* NONNULL next)
+	static inline void util_list_remove(head_type * prev, head_type * next)
 	{
-		prev->next = next;
-		next->prev = prev;
+		prev->next_ = next;
+		next->prev_ = prev;
 	}
 
-	static inline void util_list_remove_entry(head_type* NONNULL entry)
+	static inline void util_list_remove_entry(head_type * entry)
 	{
-		util_list_remove(entry->prev, entry->next);
+		util_list_remove(entry->prev_, entry->next_);
 	}
 
 	static inline void
-	util_list_splice(const head_type* NONNULL list, head_type* NONNULL prev, head_type* NONNULL next)
+	util_list_splice(const head_type * list, head_type * prev, head_type * next)
 	{
-		head_type* first = list->next, * last = list->prev;
+		head_type *first = list->next_, *last = list->prev_;
 
-		first->prev = prev;
-		prev->next = first;
+		first->prev_ = prev;
+		prev->next_ = first;
 
-		last->next = next;
-		next->prev = last;
+		last->next_ = next;
+		next->prev_ = last;
 	}
 
  private:
 
 	// initialize the list
 	template<bool LockHeld = false>
-	static inline void list_init(head_type* NONNULL head) TA_NO_THREAD_SAFETY_ANALYSIS
+	static inline void list_init(head_type * head) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if constexpr (EnableLock && !LockHeld)
 		{
-			lock_guard_type g{ head->lock };
+			lock_guard_type g{head->lock_};
 			util_list_init(head);
 		}
 		else
@@ -906,73 +918,73 @@ class intrusive_list
 
 // add the new node after the specified head_
 	template<bool LockHeld = false>
-	static inline void list_add(head_type* NONNULL newnode, head_type* NONNULL head) TA_NO_THREAD_SAFETY_ANALYSIS
+	static inline void list_add(head_type * newnode, head_type * head) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if constexpr (EnableLock && !LockHeld)
 		{
-			lock_guard_type g1{ newnode->lock };
-			lock_guard_type g2{ head->lock };
+			lock_guard_type g1{newnode->lock_};
+			lock_guard_type g2{head->lock_};
 
-			util_list_add(newnode, head, head->next);
+			util_list_add(newnode, head, head->next_);
 		}
 		else
 		{
-			util_list_add(newnode, head, head->next);
+			util_list_add(newnode, head, head->next_);
 		}
 	}
 
 // add the new node before the specified head_
 	template<bool LockHeld = false>
-	static inline void list_add_tail(head_type* NONNULL newnode, head_type* NONNULL head) TA_NO_THREAD_SAFETY_ANALYSIS
+	static inline void list_add_tail(head_type * newnode, head_type * head) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if constexpr (EnableLock && !LockHeld)
 		{
-			lock_guard_type g1{ newnode->lock };
-			lock_guard_type g2{ head->lock };
+			lock_guard_type g1{newnode->lock_};
+			lock_guard_type g2{head->lock_};
 
-			util_list_add(newnode, head->prev, head);
+			util_list_add(newnode, head->prev_, head);
 
 		}
 		else
 		{
-			util_list_add(newnode, head->prev, head);
+			util_list_add(newnode, head->prev_, head);
 
 		}
 	}
 
 // delete the entry
 	template<bool LockHeld = false>
-	static inline void list_remove(head_type* NONNULL entry) TA_NO_THREAD_SAFETY_ANALYSIS
+	static inline void list_remove(head_type * entry) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if constexpr (EnableLock && !LockHeld)
 		{
-			lock_guard_type g1{ entry->lock };
+			lock_guard_type g1{entry->lock_};
 
 			util_list_remove_entry(entry);
 
-			entry->prev = nullptr;
-			entry->next = nullptr;
+			entry->prev_ = nullptr;
+			entry->next_ = nullptr;
 		}
 		else
 		{
 			util_list_remove_entry(entry);
 
-			entry->prev = nullptr;
-			entry->next = nullptr;
+			entry->prev_ = nullptr;
+			entry->next_ = nullptr;
 		}
 	}
 
 	template<bool LockHeld = false>
-	static inline void list_remove_init(head_type* NONNULL entry) TA_NO_THREAD_SAFETY_ANALYSIS
+	static inline void list_remove_init(head_type * entry) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if constexpr (EnableLock && !LockHeld)
 		{
-			lock_guard_type g1{ entry->lock };
+			lock_guard_type g1{entry->lock_};
 
 			util_list_remove_entry(entry);
 
-			entry->prev = nullptr;
-			entry->next = nullptr;
+			entry->prev_ = nullptr;
+			entry->next_ = nullptr;
 
 			util_list_init(entry);
 		}
@@ -980,8 +992,8 @@ class intrusive_list
 		{
 			util_list_remove_entry(entry);
 
-			entry->prev = nullptr;
-			entry->next = nullptr;
+			entry->prev_ = nullptr;
+			entry->next_ = nullptr;
 
 			util_list_init(entry);
 		}
@@ -989,62 +1001,62 @@ class intrusive_list
 
 // replace the old entry with newnode
 	template<bool LockHeld = false>
-	static inline void list_replace(head_type* NONNULL old, head_type* NONNULL newnode) TA_NO_THREAD_SAFETY_ANALYSIS
+	static inline void list_replace(head_type * old, head_type * newnode) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if constexpr (EnableLock && !LockHeld)
 		{
-			newnode->next = old->next;
-			newnode->next->prev = newnode;
-			newnode->prev = old->prev;
-			newnode->prev->next = newnode;
+			newnode->next_ = old->next_;
+			newnode->next_->prev_ = newnode;
+			newnode->prev_ = old->prev_;
+			newnode->prev_->next_ = newnode;
 		}
 		else
 		{
-			newnode->next = old->next;
-			newnode->next->prev = newnode;
-			newnode->prev = old->prev;
-			newnode->prev->next = newnode;
+			newnode->next_ = old->next_;
+			newnode->next_->prev_ = newnode;
+			newnode->prev_ = old->prev_;
+			newnode->prev_->next_ = newnode;
 		}
 
 	}
 
 	template<bool LockHeld = false>
-	static inline bool list_empty(const head_type* NONNULL head) TA_NO_THREAD_SAFETY_ANALYSIS
+	static inline bool list_empty(const head_type * head) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if constexpr (EnableLock && !LockHeld)
 		{
-			lock_guard_type g{ head->lock };
+			lock_guard_type g{head->lock_};
 
-			return (head->next) == head;
+			return (head->next_) == head;
 		}
 		else
 		{
-			return (head->next) == head;
+			return (head->next_) == head;
 		}
 	}
 
 	template<bool LockHeld = false>
-	static inline void list_swap(head_type* NONNULL e1, head_type* NONNULL e2) TA_NO_THREAD_SAFETY_ANALYSIS
+	static inline void list_swap(head_type * e1, head_type * e2) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if constexpr (EnableLock && !LockHeld)
 		{
-			lock_guard_type g1{ e1->lock };
-			lock_guard_type g2{ e2->lock };
+			lock_guard_type g1{e1->lock_};
+			lock_guard_type g2{e2->lock_};
 
-			auto* pos = e2->prev;
+			auto *pos = e2->prev_;
 			list_remove_init<true>(e2);
-			list_replace < true > (e1, e2);
+			list_replace<true>(e1, e2);
 
 			if (pos == e1)
 			{
 				pos = e2;
 			}
 
-			list_add < true > (e1, pos);
+			list_add<true>(e1, pos);
 		}
 		else
 		{
-			auto* pos = e2->prev;
+			auto *pos = e2->prev_;
 			list_remove_init(e2);
 			list_replace(e1, e2);
 
@@ -1060,23 +1072,23 @@ class intrusive_list
 	/// \tparam TParent
 	/// \param list	the new list to add
 	/// \param head the place to add it in the list
-	static inline void list_splice(head_type* NONNULL list, head_type* NONNULL head) TA_NO_THREAD_SAFETY_ANALYSIS
+	static inline void list_splice(head_type * list, head_type * head) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g1{ list->lock };
-			lock_guard_type g2{ head->lock };
+			lock_guard_type g1{list->lock_};
+			lock_guard_type g2{head->lock_};
 
-			if (!list_empty < true > (list))
+			if (!list_empty<true>(list))
 			{
-				util_list_splice(list, head, head->next);
+				util_list_splice(list, head, head->next_);
 			}
 		}
 		else
 		{
 			if (!list_empty(list))
 			{
-				util_list_splice(list, head, head->next);
+				util_list_splice(list, head, head->next_);
 			}
 		}
 	}
@@ -1084,16 +1096,16 @@ class intrusive_list
 	/// \tparam TParent
 	/// \param list	the new list to add
 	/// \param head the place to add it in the list
-	static inline void list_splice_init(head_type* NONNULL list, head_type* NONNULL head) TA_NO_THREAD_SAFETY_ANALYSIS
+	static inline void list_splice_init(head_type * list, head_type * head) TA_NO_THREAD_SAFETY_ANALYSIS
 	{
 		if constexpr (EnableLock)
 		{
-			lock_guard_type g1{ list->lock };
-			lock_guard_type g2{ head->lock };
+			lock_guard_type g1{list->lock_};
+			lock_guard_type g2{head->lock_};
 
-			if (!list_empty < true > (list))
+			if (!list_empty<true>(list))
 			{
-				util_list_splice(list, head, head->next);
+				util_list_splice(list, head, head->next_);
 				util_list_init(list);
 			}
 		}
@@ -1101,7 +1113,7 @@ class intrusive_list
 		{
 			if (!list_empty(list))
 			{
-				util_list_splice(list, head, head->next);
+				util_list_splice(list, head, head->next_);
 				util_list_init(list);
 			}
 		}
@@ -1109,9 +1121,9 @@ class intrusive_list
 
 	using lock_guard_type = lock::lock_guard<TMutex>;
 
-	head_type head_   TA_GUARDED(lock_) { nullptr };
+	head_type head_ TA_GUARDED(lock_) {nullptr};
 
-	size_type size_{ 0 };
+	size_type size_{0};
 
 	mutable DeleterType deleter_;
 
@@ -1137,6 +1149,5 @@ using intrusive_list_with_default_trait = intrusive_list<T,
                                                          DeleterType>;
 
 } // namespace
-
 
 #pragma pop_macro("KDEBUG_ASSERT")

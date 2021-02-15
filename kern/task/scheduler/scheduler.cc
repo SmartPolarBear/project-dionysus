@@ -271,7 +271,7 @@ void task::scheduler::remove_timer(task::scheduler_timer* timer)
 
 	if (timer->expires != 0)
 	{
-		auto next = timer->link.next->parent;
+		auto next = timer->link.next_->parent_;
 		if (next != nullptr)
 		{
 			next->expires += timer->expires;
@@ -290,7 +290,7 @@ void task::scheduler::check_timers()
 
 	while (!timer->expires)
 	{
-		auto next = timer->link.next->parent;
+		auto next = timer->link.next_->parent_;
 
 		timer->callback(timer, cmos::cmos_read_rtc_timestamp(), timer->arg);
 

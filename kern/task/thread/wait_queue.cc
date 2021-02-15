@@ -221,7 +221,7 @@ wait_queue_state::~wait_queue_state()
 
 bool wait_queue_state::holding() TA_REQ(global_thread_lock)
 {
-	return parent_->wait_queue_link.next != &parent_->wait_queue_link;
+	return !parent_->wait_queue_link.is_empty_or_detached();
 }
 
 void wait_queue_state::block(wait_queue::interruptible intr, error_code status) TA_REQ(global_thread_lock)

@@ -506,7 +506,7 @@ error_code thread::join(error_code* out_err_code, deadline ddl)
 
 	}
 
-	if (zombie_queue_link.next == &zombie_queue_link) // not in zombie list
+	if (zombie_queue_link.is_empty_or_detached()) // not in zombie list
 	{
 		delete this;
 	}
