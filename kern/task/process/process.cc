@@ -195,10 +195,6 @@ void process::finish_dead_transition() noexcept
 
 			vmm::pgdir_entry_free(mm->pgdir);
 
-			trap::pushcli();
-
-			trap::popcli();
-
 			vmm::mm_destroy(mm);
 		}
 	}

@@ -315,7 +315,7 @@ class thread final
 	thread_states state{ thread_states::INITIAL };
 
  private:
-	void switch_to() TA_REQ(global_thread_lock);
+	void switch_to(interrupt_saved_state_type state_to_restore) TA_REQ(global_thread_lock);
 
 	thread(process* parent, ktl::string_view name, cpu_affinity affinity);
 

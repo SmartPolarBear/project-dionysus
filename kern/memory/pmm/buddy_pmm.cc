@@ -215,7 +215,8 @@ page_info* pmm::buddy_pmm::buddy_alloc_pages(size_t n)
 	page_info* page = buddy_alloc_pages_impl(order);
 	if (page != nullptr && n != order_size)
 	{
-		pmm::free_pages(page + n, order_size - n);
+//		pmm::free_pages(page + n, order_size - n);
+		pmm::buddy_pmm::buddy_free_pages(page + n, order_size - n);
 	}
 
 	return page;

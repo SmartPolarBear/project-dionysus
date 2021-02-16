@@ -36,7 +36,7 @@ struct TA_CAP("mutex") arch_spinlock
 #endif
 };
 
-constexpr arch_spinlock ARCH_SPINLOCK_INITIAL{ 0, ""sv, { 0 }};
+constexpr arch_spinlock ARCH_SPINLOCK_INITIAL{ .value=0 };
 
 void arch_spinlock_lock(arch_spinlock* l) TA_ACQ(l);
 void arch_spinlock_unlock(arch_spinlock* l) TA_REL(l);

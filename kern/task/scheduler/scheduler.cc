@@ -59,7 +59,7 @@ void task::scheduler::schedule()
 	KDEBUG_ASSERT(!global_thread_list.empty());
 	KDEBUG_ASSERT(global_thread_lock.holding());
 
-	trap::pushcli();
+	auto state = arch_interrupt_save();
 
 	thread* next = nullptr;
 
@@ -81,11 +81,9 @@ void task::scheduler::schedule()
 		next = cpu->idle;
 	}
 
-	trap::popcli();
-
 	if (next != cur_thread.get())
 	{
-		next->switch_to();
+		next->switch_to(state);
 	}
 
 }

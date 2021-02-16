@@ -16,7 +16,7 @@
 #include <cstring>
 
 // only works after gdt installation
-void trap::pushcli(void)
+void trap::pushcli()
 {
 	auto eflags = read_eflags();
 

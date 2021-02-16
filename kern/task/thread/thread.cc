@@ -15,6 +15,8 @@
 
 #include "kbl/lock/lock_guard.hpp"
 
+#include <gsl/util>
+
 #include <utility>
 
 using namespace task;
@@ -206,15 +208,18 @@ void thread::default_trampoline()  TA_REL(global_thread_lock) //TA_NO_THREAD_SAF
 	// will return to thread_entry
 }
 
-void thread::switch_to() TA_REQ(global_thread_lock)
+void thread::switch_to(interrupt_saved_state_type state_to_restore) TA_REQ(global_thread_lock)
 {
-
+	KDEBUG_ASSERT(arch_ints_disabled());
 	KDEBUG_ASSERT(this->state == thread_states::READY);
+
+	auto _ = gsl::finally([&state_to_restore]()
+	{
+	  arch_interrupt_restore(state_to_restore);
+	});
 
 	if (this != cur_thread)
 	{
-		trap::pushcli();
-
 		auto prev = cur_thread.get();
 
 		{
@@ -247,11 +252,14 @@ void thread::switch_to() TA_REQ(global_thread_lock)
 
 		cur_thread = this;
 
-		trap::popcli();
+		// manually restore interrupt state
+		arch_interrupt_restore(state_to_restore);
 
 		context_switch(&prev->kstack_->context, this->kstack_->context);
 
 	}
+
+	// automatically restore interrupt state here
 }
 
 thread::thread(process* prt, ktl::string_view nm, cpu_affinity aff)
