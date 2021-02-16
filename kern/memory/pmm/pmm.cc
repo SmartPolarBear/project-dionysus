@@ -214,7 +214,7 @@ static inline void init_physical_mem()
 	}
 }
 
-void pmm::init_pmm(void)
+void pmm::init_pmm()
 {
 	init_pmm_manager();
 

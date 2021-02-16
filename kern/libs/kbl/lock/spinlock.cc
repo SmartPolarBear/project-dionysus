@@ -127,7 +127,7 @@ void lock::spinlock::unlock() noexcept
 
 bool lock::spinlock::try_lock() noexcept
 {
-	return arch_spinlock_try_lock(&spinlock_);
+	return !arch_spinlock_try_lock(&spinlock_);
 }
 bool lock::spinlock::holding() noexcept
 {
