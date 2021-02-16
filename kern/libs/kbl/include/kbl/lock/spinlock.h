@@ -24,7 +24,6 @@ bool spinlock_holding(spinlock_struct* lock);
 void spinlock_initialize_lock(spinlock_struct* lk, const char* name);
 
 class TA_CAP("mutex") spinlock final
-	: public mutex
 {
  public:
 	constexpr spinlock() = default;
@@ -33,16 +32,16 @@ class TA_CAP("mutex") spinlock final
 		spinlock_.name = name;
 	}
 
-	void lock() noexcept final
+	void lock() noexcept
 	TA_ACQ();
 
-	void unlock() noexcept final
+	void unlock() noexcept
 	TA_REL();
 
-	bool try_lock() noexcept final
+	bool try_lock() noexcept
 	TA_TRY_ACQ(true);
 
-	bool holding() noexcept final;
+	bool holding() noexcept ;
 
 	bool not_holding() noexcept;
 
@@ -50,7 +49,6 @@ class TA_CAP("mutex") spinlock final
 	void assert_held()  TA_ASSERT(this);
 
 	void assert_not_held()  TA_ASSERT(!this);
-
 
 	// for negative capabilities
 	const spinlock& operator!() const
@@ -62,5 +60,7 @@ class TA_CAP("mutex") spinlock final
 	spinlock_struct spinlock_{};
 	bool intr_{ false };
 };
+
+static_assert(Mutex<spinlock>, "Spinlock should satisfy the requirement of Mutex");
 
 } // namespace lock

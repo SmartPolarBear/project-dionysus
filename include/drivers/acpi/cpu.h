@@ -43,6 +43,8 @@ struct cpu_struct
 	}
 };
 
+static_assert(offsetof(cpu_struct, id) == 0, "cpuid should have offset 0");
+
 constexpr size_t CPU_COUNT_LIMIT = 8;
 
 extern uint8_t cpu_count;

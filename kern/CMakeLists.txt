@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
 file(WRITE ${CMAKE_CURRENT_SOURCE_DIR}/drv/apic/vectors.S "")
 
+option(KERNEL_ENABLE_DEBUG_FACILITY "Enable kernel debugging facilities" ON)
+
 add_executable(kernel
         ${CMAKE_CURRENT_SOURCE_DIR}/init/boot.S
         ${CMAKE_CURRENT_SOURCE_DIR}/drv/apic/trapentry_asm.S
@@ -55,6 +57,11 @@ target_compile_options(kernel BEFORE
         PRIVATE -D_LDBL_EQ_DBL
         PRIVATE -D_GNU_SOURCE
         PRIVATE -D_POSIX_TIMERS)
+
+if (KERNEL_ENABLE_DEBUG_FACILITY)
+    target_compile_options(kernel BEFORE
+            PRIVATE -D_KERNEL_ENABLE_DEBUG_FACILITY)
+endif()
 
 # FIXME: needs further inspect on PRIVATE -nostdlib which has been removed to enable shared_ptr
 target_link_options(kernel

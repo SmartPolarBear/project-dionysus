@@ -45,10 +45,13 @@ using lock::spinlock_struct;
 
 void lock::spinlock_initialize_lock(spinlock_struct* lk, const char* name)
 {
-	arch_spinlock_initialize_lock(lk, name);
+	lk->name = name;
+	lk->value = 0;
+	lk->pcs[0] = 0;
+//	arch_spinlock_initialize_lock(lk, name);
 }
 
-void lock::spinlock_acquire(spinlock_struct* lock, bool pres_intr)
+void lock::spinlock_acquire(spinlock_struct* lock, bool pres_intr) TA_NO_THREAD_SAFETY_ANALYSIS
 {
 	if (spinlock_holding(lock))
 	{
@@ -58,13 +61,15 @@ void lock::spinlock_acquire(spinlock_struct* lock, bool pres_intr)
 	kdebug::kdebug_get_backtrace(lock->pcs);
 
 	if (pres_intr)trap::pushcli();
-	arch_spinlock_acquire(lock);
 
-	lock->cpu = cpu.get();
+//	arch_spinlock_acquire(lock);
+	arch_spinlock_lock(lock);
+
+//	lock->cpu = cpu.get();
 
 }
 
-void lock::spinlock_release(spinlock_struct* lock, bool pres_intr)
+void lock::spinlock_release(spinlock_struct* lock, bool pres_intr) TA_NO_THREAD_SAFETY_ANALYSIS
 {
 	if (!spinlock_holding(lock))
 	{
@@ -75,16 +80,18 @@ void lock::spinlock_release(spinlock_struct* lock, bool pres_intr)
 	}
 
 	lock->pcs[0] = 0;
-	lock->cpu = nullptr;
+//	lock->cpu = nullptr;
 
-	arch_spinlock_release(lock);
+//	arch_spinlock_release(lock);
+	arch_spinlock_unlock(lock);
 
 	if (pres_intr)trap::popcli();
 }
 
-bool lock::spinlock_holding(spinlock_struct* lock)
+bool lock::spinlock_holding(spinlock_struct* lock) TA_NO_THREAD_SAFETY_ANALYSIS
 {
-	return lock->locked && lock->cpu == cpu.get();
+//	return lock->locked && lock->cpu == cpu.get();
+	return lock->value != 0 && arch_spinlock_cpu(lock) == cpu->id;
 }
 
 void lock::spinlock::lock() noexcept
@@ -99,9 +106,10 @@ void lock::spinlock::lock() noexcept
 
 	kdebug::kdebug_get_backtrace(spinlock_.pcs);
 
-	arch_spinlock_acquire(&spinlock_);
+//	arch_spinlock_acquire(&spinlock_);
+	arch_spinlock_lock(&spinlock_);
 
-	spinlock_.cpu = cpu.get();
+//	spinlock_.cpu = cpu.get();
 
 }
 
@@ -116,9 +124,10 @@ void lock::spinlock::unlock() noexcept
 	}
 
 	spinlock_.pcs[0] = 0;
-	spinlock_.cpu = nullptr;
+//	spinlock_.cpu = nullptr;
 
-	arch_spinlock_release(&spinlock_);
+//	arch_spinlock_release(&spinlock_);
+	arch_spinlock_unlock(&spinlock_);
 
 	if (intr_) sti();
 	intr_ = false;
@@ -126,7 +135,8 @@ void lock::spinlock::unlock() noexcept
 
 bool lock::spinlock::try_lock() noexcept
 {
-	if (spinlock_.locked)
+//	if (spinlock_.locked)
+	if (spinlock_.value)
 	{
 		return false;
 	}
@@ -140,11 +150,13 @@ bool lock::spinlock::holding() noexcept
 {
 	if (cpu.is_valid())
 	{
-		return spinlock_.locked && spinlock_.cpu == cpu.get();
+//		return spinlock_.locked && spinlock_.cpu == cpu.get();
+		return spinlock_.value != 0 && arch_spinlock_cpu(&spinlock_) == cpu->id;
 	}
 	else
 	{
-		return spinlock_.locked;
+//		return spinlock_.locked;
+		return spinlock_.value;
 	}
 }
 

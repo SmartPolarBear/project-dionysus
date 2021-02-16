@@ -64,11 +64,11 @@ extern "C" [[maybe_unused]] char* sbrk(int inc)
 	return (char*)memory::kmalloc(inc, 0);
 }
 
-struct timeval
-{
-	long tv_sec;     /* seconds */
-	long tv_usec;    /* microseconds */
-};
+//struct timeval
+//{
+//	long tv_sec;     /* seconds */
+//	long tv_usec;    /* microseconds */
+//};
 
 struct timezone
 {

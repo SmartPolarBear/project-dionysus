@@ -3,11 +3,11 @@
 
 namespace lock
 {
-	class mutex: public lockable
-	{
-	 public:
-		virtual ~mutex() = default;
+template<typename T>
+concept Mutex= Lockable < T> &&
+requires(T t)
+{
+	t.holding();
+};
 
-		virtual bool holding() noexcept = 0;
-	};
 }
