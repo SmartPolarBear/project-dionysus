@@ -80,7 +80,7 @@ PANIC void local_apic::init_lapic(void)
 //          can be highly relavant to lock aquire and release
 size_t local_apic::get_cpunum()
 {
-	if (read_eflags() & trap::EFLAG_IF)
+	if (read_eflags() & EFLAG_IF)
 	{
 		KDEBUG_RICHPANIC("local_apic::get_cpunum can't be called with interrupts enabled\n", "KERNEL PANIC:LAPIC",
 				false, "Return address: 0x%x\n", __builtin_return_address(0));

@@ -1,6 +1,7 @@
 #pragma once
 
 //#include "drivers/acpi/cpu.h"
+#include "arch/amd64/cpu/interrupt.h"
 struct cpu_struct;
 
 #include "arch/amd64/lock/arch_spinlock.hpp"
@@ -39,9 +40,9 @@ class TA_CAP("mutex") spinlock final
 	TA_REL();
 
 	bool try_lock() noexcept
-	TA_TRY_ACQ(true);
+	TA_TRY_ACQ(false);
 
-	bool holding() noexcept ;
+	bool holding() noexcept;
 
 	bool not_holding() noexcept;
 
@@ -58,7 +59,7 @@ class TA_CAP("mutex") spinlock final
 
  private:
 	spinlock_struct spinlock_{};
-	bool intr_{ false };
+	interrupt_saved_state_type state_{ 0 };
 };
 
 static_assert(Mutex<spinlock>, "Spinlock should satisfy the requirement of Mutex");

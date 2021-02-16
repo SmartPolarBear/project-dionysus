@@ -51,4 +51,3 @@ static inline void invlpg(void *addr)
 	: "memory");
 }
 
-

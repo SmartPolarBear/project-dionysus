@@ -135,7 +135,7 @@ namespace pmm
         {
             // shouldn't have interrupts.
             // popcli&pushcli can neither be used because unprepared cpu local storage
-            KDEBUG_ASSERT(!(read_eflags() & trap::EFLAG_IF));
+            KDEBUG_ASSERT(!(read_eflags() & EFLAG_IF));
 
             // we don't reuse alloc_page() because spinlock_struct may not be prepared.
             auto page = pmm_entity->alloc_pages(1);

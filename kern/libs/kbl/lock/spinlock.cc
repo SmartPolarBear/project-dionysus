@@ -12,7 +12,7 @@
 
 using lock::spinlock_struct;
 
-[[noreturn]] static inline void dump_lock_panic(lock::spinlock_struct* lock)
+[[noreturn]] static inline void dump_lock_panic(lock::spinlock_struct* lock, const char* caller = nullptr)
 {
 	// disable the lock of console
 	console::console_set_lock(false);
@@ -20,10 +20,15 @@ using lock::spinlock_struct;
 
 	console::console_set_color(console::CONSOLE_COLOR_BLUE, console::CONSOLE_COLOR_LIGHT_BROWN);
 
-	write_format("[cpu %d]lock %s has been held by %d.\nCall stack of lock:\n",
+	write_format("[cpu %d]lock %s has been held by cpu %d.\nCall stack of lock:\n",
 		cpu->id,
 		lock->name,
 		arch_spinlock_cpu(lock));
+
+	if (caller)
+	{
+		write_format("-> called by %s\n", caller);
+	}
 
 	{
 		size_t counter = 0;
@@ -58,7 +63,7 @@ void lock::spinlock_acquire(spinlock_struct* lock, bool pres_intr) TA_NO_THREAD_
 {
 	if (spinlock_holding(lock))
 	{
-		dump_lock_panic(lock);
+		dump_lock_panic(lock, __FUNCTION__);
 	}
 
 	kdebug::kdebug_get_backtrace(lock->pcs);
@@ -99,41 +104,24 @@ bool lock::spinlock_holding(spinlock_struct* lock) TA_NO_THREAD_SAFETY_ANALYSIS
 
 void lock::spinlock::lock() noexcept
 {
-	intr_ = !arch_ints_disabled();
-	if (intr_)cli();
+	state_ = arch_interrupt_save();
 
-	if (holding())
-	{
-		dump_lock_panic(&spinlock_);
-	}
+	assert_not_held();
 
 	kdebug::kdebug_get_backtrace(spinlock_.pcs);
 
-//	arch_spinlock_acquire(&spinlock_);
 	arch_spinlock_lock(&spinlock_);
-
-//	spinlock_.cpu = cpu.get();
-
 }
 
 void lock::spinlock::unlock() noexcept
 {
-	if (!holding())
-	{
-		KDEBUG_RICHPANIC("Release a not-held spinlock_struct.\n",
-			"KERNEL PANIC",
-			false,
-			"Lock's name_: %s\n", spinlock_.name);
-	}
+	assert_held();
 
-	spinlock_.pcs[0] = 0;
-//	spinlock_.cpu = nullptr;
-
-//	arch_spinlock_release(&spinlock_);
 	arch_spinlock_unlock(&spinlock_);
 
-	if (intr_) sti();
-	intr_ = false;
+	spinlock_.pcs[0] = 0;
+
+	arch_interrupt_restore(state_);
 }
 
 bool lock::spinlock::try_lock() noexcept
@@ -161,6 +149,10 @@ bool lock::spinlock::not_holding() noexcept
 
 void lock::spinlock::assert_held() TA_ASSERT(this)
 {
+	if (!holding())
+	{
+		dump_lock_panic(&spinlock_, __FUNCTION__);
+	}
 	KDEBUG_ASSERT(holding());
 }
 
@@ -168,7 +160,7 @@ void lock::spinlock::assert_not_held() TA_ASSERT(!this)
 {
 	if (holding())
 	{
-		dump_lock_panic(&spinlock_);
+		dump_lock_panic(&spinlock_, __FUNCTION__);
 	}
 	KDEBUG_ASSERT(not_holding());
 }

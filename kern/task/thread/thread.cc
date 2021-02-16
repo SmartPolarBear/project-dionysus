@@ -94,7 +94,7 @@ kernel_stack::kernel_stack(thread* parent_thread,
 
 	this->context->rip = (uintptr_t)tpl;
 
-	tf->rflags |= trap::EFLAG_IF | trap::EFLAG_IOPL_MASK;
+	tf->rflags |= EFLAG_IF | EFLAG_IOPL_MASK;
 
 	// argument: routine arg and exit callback
 	tf->rdi = reinterpret_cast<uintptr_t>(routine);

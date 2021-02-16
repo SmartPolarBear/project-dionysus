@@ -1,5 +1,6 @@
 #pragma once
 #include "system/types.h"
+#include "arch/amd64/cpu/interrupt.h"
 
 struct arch_task_context_registers
 {
@@ -26,8 +27,7 @@ extern "C" void load_tr(size_t seg);
 
 extern "C" void swap_gs();
 
-extern "C" void cli();
-extern "C" void sti();
+
 extern "C" void hlt();
 
 extern "C" void enable_avx();
