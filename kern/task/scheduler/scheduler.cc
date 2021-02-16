@@ -10,6 +10,8 @@
 
 #include "ktl/algorithm.hpp"
 
+#include "gsl/util"
+
 using namespace lock;
 using namespace trap;
 
@@ -90,10 +92,12 @@ void task::scheduler::schedule()
 
 void task::scheduler::timer_tick_handle()
 {
-	lock_guard g1{ global_thread_lock };
-	lock_guard g2{ timer_lock };
+	timer_lock.assert_not_held();
 
-	check_timers();
+	{
+		lock_guard g2{ timer_lock };
+		check_timers_locked();
+	}
 	tick(cur_thread.get());
 }
 
@@ -143,34 +147,36 @@ void task::scheduler::insert_locked(task::thread* t) TA_REQ(global_thread_lock)
 
 void task::scheduler::tick(task::thread* t)
 {
-	KDEBUG_ASSERT(global_thread_lock.holding());
-	pushcli();
-
+	auto state = arch_interrupt_save();
+	auto _ = gsl::finally([&state]()
 	{
-
-		if (!timer_list.empty())
-		{
-			// TODO
-		}
-	}
+	  arch_interrupt_restore(state);
+	});
 
 	// Push migrating approach to load balancing
 	cpu_struct* max_cpu = &(*valid_cpus.begin()), * min_cpu = &(*valid_cpus.begin());
-	for (auto& c:valid_cpus)
-	{
-		if (c.scheduler->workload_size() > max_cpu->scheduler->workload_size())
-		{
-			max_cpu = &c;
-		}
 
-		if (c.scheduler->workload_size() < min_cpu->scheduler->workload_size())
+	{
+		lock_guard g{ global_thread_lock };
+
+		for (auto& c:valid_cpus)
 		{
-			min_cpu = &c;
+			if (c.scheduler->workload_size_locked() > max_cpu->scheduler->workload_size_locked())
+			{
+				max_cpu = &c;
+			}
+
+			if (c.scheduler->workload_size_locked() < min_cpu->scheduler->workload_size_locked())
+			{
+				min_cpu = &c;
+			}
 		}
 	}
 
-	if (max_cpu != min_cpu && max_cpu->scheduler->workload_size() > min_cpu->scheduler->workload_size() + 1)
+	if (max_cpu != min_cpu
+		&& max_cpu->scheduler->workload_size() > min_cpu->scheduler->workload_size() + 1)
 	{
+		lock_guard g{ global_thread_lock };
 		if (auto victim = max_cpu->scheduler->steal();victim != nullptr)
 		{
 			min_cpu->scheduler->enqueue(victim);
@@ -179,6 +185,7 @@ void task::scheduler::tick(task::thread* t)
 
 	if (t != cpu->idle)
 	{
+		lock_guard g{ global_thread_lock };
 		scheduler_class.tick();
 	}
 	else if (t != nullptr) // idle is running
@@ -186,10 +193,15 @@ void task::scheduler::tick(task::thread* t)
 		t->need_reschedule_ = true;
 	}
 
-	popcli();
 }
 
 task::scheduler::size_type task::scheduler::workload_size() const
+{
+	lock_guard g{ global_thread_lock };
+	return workload_size_locked();
+}
+
+task::scheduler::size_type task::scheduler::workload_size_locked() const
 {
 	return scheduler_class.workload_size();
 }
@@ -212,7 +224,7 @@ error_code task::scheduler::idle(void* arg __UNUSED) TA_NO_THREAD_SAFETY_ANALYSI
 
 			for (auto& c:valid_cpus)
 			{
-				if (c.scheduler->workload_size() > max_cpu->scheduler->workload_size() &&
+				if (c.scheduler->workload_size_locked() > max_cpu->scheduler->workload_size_locked() &&
 					cpu.get() != &c)
 				{
 					max_cpu = &c;
@@ -281,7 +293,7 @@ void task::scheduler::remove_timer(task::scheduler_timer* timer)
 	timer_list.remove(timer);
 }
 
-void task::scheduler::check_timers()
+void task::scheduler::check_timers_locked()
 {
 	if (timer_list.empty())return;
 
@@ -342,6 +354,8 @@ void task::scheduler::current::insert(task::thread* t)
 
 void task::scheduler::current::timer_tick_handle()
 {
+	global_thread_lock.assert_not_held();
+
 	cpu->scheduler->timer_tick_handle();
 }
 

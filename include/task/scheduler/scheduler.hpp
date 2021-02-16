@@ -100,10 +100,11 @@ class scheduler
 	void dequeue(thread* t) TA_REQ(global_thread_lock);
 	thread* fetch() TA_REQ(global_thread_lock);
 	thread* steal() TA_REQ(global_thread_lock);
-	void tick(thread* t)  TA_REQ(global_thread_lock, timer_lock);
-	void check_timers() TA_REQ(timer_lock);
+	void tick(thread* t) TA_REQ(!global_thread_lock);
+	void check_timers_locked() TA_REQ(timer_lock);
 
-	[[nodiscard]] size_type workload_size() const TA_REQ(global_thread_lock);
+	[[nodiscard]] size_type workload_size() const TA_REQ(!global_thread_lock);
+	[[nodiscard]] size_type workload_size_locked() const TA_REQ(global_thread_lock);
 
 	void timer_tick_handle() TA_REQ(!global_thread_lock, !timer_lock);
 
