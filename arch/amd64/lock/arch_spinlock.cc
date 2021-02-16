@@ -30,7 +30,6 @@
 //}
 
 //TODO: temporary workaround
-
 static inline uint8_t this_cpu_id()
 {
 	uint8_t* cpuid_ptr = ((uint8_t*)cls_get<uint8_t*>(CLS_CPU_STRUCT_PTR));

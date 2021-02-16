@@ -46,8 +46,7 @@ static inline cpu_num_type arch_spinlock_cpu(const arch_spinlock* lock)
 {
 	return (cpu_num_type)__atomic_load_n(&lock->value, __ATOMIC_RELAXED) - 1;
 }
-//
-//
+
 //void arch_spinlock_acquire(arch_spinlock* lock);
 //void arch_spinlock_initialize_lock(arch_spinlock* lk, const char* name);
 //void arch_spinlock_release(arch_spinlock* lock);

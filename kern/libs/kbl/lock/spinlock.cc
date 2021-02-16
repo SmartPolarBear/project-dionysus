@@ -20,7 +20,10 @@ using lock::spinlock_struct;
 
 	console::console_set_color(console::CONSOLE_COLOR_BLUE, console::CONSOLE_COLOR_LIGHT_BROWN);
 
-	write_format("[cpu %d]lock %s has been held.\nCall stack of lock:\n", cpu->id, lock->name);
+	write_format("[cpu %d]lock %s has been held by %d.\nCall stack of lock:\n",
+		cpu->id,
+		lock->name,
+		arch_spinlock_cpu(lock));
 
 	{
 		size_t counter = 0;
@@ -135,16 +138,7 @@ void lock::spinlock::unlock() noexcept
 
 bool lock::spinlock::try_lock() noexcept
 {
-//	if (spinlock_.locked)
-	if (spinlock_.value)
-	{
-		return false;
-	}
-	else
-	{
-		this->lock();
-		return true;
-	}
+	return arch_spinlock_try_lock(&spinlock_);
 }
 bool lock::spinlock::holding() noexcept
 {
@@ -172,5 +166,9 @@ void lock::spinlock::assert_held() TA_ASSERT(this)
 
 void lock::spinlock::assert_not_held() TA_ASSERT(!this)
 {
+	if (holding())
+	{
+		dump_lock_panic(&spinlock_);
+	}
 	KDEBUG_ASSERT(not_holding());
 }
