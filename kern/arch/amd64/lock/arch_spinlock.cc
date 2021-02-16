@@ -4,7 +4,7 @@
 
 #include "drivers/console/console.h"
 
-#include "arch/amd64/intrinsics.hpp"
+#include "arch/amd64/cpu/intrinsics.hpp"
 
 #define  ARCH_SPINLOCK
 #include "drivers/apic/traps.h"

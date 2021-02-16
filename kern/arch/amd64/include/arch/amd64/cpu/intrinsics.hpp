@@ -8,17 +8,17 @@
 namespace arch
 {
 
-static inline void cpu_yield()
+[[maybe_unused]]static inline void cpu_yield()
 {
 	_mm_pause();
 }
 
-static inline void mfence()
+[[maybe_unused]]static inline void mfence()
 {
 	asm volatile("mfence":: :"memory");
 }
 
-static size_t cycles()
+[[maybe_unused]]static size_t cycles()
 {
 	return _rdtsc();
 }

@@ -16,9 +16,6 @@ set(QEMU_BIN_EXE ${QEMU_BIN}.exe)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -gdwarf-2")
 
-# arch libaraies for kernel
-add_subdirectory(arch)
-
 # kernel
 add_subdirectory(kern)
 
@@ -34,23 +31,23 @@ add_subdirectory(external)
 add_custom_target(disk.img ALL
         COMMAND python3 "${CMAKE_SOURCE_DIR}/tools/diskimg/diskimg.py" update "${CMAKE_SOURCE_DIR}" "${CMAKE_SOURCE_DIR}/config/build/image.json"
         DEPENDS kernel ap_boot.elf hello ipctest fs monitor
-		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-)
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        )
 
 add_custom_target(qemu
-		COMMAND ${QEMU_BIN_EXE} -serial mon:stdio ${QEMU_ARGS}
+        COMMAND ${QEMU_BIN_EXE} -serial mon:stdio ${QEMU_ARGS}
         DEPENDS kernel ap_boot.elf disk.img
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-)
+        )
 
 add_custom_target(qemu-wsl
-    COMMAND ${QEMU_BIN} -serial mon:stdio ${QEMU_ARGS}
-    DEPENDS kernel ap_boot.elf disk.img
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-)
-
-add_custom_target(qemu-gdb
-		COMMAND ${QEMU_BIN} -serial mon:stdio ${QEMU_ARGS} ${QEMU_GDB} &
+        COMMAND ${QEMU_BIN} -serial mon:stdio ${QEMU_ARGS}
         DEPENDS kernel ap_boot.elf disk.img
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-)
+        )
+
+add_custom_target(qemu-gdb
+        COMMAND ${QEMU_BIN} -serial mon:stdio ${QEMU_ARGS} ${QEMU_GDB} &
+        DEPENDS kernel ap_boot.elf disk.img
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        )

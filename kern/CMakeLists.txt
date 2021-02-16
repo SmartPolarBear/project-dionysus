@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 file(WRITE ${CMAKE_CURRENT_SOURCE_DIR}/drv/apic/vectors.S "")
 
 option(KERNEL_ENABLE_DEBUG_FACILITY "Enable kernel debugging facilities" ON)
+option(ARCH "architecture library" "AMD64")
 
 add_executable(kernel
         ${CMAKE_CURRENT_SOURCE_DIR}/init/boot.S
@@ -82,11 +83,12 @@ target_include_directories(kernel BEFORE
 
 target_link_directories(kernel BEFORE PRIVATE ${CMAKE_BINARY_DIR}/external/third_party_root/lib)
 
-target_link_libraries(kernel arch_amd64 executable c g m c++abi c++ c++experimental GSL)
+target_link_libraries(kernel executable c g m c++abi c++ c++experimental GSL)
 
 set_target_properties(kernel PROPERTIES LINK_DEPENS "${CMAKE_SOURCE_DIR}/config/build/kernel.ld")
 set_target_properties(kernel PROPERTIES LINK_FLAGS "-Wl,-T ${CMAKE_SOURCE_DIR}/config/build/kernel.ld")
 
+add_subdirectory(arch)
 add_subdirectory(fs)
 add_subdirectory(init)
 add_subdirectory(libs)

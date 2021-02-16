@@ -30,10 +30,10 @@ struct TA_CAP("mutex") arch_spinlock
 {
 	uint64_t value;
 
-//#ifdef _KERNEL_ENABLE_DEBUG_FACILITY
+#ifdef _KERNEL_ENABLE_DEBUG_FACILITY
 	ktl::string_view name;
 	uintptr_t pcs[21];
-//#endif
+#endif
 };
 
 constexpr arch_spinlock ARCH_SPINLOCK_INITIAL{ 0, ""sv, { 0 }};
