@@ -20,10 +20,11 @@ using lock::spinlock_struct;
 
 	console::console_set_color(console::CONSOLE_COLOR_BLUE, console::CONSOLE_COLOR_LIGHT_BROWN);
 
-	write_format("[cpu %d]lock %s has been held by cpu %d.\nCall stack of lock:\n",
+	write_format("[cpu %d]lock %s has been held by cpu %d.\nspinlock value=%lld.\nCall stack of lock:\n",
 		cpu->id,
 		lock->name,
-		arch_spinlock_cpu(lock));
+		arch_spinlock_cpu(lock),
+		lock->value);
 
 	if (caller)
 	{
