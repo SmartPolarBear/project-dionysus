@@ -12,6 +12,9 @@ template<typename TFrom, typename TTo>
 concept convertible_to=std::convertible_to<TFrom, TTo>;
 
 template<typename T>
+concept integral=std::integral<T>;
+
+template<typename T>
 concept is_trivially_copyable=std::is_trivially_copyable_v<T>;
 
 }
