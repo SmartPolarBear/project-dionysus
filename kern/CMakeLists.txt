@@ -73,17 +73,19 @@ endif ()
 
 if (KERNEL_ENABLE_DEBUG_FACILITY)
     message(STATUS "Debug facilities enabled.")
-    target_compile_options(kernel BEFORE
-            PRIVATE -D_KERNEL_ENABLE_DEBUG_FACILITY)
+    target_compile_definitions(kernel
+            PUBLIC -D_KERNEL_ENABLE_DEBUG_FACILITY)
 endif ()
 
 if (THREAD_SAFETY_ANALYSIS)
     message(STATUS "Thread safety analysis enabled.")
     target_compile_options(kernel BEFORE
-            PRIVATE -D_USE_THREAD_SAFETY_ANALYSIS
             PRIVATE -Wthread-safety
             #PRIVATE -Wthread-safety-negative
             PRIVATE -Wthread-safety-beta)
+
+    target_compile_definitions(kernel
+            PUBLIC -D_USE_THREAD_SAFETY_ANALYSIS)
 endif ()
 
 # FIXME: needs further inspect on PRIVATE -nostdlib which has been removed to enable shared_ptr
