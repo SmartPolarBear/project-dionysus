@@ -7,3 +7,6 @@ target_sources(kernel
         PRIVATE operator_delete.cc)
 
 target_include_directories(kernel PRIVATE include)
+
+# TODO: more elegant way to do this
+target_include_directories(arch_amd64 PRIVATE include)

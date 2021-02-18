@@ -6,7 +6,7 @@
 #include "system/pmm.h"
 #include "system/vmm.h"
 
-#include "elf/elf64_spec.hpp"
+#include "internals/elf64_spec.hpp"
 
 #include "../../libs/basic_io/include/builtin_text_io.hpp"
 #include "kbl/data/pod_list.h"

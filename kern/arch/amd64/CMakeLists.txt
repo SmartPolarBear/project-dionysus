@@ -30,7 +30,21 @@ target_link_directories(arch_amd64 PUBLIC ${CMAKE_BINARY_DIR}/external/third_par
 
 target_link_libraries(arch_amd64 c g m c++ c++abi c++experimental)
 
+target_compile_definitions(arch_amd64
+        PRIVATE -D_LIBCPP_DISABLE_EXTERN_TEMPLATE
+        PRIVATE -D_LIBCPP_HAS_NO_PLATFORM_WAIT
+        PRIVATE -D_LIBCPP_HAS_THREAD_API_EXTERNAL
+        PRIVATE -D_LIBCPP_HAS_THREAD_LIBRARY_EXTERNAL
+        PRIVATE -D_LIBCPP_STD_VER=20
+        PRIVATE -D_LIBCPP_ENABLE_THREAD_SAFETY_ANNOTATIONS
+        PRIVATE -D_LIBCPP_NO_NATIVE_SEMAPHORES
+        PRIVATE -D__ELF__
+        PRIVATE -D_LDBL_EQ_DBL
+        PRIVATE -D_GNU_SOURCE
+        PRIVATE -D_POSIX_TIMERS)
+
 target_compile_options(arch_amd64 BEFORE
+        PRIVATE -U_LIBCPP_HAS_THREAD_API_PTHREAD
         PRIVATE -g
         PRIVATE --target=x86_64-pc-linux-elf
         PRIVATE -fno-pie

@@ -1,4 +1,4 @@
-#include "elf/elf.hpp"
+#include "internals/elf.hpp"
 #include "system/error.hpp"
 
 #include <cstring>

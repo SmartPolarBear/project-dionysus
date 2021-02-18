@@ -39,12 +39,20 @@ set_target_properties(kernel PROPERTIES
         CXX_EXTENSIONS ON)
 
 target_compile_definitions(kernel
+        PRIVATE -D_LIBCPP_DISABLE_EXTERN_TEMPLATE
+        PRIVATE -D_LIBCPP_HAS_NO_PLATFORM_WAIT
+        PRIVATE -D_LIBCPP_HAS_THREAD_API_EXTERNAL
+        PRIVATE -D_LIBCPP_HAS_THREAD_LIBRARY_EXTERNAL
+        PRIVATE -D_LIBCPP_STD_VER=20
+        PRIVATE -D_LIBCPP_ENABLE_THREAD_SAFETY_ANNOTATIONS
+        PRIVATE -D_LIBCPP_NO_NATIVE_SEMAPHORES
         PRIVATE -D__ELF__
         PRIVATE -D_LDBL_EQ_DBL
         PRIVATE -D_GNU_SOURCE
         PRIVATE -D_POSIX_TIMERS)
 
 target_compile_options(kernel BEFORE
+        PRIVATE -U_LIBCPP_HAS_THREAD_API_PTHREAD
         PRIVATE --target=${TARGET_ARCH_TRIPLE}
         PRIVATE -mcmodel=large
         PRIVATE -nostdlibinc
@@ -107,7 +115,7 @@ target_include_directories(kernel BEFORE
 
 target_link_directories(kernel BEFORE PRIVATE ${CMAKE_BINARY_DIR}/external/third_party_root/lib)
 
-target_link_libraries(kernel executable c g m c++abi c++ c++experimental GSL)
+target_link_libraries(kernel c g m c++abi c++ c++experimental GSL)
 
 set_target_properties(kernel PROPERTIES LINK_DEPENS "${CMAKE_SOURCE_DIR}/config/build/kernel.ld")
 set_target_properties(kernel PROPERTIES LINK_FLAGS "-Wl,-T ${CMAKE_SOURCE_DIR}/config/build/kernel.ld")

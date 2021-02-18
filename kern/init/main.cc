@@ -36,12 +36,16 @@
 // std::variant is usable with the pseudo-syscalls
 // std::span is usable unconditionally
 
-
+#include "ktl/atomic.hpp"
 
 extern std::shared_ptr<task::job> root_job;
 
 static inline void run(const char* name)
 {
+
+	ktl::atomic<int> a{ 100 };
+	a.store(1000);
+	a.fetch_sub(10);
 
 	uint8_t* bin = nullptr;
 	size_t size = 0;
