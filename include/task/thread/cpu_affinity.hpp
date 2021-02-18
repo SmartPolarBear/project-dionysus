@@ -7,7 +7,6 @@
 #include "debug/thread_annotations.hpp"
 
 #include "kbl/lock/spinlock.h"
-#include "kbl/atomic/atomic.hpp"
 #include "kbl/data/list.hpp"
 #include "kbl/data/name.hpp"
 #include "kbl/checker/canary.hpp"

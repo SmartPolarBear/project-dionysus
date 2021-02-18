@@ -69,7 +69,7 @@ void task::process_init()
 	}
 }
 
-kbl::integral_atomic<pid_type> process::pid_counter;
+ktl::atomic<pid_type> process::pid_counter;
 
 error_code_with_result<ktl::shared_ptr<process>> process::create(const char* name,
 	const ktl::shared_ptr<job>& parent)

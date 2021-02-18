@@ -30,7 +30,6 @@
 
 #include "../libs/basic_io/include/builtin_text_io.hpp"
 
-
 // std::optional is usable unconditionally
 // std::any is usable with the pseudo-syscalls
 // std::variant is usable with the pseudo-syscalls
@@ -42,11 +41,6 @@ extern std::shared_ptr<task::job> root_job;
 
 static inline void run(const char* name)
 {
-
-	ktl::atomic<int> a{ 100 };
-	a.store(1000);
-	a.fetch_sub(10);
-
 	uint8_t* bin = nullptr;
 	size_t size = 0;
 

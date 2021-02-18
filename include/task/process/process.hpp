@@ -7,8 +7,7 @@
 #include "ktl/list.hpp"
 #include "ktl/string_view.hpp"
 #include "ktl/shared_ptr.hpp"
-
-#include "kbl/atomic/atomic.hpp"
+#include "ktl/atomic.hpp"
 
 #include "system/scheduler.h"
 
@@ -109,8 +108,8 @@ class process final
 	friend class job;
 	friend class thread;
 
-	static kbl::integral_atomic<pid_type> pid_counter;
-	static_assert(kbl::integral_atomic<pid_type>::is_always_lock_free);
+	static ktl::atomic<pid_type> pid_counter;
+	static_assert(ktl::atomic<pid_type>::is_always_lock_free);
 
 	static error_code_with_result<ktl::shared_ptr<process>> create(const char* name,
 		const ktl::shared_ptr<job>& parent);
@@ -125,7 +124,7 @@ class process final
 
 	~process() override = default;
 
-	[[maybe_unused]] void exit(task_return_code code)  noexcept;
+	[[maybe_unused]] void exit(task_return_code code) noexcept;
 	void kill(task_return_code code) noexcept;
 	void finish_dead_transition() noexcept;
 
