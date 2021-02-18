@@ -4,6 +4,7 @@ file(WRITE ${CMAKE_CURRENT_SOURCE_DIR}/drv/apic/vectors.S "")
 
 option(KERNEL_ENABLE_DEBUG_FACILITY "Enable kernel debugging facilities" ON)
 option(ARCH "architecture library" "AMD64")
+option(THREAD_SAFETY_ANALYSIS "CLang's thread safety analysis" ON)
 
 add_executable(kernel
         ${CMAKE_CURRENT_SOURCE_DIR}/init/boot.S
@@ -33,7 +34,6 @@ set_target_properties(kernel PROPERTIES
 target_compile_options(kernel BEFORE
         PRIVATE -g
         PRIVATE -gdwarf
-        PRIVATE --target=x86_64-pc-linux-elf
         PRIVATE -fno-pie
         PRIVATE -fno-exceptions
         PRIVATE -fno-rtti
@@ -44,25 +44,41 @@ target_compile_options(kernel BEFORE
         PRIVATE -Wall
         PRIVATE -Wno-gnu-include-next
         PRIVATE -Wextra
-        PRIVATE -march=x86-64
         PRIVATE -mtls-direct-seg-refs
         PRIVATE -mno-sse
         PRIVATE -msoft-float
         PRIVATE -mcmodel=large
         PRIVATE -mno-red-zone
         PRIVATE -nostdlibinc
-        PRIVATE -Wthread-safety
-        #PRIVATE -Wthread-safety-negative
-        PRIVATE -Wthread-safety-beta
         PRIVATE -D__ELF__
         PRIVATE -D_LDBL_EQ_DBL
         PRIVATE -D_GNU_SOURCE
         PRIVATE -D_POSIX_TIMERS)
 
+if (${ARCH} STREQUAL "AMD64")
+    message(STATUS "Target architecture: ${ARCH}")
+    target_compile_options(kernel BEFORE
+            PRIVATE --target=x86_64-pc-linux-elf
+            PRIVATE -march=x86-64)
+else ()
+    message(FATAL_ERROR "Invalid architecture option ${ARCH}")
+endif ()
+
+
 if (KERNEL_ENABLE_DEBUG_FACILITY)
+    message(STATUS "Debug facilities enabled.")
     target_compile_options(kernel BEFORE
             PRIVATE -D_KERNEL_ENABLE_DEBUG_FACILITY)
-endif()
+endif ()
+
+if (THREAD_SAFETY_ANALYSIS)
+    message(STATUS "Thread safety analysis enabled.")
+    target_compile_options(kernel BEFORE
+            PRIVATE -D_USE_THREAD_SAFETY_ANALYSIS
+            PRIVATE -Wthread-safety
+            #PRIVATE -Wthread-safety-negative
+            PRIVATE -Wthread-safety-beta)
+endif ()
 
 # FIXME: needs further inspect on PRIVATE -nostdlib which has been removed to enable shared_ptr
 target_link_options(kernel

@@ -5,6 +5,12 @@
 #error "Can only be built with clang"
 #endif
 
+#ifdef _USE_THREAD_SAFETY_ANALYSIS
+#define THREAD_ANNOTATION(x) __attribute__((x))
+#else
+#define THREAD_ANNOTATION(x)
+#endif
+
 
 // This header defines thread annotation macros to be used everywhere in Zircon
 // outside of publicly exposed headers. See system/public/zircon/compiler.h for
@@ -34,8 +40,6 @@
 // represents a scoped or RAII-style wrapper around a capability TA_NO_THREAD_SAFETY_ANALYSIS
 // function is excluded entirely from thread safety analysis
 
-#define THREAD_ANNOTATION(x) __attribute__((x))
-
 #define TA_CAP(x) THREAD_ANNOTATION(capability(x))
 #define TA_GUARDED(x) THREAD_ANNOTATION(guarded_by(x))
 #define TA_ACQ(...) THREAD_ANNOTATION(acquire_capability(__VA_ARGS__))
@@ -53,3 +57,4 @@
 #define TA_RET_CAP(x) THREAD_ANNOTATION(lock_returned(x))
 #define TA_SCOPED_CAP THREAD_ANNOTATION(scoped_lockable)
 #define TA_NO_THREAD_SAFETY_ANALYSIS THREAD_ANNOTATION(no_thread_safety_analysis)
+
