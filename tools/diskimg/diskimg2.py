@@ -169,6 +169,21 @@ def parse_config(args, mp: MountPoint):
         logging.info("Parse config: {} failed, {} succeeded.".format(fail, success))
 
 
+def sync_grub_configuration(args, mp: MountPoint):
+    if not os.path.exists(os.path.join(mp.path, "boot")):
+        os.mkdir(os.path.join(mp.path, "boot"))
+        logging.info("Create directory {}".format(os.path.join(mp.path, "boot")))
+
+    if not os.path.exists(os.path.join(mp.path, "boot/grub")):
+        os.mkdir(os.path.join(mp.path, "boot/grub"))
+        logging.info("Create directory {}".format(os.path.join(mp.path, "boot/grub")))
+
+    grub_mp_path: str = os.path.join(mp.path, "boot/grub/grub.cfg")
+    subprocess.run("sudo cp -f {} {}".format(str(args.grub[0]), grub_mp_path), check=True, shell=True)
+    logging.info("Sync grub configuration from {} to {}".format(str(args.grub[0]), grub_mp_path))
+    pass
+
+
 def update_image(parser: argparse, args):
     with LoopDevice(str(args.file[0]), 0) as loop0:
         with LoopDevice(loop0.name, LOOP1_OFFSET) as loop1:
@@ -176,6 +191,7 @@ def update_image(parser: argparse, args):
             assert loop1.is_ready
 
             with MountPoint(loop1.name, str(args.mount[0])) as mp:
+                sync_grub_configuration(args, mp)
                 parse_config(args, mp)
 
 
@@ -190,6 +206,13 @@ def main():
         elif os.path.exists(template_path):
             subprocess.run("sudo cp {} {}".format(template_path, abs_file_path), check=True, shell=True)
             return abs_file_path
+        else:
+            raise argparse.ArgumentError("FATAL: path {} not exists".format(arg))
+
+    def validate_disk_template_file(parser: argparse, arg: str) -> str:
+        path: pathlib.Path = pathlib.Path(arg)
+        if path.exists():
+            return str(path.absolute().as_posix())
         else:
             raise argparse.ArgumentError("FATAL: path {} not exists".format(arg))
 
@@ -224,11 +247,19 @@ def main():
     parser.add_argument('-f', '--file', type=lambda x: validate_disk_file(parser, x), nargs=1,
                         help="the disk image file",
                         required=True)
+    parser.add_argument('-t', '--template-disk', type=lambda x: validate_disk_template_file(parser, x), nargs=1,
+                        help="the disk image template if disk image doesn't exist")
+
     parser.add_argument('-c', '--config', type=lambda x: validate_config_file(parser, x), nargs=1,
                         help="the configuration file", required=True)
+
+    parser.add_argument('-g', '--grub', type=lambda x: validate_config_file(parser, x), nargs=1,
+                        help="the grub configuration file", required=True)
+
     parser.add_argument('-d', '--directory', type=lambda x: validate_build_directory(parser, x), nargs=1,
                         default=os.path.join(os.getcwd(), "build"),
                         help="the build directory", required=True)
+
     parser.add_argument('-m', '--mount', type=lambda x: validate_mount_point(parser, x), nargs=1,
                         default=os.path.join(os.path.join(os.getcwd(), "build"), "mountpoint"),
                         help="the mount point directory", required=False)
