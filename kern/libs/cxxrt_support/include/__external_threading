@@ -14,7 +14,6 @@
 // these types and functions declared, but only for use in interfaces that
 // aren't supported in the kernel, so dummy declarations are all they need.
 
-//#include "arch/amd64/lock/arch_spinlock.hpp"
 
 #include <chrono>
 #include <limits>
