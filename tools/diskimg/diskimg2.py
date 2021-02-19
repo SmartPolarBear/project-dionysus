@@ -126,9 +126,6 @@ class MappingItem:
         if not os.path.exists(fr):
             raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), fr)
 
-        if not os.path.exists(to):
-            raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), to)
-
         self.__from = fr
         self.__to = to
 
@@ -160,8 +157,8 @@ def parse_config(args, mp: MountPoint):
         success: int = 0
 
         file_mappings_list: dict = conf_dict[JSON_FILE_MAPPINGS_NAME]
-        for item in (MappingItem(mapping['from'], mapping['to'], str(args.directory[0]), mp.path) for mapping in
-                     file_mappings_list):
+        for item in (MappingItem(mapping['from'], mapping['to'], str(args.directory[0]), mp.path)
+                     for mapping in file_mappings_list):
             try:
                 item.apply()
                 success += 1
@@ -182,30 +179,57 @@ def update_image(parser: argparse, args):
                 parse_config(args, mp)
 
 
-def validate_path(parser: argparse, arg: str) -> str:
-    path: pathlib.Path = pathlib.Path(arg)
-
-    if path.exists():
-        return str(path.absolute().as_posix())
-    else:
-        raise argparse.ArgumentError("FATAL: path {} not exists".format(arg))
-
-
 def main():
+    def validate_disk_file(parser: argparse, arg: str) -> str:
+        path: pathlib.Path = pathlib.Path(arg)
+        # FIXME: temporary workaround
+        template_path = os.path.join(os.getcwd(), "../disk.img")
+        abs_file_path: str = str(path.absolute().as_posix())
+        if path.exists():
+            return abs_file_path
+        elif os.path.exists(template_path):
+            subprocess.run("sudo cp {} {}".format(template_path, abs_file_path), check=True, shell=True)
+            return abs_file_path
+        else:
+            raise argparse.ArgumentError("FATAL: path {} not exists".format(arg))
+
+    def validate_config_file(parser: argparse, arg: str) -> str:
+        path: pathlib.Path = pathlib.Path(arg)
+        if path.exists():
+            return str(path.absolute().as_posix())
+        else:
+            raise argparse.ArgumentError("FATAL: path {} not exists".format(arg))
+
+    def validate_build_directory(parser: argparse, arg: str) -> str:
+        path: pathlib.Path = pathlib.Path(arg)
+        if path.exists():
+            return str(path.absolute().as_posix())
+        else:
+            raise argparse.ArgumentError("FATAL: path {} not exists".format(arg))
+
+    def validate_mount_point(parser: argparse, arg: str) -> str:
+        path: pathlib.Path = pathlib.Path(arg)
+        abs_path_str: str = str(path.absolute().as_posix())
+
+        if not path.exists():
+            os.mkdir(abs_path_str)
+
+        return abs_path_str
+
     parser: argparse = argparse.ArgumentParser(description="disk img manager for project-dionysus",
                                                epilog="This script requires sudo")
 
     parser.add_argument('action', choices=['update', 'convert'])
 
-    parser.add_argument('-f', '--file', type=lambda x: validate_path(parser, x), nargs=1,
+    parser.add_argument('-f', '--file', type=lambda x: validate_disk_file(parser, x), nargs=1,
                         help="the disk image file",
                         required=True)
-    parser.add_argument('-c', '--config', type=lambda x: validate_path(parser, x), nargs=1,
+    parser.add_argument('-c', '--config', type=lambda x: validate_config_file(parser, x), nargs=1,
                         help="the configuration file", required=True)
-    parser.add_argument('-d', '--directory', type=lambda x: validate_path(parser, x), nargs=1,
+    parser.add_argument('-d', '--directory', type=lambda x: validate_build_directory(parser, x), nargs=1,
                         default=os.path.join(os.getcwd(), "build"),
                         help="the build directory", required=True)
-    parser.add_argument('-m', '--mount', type=lambda x: validate_path(parser, x), nargs=1,
+    parser.add_argument('-m', '--mount', type=lambda x: validate_mount_point(parser, x), nargs=1,
                         default=os.path.join(os.path.join(os.getcwd(), "build"), "mountpoint"),
                         help="the mount point directory", required=False)
 

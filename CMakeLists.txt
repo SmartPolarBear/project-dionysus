@@ -5,6 +5,21 @@ project(project-dionysus C CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+option(VERSION_DISKIMG "diskimg tool version" "NEW")
+set(DISK_IMG_PATH "${CMAKE_SOURCE_DIR}/tools/diskimg/diskimg2.py")
+set(DISK_IMG_ARGS update -f disk.img -c ../config/build/image.json -d . -m mountpoint)
+if (${VERSION_DISKIMG} STREQUAL "NEW")
+    set(DISK_IMG_PATH "${CMAKE_SOURCE_DIR}/tools/diskimg/diskimg2.py")
+    set(DISK_IMG_ARGS update -f disk.img -c ../config/build/image.json -d . -m mountpoint)
+    message(STATUS "Use diskimg at ${DISK_IMG_PATH}")
+elseif (${VERSION_DISKIMG} STREQUAL "OLD")
+    set(DISK_IMG_PATH "${CMAKE_SOURCE_DIR}/tools/diskimg/diskimg.py")
+    set(DISK_IMG_ARGS update ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/config/build/image.json)
+    message(STATUS "Use diskimg at ${DISK_IMG_PATH}")
+else ()
+    message(FATAL_ERROR "Invalid diskimg tool version. Either NEW or OLD.")
+endif ()
+
 set(QEMU_CPUS 6)
 set(QEMU_MEM 8G)
 set(QEMU_DEBUG_PORT 32768)
@@ -29,7 +44,7 @@ add_subdirectory(external)
 # custom targets
 
 add_custom_target(disk.img ALL
-        COMMAND python3 "${CMAKE_SOURCE_DIR}/tools/diskimg/diskimg.py" update "${CMAKE_SOURCE_DIR}" "${CMAKE_SOURCE_DIR}/config/build/image.json"
+        COMMAND python3 "${DISK_IMG_PATH}" ${DISK_IMG_ARGS}
         DEPENDS kernel ap_boot.elf hello ipctest fs monitor
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         )
