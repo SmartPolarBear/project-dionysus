@@ -30,17 +30,6 @@ enum [[clang::enum_extensibility(closed)]]task_return_code : int64_t
 	TASK_RETCODE_CRITICAL_PROCESS_KILL
 };
 
-using sleep_channel_type = size_t;
-enum process_state
-{
-	PROC_STATE_UNUSED,
-	PROC_STATE_EMBRYO,
-	PROC_STATE_SLEEPING,
-	PROC_STATE_RUNNABLE,
-	PROC_STATE_RUNNING,
-	PROC_STATE_ZOMBIE,
-};
-
 enum process_flags
 {
 	PROC_EXITING = 0b1,
@@ -48,31 +37,6 @@ enum process_flags
 	PROC_DRIVER = 0b100,
 	PROC_USER = 0b1000,
 };
-
-enum load_binary_flags
-{
-	LOAD_BINARY_RUN_IMMEDIATELY = 0b0001
-};
-
-constexpr size_t PROC_WAITING_INTERRUPTED = 0x80000000;
-enum process_waiting_state : size_t
-{
-	PROC_WAITING_NONE,
-	PROC_WAITING_CHILD = 0x1ul | PROC_WAITING_INTERRUPTED,
-	PROC_WAITING_TIMER = 0x2ul | PROC_WAITING_INTERRUPTED,
-};
-
-enum binary_types
-{
-	BINARY_ELF
-};
-
-constexpr size_t PROC_NAME_LEN = 64;
-
-// it should be enough
-constexpr size_t PROC_MAX_COUNT = INT32_MAX;
-
-constexpr pid_type PID_MAX = INT64_MAX;
 
 class job;
 class user_stack;
@@ -132,17 +96,7 @@ class process final
 
 	[[nodiscard]] ktl::string_view get_name() const
 	{
-		return name.data();
-	}
-
-	[[nodiscard]] process_state get_state() const
-	{
-		return state;
-	}
-
-	void set_state(process_state _state)
-	{
-		state = _state;
+		return name_.data();
 	}
 
 	[[nodiscard]] pid_type get_id() const
@@ -208,8 +162,7 @@ class process final
 	ktl::shared_ptr<job> critical_to;
 	bool kill_critical_when_nonzero_code{ false };
 
-	char _name_buf[PROC_NAME_LEN]{};
-	ktl::span<char> name;
+	kbl::name<PROC_MAX_NAME_LEN> name_;
 
 	ktl::list<thread*> threads TA_GUARDED(lock){};
 
@@ -217,8 +170,6 @@ class process final
 	ktl::list<user_stack*> busy_list TA_GUARDED(lock){};
 
 	task_return_code ret_code;
-
-	process_state state;
 
 	pid_type id;
 

@@ -152,10 +152,7 @@ task::process::process(std::span<char> name,
 	ktl::shared_ptr<job> critical_to)
 	: parent(std::move(parent)), critical_to(std::move(critical_to))
 {
-	this->name = ktl::span<char>{ _name_buf, name.size() };
-
-	ktl::copy(name.begin(), name.end(), this->name.begin());
-
+	this->name_.set(name);
 }
 
 error_code process::setup_mm()

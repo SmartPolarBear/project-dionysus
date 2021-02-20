@@ -129,23 +129,23 @@ static inline error_code load_server_info()
 error_code monitor::monitor_init()
 {
 
-	auto ret = load_monitor_executable();
-
-	if (ret != ERROR_SUCCESS)
-	{
-		return ret;
-	}
-
-	ret = load_server_info();
-
-	if (ret != ERROR_SUCCESS)
-	{
-		return ret;
-	}
-
-	// task is ready to run
-	g_monitor_proc->get_mm()->brk_start = g_monitor_proc->get_mm()->brk = PAGE_ROUNDUP(g_monitor_proc->get_mm()->brk_start);
-	g_monitor_proc->set_state(task::PROC_STATE_RUNNABLE);
+//	auto ret = load_monitor_executable();
+//
+//	if (ret != ERROR_SUCCESS)
+//	{
+//		return ret;
+//	}
+//
+//	ret = load_server_info();
+//
+//	if (ret != ERROR_SUCCESS)
+//	{
+//		return ret;
+//	}
+//
+//	// task is ready to run
+//	g_monitor_proc->get_mm()->brk_start = g_monitor_proc->get_mm()->brk = PAGE_ROUNDUP(g_monitor_proc->get_mm()->brk_start);
+//	g_monitor_proc->set_state(task::PROC_STATE_RUNNABLE);
 
 	return ERROR_SUCCESS;
 }
