@@ -271,7 +271,7 @@ error_code_with_result<ktl::shared_ptr<task::process>> task::process::create(con
 task::process::process(std::span<char> name,
 	const ktl::shared_ptr<job>& parent,
 	const ktl::shared_ptr<job>& critical_to)
-	: parent(parent), critical_to_(critical_to)
+	: parent_(parent), critical_to_(critical_to)
 {
 	this->name_.set(name);
 }
@@ -320,7 +320,7 @@ void process::finish_dead_transition() noexcept
 	mm = nullptr;
 
 	{
-		auto parent_ptr = parent.lock();
+		auto parent_ptr = parent_.lock();
 		parent_ptr->remove_child_process(this);
 	}
 
@@ -334,7 +334,7 @@ void process::finish_dead_transition() noexcept
 		auto critical_to = critical_to_.lock();
 		if (critical_to != nullptr)
 		{
-			if (!kill_critical_when_nonzero_code || ret_code != 0)
+			if (!kill_critical_when_nonzero_code_ || ret_code != 0)
 			{
 				kill_job = critical_to;
 			}
@@ -354,7 +354,7 @@ void process::exit(task_return_code code) noexcept
 	{
 		lock::lock_guard guard{ this->lock };
 
-		if (this->status == Status::DYING)
+		if (this->status_ == Status::DYING)
 		{
 			return;
 		}
@@ -381,12 +381,12 @@ void process::kill(task_return_code code) noexcept
 	{
 		lock_guard guard{ lock };
 
-		if (status == Status::DEAD)
+		if (status_ == Status::DEAD)
 		{
 			return;
 		}
 
-		if (status != Status::DYING)
+		if (status_ != Status::DYING)
 		{
 			ret_code = code;
 		}
@@ -413,18 +413,18 @@ void process::set_status_locked(process::Status st) noexcept TA_REQ(lock)
 {
 	KDEBUG_ASSERT(lock.holding());
 
-	if (status == Status::DEAD && st != Status::DEAD)
+	if (status_ == Status::DEAD && st != Status::DEAD)
 	{
 		KDEBUG_GENERALPANIC("Bad transition from dead to other status.");
 		return;
 	}
 
-	if (status == st)
+	if (status_ == st)
 	{
 		return;
 	}
 
-	status = st;
+	status_ = st;
 	if (st == Status::DYING)
 	{
 		global_thread_lock.assert_not_held();
@@ -522,7 +522,7 @@ error_code process::suspend()
 
 	lock_guard g{ lock };
 
-	if (status == Status::DYING || status == Status::DEAD)
+	if (status_ == Status::DYING || status_ == Status::DEAD)
 	{
 		return -ERROR_INVALID;
 	}
@@ -548,7 +548,7 @@ void process::resume()
 
 	lock_guard g{ lock };
 
-	if (status == Status::DYING || status == Status::DEAD)
+	if (status_ == Status::DYING || status_ == Status::DEAD)
 	{
 		return;
 	}

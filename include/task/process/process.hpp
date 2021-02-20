@@ -151,7 +151,7 @@ class process final
 	/// \return the status
 	[[nodiscard]] Status get_status() const
 	{
-		return status;
+		return status_;
 	}
 
 	error_code resize_heap(IN OUT uintptr_t* heap_ptr);
@@ -171,12 +171,12 @@ class process final
 
 	error_code setup_mm() TA_REQ(lock);
 
-	Status status;
+	Status status_;
 
-	ktl::weak_ptr<job> parent;
+	ktl::weak_ptr<job> parent_;
 	ktl::weak_ptr<job> critical_to_;
 
-	bool kill_critical_when_nonzero_code{ false };
+	bool kill_critical_when_nonzero_code_{ false };
 
 	kbl::canary<kbl::magic("proc")> canary_;
 
