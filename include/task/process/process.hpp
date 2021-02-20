@@ -40,8 +40,6 @@ enum process_flags
 	PROC_USER = 0b1000,
 };
 
-class job;
-
 class process_user_stack_state
 {
  public:
@@ -80,6 +78,8 @@ class process_user_stack_state
 
 	mutable lock::spinlock lock_;
 };
+
+class job;
 
 class process final
 	: public object::dispatcher<process, 0>

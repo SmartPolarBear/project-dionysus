@@ -44,6 +44,130 @@ cls_item<process*, CLS_PROC_STRUCT_PTR> cur_proc;
 
 std::shared_ptr<job> root_job;
 
+error_code_with_result<void*> task::process_user_stack_state::make_next_user_stack_locked()
+{
+	const uintptr_t current_top = USER_STACK_TOP - USTACK_TOTAL_SIZE * busy_list_.size();
+
+	auto ret = vmm::mm_map(parent_->mm,
+		current_top - USTACK_TOTAL_SIZE - 1, //TODO -1?
+		USTACK_TOTAL_SIZE,
+		vmm::VM_STACK, nullptr);
+
+	if (ret != ERROR_SUCCESS)
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
+
+	// allocate an stack
+	for (size_t i = 0;
+	     i < USTACK_PAGES_PER_THREAD; // do not allocate the guard page
+	     i++)
+	{
+		uintptr_t va = current_top - USTACK_USABLE_SIZE_PER_THREAD + i * PAGE_SIZE;
+		page_info* page_ret = nullptr;
+
+		ret = pmm::pgdir_alloc_page(parent_->mm->pgdir,
+			true,
+			va,
+			PG_W | PG_U | PG_PS | PG_P,
+			&page_ret);
+
+		if (ret != ERROR_SUCCESS)
+		{
+			return -ERROR_MEMORY_ALLOC;
+		}
+	}
+
+	[[maybe_unused]]page_info* guard_page = nullptr;
+
+	ret = pmm::pgdir_alloc_page(parent_->mm->pgdir,
+		true,
+		current_top - USTACK_TOTAL_PAGES_PER_THREAD,
+		PG_U | PG_PS | PG_P, // guard page can't be written
+		&guard_page);
+
+	if (ret != ERROR_SUCCESS)
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
+
+	return (void*)(current_top - USTACK_USABLE_SIZE_PER_THREAD);
+}
+
+error_code_with_result<user_stack*> task::process_user_stack_state::allocate_ustack(thread* t)
+{
+	lock_guard g{ lock_ };
+
+	if (!free_list_.empty())
+	{
+		auto stack = free_list_.front_ptr();
+		free_list_.pop_front();
+
+		{
+			auto iter = free_list_.begin();
+			while (*iter < *stack); // forward the iterator until iter is greater or equal stack
+			free_list_.insert(--iter, stack);
+		}
+
+		return stack;
+	}
+
+	kbl::allocate_checker ac{};
+
+	user_stack* stack = nullptr;
+	if (auto alloc_ret = make_next_user_stack_locked();has_error(alloc_ret))
+	{
+		return get_error_code(alloc_ret);
+	}
+	else
+	{
+		stack = new(&ac) user_stack{ parent_, t, get_result(alloc_ret) };
+	}
+
+	if (!ac.check())
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
+
+	busy_list_.push_back(stack);
+
+	{
+		t->ustack_ = stack;
+	}
+
+	return stack;
+}
+
+void task::process_user_stack_state::free_ustack(task::user_stack* ustack)
+{
+	lock_guard g{ lock_ };
+
+	if (free_list_.size() >= USTACK_FREELIST_THRESHOLD)
+	{
+		auto back = free_list_.back_ptr();
+		free_list_.pop_back();
+
+		delete back;
+	}
+
+	auto iter = free_list_.begin();
+	while (*iter < *ustack); // forward the iterator until iter is greater or equal stack
+	free_list_.insert(--iter, ustack);
+}
+
+task::process_user_stack_state::~process_user_stack_state()
+{
+	KDEBUG_ASSERT(busy_list_.empty());
+
+	while (!free_list_.empty())
+	{
+		auto back = free_list_.back_ptr();
+		free_list_.pop_back();
+
+		delete back;
+	}
+}
+
 void task::process_init()
 {
 	auto create_ret = task::job::create_root();
@@ -315,130 +439,6 @@ void task::process::remove_thread(task::thread* t)
 	lock_guard g{ lock };
 
 	this->threads.remove(t);
-}
-
-error_code_with_result<void*> task::process_user_stack_state::make_next_user_stack_locked()
-{
-	const uintptr_t current_top = USER_STACK_TOP - USTACK_TOTAL_SIZE * busy_list_.size();
-
-	auto ret = vmm::mm_map(parent_->mm,
-		current_top - USTACK_TOTAL_SIZE - 1, //TODO -1?
-		USTACK_TOTAL_SIZE,
-		vmm::VM_STACK, nullptr);
-
-	if (ret != ERROR_SUCCESS)
-	{
-		return -ERROR_MEMORY_ALLOC;
-	}
-
-	// allocate an stack
-	for (size_t i = 0;
-	     i < USTACK_PAGES_PER_THREAD; // do not allocate the guard page
-	     i++)
-	{
-		uintptr_t va = current_top - USTACK_USABLE_SIZE_PER_THREAD + i * PAGE_SIZE;
-		page_info* page_ret = nullptr;
-
-		ret = pmm::pgdir_alloc_page(parent_->mm->pgdir,
-			true,
-			va,
-			PG_W | PG_U | PG_PS | PG_P,
-			&page_ret);
-
-		if (ret != ERROR_SUCCESS)
-		{
-			return -ERROR_MEMORY_ALLOC;
-		}
-	}
-
-	[[maybe_unused]]page_info* guard_page = nullptr;
-
-	ret = pmm::pgdir_alloc_page(parent_->mm->pgdir,
-		true,
-		current_top - USTACK_TOTAL_PAGES_PER_THREAD,
-		PG_U | PG_PS | PG_P, // guard page can't be written
-		&guard_page);
-
-	if (ret != ERROR_SUCCESS)
-	{
-		return -ERROR_MEMORY_ALLOC;
-	}
-
-	return (void*)(current_top - USTACK_USABLE_SIZE_PER_THREAD);
-}
-
-error_code_with_result<user_stack*> task::process_user_stack_state::allocate_ustack(thread* t)
-{
-	lock_guard g{ lock_ };
-
-	if (!free_list_.empty())
-	{
-		auto stack = free_list_.front_ptr();
-		free_list_.pop_front();
-
-		{
-			auto iter = free_list_.begin();
-			while (*iter < *stack); // forward the iterator until iter is greater or equal stack
-			free_list_.insert(--iter, stack);
-		}
-
-		return stack;
-	}
-
-	kbl::allocate_checker ac{};
-
-	user_stack* stack = nullptr;
-	if (auto alloc_ret = make_next_user_stack_locked();has_error(alloc_ret))
-	{
-		return get_error_code(alloc_ret);
-	}
-	else
-	{
-		stack = new(&ac) user_stack{ parent_, t, get_result(alloc_ret) };
-	}
-
-	if (!ac.check())
-	{
-		return -ERROR_MEMORY_ALLOC;
-	}
-
-	busy_list_.push_back(stack);
-
-	{
-		t->ustack_ = stack;
-	}
-
-	return stack;
-}
-
-void task::process_user_stack_state::free_ustack(task::user_stack* ustack)
-{
-	lock_guard g{ lock_ };
-
-	if (free_list_.size() >= USTACK_FREELIST_THRESHOLD)
-	{
-		auto back = free_list_.back_ptr();
-		free_list_.pop_back();
-
-		delete back;
-	}
-
-	auto iter = free_list_.begin();
-	while (*iter < *ustack); // forward the iterator until iter is greater or equal stack
-	free_list_.insert(--iter, ustack);
-}
-
-task::process_user_stack_state::~process_user_stack_state()
-{
-	KDEBUG_ASSERT(busy_list_.empty());
-
-	while (!free_list_.empty())
-	{
-		auto back = free_list_.back_ptr();
-		free_list_.pop_back();
-
-		delete back;
-	}
 }
 
 void task::process::add_child_thread(thread* t) noexcept

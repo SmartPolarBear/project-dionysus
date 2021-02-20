@@ -6,14 +6,13 @@
 
 #include "kbl/lock/spinlock.h"
 
-
 namespace object
 {
 using right_type = uint64_t;
 
 template<typename TDispatcher, right_type default_rights>
 class dispatcher
-	: public object
+	: public object<TDispatcher>
 {
  public:
 	virtual ~dispatcher() = default;

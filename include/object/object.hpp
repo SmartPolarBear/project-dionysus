@@ -2,15 +2,36 @@
 
 #include "system/types.h"
 
+#include "ktl/atomic.hpp"
+
 namespace object
 {
 
-using koid_type = int64_t;
+using object_counter_type = ktl::atomic<uint64_t>;
+static_assert(object_counter_type::is_always_lock_free);
 
+using koid_type = int64_t;
+using koid_counter_type = ktl::atomic<koid_type>;
+static_assert(koid_counter_type::is_always_lock_free);
+
+template<typename T>
 class object
 {
  public:
-	virtual ~object() = default;
+	static object_counter_type kobject_counter_;
+	static koid_counter_type koid_counter_;
+
+	object()
+		: koid{ koid_counter_.load() }
+	{
+		++koid_counter_;
+		++kobject_counter_;
+	}
+
+	virtual ~object()
+	{
+		--kobject_counter_;
+	}
 
 	[[nodiscard]] koid_type get_koid() const
 	{
