@@ -10,6 +10,7 @@
 
 #include "kbl/lock/spinlock.h"
 #include "kbl/ref_count/ref_count_base.hpp"
+#include "kbl/data/name.hpp"
 
 #include "kbl/lock/lock_guard.hpp"
 #include "ktl/unique_ptr.hpp"
@@ -25,161 +26,162 @@
 
 namespace task
 {
-	enum class policy_action
+enum class policy_action
+{
+	// for the sake of debugging, starting from 1
+	kPolicyAllow = 1,
+	kPolicyDeny,
+	kPolicyKill,
+	kPolicyAllowWithException,
+	kPolicyDenyWithException,
+};
+
+enum class policy_condition : size_t
+{
+	// TODO: define them
+	kPlaceholder,
+
+	kPolicyConditionMax
+};
+
+struct policy_item
+{
+	policy_condition condition;
+	policy_action action;
+};
+
+class job_policy
+{
+ public:
+	static constexpr size_t POLICY_CONDITION_MAX = static_cast<size_t >(policy_condition::kPolicyConditionMax);
+
+	static job_policy creat_root_policy()
 	{
-		// for the sake of debugging, starting from 1
-		kPolicyAllow = 1,
-		kPolicyDeny,
-		kPolicyKill,
-		kPolicyAllowWithException,
-		kPolicyDenyWithException,
-	};
+		//TODO
+		return job_policy();
+	}
 
-	enum class policy_condition : size_t
+	[[nodiscard]]std::span<std::optional<policy_item>, POLICY_CONDITION_MAX> get_policies()
 	{
-		// TODO: define them
-		kPlaceholder,
+		return { action_ };
+	}
 
-		kPolicyConditionMax
-	};
-
-	struct policy_item
+	[[nodiscard]] std::optional<policy_item> get_for_condition(policy_condition cond)
 	{
-		policy_condition condition;
-		policy_action action;
-	};
+		return action_[static_cast<size_t>(cond)];
+	}
 
-	class job_policy
+	void apply(policy_item& policy)
 	{
-	 public:
-		static constexpr size_t POLICY_CONDITION_MAX = static_cast<size_t >(policy_condition::kPolicyConditionMax);
+		action_[static_cast<size_t>(policy.condition)] = policy;
+	}
 
-		static job_policy creat_root_policy()
+	void merge_with(job_policy&& another)
+	{
+		for (std::optional<policy_item>& ac:another.action_)
 		{
-			//TODO
-			return job_policy();
-		}
-
-		[[nodiscard]]std::span<std::optional<policy_item>, POLICY_CONDITION_MAX> get_policies()
-		{
-			return { action };
-		}
-
-		[[nodiscard]] std::optional<policy_item> get_for_condition(policy_condition cond)
-		{
-			return action[static_cast<size_t>(cond)];
-		}
-
-		void apply(policy_item& policy)
-		{
-			action[static_cast<size_t>(policy.condition)] = policy;
-		}
-
-		void merge_with(job_policy&& another)
-		{
-			for (std::optional<policy_item>& action:another.action)
+			if (ac.has_value())
 			{
-				if (action.has_value())
-				{
-					apply(action.value());
-				}
+				apply(ac.value());
 			}
 		}
+	}
 
-	 private:
-		std::optional<policy_item> action[POLICY_CONDITION_MAX];
-	};
+ private:
+	std::optional<policy_item> action_[POLICY_CONDITION_MAX];
+};
 
-	class job final
-		: public object::dispatcher<job, 0>
+class job final
+	: public object::dispatcher<job, 0>
+{
+ public:
+	enum class [[clang::enum_extensibility(closed)]] job_status
 	{
-	 public:
-		enum class [[clang::enum_extensibility(closed)]] job_status
-		{
-			READY,
-			KILLING,
-			DEAD
-		};
-	 public:
-		friend class process;
-		friend class thread_dispatcher;
-
-		using job_list_type = ktl::list<std::shared_ptr<job>>;
-		using process_list_type = ktl::list<std::shared_ptr<process>>;
-
-		template<typename T>
-		using array_of_child = ktl::unique_ptr<T[]>();
-
-		static constexpr size_t JOB_NAME_MAX = 64;
-		static constexpr size_t JOB_MAX_HEIGHT = 16;
-	 public:
-
-		[[nodiscard]]bool kill(task_return_code terminate_code) noexcept;
-
-		void apply_basic_policy(uint64_t mode, std::span<policy_item> policies) noexcept;
-
-		[[nodiscard]]job_policy get_policy() const;
-
-		[[nodiscard]]static error_code_with_result<std::shared_ptr<task::job>> create_root();
-
-		[[nodiscard]]static error_code_with_result<std::shared_ptr<task::job>> create(uint64_t flags,
-			std::shared_ptr<job> parent);
-
-		~job() final;
-
-		[[nodiscard]]size_t get_max_height() const
-		{
-			return max_height;
-		}
-
-		[[nodiscard]] job_status get_status() const
-		{
-			lock::lock_guard g{ this->lock };
-			return status;
-		}
-
-	 private:
-		job(uint64_t flags,
-			std::shared_ptr<job> parent,
-			job_policy policy);
-
-		void remove_from_job_trees() TA_EXCL(lock);
-
-		bool add_child_job(std::shared_ptr<job> child);
-		void remove_child_job(job* job);
-		void remove_child_job(std::shared_ptr<job> proc);
-
-		void add_child_process(std::shared_ptr<process> proc);
-		void remove_child_process(process* proc);
-		void remove_child_process(std::shared_ptr<process> proc);
-
-		bool is_ready_for_dead_transition()TA_REQ(lock);
-		bool finish_dead_transition()TA_EXCL(lock);
-
-		template<typename T>
-		[[nodiscard]]size_t get_count() TA_REQ(lock);
-
-//		template<typename TChildrenList, typename TChild, typename TFunc>
-//		requires ktl::ListOfTWithBound<TChildrenList, TChild> && (!ktl::is_pointer<TChild>)
-//		[[nodiscard]]error_code_with_result<ktl::unique_ptr<TChild* []>> for_each_child(TChildrenList& children,
-//			TFunc func) TA_REQ(lock);
-
-	 private:
-		job_list_type child_jobs;
-		process_list_type child_processes;
-
-		job_policy policy;
-
-		std::shared_ptr<job> parent;
-
-		char name[JOB_NAME_MAX]{ 0 };
-
-		bool killed{ false };
-
-		task_return_code ret_code;
-
-		job_status status TA_GUARDED(lock);
-
-		const size_t max_height;
+		READY,
+		KILLING,
+		DEAD
 	};
+
+	using link_type = kbl::list_link<job, lock::spinlock>;
+
+	friend class process;
+	friend class thread;
+
+	using process_list_type = kbl::intrusive_list_with_default_trait<process,
+	                                                                 lock::spinlock,
+	                                                                 &process::job_link,
+	                                                                 true>;
+
+	static constexpr size_t JOB_NAME_MAX = 64;
+	static constexpr size_t JOB_MAX_HEIGHT = 16;
+ public:
+
+	/*can discard*/ bool kill(task_return_code terminate_code) noexcept;
+
+	void apply_basic_policy(uint64_t mode, std::span<policy_item> policies) noexcept;
+
+	[[nodiscard]]job_policy get_policy() const;
+
+	[[nodiscard]]static error_code_with_result<std::shared_ptr<task::job>> create_root();
+
+	[[nodiscard]]static error_code_with_result<std::shared_ptr<task::job>> create(uint64_t flags,
+		const std::shared_ptr<job>& parent);
+
+	~job() final;
+
+	[[nodiscard]]size_t get_max_height() const
+	{
+		return max_height_;
+	}
+
+	[[nodiscard]] job_status get_status() const
+	{
+		lock::lock_guard g{ this->lock };
+		return status_;
+	}
+
+ private:
+	job(uint64_t flags,
+		const std::shared_ptr<job>& parent,
+		job_policy policy);
+
+	void remove_from_job_trees() TA_EXCL(lock);
+
+	bool add_child_job(job* child);
+	void remove_child_job(job* job);
+
+	void add_child_process(process* proc);
+	void remove_child_process(process* proc);
+
+	bool is_ready_for_dead_transition_locked()TA_REQ(lock);
+	bool finish_dead_transition_unlocked()TA_REQ(!lock);
+
+	template<typename T>
+	[[nodiscard]]size_t get_count_locked() TA_REQ(lock);
+
+ private:
+	kbl::canary<kbl::magic(" job")> canary_;
+
+	job_policy policy_;
+
+	ktl::weak_ptr<job> parent_;
+
+	kbl::name<JOB_NAME_MAX> name_;
+	
+	task_return_code ret_code_;
+
+	job_status status_ TA_GUARDED(lock);
+
+	link_type job_link{ this };
+	using job_list_type = kbl::intrusive_list_with_default_trait<job,
+	                                                             lock::spinlock,
+	                                                             &job::job_link,
+	                                                             true>;
+
+	job_list_type child_jobs_;
+	process_list_type child_processes_;
+
+	const size_t max_height_;
+
+};
 }

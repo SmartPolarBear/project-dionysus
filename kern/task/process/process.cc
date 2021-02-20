@@ -193,15 +193,13 @@ void task::process_init()
 	}
 }
 
-error_code_with_result<ktl::shared_ptr<process>> process::create(const char* name,
+error_code_with_result<process*> process::create(const char* name,
 	const ktl::shared_ptr<job>& parent)
 {
 	ktl::span<char> name_span{ (char*)name, (size_t)strnlen(name, PROC_MAX_NAME_LEN) };
 
 	kbl::allocate_checker ck;
-
-	ktl::shared_ptr<process>
-		proc{ new(&ck) process{ name_span, parent, nullptr }};
+	auto proc = new(&ck) process{ name_span, parent, nullptr };
 
 	lock_guard g1{ proc->lock };
 
@@ -220,13 +218,13 @@ error_code_with_result<ktl::shared_ptr<process>> process::create(const char* nam
 	return proc;
 }
 
-error_code_with_result<ktl::shared_ptr<task::process>> task::process::create(const char* name,
+error_code_with_result<process*> task::process::create(const char* name,
 	void* bin,
 	size_t size,
 	const ktl::shared_ptr<job>& parent)
 {
 
-	ktl::shared_ptr<process> proc{ nullptr };
+	process* proc{ nullptr };
 	if (auto ret = task::process::create(name, parent);has_error(ret))
 	{
 		return get_error_code(ret);
@@ -238,7 +236,7 @@ error_code_with_result<ktl::shared_ptr<task::process>> task::process::create(con
 
 	// TODO: write better loader
 	uintptr_t entry_addr = 0;
-	if (auto ret = load_binary(proc.get(), (uint8_t*)bin, size, &entry_addr);ret != ERROR_SUCCESS)
+	if (auto ret = load_binary(proc, (uint8_t*)bin, size, &entry_addr);ret != ERROR_SUCCESS)
 	{
 		return ret;
 	}
@@ -246,7 +244,7 @@ error_code_with_result<ktl::shared_ptr<task::process>> task::process::create(con
 	thread* main_thread = nullptr;
 
 	// name_ the main thread with the parent_'s name_
-	if (auto ret = thread::create(proc.get(), name, (task::thread_routine_type)entry_addr, nullptr);has_error(ret))
+	if (auto ret = thread::create(proc, name, (task::thread_routine_type)entry_addr, nullptr);has_error(ret))
 	{
 		return get_error_code(ret);
 	}

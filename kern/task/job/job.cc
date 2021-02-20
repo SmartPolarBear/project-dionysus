@@ -27,19 +27,19 @@
 
 using namespace lock;
 
-task::job::job(uint64_t flags, std::shared_ptr<job> parent, job_policy _policy)
+task::job::job(uint64_t flags, const std::shared_ptr<job>& parent, job_policy _policy)
 	: dispatcher<job, 0>(),
-	  policy(std::move(_policy)),
-	  parent(std::move(parent)),
-	  ret_code(TASK_RETCODE_NORMAL),
-	  status(job_status::READY),
-	  max_height(parent == nullptr ? JOB_MAX_HEIGHT : parent->max_height - 1)
+	  policy_(std::move(_policy)),
+	  parent_(parent),
+	  ret_code_(TASK_RETCODE_NORMAL),
+	  status_(job_status::READY),
+	  max_height_(parent == nullptr ? JOB_MAX_HEIGHT : parent->max_height_ - 1)
 {
 
 }
 
 error_code_with_result<std::shared_ptr<task::job>> task::job::create(uint64_t flags,
-	std::shared_ptr<job> parent)
+	const std::shared_ptr<job>& parent)
 {
 	if (parent != nullptr && parent->get_max_height() == 0)
 	{
@@ -76,6 +76,7 @@ task::job::~job()
 
 void task::job::remove_from_job_trees() TA_EXCL(this->lock)
 {
+	auto parent = parent_.lock();
 	parent->remove_child_job(this);
 }
 
@@ -83,19 +84,30 @@ void task::job::apply_basic_policy(uint64_t mode, std::span<policy_item> policie
 {
 	for (auto&& p:policies)
 	{
-		this->policy.apply(p);
+		this->policy_.apply(p);
 	}
 }
 
 task::job_policy task::job::get_policy() const
 {
 	lock::lock_guard guard{ lock };
-	return policy;
+	return policy_;
 }
 
-bool task::job::add_child_job(std::shared_ptr<job> child)
+bool task::job::add_child_job(job* child)
 {
-	return false;
+	canary_.assert();
+
+	lock_guard g{ lock };
+
+	if (status_ != job_status::READY)
+		return false;
+
+	KDEBUG_ASSERT(child->job_link.is_empty_or_detached());
+
+	child_jobs_.push_back(child);
+
+	return true;
 }
 
 void task::job::remove_child_job(task::job* jb)
@@ -106,45 +118,43 @@ void task::job::remove_child_job(task::job* jb)
 	{
 		lock_guard guard{ lock };
 
-		auto iter = ktl::find_if(child_jobs.begin(), child_jobs.end(), [jb](auto ele)
+		auto iter = ktl::find_if(child_jobs_.begin(), child_jobs_.end(), [jb](auto& ele)
 		{
-		  return ele->get_koid() == jb->get_koid();
+		  return ele.get_koid() == jb->get_koid();
 		});
 
-		if (iter == child_jobs.end())
+		if (iter == child_jobs_.end())
 		{
 			return;
 		}
 
-		child_jobs.erase(iter);
-		suicide = is_ready_for_dead_transition();
+		child_jobs_.erase(iter);
+		suicide = is_ready_for_dead_transition_locked();
 	}
 
 	if (suicide)
 	{
-		finish_dead_transition();
+		finish_dead_transition_unlocked();
 	}
 }
 
-void task::job::remove_child_job(std::shared_ptr<job> jb)
+bool task::job::is_ready_for_dead_transition_locked() TA_REQ(lock)
 {
-	remove_child_job(jb.get());
+	return status_ == job_status::KILLING && child_jobs_.empty() && child_processes_.empty();
 }
 
-bool task::job::is_ready_for_dead_transition() TA_REQ(lock)
+bool task::job::finish_dead_transition_unlocked()
 {
-	return status == job_status::KILLING && child_jobs.empty() && child_processes.empty();
-}
-
-bool task::job::finish_dead_transition() TA_EXCL(lock)
-{
-	// there must be big problem is parent_ die before its successor jobs
-	KDEBUG_ASSERT(parent == nullptr || parent->get_status() != job_status::DEAD);
+	{
+		auto parent = parent_.lock();
+		// there must be big problem is parent_ die before its successor jobs
+		KDEBUG_ASSERT(parent == nullptr || parent->get_status() != job_status::DEAD);
+	}
 
 	// locked scope
 	{
 		lock::lock_guard guard{ lock };
-		status = job_status::DEAD;
+		status_ = job_status::DEAD;
 	}
 
 	remove_from_job_trees();
@@ -152,27 +162,64 @@ bool task::job::finish_dead_transition() TA_EXCL(lock)
 	return false;
 }
 
-bool task::job::kill(task_return_code terminate_code) noexcept
+bool task::job::kill(task_return_code code) noexcept
 {
-	return false;
+	canary_.assert();
+
+	bool should_die = false;
+	{
+		lock_guard g{ lock };
+
+		if (status_ != job_status::READY)
+			return false;
+
+		ret_code_ = code;
+		status_ = job_status::KILLING;
+
+		while (!child_jobs_.empty())
+		{
+			auto top = child_jobs_.front_ptr();
+			child_jobs_.pop_front();
+
+			top->kill(code);
+		}
+
+		while (!child_processes_.empty())
+		{
+			auto top = child_processes_.front_ptr();
+			child_processes_.pop_front();
+
+			top->kill(code);
+		}
+
+		should_die = is_ready_for_dead_transition_locked();
+	}
+
+	if (should_die)
+	{
+		finish_dead_transition_unlocked();
+	}
+
+	return true;
 }
 
 template<>
-size_t task::job::get_count<task::job()>() TA_REQ(lock)
+size_t task::job::get_count_locked<task::job>() TA_REQ(lock)
 {
-	return this->child_jobs.size();
+	return this->child_jobs_.size();
 }
 
-void task::job::add_child_process(std::shared_ptr<process> proc)
+template<>
+size_t task::job::get_count_locked<task::process>() TA_REQ(lock)
+{
+	return this->child_processes_.size();
+}
+
+void task::job::add_child_process(process* proc)
 {
 	lock::lock_guard guard{ lock };
 
-	this->child_processes.insert(child_processes.begin(), proc);
-}
-
-void task::job::remove_child_process(std::shared_ptr<process> proc)
-{
-	remove_child_process(proc.get());
+	this->child_processes_.insert(child_processes_.begin(), proc);
 }
 
 void task::job::remove_child_process(task::process* proc)
@@ -181,29 +228,23 @@ void task::job::remove_child_process(task::process* proc)
 	{
 		lock_guard guard{ lock };
 
-		auto iter = ktl::find_if(child_processes.begin(), child_processes.end(), [proc](auto p)
+		auto iter = ktl::find_if(child_processes_.begin(), child_processes_.end(), [proc](auto& p)
 		{
-		  return p->get_koid() == proc->get_koid();
+		  return p.get_koid() == proc->get_koid();
 		});
 
-		if (iter == child_processes.end())
+		if (iter == child_processes_.end())
 		{
 			return;
 		}
 
-		child_processes.erase(iter);
+		child_processes_.erase(iter);
 
-		should_die = is_ready_for_dead_transition();
+		should_die = is_ready_for_dead_transition_locked();
 	}
 
 	if (should_die)
 	{
-		finish_dead_transition();
+		finish_dead_transition_unlocked();
 	}
-}
-
-template<>
-size_t task::job::get_count<task::process()>() TA_REQ(lock)
-{
-	return this->child_processes.size();
 }

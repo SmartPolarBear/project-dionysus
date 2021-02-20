@@ -86,6 +86,8 @@ class process final
 	: public object::dispatcher<process, 0>
 {
  public:
+	using link_type = kbl::list_link<process, lock::spinlock>;
+
 	static constexpr size_t PROC_MAX_NAME_LEN = 64;
 
 	static constexpr size_t KSTACK_PAGES = 2;
@@ -104,10 +106,10 @@ class process final
 	friend class thread;
 	friend class process_user_stack_state;
 
-	static error_code_with_result<ktl::shared_ptr<process>> create(const char* name,
+	static error_code_with_result<process*> create(const char* name,
 		const ktl::shared_ptr<job>& parent);
 
-	static error_code_with_result<ktl::shared_ptr<task::process>> create(const char* name,
+	static error_code_with_result<process*> create(const char* name,
 		void* bin,
 		size_t size,
 		const ktl::shared_ptr<job>& parent);
@@ -194,6 +196,7 @@ class process final
 
 	size_t flags;
 
+	link_type job_link{ this };
 };
 
 }
