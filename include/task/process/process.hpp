@@ -14,6 +14,8 @@
 #include "drivers/acpi/cpu.h"
 #include "drivers/apic/traps.h"
 
+#include "task/thread/user_stack.hpp"
+
 extern cls_item<task::process*, CLS_PROC_STRUCT_PTR> cur_proc;
 
 namespace task
@@ -39,17 +41,10 @@ enum process_flags
 };
 
 class job;
-class user_stack;
 
-class process final
-	: public object::dispatcher<process, 0>
+class process_user_stack_state
 {
  public:
-	static constexpr size_t PROC_MAX_NAME_LEN = 64;
-
-	static constexpr size_t KSTACK_PAGES = 2;
-	static constexpr size_t KSTACK_SIZE = KSTACK_PAGES * PAGE_SIZE;
-
 	[[maybe_unused]]static constexpr size_t USTACK_PAGES_PER_THREAD = 8;
 	[[maybe_unused]]static constexpr size_t USTACK_GUARD_PAGES_PER_THREAD = 1;
 	[[maybe_unused]]static constexpr size_t
@@ -59,6 +54,41 @@ class process final
 	[[maybe_unused]]static constexpr size_t USTACK_TOTAL_SIZE = USTACK_TOTAL_PAGES_PER_THREAD * PAGE_SIZE;
 
 	static constexpr size_t USTACK_FREELIST_THRESHOLD = 16;
+
+	using list_type = kbl::intrusive_list<user_stack, lock::spinlock, user_stack_list_node_trait, true>;
+
+	process_user_stack_state() = delete;
+	process_user_stack_state(const process_user_stack_state&) = delete;
+	process_user_stack_state& operator=(const process_user_stack_state&) = delete;
+
+	explicit process_user_stack_state(process* par) : parent_(par)
+	{
+	}
+
+	~process_user_stack_state();
+
+	[[nodiscard]] error_code_with_result<user_stack*> allocate_ustack(thread* t);
+	void free_ustack(user_stack* ustack);
+
+ private:
+	[[nodiscard]] error_code_with_result<void*> make_next_user_stack_locked() TA_REQ(lock_);
+
+	process* parent_;
+
+	list_type free_list_ TA_GUARDED(lock_){};
+	list_type busy_list_ TA_GUARDED(lock_){};
+
+	mutable lock::spinlock lock_;
+};
+
+class process final
+	: public object::dispatcher<process, 0>
+{
+ public:
+	static constexpr size_t PROC_MAX_NAME_LEN = 64;
+
+	static constexpr size_t KSTACK_PAGES = 2;
+	static constexpr size_t KSTACK_SIZE = KSTACK_PAGES * PAGE_SIZE;
 
 	enum class [[clang::enum_extensibility(closed)]] Status
 	{
@@ -71,6 +101,7 @@ class process final
  public:
 	friend class job;
 	friend class thread;
+	friend class process_user_stack_state;
 
 	static ktl::atomic<pid_type> pid_counter;
 	static_assert(ktl::atomic<pid_type>::is_always_lock_free);
@@ -135,9 +166,6 @@ class process final
 	error_code resize_heap(IN OUT uintptr_t* heap_ptr);
 
  private:
-
-	[[nodiscard]] error_code_with_result<void*> make_next_user_stack() TA_REQ(lock);
-
 	[[nodiscard]] process(std::span<char> name,
 		pid_type id,
 		ktl::shared_ptr<job> parent,
@@ -151,9 +179,6 @@ class process final
 
 	void add_child_thread(thread* t) noexcept TA_EXCL(lock);
 
-	[[nodiscard]] error_code_with_result<user_stack*> allocate_ustack(thread* t) TA_EXCL(lock);
-	void free_ustack(user_stack* ustack) TA_EXCL(lock);
-
 	error_code setup_mm() TA_REQ(lock);
 
 	Status status;
@@ -166,16 +191,11 @@ class process final
 
 	ktl::list<thread*> threads TA_GUARDED(lock){};
 
-	ktl::list<user_stack*> free_list TA_GUARDED(lock){};
-	ktl::list<user_stack*> busy_list TA_GUARDED(lock){};
+	process_user_stack_state user_stack_state_{ this };
 
 	task_return_code ret_code;
 
 	pid_type id;
-
-	pid_type parent_id;
-
-	size_t runs;
 
 	vmm::mm_struct* mm;
 

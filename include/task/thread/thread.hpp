@@ -24,6 +24,7 @@
 
 #include "task/thread/wait_queue.hpp"
 #include "task/thread/cpu_affinity.hpp"
+#include "task/thread/user_stack.hpp"
 
 #include <compare>
 
@@ -37,9 +38,6 @@ using thread_trampoline_type = void (*)();
 using thread_routine_type = error_code (*)(void* arg);
 
 extern lock::spinlock global_thread_lock;
-
-class process;
-class thread;
 
 class kernel_stack final
 {
@@ -84,34 +82,6 @@ class kernel_stack final
 	trap::trap_frame* tf{ nullptr };
 
 	task::context* context{ nullptr };
-};
-
-class user_stack
-{
- public:
-	friend class process;
-	friend class thread;
-
- public:
-
-	user_stack() = delete;
-	user_stack(const user_stack&) = delete;
-	user_stack& operator=(const user_stack&) = delete;
-
-	[[nodiscard]] void* get_top();
-
-	int64_t operator<=>(const user_stack& rhs) const
-	{
-		return (uint8_t*)this->top - (uint8_t*)rhs.top;
-	}
-
- private:
-	user_stack(process* p, thread* t, void* stack_ptr);
-
-	void* top{ nullptr };
-
-	process* owner_process{ nullptr };
-	thread* owner_thread{ nullptr };
 };
 
 class wait_queue_state
@@ -175,7 +145,7 @@ class task_state
 		exit_code_ = exit_code;
 	}
 
-	error_code join(const deadline &) TA_REQ(global_thread_lock);
+	error_code join(const deadline&) TA_REQ(global_thread_lock);
 	void wake_joiners(error_code status) TA_REQ(global_thread_lock);
 
  private:
@@ -204,6 +174,8 @@ class thread final
 	friend class wait_queue_state;
 
 	friend struct wait_queue_list_node_trait;
+
+	friend class process_user_stack_state;
 
 	enum class [[clang::enum_extensibility(closed)]] thread_states
 	{

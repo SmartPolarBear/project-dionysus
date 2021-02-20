@@ -4,5 +4,6 @@ target_sources(kernel
         PRIVATE thread.S
         PRIVATE thread.cc
         PRIVATE wait_queue.cc
-        PRIVATE deadline.cc)
+        PRIVATE deadline.cc
+        PRIVATE user_stack.cc)
 

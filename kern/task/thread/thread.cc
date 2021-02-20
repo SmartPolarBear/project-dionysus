@@ -147,7 +147,7 @@ error_code_with_result<task::thread*> thread::create(process* parent,
 
 	if (parent != nullptr)
 	{
-		if (auto alloc_ret = parent->allocate_ustack(ret);has_error(alloc_ret))
+		if (auto alloc_ret = parent->user_stack_state_.allocate_ustack(ret);has_error(alloc_ret))
 		{
 			return get_error_code(alloc_ret);
 		}
@@ -281,7 +281,7 @@ void thread::finish_dead_transition()
 
 		if (is_user_thread())
 		{
-			this->parent_->free_ustack(this->ustack_);
+			this->parent_->user_stack_state_.free_ustack(this->ustack_);
 		}
 
 		if (critical_)
@@ -585,14 +585,4 @@ void thread::current::exit(error_code code)
 
 	scheduler::current::reschedule();
 
-}
-
-user_stack::user_stack(process* p, thread* t, void* stack_ptr)
-	: top{ stack_ptr }, owner_process{ p }, owner_thread{ t }
-{
-}
-
-void* user_stack::get_top()
-{
-	return top;
 }
