@@ -103,16 +103,13 @@ class process final
 	friend class thread;
 	friend class process_user_stack_state;
 
-	static ktl::atomic<pid_type> pid_counter;
-	static_assert(ktl::atomic<pid_type>::is_always_lock_free);
-
 	static error_code_with_result<ktl::shared_ptr<process>> create(const char* name,
 		const ktl::shared_ptr<job>& parent);
 
 	static error_code_with_result<ktl::shared_ptr<task::process>> create(const char* name,
 		void* bin,
 		size_t size,
-		ktl::shared_ptr<job> parent);
+		const ktl::shared_ptr<job>& parent);
 
 	process() = delete;
 	process(const process&) = delete;
@@ -128,16 +125,6 @@ class process final
 	[[nodiscard]] ktl::string_view get_name() const
 	{
 		return name_.data();
-	}
-
-	[[nodiscard]] pid_type get_id() const
-	{
-		return id;
-	}
-
-	void set_id(pid_type _id)
-	{
-		id = _id;
 	}
 
 	// FIXME: remove first
@@ -166,10 +153,7 @@ class process final
 	error_code resize_heap(IN OUT uintptr_t* heap_ptr);
 
  private:
-	[[nodiscard]] process(std::span<char> name,
-		pid_type id,
-		ktl::shared_ptr<job> parent,
-		ktl::shared_ptr<job> critical_to);
+	[[nodiscard]] process(std::span<char> name, ktl::shared_ptr<job> parent, ktl::shared_ptr<job> critical_to);
 
 	/// \brief  status transition, must be called with held lock
 	/// \param st the new status
@@ -194,8 +178,6 @@ class process final
 	process_user_stack_state user_stack_state_{ this };
 
 	task_return_code ret_code;
-
-	pid_type id;
 
 	vmm::mm_struct* mm;
 

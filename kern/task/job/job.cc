@@ -183,7 +183,7 @@ void task::job::remove_child_process(task::process* proc)
 
 		auto iter = ktl::find_if(child_processes.begin(), child_processes.end(), [proc](auto p)
 		{
-		  return p->id == proc->id;
+		  return p->get_koid() == proc->get_koid();
 		});
 
 		if (iter == child_processes.end())

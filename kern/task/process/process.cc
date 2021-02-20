@@ -193,8 +193,6 @@ void task::process_init()
 	}
 }
 
-ktl::atomic<pid_type> process::pid_counter;
-
 error_code_with_result<ktl::shared_ptr<process>> process::create(const char* name,
 	const ktl::shared_ptr<job>& parent)
 {
@@ -203,7 +201,7 @@ error_code_with_result<ktl::shared_ptr<process>> process::create(const char* nam
 	kbl::allocate_checker ck;
 
 	ktl::shared_ptr<process>
-		proc{ new(&ck) process{ name_span, process::pid_counter++, parent, nullptr }};
+		proc{ new(&ck) process{ name_span, parent, nullptr }};
 
 	lock_guard g1{ proc->lock };
 
@@ -225,11 +223,11 @@ error_code_with_result<ktl::shared_ptr<process>> process::create(const char* nam
 error_code_with_result<ktl::shared_ptr<task::process>> task::process::create(const char* name,
 	void* bin,
 	size_t size,
-	ktl::shared_ptr<job> parent)
+	const ktl::shared_ptr<job>& parent)
 {
 
 	ktl::shared_ptr<process> proc{ nullptr };
-	if (auto ret = task::process::create(name, std::move(parent));has_error(ret))
+	if (auto ret = task::process::create(name, parent);has_error(ret))
 	{
 		return get_error_code(ret);
 	}
@@ -270,10 +268,7 @@ error_code_with_result<ktl::shared_ptr<task::process>> task::process::create(con
 	return proc;
 }
 
-task::process::process(std::span<char> name,
-	pid_type id,
-	ktl::shared_ptr<job> parent,
-	ktl::shared_ptr<job> critical_to)
+task::process::process(std::span<char> name, ktl::shared_ptr<job> parent, ktl::shared_ptr<job> critical_to)
 	: parent(std::move(parent)), critical_to(std::move(critical_to))
 {
 	this->name_.set(name);
