@@ -7,6 +7,7 @@
 #include "ktl/list.hpp"
 #include "ktl/string_view.hpp"
 #include "ktl/shared_ptr.hpp"
+#include "ktl/weak_ptr.hpp"
 #include "ktl/atomic.hpp"
 
 #include "system/scheduler.h"
@@ -122,6 +123,9 @@ class process final
 
 	void remove_thread(thread* t);
 
+	error_code suspend();
+	void resume();
+
 	[[nodiscard]] ktl::string_view get_name() const
 	{
 		return name_.data();
@@ -153,7 +157,9 @@ class process final
 	error_code resize_heap(IN OUT uintptr_t* heap_ptr);
 
  private:
-	[[nodiscard]] process(std::span<char> name, ktl::shared_ptr<job> parent, ktl::shared_ptr<job> critical_to);
+	[[nodiscard]] process(std::span<char> name,
+		const ktl::shared_ptr<job>& parent,
+		const ktl::shared_ptr<job>& critical_to);
 
 	/// \brief  status transition, must be called with held lock
 	/// \param st the new status
@@ -167,15 +173,20 @@ class process final
 
 	Status status;
 
-	ktl::shared_ptr<job> parent;
-	ktl::shared_ptr<job> critical_to;
+	ktl::weak_ptr<job> parent;
+	ktl::weak_ptr<job> critical_to_;
+
 	bool kill_critical_when_nonzero_code{ false };
+
+	kbl::canary<kbl::magic("proc")> canary_;
 
 	kbl::name<PROC_MAX_NAME_LEN> name_;
 
-	ktl::list<thread*> threads TA_GUARDED(lock){};
+	thread::process_list_type threads_ TA_GUARDED(lock){};
 
 	process_user_stack_state user_stack_state_{ this };
+
+	int64_t suspend_count_ TA_GUARDED(lock) { 0 };
 
 	task_return_code ret_code;
 

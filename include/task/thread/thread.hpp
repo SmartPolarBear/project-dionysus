@@ -324,12 +324,17 @@ class thread final
 	link_type zombie_queue_link{ this };
 	link_type wait_queue_link{ this };
 	link_type master_list_link{ this };
-
+	link_type process_link{ this };
  public:
 	using master_list_type = kbl::intrusive_list_with_default_trait<thread,
 	                                                                lock::spinlock,
 	                                                                &thread::master_list_link,
 	                                                                true>;
+
+	using process_list_type = kbl::intrusive_list_with_default_trait<thread,
+	                                                                 lock::spinlock,
+	                                                                 &thread::process_link,
+	                                                                 true>;
 };
 
 extern thread::master_list_type global_thread_list;

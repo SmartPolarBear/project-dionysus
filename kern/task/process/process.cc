@@ -268,8 +268,10 @@ error_code_with_result<ktl::shared_ptr<task::process>> task::process::create(con
 	return proc;
 }
 
-task::process::process(std::span<char> name, ktl::shared_ptr<job> parent, ktl::shared_ptr<job> critical_to)
-	: parent(std::move(parent)), critical_to(std::move(critical_to))
+task::process::process(std::span<char> name,
+	const ktl::shared_ptr<job>& parent,
+	const ktl::shared_ptr<job>& critical_to)
+	: parent(parent), critical_to_(critical_to)
 {
 	this->name_.set(name);
 }
@@ -317,7 +319,10 @@ void process::finish_dead_transition() noexcept
 
 	mm = nullptr;
 
-	parent->remove_child_process(this);
+	{
+		auto parent_ptr = parent.lock();
+		parent_ptr->remove_child_process(this);
+	}
 
 	ktl::shared_ptr<job> kill_job{ nullptr };
 
@@ -326,6 +331,7 @@ void process::finish_dead_transition() noexcept
 
 		set_status_locked(Status::DEAD);
 
+		auto critical_to = critical_to_.lock();
 		if (critical_to != nullptr)
 		{
 			if (!kill_critical_when_nonzero_code || ret_code != 0)
@@ -361,6 +367,11 @@ void process::exit(task_return_code code) noexcept
 		kill_all_threads_locked();
 	}
 
+	cur_thread->kill();
+
+	scheduler::current::reschedule();
+
+	KDEBUG_ASSERT(-ERROR_SHOULD_NOT_REACH_HERE);
 }
 
 void process::kill(task_return_code code) noexcept
@@ -380,7 +391,7 @@ void process::kill(task_return_code code) noexcept
 			ret_code = code;
 		}
 
-		if (threads.empty())
+		if (threads_.empty())
 		{
 			set_status_locked(Status::DEAD);
 			finish_dying = true;
@@ -423,9 +434,9 @@ void process::set_status_locked(process::Status st) noexcept TA_REQ(lock)
 
 void process::kill_all_threads_locked() noexcept
 {
-	for (auto& t:threads)
+	for (auto& t:threads_)
 	{
-		t->kill();
+		t.kill();
 	}
 }
 
@@ -433,13 +444,13 @@ void task::process::remove_thread(task::thread* t)
 {
 	lock_guard g{ lock };
 
-	this->threads.remove(t);
+	threads_.remove(t);
 }
 
 void task::process::add_child_thread(thread* t) noexcept
 {
 	lock_guard g{ lock };
-	threads.push_back(t);
+	threads_.push_back(t);
 }
 
 error_code task::process::resize_heap(IN OUT uintptr_t* heap_ptr)
@@ -504,3 +515,52 @@ error_code task::process::resize_heap(IN OUT uintptr_t* heap_ptr)
 
 	return ERROR_SUCCESS;
 }
+
+error_code process::suspend()
+{
+	canary_.assert();
+
+	lock_guard g{ lock };
+
+	if (status == Status::DYING || status == Status::DEAD)
+	{
+		return -ERROR_INVALID;
+	}
+
+	KDEBUG_ASSERT(suspend_count_ >= 0);
+	++suspend_count_;
+	if (suspend_count_ == 1)
+	{
+		for (auto& thread:threads_)
+		{
+			error_code err = thread.suspend();
+			KDEBUG_ASSERT(err == ERROR_SUCCESS
+				|| (thread.state == thread::thread_states::DYING || thread.state == thread::thread_states::DEAD));
+		}
+	}
+
+	return ERROR_SUCCESS;
+}
+
+void process::resume()
+{
+	canary_.assert();
+
+	lock_guard g{ lock };
+
+	if (status == Status::DYING || status == Status::DEAD)
+	{
+		return;
+	}
+
+	KDEBUG_ASSERT(suspend_count_ > 0);
+	--suspend_count_;
+	if (suspend_count_ == 0)
+	{
+		for (auto& thread:threads_)
+		{
+			thread.resume();
+		}
+	}
+}
+
