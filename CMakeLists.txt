@@ -7,10 +7,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option(VERSION_DISKIMG "diskimg tool version" "NEW")
 set(DISK_IMG_PATH "${CMAKE_SOURCE_DIR}/tools/diskimg/diskimg2.py")
-set(DISK_IMG_ARGS update -f disk.img -c ../config/build/image.json -d . -m mountpoint -g ../grub.cfg)
+set(DISK_IMG_ARGS "")
+
 if (${VERSION_DISKIMG} STREQUAL "NEW")
     set(DISK_IMG_PATH "${CMAKE_SOURCE_DIR}/tools/diskimg/diskimg2.py")
-    set(DISK_IMG_ARGS update -f disk.img -c ../config/build/image.json -d . -m mountpoint -g ../grub.cfg)
+    set(DISK_IMG_ARGS update -f disk.img -t ../disk.img -c ../config/build/image.json -d . -m mountpoint -g ../grub.cfg)
     message(STATUS "Use diskimg at ${DISK_IMG_PATH}")
 elseif (${VERSION_DISKIMG} STREQUAL "OLD")
     set(DISK_IMG_PATH "${CMAKE_SOURCE_DIR}/tools/diskimg/diskimg.py")

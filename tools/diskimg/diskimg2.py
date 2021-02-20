@@ -5,6 +5,7 @@ import argparse
 import pathlib
 import logging
 import errno
+import getpass
 
 
 class LoopDevice:
@@ -181,6 +182,22 @@ def sync_grub_configuration(args, mp: MountPoint):
     pass
 
 
+def workaround_permission(args, mp: MountPoint):
+    file_path: str = str(args.file[0])
+
+    try:
+        cmd: str = "sudo chown {} {}".format(getpass.getuser(), file_path)
+        subprocess.run(cmd, check=True, shell=True)
+        logging.info("Change permissions :\n Run \"{}\"".format(cmd))
+    except subprocess.CalledProcessError as ce:
+        logging.critical("Cannot change permission: {}".format(str(ce)))
+        raise ce
+    except Exception as err:
+        logging.critical("Exception {} says {}.".format(type(err), err))
+        raise err
+    pass
+
+
 def update_image(parser: argparse, args):
     with LoopDevice(str(args.file[0]), 0) as loop0:
         with LoopDevice(loop0.name, LOOP1_OFFSET) as loop1:
@@ -190,21 +207,38 @@ def update_image(parser: argparse, args):
             with MountPoint(loop1.name, str(args.mount[0])) as mp:
                 sync_grub_configuration(args, mp)
                 parse_config(args, mp)
+                workaround_permission(args, mp)
+
+
+def resolve_args_dependency(parser: argparse, args):
+    file_path: str = str(args.file[0])
+
+    if args.action == 'update':
+        if any([args.config is None, args.grub is None, args.directory is None, args.mount is None]):
+            parser.error("arguments are not enough for update.")
+
+    if not os.path.exists(file_path):
+        if args.template is None:
+            parser.error("{} is not exist, so template must be present.".format(file_path))
+
+        template_path: str = str(args.template[0])
+        if not os.path.exists(template_path):
+            parser.error("{} is not exist,  template {} also not exist.".format(file_path, template_path))
+
+        try:
+            subprocess.run("sudo cp {} {}".format(template_path, file_path), check=True, shell=True)
+            logging.info("Create target {} from template {}".format(file_path, template_path))
+        except subprocess.CalledProcessError as cpe:
+            parser.error("Error creating target {} from template {} :\n  {}".format(file_path, template_path, str(cpe)))
+
+    pass
 
 
 def main():
     def validate_disk_file(parser: argparse, arg: str) -> str:
         path: pathlib.Path = pathlib.Path(arg)
-        # FIXME: temporary workaround
-        template_path = os.path.join(os.getcwd(), "../disk.img")
         abs_file_path: str = str(path.absolute().as_posix())
-        if path.exists():
-            return abs_file_path
-        elif os.path.exists(template_path):
-            subprocess.run("sudo cp {} {}".format(template_path, abs_file_path), check=True, shell=True)
-            return abs_file_path
-        else:
-            raise argparse.ArgumentError("FATAL: path {} not exists".format(arg))
+        return abs_file_path
 
     def validate_disk_template_file(parser: argparse, arg: str) -> str:
         path: pathlib.Path = pathlib.Path(arg)
@@ -233,6 +267,7 @@ def main():
 
         if not path.exists():
             os.mkdir(abs_path_str)
+            logging.info("Creating {}, which does not exists.".format(abs_path_str))
 
         return abs_path_str
 
@@ -244,24 +279,26 @@ def main():
     parser.add_argument('-f', '--file', type=lambda x: validate_disk_file(parser, x), nargs=1,
                         help="the disk image file",
                         required=True)
-    parser.add_argument('-t', '--template-disk', type=lambda x: validate_disk_template_file(parser, x), nargs=1,
+    parser.add_argument('-t', '--template', type=lambda x: validate_disk_template_file(parser, x), nargs=1,
                         help="the disk image template if disk image doesn't exist")
 
     parser.add_argument('-c', '--config', type=lambda x: validate_config_file(parser, x), nargs=1,
-                        help="the configuration file", required=True)
+                        help="the configuration file")
 
     parser.add_argument('-g', '--grub', type=lambda x: validate_config_file(parser, x), nargs=1,
-                        help="the grub configuration file", required=True)
+                        help="the grub configuration file")
 
     parser.add_argument('-d', '--directory', type=lambda x: validate_build_directory(parser, x), nargs=1,
                         default=os.path.join(os.getcwd(), "build"),
-                        help="the build directory", required=True)
+                        help="the build directory")
 
     parser.add_argument('-m', '--mount', type=lambda x: validate_mount_point(parser, x), nargs=1,
                         default=os.path.join(os.path.join(os.getcwd(), "build"), "mountpoint"),
-                        help="the mount point directory", required=False)
+                        help="the mount point directory")
 
     args = parser.parse_args()
+
+    resolve_args_dependency(parser, args)
 
     if args.action == 'update':
         update_image(parser, args)
