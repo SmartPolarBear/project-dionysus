@@ -27,7 +27,7 @@
 
 using namespace lock;
 
-task::job::job(uint64_t flags, const std::shared_ptr<job>& parent, job_policy _policy)
+task::job::job([[maybe_unused]]uint64_t flags, const std::shared_ptr<job>& parent, job_policy _policy)
 	: dispatcher<job, 0>(),
 	  policy_(std::move(_policy)),
 	  parent_(parent),
@@ -80,7 +80,7 @@ void task::job::remove_from_job_trees() TA_EXCL(this->lock)
 	parent->remove_child_job(this);
 }
 
-void task::job::apply_basic_policy(uint64_t mode, std::span<policy_item> policies) noexcept
+void task::job::apply_basic_policy(std::span<policy_item> policies) noexcept
 {
 	for (auto&& p:policies)
 	{

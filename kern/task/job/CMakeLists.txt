@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
 target_sources(kernel
-        PRIVATE job.cc)
+        PRIVATE job.cc
+        PRIVATE job_policy.cc)

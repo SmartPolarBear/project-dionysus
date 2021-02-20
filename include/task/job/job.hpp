@@ -17,6 +17,7 @@
 #include "ktl/list.hpp"
 #include "ktl/concepts.hpp"
 
+#include "task/job/job_policy.hpp"
 #include "task/process/process.hpp"
 
 #include <cstring>
@@ -26,70 +27,6 @@
 
 namespace task
 {
-enum class policy_action
-{
-	// for the sake of debugging, starting from 1
-	kPolicyAllow = 1,
-	kPolicyDeny,
-	kPolicyKill,
-	kPolicyAllowWithException,
-	kPolicyDenyWithException,
-};
-
-enum class policy_condition : size_t
-{
-	// TODO: define them
-	kPlaceholder,
-
-	kPolicyConditionMax
-};
-
-struct policy_item
-{
-	policy_condition condition;
-	policy_action action;
-};
-
-class job_policy
-{
- public:
-	static constexpr size_t POLICY_CONDITION_MAX = static_cast<size_t >(policy_condition::kPolicyConditionMax);
-
-	static job_policy creat_root_policy()
-	{
-		//TODO
-		return job_policy();
-	}
-
-	[[nodiscard]]std::span<std::optional<policy_item>, POLICY_CONDITION_MAX> get_policies()
-	{
-		return { action_ };
-	}
-
-	[[nodiscard]] std::optional<policy_item> get_for_condition(policy_condition cond)
-	{
-		return action_[static_cast<size_t>(cond)];
-	}
-
-	void apply(policy_item& policy)
-	{
-		action_[static_cast<size_t>(policy.condition)] = policy;
-	}
-
-	void merge_with(job_policy&& another)
-	{
-		for (std::optional<policy_item>& ac:another.action_)
-		{
-			if (ac.has_value())
-			{
-				apply(ac.value());
-			}
-		}
-	}
-
- private:
-	std::optional<policy_item> action_[POLICY_CONDITION_MAX];
-};
 
 class job final
 	: public object::dispatcher<job, 0>
@@ -118,7 +55,7 @@ class job final
 
 	/*can discard*/ bool kill(task_return_code terminate_code) noexcept;
 
-	void apply_basic_policy(uint64_t mode, std::span<policy_item> policies) noexcept;
+	void apply_basic_policy(std::span<policy_item> policies) noexcept;
 
 	[[nodiscard]]job_policy get_policy() const;
 
@@ -141,7 +78,7 @@ class job final
 	}
 
  private:
-	job(uint64_t flags,
+	job([[maybe_unused]]uint64_t flags,
 		const std::shared_ptr<job>& parent,
 		job_policy policy);
 
@@ -167,7 +104,7 @@ class job final
 	ktl::weak_ptr<job> parent_;
 
 	kbl::name<JOB_NAME_MAX> name_;
-	
+
 	task_return_code ret_code_;
 
 	job_status status_ TA_GUARDED(lock);
