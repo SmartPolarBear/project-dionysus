@@ -188,7 +188,7 @@ class process final
 
 	int64_t suspend_count_ TA_GUARDED(lock) { 0 };
 
-	task_return_code ret_code;
+	task_return_code ret_code_;
 
 	vmm::mm_struct* mm;
 

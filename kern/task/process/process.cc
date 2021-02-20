@@ -334,7 +334,7 @@ void process::finish_dead_transition() noexcept
 		auto critical_to = critical_to_.lock();
 		if (critical_to != nullptr)
 		{
-			if (!kill_critical_when_nonzero_code_ || ret_code != 0)
+			if (!kill_critical_when_nonzero_code_ || ret_code_ != 0)
 			{
 				kill_job = critical_to;
 			}
@@ -359,7 +359,7 @@ void process::exit(task_return_code code) noexcept
 			return;
 		}
 
-		this->ret_code = code;
+		this->ret_code_ = code;
 
 		set_status_locked(Status::DYING);
 
@@ -388,7 +388,7 @@ void process::kill(task_return_code code) noexcept
 
 		if (status_ != Status::DYING)
 		{
-			ret_code = code;
+			ret_code_ = code;
 		}
 
 		if (threads_.empty())
