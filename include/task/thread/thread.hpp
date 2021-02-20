@@ -52,7 +52,7 @@ class kernel_stack final
 	static constexpr size_t MAX_PAGE_COUNT = MAX_SIZE / PAGE_SIZE;
 
  public:
-	[[nodiscard]] static kernel_stack* create(thread* parent,
+	[[nodiscard]] static ktl::unique_ptr<kernel_stack> create(thread* parent,
 		thread_routine_type start_routine,
 		void* arg,
 		thread_trampoline_type tpl);
@@ -304,7 +304,7 @@ class thread final
 
 	wait_queue_state wait_queue_state_{ this };
 
-	kernel_stack* kstack_{ nullptr };
+	ktl::unique_ptr<kernel_stack> kstack_{ nullptr };
 
 	user_stack* ustack_{ nullptr };
 

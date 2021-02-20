@@ -45,7 +45,7 @@ void task_state::wake_joiners(error_code status) TA_REQ(global_thread_lock)
 	exit_code_wait_queue_.wake_all(false, status);
 }
 
-kernel_stack* task::kernel_stack::create(thread* parent,
+ktl::unique_ptr<kernel_stack> task::kernel_stack::create(thread* parent,
 	task::thread_routine_type start_routine,
 	void* arg,
 	task::thread_trampoline_type tpl)
@@ -65,7 +65,7 @@ kernel_stack* task::kernel_stack::create(thread* parent,
 		return nullptr;
 	}
 
-	return ret;
+	return ktl::unique_ptr<kernel_stack>(ret);
 }
 
 kernel_stack::~kernel_stack()
@@ -535,7 +535,7 @@ error_code thread::detach_and_resume()
 
 thread::~thread()
 {
-	delete kstack_;
+
 }
 
 void thread::process_pending_signals()
