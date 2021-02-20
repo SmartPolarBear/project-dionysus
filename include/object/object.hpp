@@ -21,6 +21,11 @@ class object
 	static object_counter_type kobject_counter_;
 	static koid_counter_type koid_counter_;
 
+	static uint64_t get_object_count()
+	{
+		return kobject_counter_.load();
+	}
+
 	object()
 		: koid_{ koid_counter_.load() }
 	{

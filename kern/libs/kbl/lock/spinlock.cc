@@ -12,7 +12,7 @@
 
 using lock::spinlock_struct;
 
-[[noreturn]] static inline void dump_lock_panic(lock::spinlock_struct* lock, const char* caller = nullptr)
+[[noreturn]] static inline void dump_lock_panic(lock::arch_spinlock* lock, const char* caller = nullptr)
 {
 	// disable the lock of console
 	console::console_set_lock(false);
@@ -54,28 +54,23 @@ using lock::spinlock_struct;
 
 void lock::spinlock_initialize_lock(spinlock_struct* lk, const char* name)
 {
-	lk->name = name;
-	lk->value = 0;
-	lk->pcs[0] = 0;
-//	arch_spinlock_initialize_lock(lk, name);
+	lk->arch.name = name;
+	lk->arch.value = 0;
+	lk->arch.pcs[0] = 0;
 }
 
 void lock::spinlock_acquire(spinlock_struct* lock, bool pres_intr) TA_NO_THREAD_SAFETY_ANALYSIS
 {
 	if (spinlock_holding(lock))
 	{
-		dump_lock_panic(lock, __FUNCTION__);
+		dump_lock_panic(&lock->arch, __FUNCTION__);
 	}
 
-	kdebug::kdebug_get_backtrace(lock->pcs);
+	kdebug::kdebug_get_backtrace(lock->arch.pcs);
 
-	if (pres_intr)trap::pushcli();
+	if (pres_intr)lock->intr = arch_interrupt_save();
 
-//	arch_spinlock_acquire(lock);
-	arch_spinlock_lock(lock);
-
-//	lock->cpu = cpu.get();
-
+	arch_spinlock_lock(&lock->arch);
 }
 
 void lock::spinlock_release(spinlock_struct* lock, bool pres_intr) TA_NO_THREAD_SAFETY_ANALYSIS
@@ -85,22 +80,20 @@ void lock::spinlock_release(spinlock_struct* lock, bool pres_intr) TA_NO_THREAD_
 		KDEBUG_RICHPANIC("Release a not-held spinlock_struct.\n",
 			"KERNEL PANIC",
 			false,
-			"Lock's name_: %s", lock->name);
+			"Lock's name_: %s", lock->arch.name);
 	}
 
-	lock->pcs[0] = 0;
-//	lock->cpu = nullptr;
+	lock->arch.pcs[0] = 0;
 
-//	arch_spinlock_release(lock);
-	arch_spinlock_unlock(lock);
+	arch_spinlock_unlock(&lock->arch);
 
-	if (pres_intr)trap::popcli();
+	if (pres_intr)arch_interrupt_restore(lock->intr);
 }
 
 bool lock::spinlock_holding(spinlock_struct* lock) TA_NO_THREAD_SAFETY_ANALYSIS
 {
 //	return lock->locked && lock->cpu == cpu.get();
-	return lock->value != 0 && arch_spinlock_cpu(lock) == cpu->id;
+	return lock->arch.value != 0 && arch_spinlock_cpu(&lock->arch) == cpu->id;
 }
 
 void lock::spinlock::lock() noexcept

@@ -17,7 +17,12 @@ struct cpu_struct;
 
 namespace lock
 {
-using spinlock_struct = arch_spinlock;
+
+struct spinlock_struct
+{
+	arch_spinlock arch;
+	interrupt_saved_state_type intr;
+};
 
 void spinlock_acquire(spinlock_struct* lock, bool pres_intr = true);
 void spinlock_release(spinlock_struct* lock, bool pres_intr = true);
@@ -58,7 +63,7 @@ class TA_CAP("mutex") spinlock final
 	}
 
  private:
-	spinlock_struct spinlock_{};
+	arch_spinlock spinlock_{};
 	interrupt_saved_state_type state_{ 0 };
 };
 
