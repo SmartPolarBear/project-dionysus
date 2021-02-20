@@ -33,6 +33,9 @@ xv6 inspired me to start the project to build a kernel, with which I got knowled
 - [Stichting-MINIX-Research-Foundation/minix](https://github.com/Stichting-MINIX-Research-Foundation/minix)    
 A series of papers and the book about the development of minix 3 not only let me know about what is microkernel and how it works but also have a deep influence on the goal and development of this project.
 
+- [vsrinivas/fuchsia](https://github.com/vsrinivas/fuchsia)  
+Google's new operation system.  
+
 ## License
 Copyright (c) 2021 SmartPolarBear
 
