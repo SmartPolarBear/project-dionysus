@@ -97,12 +97,13 @@ if (THREAD_SAFETY_ANALYSIS)
             PUBLIC -D_USE_THREAD_SAFETY_ANALYSIS)
 endif ()
 
-# FIXME: needs further inspect on PRIVATE -nostdlib which has been removed to enable shared_ptr
 target_link_options(kernel
         PRIVATE -fuse-ld=gold
         PRIVATE -ffreestanding
         PRIVATE -nostartfiles
         PRIVATE -static
+        PRIVATE -nostdlib
+        PRIVATE -v
         PRIVATE -Wl,--build-id=none)
 
 add_dependencies(kernel libcxx_build libcxxabi_build newlib_build GSL)
