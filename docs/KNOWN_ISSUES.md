@@ -10,3 +10,5 @@
 1. ahci.cc: check return values of new
 2. ext2/directory/directory.cc: (dummy)
 3. vfs/vfs.cc: (dummy)
+
+4. [Inspecting] Page faults and lock racing happens sometimes.
