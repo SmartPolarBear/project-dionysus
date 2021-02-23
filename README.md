@@ -6,8 +6,6 @@ The project "Dionysus" aims at applying theories and practices concerning operat
 The techniques used and concepts of programming and design of operation system have changed over time. That's why I want to adapt the advanced and exciting ones in a project as an attempt to do further researches in this field.
 
 ## Technologies
-
-- Modern C++ (C++20)
   
 - [Guidelines Support Library](https://github.com/microsoft/GSL.git)
 
@@ -15,10 +13,15 @@ The techniques used and concepts of programming and design of operation system h
 
 - CMake, 3.16 or newer
 
+- Clang/LLVM Toolchain
+
 
 ## Features
 
-// TO BE DONE
+- Modern C++ (C++20)
+
+- Aimed at Microkernel
+
 
 ## Contributing
 
