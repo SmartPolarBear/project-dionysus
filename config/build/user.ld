@@ -3,10 +3,10 @@ OUTPUT_ARCH(i386:x86-64)
 ENTRY(_start)
 
 SECTIONS {
-    /* Load programs at this address: "." means the curproc address */
+    /* Load programs at this address: "." means the current address */
     . = 0x0000000001000000;
 
-    .text 0x0000000010000000 : {
+    .text : AT(0x0000000010000000) {
         *(.text .stub .text.* .gnu.linkonce.t.*)
     }
 

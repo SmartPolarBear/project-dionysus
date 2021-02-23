@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 add_library(user STATIC uentry.S uentry_main.cc)
 target_sources(user PRIVATE uentry.S uentry_main.cc)
 
-set_property(SOURCE entry.S PROPERTY LANGUAGE C)
+set_property(SOURCE uentry.S PROPERTY LANGUAGE C)
 
 add_subdirectory(syscall)
 add_subdirectory(io)
