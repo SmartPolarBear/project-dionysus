@@ -78,8 +78,6 @@ PANIC void local_apic::init_lapic(void)
 
 // when interrupts are enable
 // it can be dangerous to call this, getting short-lasting results
-// FIXME: this can cause even tripple fault
-//          can be highly relavant to lock aquire and release
 size_t local_apic::get_cpunum()
 {
 	if (read_eflags() & EFLAG_IF)

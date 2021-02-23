@@ -8,7 +8,7 @@ uint8_t buf[4_MB] __attribute__((aligned(2_MB)));
 #pragma ide diagnostic ignored "EndlessLoop"
 int main()
 {
-	while (true) put_str("hELLO\n");;
+	while (true) put_str("hELLO\n");
 	while (true);
 
 	size_t num = 1234567;

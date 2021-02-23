@@ -8,7 +8,9 @@ add_custom_command(TARGET hello POST_BUILD
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         )
 
-set_target_properties(hello PROPERTIES LINK_FLAGS "-Wl,-T ${CMAKE_SOURCE_DIR}/config/build/user.ld")
+add_dependencies(hello user)
+
+target_link_libraries(hello user)
 
 target_include_directories(hello PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
@@ -41,6 +43,6 @@ target_link_options(hello
         PRIVATE -no-pie
         PRIVATE -nostdlib
         PRIVATE -nostartfiles
-        PRIVATE -Wl,--build-id=none)
+        PRIVATE -Wl,--build-id=none
+        PRIVATE -Wl,-T ${CMAKE_SOURCE_DIR}/config/build/user.ld)
 
-target_link_libraries(hello user)

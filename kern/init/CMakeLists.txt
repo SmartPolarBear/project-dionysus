@@ -52,12 +52,24 @@ target_compile_options(ap_boot.elf BEFORE
         PRIVATE -fmodules
         PRIVATE -std=c17)
 
+#target_link_options(ap_boot.elf
+#        PRIVATE -no-pie
+#        PRIVATE -nostdlib
+#        PRIVATE -ffreestanding
+#        PRIVATE -nostartfiles
+#        PRIVATE -Wl,--build-id=none)
+
 target_link_options(ap_boot.elf
-        PRIVATE -no-pie
-        PRIVATE -nostdlib
+        PRIVATE -fuse-ld=lld-13
         PRIVATE -ffreestanding
         PRIVATE -nostartfiles
-        PRIVATE -Wl,--build-id=none)
+        PRIVATE -static
+        PRIVATE -nostdlib
+        PRIVATE -v
+        PRIVATE -Wl,--build-id=none
+        PRIVATE -Wl,--verbose
+        PRIVATE -Wl,--discard-none
+        PRIVATE -Wl,--emit-relocs)
 
 
 add_custom_command(TARGET ap_boot.elf POST_BUILD
