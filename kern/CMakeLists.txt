@@ -110,9 +110,7 @@ target_link_options(kernel
         PRIVATE -nostdlib
         PRIVATE -v
         PRIVATE -Wl,--build-id=none
-        PRIVATE -Wl,--verbose
-        PRIVATE -Wl,--discard-none
-        PRIVATE -Wl,--emit-relocs)
+        PRIVATE -Wl,--verbose)
 
 add_dependencies(kernel libcxx_build libcxxabi_build newlib_build GSL)
 

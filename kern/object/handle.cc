@@ -6,18 +6,22 @@
 
 using namespace object;
 
-handle object::handle::make(std::move_constructible auto& obj)
+handle object::handle::make(std::convertible_to<ref_counted> auto& obj, object_type t)
 {
-	return handle();
+	auto& rc = static_cast<ref_counted&>(obj);
+	rc.adopt();
+	return handle(rc, t);
 }
 
 object::handle object::handle::duplicate(const object::handle& h)
 {
-	return object::handle();
+	h.obj_.add_ref();
+	handle copy{ h };
+	return copy;
 }
 
-object::handle object::handle::release(const object::handle& h)
+void object::handle::release(const object::handle& h)
 {
-	return object::handle();
+	h.obj_.release();
 }
 

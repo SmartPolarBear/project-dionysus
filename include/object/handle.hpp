@@ -5,7 +5,10 @@
 #include "kbl/data/list.hpp"
 #include "kbl/lock/spinlock.h"
 
+#include "object/ref_counted.hpp"
+
 #include <any>
+#include <utility>
 
 namespace object
 {
@@ -55,16 +58,20 @@ class handle final
 		}
 	};
 
-	[[nodiscard]] static handle make(std::move_constructible auto& obj);
+	[[nodiscard]] static handle make(std::convertible_to<ref_counted> auto& obj, object_type t);
 
 	[[nodiscard]] static handle duplicate(const handle& h);
 
-	[[nodiscard]] static handle release(const handle& h);
+	[[nodiscard]] static void release(const handle& h);
  private:
-	std::any obj_;
+	handle(ref_counted obj, object_type t) : obj_(std::move(obj)), type_(t)
+	{
+	}
+
+	ref_counted obj_;
 	object_type type_;
-	handle_table_type table_;
-	rights_type rights_;
+	handle_table_type table_{ handle_table_type::GLOBAL };
+	rights_type rights_{ 0 };
 
 	link_type link_;
 };
