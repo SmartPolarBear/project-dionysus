@@ -36,7 +36,14 @@ static inline void kdebug_print_impl_v(const char* fmt, bool topleft, color_sche
 		console::console_set_pos(0);
 	}
 
-	write_format("[CPU%d] ", cpu->id);
+	if(cpu.is_valid())
+	{
+		write_format("[CPU%d] ", cpu->id);
+	}
+	else
+	{
+		write_format("[CPU0 (cpu.is_valid() == false)]");
+	}
 
 	valist_write_format(fmt, ap);
 

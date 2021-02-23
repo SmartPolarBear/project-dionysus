@@ -103,7 +103,11 @@ target_link_options(kernel
         PRIVATE -nostartfiles
         PRIVATE -static
         PRIVATE -nostdlib
-        PRIVATE -Wl,--build-id=none)
+        PRIVATE -v
+        PRIVATE -Wl,--build-id=none
+        PRIVATE -Wl,--verbose
+        PRIVATE -Wl,--discard-none
+        PRIVATE -Wl,--emit-relocs)
 
 add_dependencies(kernel libcxx_build libcxxabi_build newlib_build GSL)
 
