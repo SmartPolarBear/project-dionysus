@@ -100,23 +100,28 @@ extern "C" [[clang::optnone]] void ap_enter(void)
 	// the calling sequence of install_kernel_pml4t and install_gdt is not the same as the boot CPU
 	// because we need paging enabled first.
 
-	// install the kernel vm
-	vmm::install_kernel_pml4t();
+	// here we can ensure atomicity only by disable interrupts
+	auto state = arch_interrupt_save();
+	{
+		// install the kernel vm
+		vmm::install_kernel_pml4t();
 
-	// initialize segmentation
-	vmm::install_gdt();
+		// initialize segmentation
+		vmm::install_gdt();
 
-	// install trap vectors
-	trap::init_trap();
+		// install trap vectors
+		trap::init_trap();
 
-	// initialize local APIC
-	local_apic::init_lapic();
+		// initialize local APIC
+		local_apic::init_lapic();
 
-	// initialize apic timer
-	timer::init_apic_timer();
+		// initialize apic timer
+		timer::init_apic_timer();
 
-	// set registers converning syscall/sysret
-	syscall::system_call_init();
+		// set registers converning syscall/sysret
+		syscall::system_call_init();
+	}
+	arch_interrupt_restore(state);
 
 	// in main.cc
 	ap::all_processor_main();

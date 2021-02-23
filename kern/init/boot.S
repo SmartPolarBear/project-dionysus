@@ -171,6 +171,7 @@ gdt64_begin:
     .long 0x00009000
 gdt64_end:
 
+
 .align 16
 .code64
 entry64low:
@@ -191,6 +192,8 @@ skip_save_mbi:
 
     movq $entry64high, %rax
     jmp *%rax
+
+.section .text
 
 .global _start
 _start:

@@ -10,6 +10,8 @@
 
 #include "arch/amd64/cpu/x86.h"
 
+#include <gsl/util>
+
 using trap::IRQ_ERROR;
 using trap::IRQ_SPURIOUS;
 using trap::TRAP_IRQ0;
@@ -76,7 +78,7 @@ PANIC void local_apic::init_lapic(void)
 
 // when interrupts are enable
 // it can be dangerous to call this, getting short-lasting results
-// NOTICE: this can cause even tripple fault
+// FIXME: this can cause even tripple fault
 //          can be highly relavant to lock aquire and release
 size_t local_apic::get_cpunum()
 {
@@ -85,6 +87,7 @@ size_t local_apic::get_cpunum()
 		KDEBUG_RICHPANIC("local_apic::get_cpunum can't be called with interrupts enabled\n", "KERNEL PANIC:LAPIC",
 				false, "Return address: 0x%x\n", __builtin_return_address(0));
 	}
+
 
 	if (lapic == nullptr)
 	{
