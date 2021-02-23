@@ -18,24 +18,23 @@ template<typename T>
 class object
 {
  public:
-	static object_counter_type kobject_counter_;
-	static koid_counter_type koid_counter_;
+	static object_counter_type global_kobject_counter_;
 
 	static uint64_t get_object_count()
 	{
-		return kobject_counter_.load();
+		return global_kobject_counter_.load();
 	}
 
 	object()
 		: koid_{ koid_counter_.load() }
 	{
 		++koid_counter_;
-		++kobject_counter_;
+		++global_kobject_counter_;
 	}
 
 	virtual ~object()
 	{
-		--kobject_counter_;
+		--global_kobject_counter_;
 	}
 
 	[[nodiscard]] koid_type get_koid() const
@@ -49,12 +48,14 @@ class object
 	}
 
  private:
+	static koid_counter_type koid_counter_;
+
 	koid_type koid_{ 0 };
 
 };
 
 template<typename T>
-object_counter_type object<T>::kobject_counter_{ 0 };
+object_counter_type object<T>::global_kobject_counter_{ 0 };
 
 template<typename T>
 koid_counter_type object<T>::koid_counter_{ 0 };

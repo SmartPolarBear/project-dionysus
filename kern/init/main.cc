@@ -30,6 +30,8 @@
 
 #include "../libs/basic_io/include/builtin_text_io.hpp"
 
+#include <any>
+
 // std::optional is usable unconditionally
 // std::any is usable with the pseudo-syscalls
 // std::variant is usable with the pseudo-syscalls
@@ -41,6 +43,7 @@ extern std::shared_ptr<task::job> root_job;
 
 static inline void run(const char* name)
 {
+
 	uint8_t* bin = nullptr;
 	size_t size = 0;
 

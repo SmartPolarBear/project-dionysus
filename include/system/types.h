@@ -130,5 +130,6 @@ constexpr cpu_num_type CPU_NUM_INVALID = -1;
 
 using offset_t = uintptr_t;
 
+using rights_type = uint64_t;
 
 
