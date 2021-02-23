@@ -82,8 +82,13 @@ endif ()
 
 if (KERNEL_ENABLE_DEBUG_FACILITY)
     message(STATUS "Debug facilities enabled.")
+
+    option (FORCE_COLORED_OUTPUT TRUE)
+
     target_compile_definitions(kernel
             PUBLIC -D_KERNEL_ENABLE_DEBUG_FACILITY)
+    target_compile_options(kernel
+            PUBLIC -fdiagnostics-color=always)
 endif ()
 
 if (THREAD_SAFETY_ANALYSIS)
