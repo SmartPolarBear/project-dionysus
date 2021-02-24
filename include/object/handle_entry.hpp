@@ -22,18 +22,23 @@ enum class [[clang::enum_extensibility(closed)]] handle_table_type
 };
 
 class handle_table;
+class handle_entry;
 
 struct handle_entry_deleter
 {
-	void operator()(class handle_entry* e);
+	void operator()(handle_entry* e);
 };
 
-using handle_entry_owner = ktl::unique_ptr<class handle_entry, handle_entry_deleter>;
+using handle_entry_owner = ktl::unique_ptr<handle_entry, handle_entry_deleter>;
 
 class handle_entry final
 {
  public:
+
+
+
 	friend class handle_table;
+	friend struct handle_entry_deleter;
 
 	using link_type = kbl::list_link<handle_entry, lock::spinlock>;
 
@@ -65,24 +70,25 @@ class handle_entry final
 		}
 	};
 
-	[[nodiscard]] static handle_entry_owner make(const ktl::shared_ptr<dispatcher>& obj);
+	[[nodiscard]] static handle_entry_owner make(const dispatcher* obj, bool is_global);
 
 	[[nodiscard]] static handle_entry_owner duplicate(handle_entry* h);
 
 	static void release(handle_entry_owner h);
  private:
-	handle_entry(ktl::shared_ptr<dispatcher> obj)
-		: ptr_(std::move(obj))
+	handle_entry(const dispatcher* obj)
+		: ptr_(const_cast<dispatcher*>(obj))
 	{
 	}
 
 	kbl::canary<kbl::magic("HENT")> canary_;
 
-	ktl::shared_ptr<dispatcher> ptr_;
+	dispatcher* ptr_;
+	handle_table* parent_;
+
 	[[maybe_unused]] rights_type rights_{ 0 };
 
-	[[maybe_unused]] std::weak_ptr<handle_table> parent_;
-	[[maybe_unused]] koid_type owner_process_id;
+	koid_type owner_process_id{ -1 };
 
 	link_type link_;
 
@@ -97,6 +103,5 @@ class handle_entry final
 	}
 
 };
-
 
 }

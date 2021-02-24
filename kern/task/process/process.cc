@@ -274,6 +274,13 @@ task::process::process(std::span<char> name,
 	  critical_to_(critical_to)
 {
 	this->name_.set(name);
+
+	handle_table_.add_handle(object::handle_entry::make(this, true));
+}
+
+process::~process()
+{
+	this->handle_table_.clear();
 }
 
 error_code process::setup_mm()
@@ -563,4 +570,3 @@ void process::resume()
 		}
 	}
 }
-

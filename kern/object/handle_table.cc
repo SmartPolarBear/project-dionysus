@@ -34,6 +34,10 @@ handle_type handle_table::add_handle_locked(handle_entry_owner owner)
 	{
 		[[maybe_unused]] auto discard = owner.release();
 	}
+
+	owner->owner_process_id = cur_proc->get_koid();
+	owner->parent_ = this;
+
 	return MAKE_HANDLE(HATTR_LOCAL_PROC, (uintptr_t)&owner->link_);
 }
 
@@ -62,6 +66,9 @@ handle_entry_owner handle_table::remove_handle_locked(handle_entry* e)
 	}
 
 	handles_.remove(e);
+	e->owner_process_id = -1;
+	e->parent_ = nullptr;
+
 	return handle_entry_owner(e);
 }
 
@@ -103,6 +110,18 @@ bool handle_table::local_exist_locked(handle_entry* owner) TA_REQ(lock_)
 
 	return false;
 }
+
+void handle_table::clear()
+{
+	for (auto& handle:handles_)
+	{
+		handle_entry_owner discard{ &handle };
+		// the destructor is called
+	}
+
+	handles_.clear();
+}
+
 
 
 

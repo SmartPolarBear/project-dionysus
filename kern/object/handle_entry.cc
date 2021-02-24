@@ -7,7 +7,7 @@
 using namespace object;
 using namespace lock;
 
-handle_entry_owner object::handle_entry::make(const ktl::shared_ptr<dispatcher>& obj)
+handle_entry_owner object::handle_entry::make(const dispatcher* obj, bool is_global)
 {
 	obj->adopt();
 	kbl::allocate_checker ck;
@@ -18,8 +18,10 @@ handle_entry_owner object::handle_entry::make(const ktl::shared_ptr<dispatcher>&
 		return nullptr;
 	}
 
+	if (is_global)
 	{
 		lock_guard g{ handle_table::global_lock_ };
+		obj->add_ref();
 		handle_table::global_handles_.push_back(ret);
 	}
 
@@ -47,13 +49,15 @@ void object::handle_entry::release(handle_entry_owner h)
 	h->canary_.assert();
 	if (h->ptr_->release())
 	{
-		[[maybe_unused]]auto ret = h.release();
+		delete h->ptr_;
 	}
 }
 
 void handle_entry_deleter::operator()(handle_entry* e)
 {
 	lock_guard g{ handle_table::global_lock_ };
+
 	handle_table::global_handles_.remove(e);
+
 	delete e;
 }

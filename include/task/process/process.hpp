@@ -119,7 +119,7 @@ class process final
 	process() = delete;
 	process(const process&) = delete;
 
-	~process() override = default;
+	~process() override;
 
 	object::object_type get_type() const override
 	{
@@ -203,7 +203,7 @@ class process final
 
 	size_t flags;
 
-	object::handle_table handle_table;
+	object::handle_table handle_table_;
 
 	link_type job_link{ this };
 };

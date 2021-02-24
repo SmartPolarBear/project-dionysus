@@ -39,6 +39,8 @@ class handle_table final
 
 	handle_entry* get_handle_entry_locked(handle_type h) TA_REQ(lock_);
 
+	void clear();
+
  private:
 	bool local_exist_locked(handle_entry* owner) TA_REQ(lock_);
 
