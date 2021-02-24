@@ -5,6 +5,7 @@
 #include "object/handle_table.hpp"
 
 using namespace object;
+using namespace lock;
 
 handle_entry_owner object::handle_entry::make(const ktl::shared_ptr<dispatcher>& obj)
 {
@@ -17,7 +18,10 @@ handle_entry_owner object::handle_entry::make(const ktl::shared_ptr<dispatcher>&
 		return nullptr;
 	}
 
-	handle_table::global_handles_.push_back(ret);
+	{
+		lock_guard g{ handle_table::global_lock_ };
+		handle_table::global_handles_.push_back(ret);
+	}
 
 	return handle_entry_owner(ret);
 }
@@ -49,6 +53,7 @@ void object::handle_entry::release(handle_entry_owner h)
 
 void handle_entry_deleter::operator()(handle_entry* e)
 {
+	lock_guard g{ handle_table::global_lock_ };
 	handle_table::global_handles_.remove(e);
 	delete e;
 }

@@ -18,15 +18,23 @@ error_code_with_result<std::shared_ptr<T>> handle_table::object_from_handle(cons
 	return downcast_dispatcher<T>(h.ptr_);
 }
 
-void handle_table::add_handle(handle_entry_owner owner)
+handle_type handle_table::add_handle(handle_entry_owner owner)
 {
 	lock::lock_guard g{ lock_ };
-	add_handle_locked(std::move(owner));
+	return add_handle_locked(std::move(owner));
 }
 
-void handle_table::add_handle_locked(handle_entry_owner owner)
+handle_type handle_table::add_handle_locked(handle_entry_owner owner)
 {
-	handles_.push_back(owner.release());
+	if (!local_exist_locked(owner.get()))
+	{
+		handles_.push_back(owner.release());
+	}
+	else
+	{
+		[[maybe_unused]] auto discard = owner.release();
+	}
+	return MAKE_HANDLE(HATTR_LOCAL_PROC, (uintptr_t)&owner->link_);
 }
 
 handle_entry_owner handle_table::remove_handle(handle_type h)
@@ -63,44 +71,38 @@ handle_entry* handle_table::get_handle_entry(handle_type h)
 
 	return get_handle_entry_locked(h);
 }
-handle_entry* handle_table::get_handle_entry(handle_type h, allow_global_tag)
-{
-	lock_guard g1{ lock_ };
-	lock_guard g2{ global_lock_ };
-
-	return get_handle_entry_locked(h, allow_global);
-}
 
 handle_entry* handle_table::get_handle_entry_locked(handle_type h)
 {
 	auto[attr, idx] = PARSE_HANDLE(h);
-	if (attr & HATTR_GLOBAL)
-	{
-		return nullptr;
-	}
-
-	return get_handle_entry_locked(h);
-}
-
-handle_entry* handle_table::get_handle_entry_locked(handle_type h, allow_global_tag)
-{
-	auto[attr, idx] = PARSE_HANDLE(h);
-
-	auto iter = handles_.begin();
 
 	if ((attr & HATTR_LOCAL_PROC) == 0)
 	{
 		if (idx >= global_handles_.size())return nullptr;
 
-		iter = global_handles_.begin();
+		auto link_ptr = *reinterpret_cast<decltype(global_handles_)::head_type*>(INDEX_TO_ADDR(idx));
+		return link_ptr.parent_;
+
 	}
 	else
 	{
 		if (idx >= handles_.size())return nullptr;
+		auto link_ptr = *reinterpret_cast<decltype(handles_)::head_type*>(INDEX_TO_ADDR(idx));
+		return link_ptr.parent_;
 	}
 
-	for (uint32_t i = 0; i < idx; i++, iter++);
-
-	return &(*iter);
+	return nullptr;
 }
+
+bool handle_table::local_exist_locked(handle_entry* owner) TA_REQ(lock_)
+{
+	for (auto& handle:handles_)
+	{
+		if (handle.ptr_ == owner->ptr_)return true;
+	}
+
+	return false;
+}
+
+
 

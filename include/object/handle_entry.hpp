@@ -86,6 +86,17 @@ class handle_entry final
 
 	link_type link_;
 
+	bool operator==(const handle_entry& another) const
+	{
+		return ptr_ == another.ptr_;
+	}
+
+	bool operator!=(const handle_entry& another) const
+	{
+		return !operator==(another);
+	}
+
 };
+
 
 }
