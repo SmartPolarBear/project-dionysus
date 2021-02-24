@@ -8,7 +8,7 @@ namespace object
 class ref_counted
 {
  public:
-	friend class handle;
+	friend class handle_entry;
  protected:
 	constexpr ref_counted() : ref_count_(PRE_ADOPT_SENTINEL)
 	{

@@ -4,8 +4,23 @@
 
 using namespace object;
 
-template<>
-error_code_with_result<task::process> handle_table::object_from_handle(handle h)
+template<std::convertible_to<dispatcher> T>
+error_code_with_result<std::shared_ptr<T>> handle_table::object_from_handle(const handle_entry& h)
 {
-	return h.obj_.get();
+	return downcast_dispatcher<T>(h.ptr_);
+}
+
+void handle_table::add_handle(const handle_entry& h)
+{
+
+}
+
+void handle_table::remove_handle(handle_entry& h)
+{
+
+}
+
+bool handle_table::valid_handle(const handle_entry& h) const
+{
+	return false;
 }

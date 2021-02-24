@@ -57,7 +57,7 @@ class dispatcher :
 
 	virtual ~dispatcher() = default;
 
-	virtual object_type get_type() const= 0;
+	virtual object_type get_type() const = 0;
 };
 
 template<typename T, right_type rights>
@@ -74,7 +74,7 @@ class solo_dispatcher
 };
 
 template<typename T>
-static inline ktl::shared_ptr<T> downcast_dispatcher(ktl::shared_ptr<dispatcher>* d)
+[[maybe_unused, nodiscard]] static inline ktl::shared_ptr<T> downcast_dispatcher(ktl::shared_ptr<dispatcher>* d)
 {
 	if ((*d)->get_type() == dispatcher_tag<T>::type)[[likely]]
 	{
@@ -87,13 +87,13 @@ static inline ktl::shared_ptr<T> downcast_dispatcher(ktl::shared_ptr<dispatcher>
 }
 
 template<>
-static inline ktl::shared_ptr<dispatcher> downcast_dispatcher(ktl::shared_ptr<dispatcher>* d)
+[[maybe_unused, nodiscard]]  inline ktl::shared_ptr<dispatcher> downcast_dispatcher(ktl::shared_ptr<dispatcher>* d)
 {
 	return std::move(*d);
 }
 
 template<typename T>
-static inline T* downcast_dispatcher(dispatcher* d)
+[[maybe_unused, nodiscard]] static inline T* downcast_dispatcher(dispatcher* d)
 {
 	if (d->get_type() == dispatcher_tag<T>::type)[[likely]]
 	{
@@ -106,13 +106,13 @@ static inline T* downcast_dispatcher(dispatcher* d)
 }
 
 template<>
-static inline dispatcher* downcast_dispatcher(dispatcher* d)
+[[maybe_unused, nodiscard]]  inline dispatcher* downcast_dispatcher(dispatcher* d)
 {
 	return d;
 }
 
 template<typename T>
-static inline const T* downcast_dispatcher(const dispatcher* d)
+[[maybe_unused, nodiscard]] static inline const T* downcast_dispatcher(const dispatcher* d)
 {
 	if (d->get_type() == dispatcher_tag<T>::type)[[likely]]
 	{
@@ -125,7 +125,7 @@ static inline const T* downcast_dispatcher(const dispatcher* d)
 }
 
 template<>
-static inline const dispatcher* downcast_dispatcher(const dispatcher* d)
+[[maybe_unused, nodiscard]]  inline const dispatcher* downcast_dispatcher(const dispatcher* d)
 {
 	return d;
 }
