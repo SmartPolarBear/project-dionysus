@@ -6,22 +6,24 @@
 
 using namespace object;
 
-handle object::handle::make(std::convertible_to<ref_counted> auto& obj, object_type t)
+handle object::handle::make(ktl::shared_ptr<dispatcher> obj, object_type t)
 {
-	auto& rc = static_cast<ref_counted&>(obj);
-	rc.adopt();
-	return handle(rc, t);
+	obj->adopt();
+	return handle(obj, t);
 }
 
 object::handle object::handle::duplicate(const object::handle& h)
 {
-	h.obj_.add_ref();
+	h.obj_->add_ref();
 	handle copy{ h };
 	return copy;
 }
 
 void object::handle::release(const object::handle& h)
 {
-	h.obj_.release();
+	if (h.obj_->release())
+	{
+
+	}
 }
 

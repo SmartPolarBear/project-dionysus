@@ -10,6 +10,8 @@
 #include "ktl/weak_ptr.hpp"
 #include "ktl/atomic.hpp"
 
+#include "object/handle_table.hpp"
+
 #include "system/scheduler.h"
 
 #include "drivers/acpi/cpu.h"
@@ -83,7 +85,7 @@ class process_user_stack_state
 class job;
 
 class process final
-	: public object::dispatcher<process, 0>
+	: public object::solo_dispatcher<process, 0>
 {
  public:
 	using link_type = kbl::list_link<process, lock::spinlock>;
@@ -118,6 +120,11 @@ class process final
 	process(const process&) = delete;
 
 	~process() override = default;
+
+	object::object_type get_type() const override
+	{
+		return object::object_type::PROCESS;
+	}
 
 	[[maybe_unused]] void exit(task_return_code code) noexcept;
 	void kill(task_return_code code) noexcept;
@@ -195,6 +202,8 @@ class process final
 	vmm::mm_struct* mm;
 
 	size_t flags;
+
+	object::handle_table handle_table;
 
 	link_type job_link{ this };
 };

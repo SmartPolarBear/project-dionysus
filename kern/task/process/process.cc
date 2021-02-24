@@ -269,7 +269,9 @@ error_code_with_result<process*> task::process::create(const char* name,
 task::process::process(std::span<char> name,
 	const ktl::shared_ptr<job>& parent,
 	const ktl::shared_ptr<job>& critical_to)
-	: parent_(parent), critical_to_(critical_to)
+	: object::solo_dispatcher<process, 0>(),
+	  parent_(parent),
+	  critical_to_(critical_to)
 {
 	this->name_.set(name);
 }

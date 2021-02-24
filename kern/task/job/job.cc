@@ -28,7 +28,7 @@
 using namespace lock;
 
 task::job::job([[maybe_unused]]uint64_t flags, const std::shared_ptr<job>& parent, job_policy _policy)
-	: dispatcher<job, 0>(),
+	: solo_dispatcher<job, 0>(),
 	  policy_(std::move(_policy)),
 	  parent_(parent),
 	  ret_code_(TASK_RETCODE_NORMAL),

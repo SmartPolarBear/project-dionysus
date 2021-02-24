@@ -263,7 +263,8 @@ void thread::switch_to(interrupt_saved_state_type state_to_restore) TA_REQ(globa
 }
 
 thread::thread(process* prt, ktl::string_view nm, cpu_affinity aff)
-	: name_{ nm },
+	: object::solo_dispatcher<thread, 0>(),
+	  name_{ nm },
 	  parent_{ prt },
 	  affinity_{ aff }
 {

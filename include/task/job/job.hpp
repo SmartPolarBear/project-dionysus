@@ -29,7 +29,7 @@ namespace task
 {
 
 class job final
-	: public object::dispatcher<job, 0>
+	: public object::solo_dispatcher<job, 0>
 {
  public:
 	enum class [[clang::enum_extensibility(closed)]] job_status
@@ -65,6 +65,11 @@ class job final
 		const std::shared_ptr<job>& parent);
 
 	~job() final;
+
+	object::object_type get_type() const override
+	{
+		return object::object_type::JOB;
+	}
 
 	[[nodiscard]]size_t get_max_height() const
 	{

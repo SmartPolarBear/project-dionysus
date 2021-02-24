@@ -6,6 +6,9 @@
 #include "kbl/lock/spinlock.h"
 
 #include "object/ref_counted.hpp"
+#include "object/dispatcher.hpp"
+
+#include "ktl/shared_ptr.hpp"
 
 #include <any>
 #include <utility>
@@ -13,12 +16,6 @@
 namespace object
 {
 
-enum class [[clang::enum_extensibility(closed)]] object_type
-{
-	PROCESS = 1,
-	JOB,
-	THREAD,
-};
 
 enum class [[clang::enum_extensibility(closed)]] handle_table_type
 {
@@ -28,6 +25,8 @@ enum class [[clang::enum_extensibility(closed)]] handle_table_type
 class handle final
 {
  public:
+	friend class handle_table;
+
 	using link_type = kbl::list_link<handle, lock::spinlock>;
 
 	struct node_trait
@@ -58,20 +57,22 @@ class handle final
 		}
 	};
 
-	[[nodiscard]] static handle make(std::convertible_to<ref_counted> auto& obj, object_type t);
+	[[nodiscard]] static handle make(ktl::shared_ptr<dispatcher> obj, object_type t);
 
 	[[nodiscard]] static handle duplicate(const handle& h);
 
-	[[nodiscard]] static void release(const handle& h);
+	static void release(const handle& h);
  private:
-	handle(ref_counted obj, object_type t) : obj_(std::move(obj)), type_(t)
+	handle(ktl::shared_ptr<dispatcher> obj, object_type t)
+		: obj_(std::move(obj)),
+		  type_(t)
 	{
 	}
 
-	ref_counted obj_;
-	object_type type_;
-	handle_table_type table_{ handle_table_type::GLOBAL };
-	rights_type rights_{ 0 };
+	ktl::shared_ptr<dispatcher> obj_;
+	[[maybe_unused]] object_type type_;
+	[[maybe_unused]] handle_table_type table_{ handle_table_type::GLOBAL };
+	[[maybe_unused]] rights_type rights_{ 0 };
 
 	link_type link_;
 };

@@ -159,7 +159,7 @@ class task_state
 };
 
 class thread final
-	: object::dispatcher<thread, 0>
+	: public object::solo_dispatcher<thread, 0>
 {
  public:
 	friend class process;
@@ -228,6 +228,11 @@ class thread final
 
 	thread(const thread&) = delete;
 	thread& operator=(const thread&) = delete;
+
+	object::object_type get_type() const override
+	{
+		return object::object_type::THREAD;
+	}
 
 	[[nodiscard]] vmm::mm_struct* get_mm();
 

@@ -2,6 +2,8 @@
 
 #include "system/types.h"
 
+#include "object/ref_counted.hpp"
+
 #include "ktl/atomic.hpp"
 
 namespace object
@@ -15,7 +17,8 @@ using koid_counter_type = ktl::atomic<koid_type>;
 static_assert(koid_counter_type::is_always_lock_free);
 
 template<typename T>
-class object
+class kernel_object :
+	public object::ref_counted
 {
  public:
 	static object_counter_type global_kobject_counter_;
@@ -25,14 +28,14 @@ class object
 		return global_kobject_counter_.load();
 	}
 
-	object()
+	constexpr kernel_object()
 		: koid_{ koid_counter_.load() }
 	{
 		++koid_counter_;
 		++global_kobject_counter_;
 	}
 
-	virtual ~object()
+	virtual ~kernel_object()
 	{
 		--global_kobject_counter_;
 	}
@@ -55,9 +58,9 @@ class object
 };
 
 template<typename T>
-object_counter_type object<T>::global_kobject_counter_{ 0 };
+object_counter_type kernel_object<T>::global_kobject_counter_{ 0 };
 
 template<typename T>
-koid_counter_type object<T>::koid_counter_{ 0 };
+koid_counter_type kernel_object<T>::koid_counter_{ 0 };
 
 }
