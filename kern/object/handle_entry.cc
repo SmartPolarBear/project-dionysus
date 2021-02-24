@@ -6,42 +6,49 @@
 
 using namespace object;
 
-kbl::intrusive_list<handle_entry,
-                    lock::spinlock,
-                    handle_entry::node_trait,
-                    true> object::handle_entry::global_list{};
-
-handle_entry object::handle_entry::make(const ktl::shared_ptr<dispatcher>& obj, object_type t)
+handle_entry_owner object::handle_entry::make(const ktl::shared_ptr<dispatcher>& obj)
 {
 	obj->adopt();
 	kbl::allocate_checker ck;
-	auto ret = new(&ck) handle_entry(obj, t);
+	auto ret = new(&ck) handle_entry(obj);
 
 	if (!ck.check())
 	{
-
+		return nullptr;
 	}
 
-	global_list.push_back(ret);
+	handle_table::global_handles_.push_back(ret);
+
 	return handle_entry_owner(ret);
 }
 
-object::handle_entry object::handle_entry::duplicate(const object::handle_entry& h)
+object::handle_entry_owner object::handle_entry::duplicate(handle_entry* h)
 {
-	h.ptr_->add_ref();
-	handle_entry copy{ h };
-	return copy;
+	h->canary_.assert();
+	h->ptr_->add_ref();
+
+	kbl::allocate_checker ck;
+	auto ret = new(&ck) handle_entry(*h);
+
+	if (!ck.check())
+	{
+		return nullptr;
+	}
+
+	return handle_entry_owner(ret);
 }
 
-void object::handle_entry::release(const object::handle_entry& h)
+void object::handle_entry::release(handle_entry_owner h)
 {
-	if (h.ptr_->release())
+	h->canary_.assert();
+	if (h->ptr_->release())
 	{
-
+		[[maybe_unused]]auto ret = h.release();
 	}
 }
 
 void handle_entry_deleter::operator()(handle_entry* e)
 {
-
+	handle_table::global_handles_.remove(e);
+	delete e;
 }

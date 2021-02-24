@@ -23,6 +23,13 @@ enum class [[clang::enum_extensibility(closed)]] handle_table_type
 
 class handle_table;
 
+struct handle_entry_deleter
+{
+	void operator()(class handle_entry* e);
+};
+
+using handle_entry_owner = ktl::unique_ptr<class handle_entry, handle_entry_deleter>;
+
 class handle_entry final
 {
  public:
@@ -58,21 +65,20 @@ class handle_entry final
 		}
 	};
 
-	[[nodiscard]] static handle_entry make(const ktl::shared_ptr<dispatcher>& obj, object_type t);
+	[[nodiscard]] static handle_entry_owner make(const ktl::shared_ptr<dispatcher>& obj);
 
-	[[nodiscard]] static handle_entry duplicate(const handle_entry& h);
+	[[nodiscard]] static handle_entry_owner duplicate(handle_entry* h);
 
-	static void release(const handle_entry& h);
+	static void release(handle_entry_owner h);
  private:
-	handle_entry(ktl::shared_ptr<dispatcher> obj, object_type t)
-		: ptr_(std::move(obj)),
-		  type_(t)
+	handle_entry(ktl::shared_ptr<dispatcher> obj)
+		: ptr_(std::move(obj))
 	{
 	}
 
+	kbl::canary<kbl::magic("HENT")> canary_;
+
 	ktl::shared_ptr<dispatcher> ptr_;
-	[[maybe_unused]] object_type type_;
-	[[maybe_unused]] handle_table_type table_{ handle_table_type::GLOBAL };
 	[[maybe_unused]] rights_type rights_{ 0 };
 
 	[[maybe_unused]] std::weak_ptr<handle_table> parent_;
@@ -80,16 +86,6 @@ class handle_entry final
 
 	link_type link_;
 
-	static kbl::intrusive_list<handle_entry,
-	                           lock::spinlock,
-	                           handle_entry::node_trait,
-	                           true> global_list;
 };
 
-struct handle_entry_deleter
-{
-	void operator()(handle_entry* e);
-};
-
-using handle_entry_owner = ktl::unique_ptr<handle_entry, handle_entry_deleter>;
 }
