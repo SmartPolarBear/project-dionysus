@@ -3,11 +3,14 @@
 #include "task/process/process.hpp"
 
 using namespace object;
+using namespace lock;
 
 kbl::intrusive_list<handle_entry,
                     lock::spinlock,
                     handle_entry::node_trait,
                     true> object::handle_table::global_handles_{};
+
+lock::spinlock object::handle_table::global_lock_{ "ghandle" };
 
 template<std::convertible_to<dispatcher> T>
 error_code_with_result<std::shared_ptr<T>> handle_table::object_from_handle(const handle_entry& h)
@@ -34,7 +37,7 @@ handle_entry_owner handle_table::remove_handle(handle_type h)
 
 handle_entry_owner handle_table::remove_handle_locked(handle_type h)
 {
-	auto handle = get_handle_entry(h);
+	auto handle = get_handle_entry_locked(h);
 	if (!handle)
 	{
 		return nullptr;
@@ -56,6 +59,31 @@ handle_entry_owner handle_table::remove_handle_locked(handle_entry* e)
 
 handle_entry* handle_table::get_handle_entry(handle_type h)
 {
+	lock_guard g1{ lock_ };
+
+	return get_handle_entry_locked(h);
+}
+handle_entry* handle_table::get_handle_entry(handle_type h, allow_global_tag)
+{
+	lock_guard g1{ lock_ };
+	lock_guard g2{ global_lock_ };
+
+	return get_handle_entry_locked(h, allow_global);
+}
+
+handle_entry* handle_table::get_handle_entry_locked(handle_type h)
+{
+	auto[attr, idx] = PARSE_HANDLE(h);
+	if (attr & HATTR_GLOBAL)
+	{
+		return nullptr;
+	}
+
+	return get_handle_entry_locked(h);
+}
+
+handle_entry* handle_table::get_handle_entry_locked(handle_type h, allow_global_tag)
+{
 	auto[attr, idx] = PARSE_HANDLE(h);
 
 	auto iter = handles_.begin();
@@ -75,5 +103,4 @@ handle_entry* handle_table::get_handle_entry(handle_type h)
 
 	return &(*iter);
 }
-
 
