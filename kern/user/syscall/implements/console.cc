@@ -1,4 +1,5 @@
 #include "syscall.h"
+#include "syscall/syscall_args.hpp"
 
 #include "system/mmu.h"
 #include "system/syscall.h"
@@ -14,7 +15,8 @@
 
 error_code sys_put_str(const syscall_regs* regs)
 {
-	char* strbuf = (char*)get_nth_arg(regs, 0);
+//	char* strbuf = (char*)get_nth_arg(regs, 0);
+	char* strbuf = syscall::args_get<char*, 0>(regs);//(char*)get_nth_arg(regs, 0);
 
 //	write_format("[cpu%d,pid %d] %s", cpu->id, current->id, strbuf);
 	put_str(strbuf);
@@ -24,7 +26,8 @@ error_code sys_put_str(const syscall_regs* regs)
 
 error_code sys_put_char(const syscall_regs* regs)
 {
-	put_char((char)get_nth_arg(regs, 0));
+	auto c = syscall::args_get<char, 0>(regs);
+	put_char(c);
 
 	return ERROR_SUCCESS;
 }

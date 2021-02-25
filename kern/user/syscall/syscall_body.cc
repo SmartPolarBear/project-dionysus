@@ -17,32 +17,32 @@
 #include "task/process/process.hpp"
 
 using namespace syscall;
-
-size_t get_nth_arg(const syscall_regs* regs, size_t n)
-{
-	switch (n)
-	{
-	case 0:
-		return regs->rdi;
-	case 1:
-		return regs->rsi;
-	case 2:
-		return regs->rdx;
-	case 3:
-		return regs->r10;
-	case 4:
-		return regs->r8;
-	case 5:
-		return regs->r9;
-	default:
-		KDEBUG_RICHPANIC("System call can have not more than 4 args.", "Syscall", false, "");
-	}
-}
-
-size_t get_syscall_number(const syscall_regs* regs)
-{
-	return regs->rax;
-}
+//
+//size_t get_nth_arg(const syscall_regs* regs, size_t n)
+//{
+//	switch (n)
+//	{
+//	case 0:
+//		return regs->rdi;
+//	case 1:
+//		return regs->rsi;
+//	case 2:
+//		return regs->rdx;
+//	case 3:
+//		return regs->r10;
+//	case 4:
+//		return regs->r8;
+//	case 5:
+//		return regs->r9;
+//	default:
+//		KDEBUG_RICHPANIC("System call can have not more than 4 args.", "Syscall", false, "");
+//	}
+//}
+//
+//size_t get_syscall_number(const syscall_regs* regs)
+//{
+//	return regs->rax;
+//}
 
 
 //to be called in syscall_entry.S

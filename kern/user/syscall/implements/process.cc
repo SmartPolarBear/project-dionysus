@@ -1,4 +1,5 @@
 #include "syscall.h"
+#include "syscall/syscall_args.hpp"
 
 #include "system/mmu.h"
 #include "system/syscall.h"
@@ -24,7 +25,9 @@ error_code sys_exit(const syscall_regs* regs)
 
 error_code sys_set_heap(const syscall_regs* regs)
 {
-	return cur_proc->resize_heap((uintptr_t*)get_nth_arg(regs, 0));
+	auto heap_ptr = syscall::args_get<uintptr_t*, 0>(regs);
+//	return cur_proc->resize_heap((uintptr_t*)get_nth_arg(regs, 0));
+	return cur_proc->resize_heap(heap_ptr);
 }
 
 error_code sys_send(const syscall_regs* regs)

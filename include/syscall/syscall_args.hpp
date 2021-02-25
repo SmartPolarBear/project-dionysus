@@ -69,7 +69,7 @@ static inline uint64_t do_get(const syscall_regs* regs)
 } // _internals
 
 template<>
- uint64_t args_get<syscall::ARG_SYSCALL_NUM>(const syscall_regs* regs)
+[[maybe_unused]] uint64_t args_get<syscall::ARG_SYSCALL_NUM>(const syscall_regs* regs)
 {
 	return regs->rax;
 }
@@ -92,6 +92,20 @@ requires std::convertible_to<uint64_t, T>
 static inline T args_get(const syscall_regs* regs, int idx)
 {
 	return static_cast<T>(args_get(regs, idx));
+}
+
+template<typename T, int ArgIdx>
+requires std::is_pointer_v<T>
+static inline T args_get(const syscall_regs* regs)
+{
+	return reinterpret_cast<T>(args_get<ArgIdx>(regs));
+}
+
+template<typename T>
+requires std::is_pointer_v<T>
+static inline T args_get(const syscall_regs* regs, int idx)
+{
+	return reinterpret_cast<T>(args_get(regs, idx));
 }
 
 }

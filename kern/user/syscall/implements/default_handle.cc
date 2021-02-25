@@ -1,4 +1,5 @@
 #include "syscall.h"
+#include "syscall/syscall_args.hpp"
 
 #include "system/mmu.h"
 #include "system/syscall.h"
@@ -21,7 +22,7 @@ error_code invalid_syscall(const syscall_regs*)
 
 error_code default_syscall(const syscall_regs* regs)
 {
-	size_t syscall_no = get_syscall_number(regs); // first parameter
+	auto syscall_no = syscall::args_get<syscall::ARG_SYSCALL_NUM>(regs);//get_syscall_number(regs); // first parameter
 
 	kdebug::kdebug_warning("The syscall %lld isn't yet defined.", syscall_no);
 
