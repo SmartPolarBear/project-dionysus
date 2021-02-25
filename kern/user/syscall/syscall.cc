@@ -1,3 +1,6 @@
+
+#include <syscall/syscall.hpp>
+
 #include "syscall.h"
 
 #include "system/mmu.h"
@@ -14,7 +17,6 @@
 
 #include "task/process/process.hpp"
 
-
 #include "builtin_text_io.hpp"
 
 using namespace syscall;
@@ -28,7 +30,7 @@ using lock::spinlock_holding;
 
 [[noreturn]] void system_call_entry_x86()
 {
-	KDEBUG_GENERALPANIC("Syscall in compatibility isn't supported.\n");
+	KDEBUG_GENERALPANIC("Syscall in 32bit compatibility mode isn't supported.\n");
 }
 
 PANIC void syscall::system_call_init()
@@ -50,7 +52,6 @@ PANIC void syscall::system_call_init()
 		ia32_EFER_val |= 0b1;
 		wrmsr(MSR_EFER, ia32_EFER_val);
 	}
-
 
 	wrmsr(MSR_STAR, (SEGMENTSEL_UNULL << 48ull) | (SEGMENTSEL_KCODE << 32ull));
 

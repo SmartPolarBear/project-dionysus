@@ -1,5 +1,7 @@
 #include "syscall.h"
 
+#include "syscall/syscall_args.hpp"
+
 #include "system/mmu.h"
 #include "system/syscall.h"
 
@@ -13,16 +15,17 @@
 #include "builtin_text_io.hpp"
 
 #include "task/process/process.hpp"
+using namespace syscall;
 
 error_code sys_hello(const syscall_regs* regs)
 {
 
 	write_format("[pid %d]hello ! %lld %lld %lld %lld\n",
 		cur_proc->get_koid(),
-		get_nth_arg(regs, 0),
-		get_nth_arg(regs, 1),
-		get_nth_arg(regs, 2),
-		get_nth_arg(regs, 3));
+		args_get<0>(regs),
+		args_get<1>(regs),
+		args_get<2>(regs),
+		args_get<3>(regs));
 
 	return ERROR_SUCCESS;
 }

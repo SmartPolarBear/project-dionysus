@@ -1,4 +1,5 @@
 #include "syscall.h"
+#include "syscall/syscall_args.hpp"
 
 #include "system/mmu.h"
 #include "system/syscall.h"
@@ -16,7 +17,6 @@
 #include "task/process/process.hpp"
 
 using namespace syscall;
-
 
 size_t get_nth_arg(const syscall_regs* regs, size_t n)
 {
@@ -48,7 +48,8 @@ size_t get_syscall_number(const syscall_regs* regs)
 //to be called in syscall_entry.S
 extern "C" [[clang::optnone]] error_code syscall_body(const syscall_regs* regs)
 {
-	size_t syscall_no = get_syscall_number(regs);  // first parameter
+//	size_t syscall_no = get_syscall_number(regs);  // first parameter
+	size_t syscall_no = args_get<syscall::ARG_SYSCALL_NUM>(regs);
 
 	if (syscall_no > SYSCALL_COUNT)
 	{

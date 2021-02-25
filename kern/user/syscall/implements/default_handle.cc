@@ -12,11 +12,18 @@
 
 #include "builtin_text_io.hpp"
 
-error_code default_syscall(const syscall_regs *regs)
+error_code invalid_syscall(const syscall_regs*)
 {
-    size_t syscall_no = get_syscall_number(regs); // first parameter
+	KDEBUG_GENERALPANIC("syscall number 0 should never be called.");
 
-    kdebug::kdebug_warning("The syscall %lld isn't yet defined.", syscall_no);
+	return -ERROR_SHOULD_NOT_REACH_HERE;
+}
 
-    return ERROR_SUCCESS;
+error_code default_syscall(const syscall_regs* regs)
+{
+	size_t syscall_no = get_syscall_number(regs); // first parameter
+
+	kdebug::kdebug_warning("The syscall %lld isn't yet defined.", syscall_no);
+
+	return ERROR_SUCCESS;
 }

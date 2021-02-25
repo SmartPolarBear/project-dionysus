@@ -22,8 +22,11 @@ using namespace syscall;
 #include "syscall_handles.hpp"
 
 extern "C" syscall_entry syscall_table[SYSCALL_COUNT + 1] = {
-	[0 ... SYSCALL_COUNT] = default_syscall,
+	// default for all
+	[0] = invalid_syscall,
+	[1 ... SYSCALL_COUNT] = default_syscall,
 
+	// implemented
 	[SYS_hello] = sys_hello,
 	[SYS_exit] = sys_exit,
 	[SYS_put_str] = sys_put_str,

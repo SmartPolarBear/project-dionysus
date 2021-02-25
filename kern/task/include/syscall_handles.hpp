@@ -9,9 +9,15 @@
 
 #include "system/syscall.h"
 
+#ifdef DEF_SYSCALL_HANDLE
+#error "DEF_SYSCALL_HANDLE should only be defined once in this file."
+#endif
+
 #define DEF_SYSCALL_HANDLE(handle_name) error_code handle_name(const syscall_regs *regs)
 
+DEF_SYSCALL_HANDLE(invalid_syscall);
 DEF_SYSCALL_HANDLE(default_syscall);
+
 DEF_SYSCALL_HANDLE(sys_hello);
 DEF_SYSCALL_HANDLE(sys_put_str);
 DEF_SYSCALL_HANDLE(sys_put_char);
