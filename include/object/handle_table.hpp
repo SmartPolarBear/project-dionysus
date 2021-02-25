@@ -7,7 +7,6 @@
 
 #include "object/handle_entry.hpp"
 
-
 namespace object
 {
 
@@ -35,7 +34,11 @@ class handle_table final
 
 	static handle_table* get_global_handle_table();
 
-	handle_table() : local_{ true }
+	handle_table() : local_{ true }, parent_{ nullptr }
+	{
+	}
+
+	handle_table(dispatcher* parent) : local_{ true }, parent_{ parent }
 	{
 	}
 
@@ -71,7 +74,7 @@ class handle_table final
 	void clear();
 
  private:
-	explicit handle_table(global_handle_table_tag) : local_{ false }
+	explicit handle_table(global_handle_table_tag) : local_{ false }, parent_{ nullptr }
 	{
 	}
 
@@ -104,6 +107,8 @@ class handle_table final
 	}
 
 	bool local_{ true };
+
+	dispatcher* parent_{ nullptr };
 
 	kbl::intrusive_list<handle_entry,
 	                    lock::spinlock,

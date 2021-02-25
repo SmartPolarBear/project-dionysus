@@ -9,7 +9,7 @@ set(LIBCXX_INC_PATH ${LIBCXX_SRC_DIR}/include)
 set(AR /usr/bin/ar)
 set(CLANG /usr/bin/clang)
 set(CLANGXX /usr/bin/clang++)
-set(LDLLD /usr/bin/ld.lld)
+set(LDLLD /usr/bin/ld.lld13)
 set(RANLIB /usr/bin/ranlib)
 
 #libcxxabi

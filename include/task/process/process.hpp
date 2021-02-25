@@ -203,7 +203,7 @@ class process final
 
 	size_t flags;
 
-	object::handle_table handle_table_;
+	object::handle_table handle_table_{ this };
 
 	link_type job_link{ this };
 };

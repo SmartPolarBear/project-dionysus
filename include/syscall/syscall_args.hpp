@@ -60,10 +60,11 @@ static inline uint64_t do_get(const syscall_regs* regs)
 	}
 }
 
-template<int idx>
+template<int Idx>
+requires (!RegisterPassedArgument<Idx>)
 static inline uint64_t do_get(const syscall_regs* regs)
 {
-	syscall::args_get(regs, idx);
+	syscall::args_get(regs, Idx);
 }
 
 } // _internals
