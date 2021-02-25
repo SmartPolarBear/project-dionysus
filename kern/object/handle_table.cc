@@ -5,12 +5,12 @@
 using namespace object;
 using namespace lock;
 
-kbl::intrusive_list<handle_entry,
-                    lock::spinlock,
-                    handle_entry::node_trait,
-                    true> object::handle_table::global_handles_{};
+handle_table handle_table::global_handle_table_{ create_global_handle_table };
 
-lock::spinlock object::handle_table::global_lock_{ "ghandle" };
+handle_table* handle_table::get_global_handle_table()
+{
+	return &global_handle_table_;
+}
 
 template<std::convertible_to<dispatcher> T>
 error_code_with_result<std::shared_ptr<T>> handle_table::object_from_handle(const handle_entry& h)
@@ -83,22 +83,10 @@ handle_entry* handle_table::get_handle_entry_locked(handle_type h)
 {
 	auto[attr, idx] = PARSE_HANDLE(h);
 
-	if ((attr & HATTR_LOCAL_PROC) == 0)
-	{
-		if (idx >= global_handles_.size())return nullptr;
+	if ((attr & HATTR_GLOBAL) && local_)return nullptr;
 
-		auto link_ptr = *reinterpret_cast<decltype(global_handles_)::head_type*>(INDEX_TO_ADDR(idx));
-		return link_ptr.parent_;
-
-	}
-	else
-	{
-		if (idx >= handles_.size())return nullptr;
-		auto link_ptr = *reinterpret_cast<decltype(handles_)::head_type*>(INDEX_TO_ADDR(idx));
-		return link_ptr.parent_;
-	}
-
-	return nullptr;
+	auto link_ptr = *reinterpret_cast<decltype(handles_)::head_type*>(INDEX_TO_ADDR(idx));
+	return link_ptr.parent_;
 }
 
 bool handle_table::local_exist_locked(handle_entry* owner) TA_REQ(lock_)
@@ -116,7 +104,7 @@ void handle_table::clear()
 	for (auto& handle:handles_)
 	{
 		handle_entry_owner discard{ &handle };
-		// the destructor is called
+		// the deleter is called
 	}
 
 	handles_.clear();

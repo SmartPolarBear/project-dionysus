@@ -7,9 +7,15 @@
 using namespace object;
 using namespace lock;
 
-handle_entry_owner object::handle_entry::make(const dispatcher* obj, bool is_global)
+handle_entry_owner object::handle_entry::create(const dispatcher* obj)
 {
+	if (obj->adopted())
+	{
+		return nullptr;
+	}
+
 	obj->adopt();
+
 	kbl::allocate_checker ck;
 	auto ret = new(&ck) handle_entry(obj);
 
@@ -18,19 +24,18 @@ handle_entry_owner object::handle_entry::make(const dispatcher* obj, bool is_glo
 		return nullptr;
 	}
 
-	if (is_global)
-	{
-		lock_guard g{ handle_table::global_lock_ };
-		obj->add_ref();
-		handle_table::global_handles_.push_back(ret);
-	}
-
 	return handle_entry_owner(ret);
 }
 
 object::handle_entry_owner object::handle_entry::duplicate(handle_entry* h)
 {
 	h->canary_.assert();
+
+	if (!h->ptr_->adopted())
+	{
+		return nullptr;
+	}
+
 	h->ptr_->add_ref();
 
 	kbl::allocate_checker ck;
@@ -44,7 +49,7 @@ object::handle_entry_owner object::handle_entry::duplicate(handle_entry* h)
 	return handle_entry_owner(ret);
 }
 
-void object::handle_entry::release(handle_entry_owner h)
+void handle_entry::release(handle_entry* h)
 {
 	h->canary_.assert();
 	if (h->ptr_->release())
@@ -53,11 +58,14 @@ void object::handle_entry::release(handle_entry_owner h)
 	}
 }
 
+void object::handle_entry::release(handle_entry_owner h)
+{
+	h->canary_.assert();
+	return release(h.release());
+}
+
 void handle_entry_deleter::operator()(handle_entry* e)
 {
-	lock_guard g{ handle_table::global_lock_ };
-
-	handle_table::global_handles_.remove(e);
-
-	delete e;
+	e->canary_.assert();
+	handle_entry::release(e);
 }

@@ -35,8 +35,6 @@ class handle_entry final
 {
  public:
 
-
-
 	friend class handle_table;
 	friend struct handle_entry_deleter;
 
@@ -70,12 +68,14 @@ class handle_entry final
 		}
 	};
 
-	[[nodiscard]] static handle_entry_owner make(const dispatcher* obj, bool is_global);
+	[[nodiscard]] static handle_entry_owner create(const dispatcher* obj);
 
 	[[nodiscard]] static handle_entry_owner duplicate(handle_entry* h);
 
 	static void release(handle_entry_owner h);
  private:
+	static void release(handle_entry* h);
+
 	handle_entry(const dispatcher* obj)
 		: ptr_(const_cast<dispatcher*>(obj))
 	{
@@ -103,5 +103,6 @@ class handle_entry final
 	}
 
 };
+
 
 }

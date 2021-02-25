@@ -17,6 +17,12 @@ enum [[clang::flag_enum]] handle_type_attributes : uint16_t
 	HATTR_LOCAL_PROC = 0b10,
 };
 
+struct global_handle_table_tag
+{
+};
+
+static inline constexpr global_handle_table_tag create_global_handle_table;
+
 class handle_table final
 {
  public:
@@ -24,6 +30,18 @@ class handle_table final
 	friend struct handle_entry_deleter;
 
 	static constexpr size_t MAX_HANDLE_PER_TABLE = UINT32_MAX;
+
+	static handle_table* get_global_handle_table();
+
+	handle_table() : local_{ true }
+	{
+	}
+
+	~handle_table() = default;
+
+	handle_table(const handle_table&) = delete;
+	handle_table(handle_table&&) = delete;
+	handle_table& operator=(const handle_table&) = delete;
 
 	template<std::convertible_to<dispatcher> T>
 	error_code_with_result<std::shared_ptr<T>> object_from_handle(const handle_entry& h);
@@ -42,6 +60,10 @@ class handle_table final
 	void clear();
 
  private:
+	handle_table(global_handle_table_tag) : local_{ false }
+	{
+	}
+
 	bool local_exist_locked(handle_entry* owner) TA_REQ(lock_);
 
 	static constexpr uint64_t INDEX_OF_HANDLE(handle_type h)
@@ -70,6 +92,8 @@ class handle_table final
 		return ((uint64_t)attr << 48ull) | addr;
 	}
 
+	bool local_{ true };
+
 	kbl::intrusive_list<handle_entry,
 	                    lock::spinlock,
 	                    handle_entry::node_trait,
@@ -77,12 +101,7 @@ class handle_table final
 
 	mutable lock::spinlock lock_;
 
-	static kbl::intrusive_list<handle_entry,
-	                           lock::spinlock,
-	                           handle_entry::node_trait,
-	                           true> global_handles_;
-
-	static lock::spinlock global_lock_;
+	static handle_table global_handle_table_;
 };
 
 }

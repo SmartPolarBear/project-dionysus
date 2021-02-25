@@ -66,6 +66,11 @@ class ref_counted
 			std::memory_order_acquire));
 	}
 
+	[[nodiscard]] bool adopted() const
+	{
+		return ref_count_.load() != PRE_ADOPT_SENTINEL;
+	}
+
 	auto ref_count() const
 	{
 		return ref_count_.load(std::memory_order_relaxed);

@@ -1,7 +1,3 @@
-
-#include <task/process/process.hpp>
-#include <utility>
-
 #include "load_code.hpp"
 #include "syscall.h"
 
@@ -31,6 +27,9 @@
 
 #include "task/process/process.hpp"
 #include "task/job/job.hpp"
+#include "task/process/process.hpp"
+
+#include <utility>
 
 using namespace kbl;
 using namespace lock;
@@ -275,7 +274,11 @@ task::process::process(std::span<char> name,
 {
 	this->name_.set(name);
 
-	handle_table_.add_handle(object::handle_entry::make(this, true));
+	auto this_handle = object::handle_entry::create(this);
+	auto local_handle = object::handle_entry::duplicate(this_handle.get());
+
+	object::handle_table::get_global_handle_table()->add_handle(std::move(this_handle));
+	handle_table_.add_handle(std::move(local_handle));
 }
 
 process::~process()
