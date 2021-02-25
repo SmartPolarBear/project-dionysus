@@ -4,6 +4,7 @@
 
 #include "kbl/data/list.hpp"
 #include "kbl/lock/spinlock.h"
+#include "kbl/data/name.hpp"
 
 #include "object/ref_counted.hpp"
 #include "object/dispatcher.hpp"
@@ -34,6 +35,7 @@ using handle_entry_owner = ktl::unique_ptr<handle_entry, handle_entry_deleter>;
 class handle_entry final
 {
  public:
+	static constexpr size_t NAME_LEN = 16;
 
 	friend class handle_table;
 	friend struct handle_entry_deleter;
@@ -68,7 +70,18 @@ class handle_entry final
 		}
 	};
 
-	[[nodiscard]] static handle_entry_owner create(const dispatcher* obj);
+	handle_entry() = delete;
+
+	~handle_entry()
+	{
+		canary_.assert();
+		if (ptr_->release())
+		{
+			delete ptr_;
+		}
+	}
+
+	[[nodiscard]] static handle_entry_owner create(ktl::string_view name, const dispatcher* obj);
 
 	[[nodiscard]] static handle_entry_owner duplicate(handle_entry* h);
 
@@ -76,21 +89,39 @@ class handle_entry final
  private:
 	static void release(handle_entry* h);
 
-	handle_entry(const dispatcher* obj)
-		: ptr_(const_cast<dispatcher*>(obj))
+	handle_entry(const handle_entry& another)
+		: ptr_(another.ptr_)
 	{
+		name_.set(another.name_.data());
+
+		ptr_->add_ref();
 	}
 
-	kbl::canary<kbl::magic("HENT")> canary_;
+	handle_entry(handle_entry&& another) noexcept
+		: ptr_(std::exchange(another.ptr_, nullptr))
+	{
+		name_.set(another.name_.data());
+		another.name_.set("obj");
+	}
 
-	dispatcher* ptr_;
-	handle_table* parent_;
+	explicit handle_entry(const dispatcher* obj, ktl::string_view name = "obj")
+		: ptr_(const_cast<dispatcher*>(obj))
+	{
+		name_.set(name);
+	}
+
+	kbl::canary<kbl::magic("HENT")> canary_{};
+
+	dispatcher* ptr_{ nullptr };
+	handle_table* parent_{ nullptr };
+
+	kbl::name<NAME_LEN> name_{};
 
 	[[maybe_unused]] rights_type rights_{ 0 };
 
 	koid_type owner_process_id{ -1 };
 
-	link_type link_;
+	link_type link_{ this };
 
 	bool operator==(const handle_entry& another) const
 	{
@@ -103,6 +134,5 @@ class handle_entry final
 	}
 
 };
-
 
 }

@@ -38,7 +38,12 @@ handle_type handle_table::add_handle_locked(handle_entry_owner owner)
 	owner->owner_process_id = cur_proc->get_koid();
 	owner->parent_ = this;
 
-	return MAKE_HANDLE(HATTR_LOCAL_PROC, (uintptr_t)&owner->link_);
+	uint16_t attr = 0;
+
+	if (local_)attr |= HATTR_LOCAL_PROC;
+	else attr |= HATTR_GLOBAL;
+
+	return MAKE_HANDLE(attr, (uintptr_t)&owner->link_);
 }
 
 handle_entry_owner handle_table::remove_handle(handle_type h)
@@ -108,6 +113,44 @@ void handle_table::clear()
 	}
 
 	handles_.clear();
+}
+
+handle_entry* handle_table::query_handle_by_name(ktl::string_view name)
+{
+	lock_guard g{ lock_ };
+	query_handle_by_name_locked(name);
+}
+
+handle_entry* handle_table::query_handle_by_name_locked(ktl::string_view name) TA_REQ(lock_)
+{
+	for (auto& handle:handles_)
+	{
+		if (name.compare(handle.name_.data()) == 0)
+		{
+			return &handle;
+		}
+	}
+	return nullptr;
+}
+
+template<typename T>
+handle_entry* handle_table::query_handle(T&& pred)
+{
+	lock_guard g{ lock_ };
+	query_handle_locked(std::forward(pred));
+}
+
+template<typename T>
+handle_entry* handle_table::query_handle_locked(T&& pred) TA_REQ(lock_)
+{
+	for (auto& handle:handles_)
+	{
+		if (pred(handle))
+		{
+			return &handle;
+		}
+	}
+	return nullptr;
 }
 
 

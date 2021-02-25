@@ -7,7 +7,7 @@
 using namespace object;
 using namespace lock;
 
-handle_entry_owner object::handle_entry::create(const dispatcher* obj)
+handle_entry_owner object::handle_entry::create(ktl::string_view name, const dispatcher* obj)
 {
 	if (obj->adopted())
 	{
@@ -17,7 +17,7 @@ handle_entry_owner object::handle_entry::create(const dispatcher* obj)
 	obj->adopt();
 
 	kbl::allocate_checker ck;
-	auto ret = new(&ck) handle_entry(obj);
+	auto ret = new(&ck) handle_entry(obj, name);
 
 	if (!ck.check())
 	{
@@ -36,10 +36,8 @@ object::handle_entry_owner object::handle_entry::duplicate(handle_entry* h)
 		return nullptr;
 	}
 
-	h->ptr_->add_ref();
-
 	kbl::allocate_checker ck;
-	auto ret = new(&ck) handle_entry(*h);
+	auto ret = new(&ck) handle_entry(*h); // use copy constructor
 
 	if (!ck.check())
 	{
@@ -51,11 +49,7 @@ object::handle_entry_owner object::handle_entry::duplicate(handle_entry* h)
 
 void handle_entry::release(handle_entry* h)
 {
-	h->canary_.assert();
-	if (h->ptr_->release())
-	{
-		delete h->ptr_;
-	}
+	delete h;
 }
 
 void object::handle_entry::release(handle_entry_owner h)

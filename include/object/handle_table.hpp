@@ -1,10 +1,12 @@
 #pragma once
 
 #include "kbl/data/list.hpp"
-
 #include "kbl/lock/spinlock.h"
 
+#include "ktl/concepts.hpp"
+
 #include "object/handle_entry.hpp"
+
 
 namespace object
 {
@@ -57,10 +59,19 @@ class handle_table final
 
 	handle_entry* get_handle_entry_locked(handle_type h) TA_REQ(lock_);
 
+	handle_entry* query_handle_by_name(ktl::string_view name);
+	handle_entry* query_handle_by_name_locked(ktl::string_view name)  TA_REQ(lock_);
+
+	template<typename T>
+	handle_entry* query_handle(T&& pred);
+
+	template<typename T>
+	handle_entry* query_handle_locked(T&& pred)  TA_REQ(lock_);
+
 	void clear();
 
  private:
-	handle_table(global_handle_table_tag) : local_{ false }
+	explicit handle_table(global_handle_table_tag) : local_{ false }
 	{
 	}
 
@@ -86,7 +97,7 @@ class handle_table final
 		return std::make_tuple(ATTR_OF_HANDLE(h), INDEX_OF_HANDLE(h));
 	}
 
-	static constexpr handle_type MAKE_HANDLE(handle_type_attributes attr, uintptr_t addr)
+	static constexpr handle_type MAKE_HANDLE(uint16_t attr, uintptr_t addr)
 	{
 		addr &= 0x0000'FFFF'FFFF'FFFFull;
 		return ((uint64_t)attr << 48ull) | addr;
