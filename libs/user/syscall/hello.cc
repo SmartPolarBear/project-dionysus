@@ -8,5 +8,5 @@
 
 extern "C" size_t hello(size_t a, size_t b, size_t c, size_t d)
 {
-    return trigger_syscall(syscall::SYS_hello, 4, a, b, c, d);
+    return make_syscall(syscall::SYS_hello, a, b, c, d);
 }

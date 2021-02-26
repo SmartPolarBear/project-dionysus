@@ -6,7 +6,10 @@ uint8_t buf[4_MB] __attribute__((aligned(2_MB)));
 #pragma ide diagnostic ignored "EndlessLoop"
 int main()
 {
-	while (true)put_str("iPCTEST\n");;
+//	while (true)put_str("iPCTEST\n");;
+//	put_str("iPCTEST\n");;
+	while (true)hello(9, 8, 7, 6);
+
 	while (true);
 	while (true)
 	{
