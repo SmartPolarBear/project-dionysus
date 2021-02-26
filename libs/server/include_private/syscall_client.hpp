@@ -7,85 +7,106 @@
 #include "system/syscall.h"
 #include "system/error.hpp"
 
+#include <tuple>
+
+#ifdef _SYSCALL_ASM_CLOBBERS
+#error "_SYSCALL_ASM_CLOBBERS should not be defined"
+#endif
+
+#define _SYSCALL_ASM_CLOBBERS "rsi","rdi","rdx","r10","r9","r8"
+
+namespace _internals
+{
+template<typename T, std::size_t Size>
+struct parameter_pack
+{
+	T data[Size]{};
+
+	template<typename ...Args>
+	constexpr explicit parameter_pack(const Args& ... args) : data{ ((T)(args))... }
+	{
+	}
+};
+}
 
 // syscall without out parameters
 // precondition:
 //  1) 0<=syscall_number<SYSCALL_COUNT
 //  2) 0<=para_count<7 and all parameter is uint64_t or those with the same size.
-__attribute__((always_inline)) static inline error_code trigger_syscall(uint64_t syscall_number, size_t para_count, ...)
+
+template<typename ... TArgs>
+__attribute__((always_inline))  static inline error_code make_syscall(uint64_t syscall_number, TArgs ...args)
 {
-    uint64_t args[6] = {0};
+	constexpr size_t ARG_COUNT = sizeof...(TArgs);
 
-    if (syscall_number >= syscall::SYSCALL_COUNT ||
-        para_count > syscall::SYSCALL_PARAMETER_MAX)
-    {
-        return -ERROR_INVALID;
-    }
+	if (syscall_number >= syscall::SYSCALL_COUNT ||
+		ARG_COUNT > syscall::SYSCALL_PARAMETER_MAX)
+	{
+		return -ERROR_INVALID;
+	}
 
-    // copy out parameters in advance to avoid rewriting %rdx
-    va_list ap;
-    va_start(ap, para_count);
-    for (size_t i = 0; i < para_count; i++)
-    {
-        args[i] = va_arg(ap, uint64_t);
-    }
-    va_end(ap);
+	_internals::parameter_pack<uint64_t, 6> pack{ args... };
 
-    // set parameter-passing registers
-    for (size_t i = 0; i < para_count; i++)
-    {
-        switch (i)
-        {
-            case 5:
-            {
-                asm volatile("mov %0, %%r9\n\t"
-                :
-                : "r" (args[5])
-                : "%r9");
-                break;
-            }
-            case 4:
-                asm volatile("mov %0, %%r8\n\t"
-                :
-                : "a" (args[4])
-                : "%r8");
-                break;
-            case 3:
-                asm volatile("mov %0, %%r10\n\t"
-                :
-                : "a" (args[3])
-                : "%r10");
-                break;
-            case 2:
-                asm volatile("mov %0, %%rdx\n\t"
-                :
-                : "a" (args[2])
-                : "%rdx");
-                break;
-            case 1:
-                asm volatile("mov %0, %%rsi\n\t"
-                :
-                : "a" (args[1])
-                : "%rsi");
-                break;
-            case 0:
-                asm volatile("mov %0, %%rdi\n\t"
-                :
-                : "a" (args[0])
-                : "%rdi");
-                break;
-            default:
-                break;
-        }
-    }
+	error_code ret = 0;
 
+	switch (ARG_COUNT)
+	{
+	default:
+		return -ERROR_INVALID;
+		break;
 
-    error_code ret = 0;
+	case 6:
+		asm volatile("mov %[arg5], %%r9\n\t"
+		:
+		:  [arg5] "r"(pack.data[5])
+		: _SYSCALL_ASM_CLOBBERS, "cc", "memory");
+		[[fallthrough]];
+	case 5:
+		asm volatile("mov %[arg4], %%r8\n\t"
+		:
+		: [arg4] "r"(pack.data[4])
+		: _SYSCALL_ASM_CLOBBERS, "cc", "memory");
+		[[fallthrough]];
+	case 4:
+		asm volatile("mov %[arg3], %%r10\n\t"
+		:
+		: [arg3] "r"(pack.data[3])
+		:  _SYSCALL_ASM_CLOBBERS, "cc", "memory");
+		[[fallthrough]];
 
-    // rcx and r11 are used by syscall instruction and therefore should be protected
-    asm volatile ( "syscall" : "=a" (ret)
-    : "a" (syscall_number)
-    : "rcx", "r11", "rbx", "memory" );
+	case 3:
+		asm volatile("mov %[arg2], %%rdx\n\t"
+		:
+		: [arg2] "r"(pack.data[2])
+		:  _SYSCALL_ASM_CLOBBERS, "cc", "memory");
+		[[fallthrough]];
 
-    return ret;
+	case 2:
+		asm volatile("mov %[arg1], %%rsi\n\t"
+		:
+		: [arg1]"r"(pack.data[1])
+		: _SYSCALL_ASM_CLOBBERS, "cc", "memory");
+		[[fallthrough]];
+
+	case 1:
+		asm volatile("mov %[arg0], %%rdi\n\t"
+		:
+		: [arg0] "r"(pack.data[0])
+		: _SYSCALL_ASM_CLOBBERS, "cc", "memory");
+		[[fallthrough]];
+
+	case 0:
+		break;
+
+	}
+
+	// rcx and r11 are used by syscall instruction and therefore should be protected
+	asm volatile ( "syscall"
+	: "=a" (ret)
+	: "a" (syscall_number)
+	: _SYSCALL_ASM_CLOBBERS, "rcx", "r11", "rbx", "cc", "memory"  );
+
+	return ret;
 }
+
+#undef _SYSCALL_ASM_CLOBBERS

@@ -8,6 +8,7 @@
 #include "system/error.hpp"
 
 #include <tuple>
+#include <concepts>
 
 #ifdef _SYSCALL_ASM_CLOBBERS
 #error "_SYSCALL_ASM_CLOBBERS should not be defined"
@@ -17,6 +18,9 @@
 
 namespace _internals
 {
+/// \brief convert the parameter pack to a array of given type T and size Size at compile time
+/// \tparam T type, all elements of parameter pack should be able to be cast to T
+/// \tparam Size size of the parameter_pack
 template<typename T, std::size_t Size>
 struct parameter_pack
 {
@@ -27,17 +31,24 @@ struct parameter_pack
 	{
 	}
 };
+
 }
 
-// syscall without out parameters
-// precondition:
-//  1) 0<=syscall_number<SYSCALL_COUNT
-//  2) 0<=para_count<7 and all parameter is uint64_t or those with the same size.
-
-template<typename ... TArgs>
-__attribute__((always_inline))  static inline error_code make_syscall(uint64_t syscall_number, TArgs ...args)
+template<typename T>
+concept syscall_argument=
+requires(T t)
 {
-	constexpr size_t ARG_COUNT = sizeof...(TArgs);
+	{ ((uint64_t)t) }->std::convertible_to<uint64_t>;
+};
+
+/// \brief syscall without out parameters
+/// \param syscall_number the syscall number, satisfying 0<=syscall_number<SYSCALL_COUNT or ERROR_INVALID is returned
+/// \param args arguments for syscall. 0<=[the count of parameter]<7 and all parameter can be cast to uint64_t
+/// \return the error_code of syscall
+__attribute__((always_inline))  static inline error_code make_syscall(uint64_t syscall_number,
+	syscall_argument auto ...args)
+{
+	constexpr size_t ARG_COUNT = sizeof...(args);
 
 	if (syscall_number >= syscall::SYSCALL_COUNT ||
 		ARG_COUNT > syscall::SYSCALL_PARAMETER_MAX)
@@ -45,7 +56,7 @@ __attribute__((always_inline))  static inline error_code make_syscall(uint64_t s
 		return -ERROR_INVALID;
 	}
 
-	_internals::parameter_pack<uint64_t, 6> pack{ args... };
+	_internals::parameter_pack<uint64_t, ARG_COUNT> pack{ args... };
 
 	error_code ret = 0;
 
