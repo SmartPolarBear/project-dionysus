@@ -8,7 +8,7 @@
 
 #include "internals/elf64_spec.hpp"
 
-#include "../../libs/basic_io/include/builtin_text_io.hpp"
+#include "../../../libs/basic_io/include/builtin_text_io.hpp"
 #include "kbl/data/pod_list.h"
 
 #include "task/process/process.hpp"
