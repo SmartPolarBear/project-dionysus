@@ -43,6 +43,7 @@ extern std::shared_ptr<task::job> root_job;
 
 static inline void run(const char* name)
 {
+	auto fuck = object::koid_allocator::instance().fetch();
 
 	uint8_t* bin = nullptr;
 	size_t size = 0;

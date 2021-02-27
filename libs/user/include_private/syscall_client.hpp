@@ -31,7 +31,6 @@ struct parameter_pack
 	{
 	}
 };
-
 }
 
 template<typename T>

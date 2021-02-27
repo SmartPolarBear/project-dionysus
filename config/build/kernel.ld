@@ -59,6 +59,7 @@ SECTIONS
 
 	.bss : {
 		*(.bss)
+		*(.gnu.linkonce.b.*)
 		*(COMMON)
 	}
 
