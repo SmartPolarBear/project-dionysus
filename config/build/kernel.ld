@@ -1,77 +1,91 @@
-/* Simple linker script for the JOS kernel.
-   See the GNU ld 'info' manual ("info ld") to learn the syntax. */
-
-/* OUTPUT_FORMAT("elf32-i386", "elf32-i386", "elf32-i386") */
 OUTPUT_FORMAT("elf64-x86-64", "elf64-x86-64", "elf64-x86-64")
 OUTPUT_ARCH(i386:x86-64)
+
 ENTRY(_start)
 
 mboot_load_addr = 0x00100000;
 
 SECTIONS
 {
-	/* Link the kernel at this address: "." means the curproc address */
-        /* Must be equal to KERNLINK */
+	/* Link the kernel at this address: "." means the current address */
+    /* Must be equal to KERNLINK */
 	. = 0xFFFFFFFF80100000; 
 
 	PROVIDE(begin = .);
 
 	.text : AT(mboot_load_addr) {
+		PROVIDE(text_start = .);
 		*(.mboot)
 		*(.text .rela.text .stub .text.* .gnu.linkonce.t.*)
+	    PROVIDE(text_end = .);
 	}
 
-	PROVIDE(etext = .);	/* Define the 'etext' symbol to this value */
+    /* CONSTANT(MAXPAGESIZE) equals what is given to linker by -z max-page-size=0x1000 */
+	. = ALIGN(CONSTANT(MAXPAGESIZE));
+
+    .note.gnu.build-id : {
+        PROVIDE_HIDDEN(__build_id_note_start = .);
+        *(.note.gnu.build-id)
+        PROVIDE_HIDDEN(__build_id_note_end = .);
+    } :rodata :note
 
 	.rodata : {
 		*(.rodata .rodata.* .gnu.linkonce.r.*)
-	}
+	} :rodata
 
-	/* Adjust the address for the data segment to the next page */
-	. = ALIGN(0x1000);
+	. = ALIGN(CONSTANT(MAXPAGESIZE));
 
-	/* Conventionally, Unix linkers provide pseudo-symbols
-	 * etext, edata, and end, at the end of the text, data, and bss.
-	 * For the kernel mapping, we need the address at the beginning
-	 * of the data section, but that's not one of the conventional
-	 * symbols, because the convention started before there was a
-	 * read-only rodata section between text and data. */
-	PROVIDE(data = .);
+	.init_array : {
+        PROVIDE(start_ctors = .);
+        KEEP(*(SORT_BY_INIT_PRIORITY(.init_array.*)
+               SORT_BY_INIT_PRIORITY(.ctors.*)))
+        KEEP(*(.init_array .ctors))
+        PROVIDE(end_ctors = .);
+
+        PROVIDE(start_dtors = .);
+        *(.dtor*)
+        PROVIDE(end_dtors = .);
+
+        ASSERT(ALIGNOF(.init_array) == 8 || SIZEOF(.init_array) == 0,
+               ".init_array overalignment -> maybe padding gaps");
+    }
+
+	. = ALIGN(CONSTANT(MAXPAGESIZE));
 
 	/* The data segment */
 	.data : {
-		start_ctors = .;
-		KEEP(*( .init_array ));
-		KEEP(*(SORT_BY_INIT_PRIORITY( .init_array.* )));
-		*(.ctor*)
-		end_ctors = .;
-		
-		start_dtors = .;
-		*(.dtor*)
-		end_dtors = .;
-
+		PROVIDE(data_start = .);
 		*(.data)
+		PROVIDE(data_end = .);
 	}
 
-	. = ALIGN(0x1000);
-
-	PROVIDE(edata = .);
+	. = ALIGN(CONSTANT(MAXPAGESIZE));
 
 	.bss : {
+		PROVIDE(bss_start = .);
 		*(.bss)
 		*(.gnu.linkonce.b.*)
 		*(COMMON)
+		PROVIDE(bss_end = .);
 	}
 
-	. = ALIGN(0x1000);
+	. = ALIGN(CONSTANT(MAXPAGESIZE));
 
 	PROVIDE(end = .);
 
 	/DISCARD/ : {
-		*(.eh_frame .rela.eh_frame .note.GNU-stack .note.gnu.build-id)
+		*(.eh_frame .rela.eh_frame .note.GNU-stack)
 	}
 }
 
-mboot_load_end = mboot_load_addr + (edata - begin);
+PHDRS
+{
+    code PT_LOAD FLAGS(5); /* PF_R|PF_X */
+    rodata PT_LOAD FLAGS(4); /* PF_R */
+    data PT_LOAD FLAGS(6); /* PF_R|PF_W */
+    note PT_NOTE FLAGS(4); /* PF_R */
+}
+
+mboot_load_end = mboot_load_addr + (data_end - begin);
 mboot_bss_end = mboot_load_addr + (end - begin);
 mboot_entry_addr = mboot_load_addr + (mboot_entry - begin);

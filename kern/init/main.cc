@@ -22,6 +22,7 @@
 #include "system/pmm.h"
 #include "system/scheduler.h"
 #include "system/syscall.h"
+#include "system/kernel_layout.hpp"
 #include "system/vmm.h"
 
 #include "task/scheduler/scheduler.hpp"

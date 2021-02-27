@@ -1,17 +1,11 @@
 // C++ ctors and dtors
 // usually called from boot.S
 
+#include "system/kernel_layout.hpp"
+
 extern "C"
 {
 
-using ctor_type = void (*)();
-using dtor_type = void (*)();
-
-extern ctor_type start_ctors;
-extern ctor_type end_ctors;
-
-extern dtor_type start_dtors;
-extern dtor_type end_dtors;
 
 // IMPORTANT: initialization of libc components such as printf depends on this.
 void call_ctors(void)
