@@ -45,6 +45,20 @@ void task_state::wake_joiners(error_code status) TA_REQ(global_thread_lock)
 	exit_code_wait_queue_.wake_all(false, status);
 }
 
+void task::ipc_state::copy_mrs_to(thread* another, size_t st, size_t cnt)
+{
+	lock_guard g{ another->lock };
+
+	register_t dummy = 0xdeadbeaf;
+	asm volatile (
+	"repnz movsq (%%rsi), (%%rdi)\n"
+	: /* output */
+	"=S"(dummy), "=D"(dummy), "=c"(dummy)
+	: /* input */
+	"c"(cnt), "S"(&mr_[st]),
+	"D"(&another->ipc_state_.mr_[st]));
+}
+
 ktl::unique_ptr<kernel_stack> task::kernel_stack::create(thread* parent,
 	task::thread_routine_type start_routine,
 	void* arg,

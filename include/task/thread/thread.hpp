@@ -158,6 +158,49 @@ class task_state
 	wait_queue exit_code_wait_queue_{};
 };
 
+class ipc_state
+{
+ public:
+	static constexpr size_t MR_SIZE = 64;
+	static constexpr size_t BR_SIZE = 33;
+
+	friend class wait_queue;
+	friend class thread;
+
+	using register_type = uint64_t;
+
+	ipc_state() = default;
+	ipc_state(const ipc_state&) = delete;
+	ipc_state& operator=(const ipc_state&) = delete;
+
+	register_type get_mr(size_t index)
+	{
+		return mr_[index];
+	}
+
+	void set_mr(size_t index, register_type value)
+	{
+		mr_[index] = value;
+	}
+
+	register_type get_br(size_t index)
+	{
+		return br_[index];
+	}
+
+	void set_br(size_t index, register_type value)
+	{
+		br_[index] = value;
+	}
+
+	void copy_mrs_to(thread* another, size_t st, size_t cnt);
+ private:
+	/// \brief message registers
+	register_type mr_[MR_SIZE]{ 0 };
+	/// \brief buffer registers
+	register_type br_[BR_SIZE]{ 0 };
+};
+
 class thread final
 	: public object::solo_dispatcher<thread, 0>
 {
@@ -172,6 +215,7 @@ class thread final
 	friend class user_stack;
 	friend class wait_queue;
 	friend class wait_queue_state;
+	friend class ipc_state;
 
 	friend struct wait_queue_list_node_trait;
 
@@ -308,6 +352,8 @@ class thread final
 	task_state task_state_{};
 
 	wait_queue_state wait_queue_state_{ this };
+
+	ipc_state ipc_state_{};
 
 	ktl::unique_ptr<kernel_stack> kstack_{ nullptr };
 
