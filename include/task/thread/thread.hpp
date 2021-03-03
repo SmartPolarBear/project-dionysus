@@ -26,6 +26,8 @@
 #include "task/thread/cpu_affinity.hpp"
 #include "task/thread/user_stack.hpp"
 
+#include "task/process/ipc/message.hpp"
+
 #include <compare>
 
 namespace task
@@ -167,38 +169,44 @@ class ipc_state
 	friend class wait_queue;
 	friend class thread;
 
-	using register_type = uint64_t;
-
 	ipc_state() = default;
 	ipc_state(const ipc_state&) = delete;
 	ipc_state& operator=(const ipc_state&) = delete;
 
-	register_type get_mr(size_t index)
+	ipc::message_register_type get_mr(size_t index)
 	{
 		return mr_[index];
 	}
 
-	void set_mr(size_t index, register_type value)
+	void set_mr(size_t index, ipc::message_register_type value)
 	{
 		mr_[index] = value;
 	}
 
-	register_type get_br(size_t index)
+	ipc::message_register_type get_br(size_t index)
 	{
 		return br_[index];
 	}
 
-	void set_br(size_t index, register_type value)
+	void set_br(size_t index, ipc::message_register_type value)
 	{
 		br_[index] = value;
 	}
 
 	void copy_mrs_to(thread* another, size_t st, size_t cnt);
+
+	/// \brief set the message tag to mrs
+	/// \param tag
+	void set_message_tag(const ipc::message_tag* tag) noexcept;
+
+	/// \brief set acceptor to brs
+	/// \param acc
+	void set_acceptor(const ipc::message_acceptor* acc) noexcept;
  private:
 	/// \brief message registers
-	register_type mr_[MR_SIZE]{ 0 };
+	ipc::message_register_type mr_[MR_SIZE]{ 0 };
 	/// \brief buffer registers
-	register_type br_[BR_SIZE]{ 0 };
+	ipc::buffer_register_type br_[BR_SIZE]{ 0 };
 };
 
 class thread final
