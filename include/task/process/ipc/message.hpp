@@ -16,6 +16,11 @@ static inline constexpr size_t REGS_PER_MESSAGE = 64;
 namespace _internals
 {
 template<typename T>
+concept UntypedMessageItem=sizeof(T) <= sizeof(message_register_type) &&
+	ktl::convertible_to<T, message_register_type> &&
+	ktl::is_trivially_copy_assignable_v<T>;
+
+template<typename T>
 concept SingleMessageItem= (sizeof(T) == sizeof(message_register_type) ||
 	sizeof(T) == sizeof(buffer_register_type)) &&
 	ktl::is_standard_layout_v<T> &&
@@ -37,7 +42,8 @@ concept DoubleMessageItem=(sizeof(T) == sizeof(message_register_type[2]) ||
 	ktl::is_standard_layout_v<T>;
 
 template<typename T>
-concept Message=sizeof(T) == sizeof(message_register_type[REGS_PER_MESSAGE]) && ktl::is_standard_layout_v<T>;
+concept Message=sizeof(T) == sizeof(message_register_type[REGS_PER_MESSAGE]) &&
+	ktl::is_standard_layout_v<T>;
 
 }
 
@@ -254,6 +260,59 @@ static_assert(_internals::DoubleMessageItem<grant_item>);
 class message final
 {
  public:
+	void put(_internals::UntypedMessageItem auto& item, size_t index)
+	{
+
+	}
+
+	void put(_internals::SingleMessageItem auto& item, size_t index)
+	{
+
+	}
+
+	void put(_internals::DoubleMessageItem auto& item, size_t index)
+	{
+
+	}
+
+	void append(_internals::UntypedMessageItem auto& item)
+	{
+
+	}
+
+	void append(_internals::SingleMessageItem auto& item)
+	{
+
+	}
+
+	void append(_internals::DoubleMessageItem auto& item)
+	{
+
+	}
+
+	template<_internals::UntypedMessageItem T>
+	T at(size_t index)
+	{
+
+	}
+
+	template<_internals::SingleMessageItem T>
+	T at(size_t index)
+	{
+
+	}
+
+	template<_internals::DoubleMessageItem T>
+	T at(size_t index)
+	{
+
+	}
+
+	void clear()
+	{
+
+	}
+
  private:
 	union
 	{
@@ -262,8 +321,8 @@ class message final
 		message_register_type regs_[REGS_PER_MESSAGE];
 
 		message_tag tag_;
-	};
-};
+	}__attribute__((packed));
+}__attribute__((packed));
 
 static_assert(_internals::Message<message>);
 
