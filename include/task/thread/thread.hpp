@@ -26,7 +26,7 @@
 #include "task/thread/cpu_affinity.hpp"
 #include "task/thread/user_stack.hpp"
 
-#include "task/process/ipc/message.hpp"
+#include "task/ipc/message.hpp"
 
 #include <compare>
 

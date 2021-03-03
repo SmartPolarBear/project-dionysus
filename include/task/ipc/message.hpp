@@ -1,6 +1,6 @@
 #pragma once
 
-#include <compare>
+#include "../../../build/external/third_party_root/include/c++/v1/compare"
 
 namespace task::ipc
 {

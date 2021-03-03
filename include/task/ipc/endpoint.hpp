@@ -1,11 +1,11 @@
 #pragma once
-#include "object/kernel_object.hpp"
+#include "../../object/kernel_object.hpp"
 
-#include "kbl/data/name.hpp"
-#include "kbl/lock/spinlock.h"
+#include "../../../kern/libs/kbl/include/kbl/data/name.hpp"
+#include "../../../kern/libs/kbl/include/kbl/lock/spinlock.h"
 
-#include "task/thread/wait_queue.hpp"
-#include "task/process/ipc/message.hpp"
+#include "../thread/wait_queue.hpp"
+#include "message.hpp"
 
 
 namespace task::ipc
