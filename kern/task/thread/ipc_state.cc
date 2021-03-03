@@ -40,9 +40,11 @@ void task::ipc_state::copy_mrs_to(thread* another, size_t st, size_t cnt)
 void task::ipc_state::set_message_tag(const ipc::message_tag* tag) noexcept
 {
 	mr_[0] = tag->raw();
+	mr_count_ = 1;
 }
 
 void task::ipc_state::set_acceptor(const ipc::message_acceptor* acc) noexcept
 {
 	br_[0] = acc->raw();
+	br_count_ = 1;
 }

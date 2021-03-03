@@ -11,10 +11,13 @@ class endpoint;
 using message_register_type = uint64_t;
 using buffer_register_type = uint64_t;
 
+static inline constexpr size_t REGS_PER_MESSAGE = 64;
+
 namespace _internals
 {
 template<typename T>
-concept SingleMessageItem= (sizeof(T) == sizeof(uint64_t)) &&
+concept SingleMessageItem= (sizeof(T) == sizeof(message_register_type) ||
+	sizeof(T) == sizeof(buffer_register_type)) &&
 	ktl::is_standard_layout_v<T> &&
 	(
 		requires(T t)
@@ -28,8 +31,17 @@ concept SingleMessageItem= (sizeof(T) == sizeof(uint64_t)) &&
 				}
 	);
 
+template<typename T>
+concept DoubleMessageItem=(sizeof(T) == sizeof(message_register_type[2]) ||
+	sizeof(T) == sizeof(buffer_register_type[2])) &&
+	ktl::is_standard_layout_v<T>;
+
+template<typename T>
+concept Message=sizeof(T) == sizeof(message_register_type[REGS_PER_MESSAGE]) && ktl::is_standard_layout_v<T>;
+
 }
 
+/// \brief A message tag describe the message items to be sent
 class message_tag final
 {
  public:
@@ -119,6 +131,7 @@ class message_tag final
 
 static_assert(_internals::SingleMessageItem<message_tag>);
 
+/// \brief A message acceptor constraint how to receive the messages
 class message_acceptor final
 {
  public:
@@ -129,6 +142,27 @@ class message_acceptor final
 		NONE = 0,
 		COMPLETE = UINT64_MAX
 	};
+
+	[[nodiscard]] message_acceptor() : raw_(0)
+	{
+	}
+
+	~message_acceptor() = default;
+
+	message_acceptor(message_acceptor&& another) : raw_(std::exchange(another.raw_, 0))
+	{
+	}
+
+	message_acceptor(const message_acceptor& another) : raw_(another.raw_)
+	{
+	}
+
+	message_acceptor& operator=(const message_acceptor& another)
+	{
+		if (this == &another)return *this;
+		raw_ = another.raw_;
+		return *this;
+	}
 
 	[[nodiscard]] bool allow_string() const
 	{
@@ -166,9 +200,71 @@ class message_acceptor final
 
 static_assert(_internals::SingleMessageItem<message_acceptor>);
 
+enum class message_item_types : uint8_t
+{
+	STRING, MAP, GRANT
+};
+
+/// \brief string item is a block of memory less than 4MB
+class string_item final
+{
+ public:
+	static constexpr size_t STRING_ITEM_STR_LEN_BITS = sizeof(message_register_type) * 8 - 10;
+
+	[[nodiscard]] message_item_types type() const
+	{
+		return (message_item_types)type_;
+	}
+ private:
+	union
+	{
+		struct
+		{
+			uint64_t type_: 4;
+			uint64_t res0_: 6;
+			uint64_t string_len_: STRING_ITEM_STR_LEN_BITS;
+			uint64_t string_ptr;
+		}__attribute__((packed));
+		uint64_t raws_[2];
+	};
+}__attribute__((packed));
+
+static_assert(_internals::DoubleMessageItem<string_item>);
+
+/// \brief map item share the page with threads
+class map_item final
+{
+ public:
+ private:
+	[[maybe_unused]]uint64_t plchdl[2];
+}__attribute__((packed));
+
+static_assert(_internals::DoubleMessageItem<map_item>);
+
+/// \brief grant item map the page with receiver and unmap for sender
+class grant_item final
+{
+ public:
+ private:
+	[[maybe_unused]]uint64_t plchdl[2];
+}__attribute__((packed));
+
+static_assert(_internals::DoubleMessageItem<grant_item>);
+
 class message final
 {
+ public:
+ private:
+	union
+	{
+		uint64_t raws_[REGS_PER_MESSAGE];
 
-}__attribute__((packed));
+		message_register_type regs_[REGS_PER_MESSAGE];
+
+		message_tag tag_;
+	};
+};
+
+static_assert(_internals::Message<message>);
 
 }

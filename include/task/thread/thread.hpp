@@ -195,18 +195,25 @@ class ipc_state
 
 	void copy_mrs_to(thread* another, size_t st, size_t cnt);
 
-	/// \brief set the message tag to mrs
+	/// \brief set the message tag to mrs. will reset mr_count_, which influence exist items
 	/// \param tag
 	void set_message_tag(const ipc::message_tag* tag) noexcept;
 
-	/// \brief set acceptor to brs
+	/// \brief set acceptor to brs. will reset mr_count_, which influence exist items
 	/// \param acc
 	void set_acceptor(const ipc::message_acceptor* acc) noexcept;
+
+
  private:
 	/// \brief message registers
 	ipc::message_register_type mr_[MR_SIZE]{ 0 };
+
+	size_t mr_count_{ 0 };
+
 	/// \brief buffer registers
 	ipc::buffer_register_type br_[BR_SIZE]{ 0 };
+
+	size_t br_count_{ 0 };
 };
 
 class thread final
