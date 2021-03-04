@@ -32,6 +32,9 @@ set(QEMU_BIN_EXE ${QEMU_BIN}.exe)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -gdwarf-2")
 
+# include
+add_subdirectory(include)
+
 # kernel
 add_subdirectory(kern)
 
