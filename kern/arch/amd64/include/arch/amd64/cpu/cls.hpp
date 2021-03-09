@@ -5,6 +5,8 @@
 
 static_assert(sizeof(uintptr_t) == 0x08);
 
+
+
 enum CLS_ADDRESS : uintptr_t
 {
 	CLS_CPU_STRUCT_PTR = 0,

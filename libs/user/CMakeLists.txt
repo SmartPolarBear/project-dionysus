@@ -30,10 +30,14 @@ target_compile_options(user BEFORE
         PRIVATE -mcmodel=large
         PRIVATE -mno-red-zone
         PRIVATE -nostdlibinc
-        PRIVATE -D__ELF__
-        PRIVATE -D_LDBL_EQ_DBL
-        PRIVATE -D_GNU_SOURCE
-        PRIVATE -D_POSIX_TIMERS)
+        )
+
+target_compile_definitions(user
+        PUBLIC -D__ELF__
+        PUBLIC -D_LDBL_EQ_DBL
+        PUBLIC -D_GNU_SOURCE
+        PUBLIC -D_POSIX_TIMERS
+        PUBLIC -D_DIONYSUS_USER_)
 
 
 target_include_directories(user BEFORE
@@ -47,7 +51,7 @@ target_include_directories(user BEFORE
 
 add_dependencies(user libcxx_build_user libcxxabi_build_user newlib_build_user)
 
-target_link_directories(user  BEFORE
+target_link_directories(user BEFORE
         PUBLIC ${CMAKE_BINARY_DIR}/external/third_party_root_user/lib)
 
 target_link_libraries(user PUBLIC c g m c++ c++abi c++experimental)

@@ -37,7 +37,7 @@ static inline Header* heap_expand(size_t nu)
 	return freep;
 }
 
-void heap_free(void* ap)
+extern "C" void heap_free(void* ap)
 {
 
 	auto bp = (Header*)ap - 1, p = freep;
@@ -62,7 +62,7 @@ void heap_free(void* ap)
 	freep = p;
 }
 
-void* heap_alloc(size_t size, [[maybe_unused]]uint64_t flags)
+extern "C" void* heap_alloc(size_t size, [[maybe_unused]]uint64_t flags)
 {
 	Header* prevp = freep;
 

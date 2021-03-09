@@ -1,4 +1,3 @@
 cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
-add_subdirectory(syscall)
-add_subdirectory(task)
+target_include_directories(user PUBLIC public)
