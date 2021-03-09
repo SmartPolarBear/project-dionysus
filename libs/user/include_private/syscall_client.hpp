@@ -11,7 +11,7 @@
 #include <concepts>
 
 #ifdef _SYSCALL_ASM_CLOBBERS
-#error "_SYSCALL_ASM_CLOBBERS should not be defined"
+#error "_SYSCALL_ASM_CLOBBERS should not have been defined"
 #endif
 
 #define _SYSCALL_ASM_CLOBBERS "rsi","rdi","rdx","r10","r9","r8"
