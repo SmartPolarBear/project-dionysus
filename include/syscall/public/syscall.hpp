@@ -15,6 +15,12 @@ enum SYSCALL_NUMBER
 	SYS_receive,
 	SYS_receive_page,
 	SYS_set_heap_size,
+
+	SYS_ipc_load_message,
+	SYS_ipc_send,
+	SYS_ipc_receive,
+	SYS_ipc_call,
+	SYS_ipc_wait,
 };
 
 }
