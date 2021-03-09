@@ -50,7 +50,8 @@ target_compile_definitions(kernel
         PRIVATE -D__ELF__
         PRIVATE -D_LDBL_EQ_DBL
         PRIVATE -D_GNU_SOURCE
-        PRIVATE -D_POSIX_TIMERS)
+        PRIVATE -D_POSIX_TIMERS
+        PRIVATE -D_DIONYSUS_KERNEL_)
 
 target_compile_options(kernel BEFORE
         PRIVATE -U_LIBCPP_HAS_THREAD_API_PTHREAD

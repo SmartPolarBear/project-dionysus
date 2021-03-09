@@ -32,15 +32,15 @@ set(QEMU_BIN_EXE ${QEMU_BIN}.exe)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -gdwarf-2")
 
+# other subdirectories
+add_subdirectory(libs)
+add_subdirectory(bin)
+
 # include
 add_subdirectory(include)
 
 # kernel
 add_subdirectory(kern)
-
-# other subdirectories
-add_subdirectory(bin)
-add_subdirectory(libs)
 
 # external projects
 add_subdirectory(external)
