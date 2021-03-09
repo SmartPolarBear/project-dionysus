@@ -49,7 +49,7 @@ __attribute__((always_inline))  static inline error_code make_syscall(uint64_t s
 {
 	constexpr size_t ARG_COUNT = sizeof...(args);
 
-	if (syscall_number >= syscall::SYSCALL_COUNT ||
+	if (syscall_number >= syscall::SYSCALL_COUNT_MAX ||
 		ARG_COUNT > syscall::SYSCALL_PARAMETER_MAX)
 	{
 		return -ERROR_INVALID;

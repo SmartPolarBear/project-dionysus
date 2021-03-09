@@ -5,8 +5,12 @@
 #define SYS_hello 1
 #define SYS_exit 2
 
-#else
+#elif defined(_DIONYSUS_KERNEL_)
 
 #include "syscall/syscall.hpp"
+
+#else
+
+#include "syscall/public/syscall.hpp"
 
 #endif

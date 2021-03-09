@@ -51,7 +51,7 @@ extern "C" [[clang::optnone]] error_code syscall_body(const syscall_regs* regs)
 //	size_t syscall_no = get_syscall_number(regs);  // first parameter
 	size_t syscall_no = args_get<syscall::ARG_SYSCALL_NUM>(regs);
 
-	if (syscall_no > SYSCALL_COUNT)
+	if (syscall_no > SYSCALL_COUNT_MAX)
 	{
 		KDEBUG_FOLLOWPANIC("Syscall number out of range.");
 	}

@@ -1,13 +1,20 @@
 #pragma once
 
+#include "system/types.h"
+
 namespace syscall
 {
+
+constexpr size_t SYSCALL_COUNT_MAX = 512;
+
+constexpr size_t SYSCALL_PARAMETER_MAX = 6;
 
 enum SYSCALL_NUMBER
 {
 	// starts from 1 for the sake of debugging
 	SYS_hello = 1,
 	SYS_exit,
+
 	SYS_put_str,
 	SYS_put_char,
 	SYS_send,

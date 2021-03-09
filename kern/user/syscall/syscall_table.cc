@@ -21,10 +21,10 @@ using namespace syscall;
 
 #include "syscall_handles.hpp"
 
-extern "C" syscall_entry syscall_table[SYSCALL_COUNT + 1] = {
+extern "C" syscall_entry syscall_table[SYSCALL_COUNT_MAX + 1] = {
 	// default for all
 	[0] = invalid_syscall,
-	[1 ... SYSCALL_COUNT] = default_syscall,
+	[1 ... SYSCALL_COUNT_MAX] = default_syscall,
 
 	// implemented
 	[SYS_hello] = sys_hello,
