@@ -20,6 +20,8 @@
 #include "system/time.hpp"
 #include "system/deadline.hpp"
 
+#include "syscall_handles.hpp"
+
 #include "drivers/apic/traps.h"
 
 #include "task/thread/wait_queue.hpp"
@@ -47,8 +49,7 @@ class kernel_stack final
 	friend class thread;
 	friend class process;
 
-	friend
-	class scheduler;
+	friend class scheduler;
 
 	static constexpr size_t MAX_SIZE = 4_MB;
 	static constexpr size_t MAX_PAGE_COUNT = MAX_SIZE / PAGE_SIZE;
@@ -169,7 +170,12 @@ class ipc_state
 	friend class wait_queue;
 	friend class thread;
 
-	ipc_state() = default;
+	friend error_code (::sys_ipc_load_message(const syscall::syscall_regs* regs));
+
+	ipc_state() = delete;
+	explicit ipc_state(thread* parent) : parent_(parent)
+	{
+	}
 	ipc_state(const ipc_state&) = delete;
 	ipc_state& operator=(const ipc_state&) = delete;
 
@@ -193,16 +199,17 @@ class ipc_state
 		br_[index] = value;
 	}
 
-	void copy_mrs_to(thread* another, size_t st, size_t cnt);
+	void load_mrs_locked(size_t start, ktl::span<ipc::message_register_type> mrs) ;
+
+	void copy_mrs_to_locked(thread* another, size_t st, size_t cnt);
 
 	/// \brief set the message tag to mrs. will reset mr_count_, which influence exist items
 	/// \param tag
-	void set_message_tag(const ipc::message_tag* tag) noexcept;
+	void set_message_tag_locked(const ipc::message_tag* tag) noexcept;
 
 	/// \brief set acceptor to brs. will reset mr_count_, which influence exist items
 	/// \param acc
 	void set_acceptor(const ipc::message_acceptor* acc) noexcept;
-
 
  private:
 	/// \brief message registers
@@ -214,6 +221,10 @@ class ipc_state
 	ipc::buffer_register_type br_[BR_SIZE]{ 0 };
 
 	size_t br_count_{ 0 };
+
+	thread* parent_{ nullptr };
+
+	mutable lock::spinlock lock_{ "ipc_lock" };
 };
 
 class thread final
@@ -235,6 +246,8 @@ class thread final
 	friend struct wait_queue_list_node_trait;
 
 	friend class process_user_stack_state;
+
+	friend error_code (::sys_ipc_load_message(const syscall::syscall_regs* regs));
 
 	enum class [[clang::enum_extensibility(closed)]] thread_states
 	{
@@ -368,7 +381,7 @@ class thread final
 
 	wait_queue_state wait_queue_state_{ this };
 
-	ipc_state ipc_state_{};
+	ipc_state ipc_state_{ this };
 
 	ktl::unique_ptr<kernel_stack> kstack_{ nullptr };
 

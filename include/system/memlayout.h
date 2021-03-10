@@ -34,9 +34,16 @@ constexpr uintptr_t KERNEL_SIZE = KERNEL_VIRTUALEND - KERNEL_VIRTUALBASE + 1;
 // Be greatly cautious not to overwrite it !!!!
 constexpr uintptr_t KERNEL_VIRTUALLINK = 0xFFFFFFFF80100000;
 
+constexpr uintptr_t USER_TOP = 0x00007fffffffffff;
+
 static inline constexpr bool VALID_KERNEL_PTR(uintptr_t ptr)
 {
 	return KERNEL_VIRTUALBASE <= ptr && ptr <= KERNEL_VIRTUALEND;
+}
+
+static inline constexpr bool VALID_USER_PTR(uintptr_t ptr)
+{
+	return ptr <= USER_TOP;
 }
 
 constexpr bool VALID_KERNEL_REGION(uintptr_t start, uintptr_t end)
@@ -44,7 +51,6 @@ constexpr bool VALID_KERNEL_REGION(uintptr_t start, uintptr_t end)
 	return (KERNEL_VIRTUALBASE < start) && (start < end) && (end <= KERNEL_VIRTUALEND);
 }
 
-constexpr uintptr_t USER_TOP = 0x00007fffffffffff;
 constexpr bool VALID_USER_REGION(uintptr_t start, uintptr_t end)
 {
 	return start < end && end <= USER_TOP;

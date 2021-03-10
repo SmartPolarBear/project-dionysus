@@ -437,6 +437,12 @@ class message final
 		tag_ = tag;
 	}
 
+	[[nodiscard]] message_span get_items_span() const
+	{
+		message_span ret{ const_cast<message_register_type*>(  raws_ + 1), tag_.untyped_count() + tag_.typed_count() };
+		return ret;
+	}
+
  private:
 	union
 	{
