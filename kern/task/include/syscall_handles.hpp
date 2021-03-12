@@ -15,7 +15,7 @@
 
 #define DEF_SYSCALL_HANDLE(handle_name) error_code handle_name(const syscall::syscall_regs *regs)
 
-DEF_SYSCALL_HANDLE(invalid_syscall);
+DEF_SYSCALL_HANDLE(zero_is_invalid_syscall);
 DEF_SYSCALL_HANDLE(default_syscall);
 
 DEF_SYSCALL_HANDLE(sys_hello);

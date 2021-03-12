@@ -18,11 +18,11 @@ QEMU_EXE = $(QEMU).exe
 GDBPORT = 32678
 QEMUGDB = -gdb tcp::$(GDBPORT)
 
-CPUS = 4
+CPUS = 6
 
 QEMUOPTS = -no-reboot -vga std -machine type=q35
 QEMUOPTS += -d int
-QEMUOPTS += -smp $(CPUS) -m 6G $(QEMUEXTRA)
+QEMUOPTS += -smp $(CPUS) -m 8G $(QEMUEXTRA)
 
 QEMUOPTS += -drive file=$(BUILD)/disk.img,index=0,media=disk,format=raw,id=disk0,if=none \
                         -device ahci,id=ahci \

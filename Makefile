@@ -11,10 +11,10 @@ qemu-kvm: #all
 	$(QEMU) -serial mon:stdio --enable-kvm -cpu host $(QEMUOPTS)
 
 qemu-whpx: #all
-	$(QEMU_EXE) -serial mon:stdio -accel whpx -cpu Icelake-Client-v2 $(QEMUOPTS)
+	$(QEMU_EXE) -serial mon:stdio -accel whpx -cpu Icelake-Server $(QEMUOPTS)
 
 idedebug: #all
-	@$(QEMU) -serial mon:stdio $(QEMUOPTS) -cpu Icelake-Client-v2 -S $(QEMUGDB) &
+	@$(QEMU) -serial mon:stdio $(QEMUOPTS) -cpu Icelake-Server -S $(QEMUGDB) &
 
 idedebug-kvm: #all
 	@$(QEMU) -serial mon:stdio --enable-kvm -cpu host $(QEMUOPTS) -S $(QEMUGDB) &
