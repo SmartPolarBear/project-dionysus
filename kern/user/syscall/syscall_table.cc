@@ -1,4 +1,5 @@
 #include "syscall.h"
+#include "syscall_handles.hpp"
 #include "syscall/syscall_args.hpp"
 
 #include "system/mmu.h"
@@ -49,8 +50,9 @@ extern "C" syscall_entry syscall_table[SYSCALL_COUNT_MAX + 1] = {
 	[SYS_put_char] = sys_put_char,
 	[SYS_set_heap_size]=sys_set_heap,
 
-	[SYS_ipc_load_message]= sys_ipc_load_message
-
+	[SYS_ipc_load_message] = sys_ipc_load_message,
+	[SYS_ipc_send] = sys_ipc_send,
+	[SYS_ipc_receive] = sys_ipc_receive
 };
 
 #pragma clang diagnostic pop

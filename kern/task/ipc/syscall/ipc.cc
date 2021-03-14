@@ -20,6 +20,7 @@
 #include <format>
 
 using namespace task;
+using namespace syscall;
 
 error_code sys_ipc_load_message(const syscall_regs* regs)
 {
@@ -35,6 +36,22 @@ error_code sys_ipc_load_message(const syscall_regs* regs)
 	cur_thread->ipc_state_.set_message_tag_locked(&tag);
 
 	cur_thread->ipc_state_.load_mrs_locked(1, msg->get_items_span());
+
+	return ERROR_SUCCESS;
+}
+
+error_code sys_ipc_send(const syscall_regs* regs)
+{
+	auto target_koid = args_get<object::koid_type, 0>(regs);
+	auto timeout = args_get<time_type, 1>(regs);
+
+	return ERROR_SUCCESS;
+}
+
+error_code sys_ipc_receive(const syscall_regs* regs)
+{
+	auto from_koid = args_get<object::koid_type, 0>(regs);
+	auto timeout = args_get<time_type, 1>(regs);
 
 	return ERROR_SUCCESS;
 }

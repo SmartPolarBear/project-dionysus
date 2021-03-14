@@ -26,5 +26,7 @@ DEF_SYSCALL_HANDLE(sys_set_heap);
 
 // task/ipc/syscall/ipc.cc
 DEF_SYSCALL_HANDLE(sys_ipc_load_message);
+DEF_SYSCALL_HANDLE(sys_ipc_send);
+DEF_SYSCALL_HANDLE(sys_ipc_receive);
 
 #undef DEF_SYSCALL_HANDLE

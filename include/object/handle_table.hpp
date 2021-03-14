@@ -7,10 +7,10 @@
 
 #include "object/handle_entry.hpp"
 
+#include "object/public/handle_type.hpp"
+
 namespace object
 {
-
-using handle_type = uint64_t;
 
 enum [[clang::flag_enum]] handle_type_attributes : uint16_t
 {
