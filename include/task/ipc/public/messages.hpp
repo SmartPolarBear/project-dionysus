@@ -1,6 +1,7 @@
 #pragma once
 
 #include <compare>
+#include <cstring>
 
 #if defined(_DIONYSUS_KERNEL_)
 #include "ktl/concepts.hpp"
@@ -351,6 +352,21 @@ static_assert(_internals::DoubleMessageItem<string_item>);
 class message final
 {
  public:
+	message()
+	{
+	}
+	~message() = default;
+
+	message(const message& another)
+	{
+		memmove(raws_, another.raws_, sizeof(raws_));
+	}
+
+	message(message&& another)
+	{
+		memmove(raws_, another.raws_, sizeof(raws_));
+		memset(another.raws_, 0, sizeof(another.raws_));
+	}
 
 	void append(_internals::UntypedMessageItem auto& item)
 	{
@@ -446,7 +462,7 @@ class message final
  private:
 	union
 	{
-		uint64_t raws_[REGS_PER_MESSAGE];
+		uint64_t raws_[REGS_PER_MESSAGE]{ 0 };
 
 		message_register_type regs_[REGS_PER_MESSAGE];
 
