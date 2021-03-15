@@ -45,9 +45,13 @@ extern "C" syscall_entry syscall_table[SYSCALL_COUNT_MAX + 1] = {
 	[1 ... SYSCALL_COUNT_MAX] = default_syscall,
 
 	[SYS_hello] = sys_hello,
-	[SYS_exit] = sys_exit,
 	[SYS_put_str] = sys_put_str,
 	[SYS_put_char] = sys_put_char,
+
+	[SYS_get_current_thread] = sys_get_current_thread,
+
+	[SYS_get_current_process] = sys_get_current_process,
+	[SYS_exit] = sys_exit,
 	[SYS_set_heap_size]=sys_set_heap,
 
 	[SYS_ipc_load_message] = sys_ipc_load_message,

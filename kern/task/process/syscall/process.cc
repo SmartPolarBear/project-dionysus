@@ -15,6 +15,8 @@
 
 #include "builtin_text_io.hpp"
 
+using namespace syscall;
+using namespace object;
 
 error_code sys_exit(const syscall_regs* regs)
 {
@@ -28,4 +30,25 @@ error_code sys_set_heap(const syscall_regs* regs)
 {
 	auto heap_ptr = syscall::args_get<uintptr_t*, 0>(regs);
 	return cur_proc->resize_heap(heap_ptr);
+}
+
+error_code sys_get_current_process(const syscall_regs* regs)
+{
+	if (!cur_proc.is_valid())
+	{
+		return -ERROR_INVALID;
+	}
+
+	auto out = args_get<object::handle_type*, 0>(regs);
+
+	if (!VALID_USER_PTR(out))
+	{
+		return -ERROR_INVALID;
+	}
+
+	auto handle = handle_entry::create("current_thread"sv, cur_proc.get());
+
+	*out = cur_proc->handle_table_.add_handle(std::move(handle));
+
+	return ERROR_SUCCESS;
 }

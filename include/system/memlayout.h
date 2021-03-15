@@ -1,6 +1,8 @@
 #pragma once
 #include "system/mmu.h"
 
+#include "ktl/concepts.hpp"
+
 #if !defined(__cplusplus)
 #error "This header is only for C++"
 #endif //__cplusplus
@@ -45,6 +47,20 @@ static inline constexpr bool VALID_USER_PTR(uintptr_t ptr)
 {
 	return ptr <= USER_TOP;
 }
+
+static inline constexpr bool VALID_USER_PTR(ktl::convertible_to<uintptr_t> auto ptr)
+{
+	auto addr = static_cast<uintptr_t>(ptr);
+	return addr <= USER_TOP;
+}
+
+static inline constexpr bool VALID_USER_PTR(ktl::is_pointer auto ptr)
+{
+	auto addr = reinterpret_cast<uintptr_t>(ptr);
+	return addr <= USER_TOP;
+}
+
+
 
 constexpr bool VALID_KERNEL_REGION(uintptr_t start, uintptr_t end)
 {

@@ -15,10 +15,6 @@
 #include "task/thread/thread.hpp"
 #include "task/ipc/message.hpp"
 
-#include "builtin_text_io.hpp"
-
-#include <format>
-
 using namespace task;
 using namespace syscall;
 

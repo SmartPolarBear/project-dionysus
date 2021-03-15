@@ -4,5 +4,6 @@ target_sources(user
         PRIVATE process.cc
         PRIVATE hello.cc
         PRIVATE console.cc
-        PRIVATE ipc.cc)
+        PRIVATE ipc.cc
+        PRIVATE thread.cc)
 

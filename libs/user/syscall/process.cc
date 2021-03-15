@@ -11,6 +11,8 @@
 
 #include "dionysus_api.hpp"
 
+#include "process.hpp"
+
 DIONYSUS_API error_code terminate(error_code e)
 {
 	return make_syscall(syscall::SYS_exit, e);
@@ -19,4 +21,15 @@ DIONYSUS_API error_code terminate(error_code e)
 DIONYSUS_API error_code set_heap_size(uintptr_t* size)
 {
 	return make_syscall(syscall::SYS_set_heap_size, size);
+}
+
+DIONYSUS_API error_code get_current_process(OUT object::handle_type* out)
+{
+	if (out == nullptr)
+	{
+		return -ERROR_INVALID;
+	}
+
+	return make_syscall(syscall::SYS_get_current_process, out);
+
 }

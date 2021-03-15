@@ -8,6 +8,10 @@
 
 #include "ipc.hpp"
 
+#include "process.hpp"
+
+#include "thread.hpp"
+
 DIONYSUS_API error_code terminate(error_code e);
 DIONYSUS_API error_code set_heap_size(uintptr_t* size);
 

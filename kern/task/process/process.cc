@@ -275,7 +275,6 @@ task::process::process(std::span<char> name,
 	this->name_.set(name);
 
 	auto this_handle = object::handle_entry::create(name_.data(), this);
-	
 
 	auto local_handle = object::handle_entry::duplicate(this_handle.get());
 

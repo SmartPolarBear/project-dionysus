@@ -21,8 +21,13 @@ DEF_SYSCALL_HANDLE(default_syscall);
 DEF_SYSCALL_HANDLE(sys_hello);
 DEF_SYSCALL_HANDLE(sys_put_str);
 DEF_SYSCALL_HANDLE(sys_put_char);
+
+DEF_SYSCALL_HANDLE(sys_get_current_process);
 DEF_SYSCALL_HANDLE(sys_exit);
 DEF_SYSCALL_HANDLE(sys_set_heap);
+
+DEF_SYSCALL_HANDLE(sys_get_current_thread);
+
 
 // task/ipc/syscall/ipc.cc
 DEF_SYSCALL_HANDLE(sys_ipc_load_message);
