@@ -168,6 +168,11 @@ class process final
 
 	error_code resize_heap(IN OUT uintptr_t* heap_ptr);
 
+	[[nodiscard]]object::handle_table* handle_table()
+	{
+		return &handle_table_;
+	}
+
  private:
 	[[nodiscard]] process(std::span<char> name,
 		const ktl::shared_ptr<job>& parent,

@@ -20,6 +20,8 @@ enum class [[clang::enum_extensibility(closed)]] object_type
 	THREAD,
 };
 
+}
+
 template<typename T>
 struct dispatcher_tag;
 
@@ -29,24 +31,26 @@ struct canary_tag;
 #ifdef DECLARE_TAG
 #error "DECLARE_TAG should not have been defined"
 #endif
-#define DECLARE_TAG(TYPE, ID, MAGIC) \
-    class TYPE;                       \
+#define DECLARE_TAG(NAMESPACE, TYPE, ID, MAGIC) \
+    namespace NAMESPACE{ class TYPE; }\
     template<>                          \
-    struct dispatcher_tag<TYPE>         \
+    struct dispatcher_tag<NAMESPACE::TYPE>         \
     {                                   \
-    static constexpr object_type type=ID;  \
+    static constexpr object::object_type type=ID;  \
     };                                  \
     template<>                          \
-    struct canary_tag<TYPE>             \
-    {static constexpr auto magic=kbl::magic(MAGIC);};  \
+    struct canary_tag<NAMESPACE::TYPE>             \
+    {static constexpr auto magic=kbl::magic(MAGIC);}; \
 
 
-DECLARE_TAG(job_dispatcher, object_type::JOB, "JOB_")
-DECLARE_TAG(process_dispatcher, object_type::PROCESS, "PROC")
-DECLARE_TAG(thread, object_type::THREAD, "THRD")
+DECLARE_TAG(task, job_dispatcher, object::object_type::JOB, "JOB_")
+DECLARE_TAG(task, process_dispatcher, object::object_type::PROCESS, "PROC")
+DECLARE_TAG(task, thread, object::object_type::THREAD, "THRD")
 
 #undef DECLARE_TAG
 
+namespace object
+{
 using right_type = uint64_t;
 
 class dispatcher :
@@ -97,7 +101,7 @@ template<typename T>
 {
 	if (d->get_type() == dispatcher_tag<T>::type)[[likely]]
 	{
-		return ktl::shared_ptr<T>{ reinterpret_cast<T*>(d) };
+		return reinterpret_cast<T*>(d);
 	}
 	else [[unlikely]]
 	{

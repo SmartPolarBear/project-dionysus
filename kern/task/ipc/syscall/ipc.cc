@@ -38,15 +38,30 @@ error_code sys_ipc_load_message(const syscall_regs* regs)
 
 error_code sys_ipc_send(const syscall_regs* regs)
 {
-	auto target_koid = args_get<object::koid_type, 0>(regs);
+	auto target_handle = args_get<object::handle_type, 0>(regs);
 	auto timeout = args_get<time_type, 1>(regs);
+
+	auto handle_entry = cur_proc->handle_table()->get_handle_entry(target_handle);
+	if (auto ret = cur_proc->handle_table()->object_from_handle<thread>(handle_entry);has_error(ret))
+	{
+		return get_error_code(ret);
+	}
+	else
+	{
+		auto th = get_result(ret);
+
+		lock::lock_guard g1{ cur_thread->lock };
+		lock::lock_guard g2{ th->lock };
+
+		cur_thread->get_ipc_state()->copy_mrs_to_locked(th, 0, task::ipc_state::MR_SIZE);
+	}
 
 	return ERROR_SUCCESS;
 }
 
 error_code sys_ipc_receive(const syscall_regs* regs)
 {
-	auto from_koid = args_get<object::koid_type, 0>(regs);
+	auto from_koid = args_get<object::handle_type, 0>(regs);
 	auto timeout = args_get<time_type, 1>(regs);
 
 	return ERROR_SUCCESS;

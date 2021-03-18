@@ -199,7 +199,7 @@ class ipc_state
 		br_[index] = value;
 	}
 
-	void load_mrs_locked(size_t start, ktl::span<ipc::message_register_type> mrs) ;
+	void load_mrs_locked(size_t start, ktl::span<ipc::message_register_type> mrs);
 
 	void copy_mrs_to_locked(thread* another, size_t st, size_t cnt);
 
@@ -248,6 +248,8 @@ class thread final
 	friend class process_user_stack_state;
 
 	friend error_code (::sys_ipc_load_message(const syscall::syscall_regs* regs));
+	friend error_code (::sys_ipc_send(const syscall::syscall_regs* regs));
+	friend error_code (::sys_ipc_receive(const syscall::syscall_regs* regs));
 
 	enum class [[clang::enum_extensibility(closed)]] thread_states
 	{
@@ -358,6 +360,11 @@ class thread final
 	bool is_idle() const
 	{
 		return flags_ & FLAG_IDLE;
+	}
+
+	[[nodiscard]] ipc_state* get_ipc_state()
+	{
+		return &ipc_state_;
 	}
 
 	thread_states state{ thread_states::INITIAL };

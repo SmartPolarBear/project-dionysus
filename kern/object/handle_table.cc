@@ -12,11 +12,6 @@ handle_table* handle_table::get_global_handle_table()
 	return &global_handle_table_;
 }
 
-template<std::convertible_to<dispatcher> T>
-error_code_with_result<std::shared_ptr<T>> handle_table::object_from_handle(const handle_entry& h)
-{
-	return downcast_dispatcher<T>(h.ptr_);
-}
 
 handle_type handle_table::add_handle(handle_entry_owner owner)
 {

@@ -18,9 +18,11 @@
 using namespace syscall;
 using namespace object;
 
+using namespace task;
+
 error_code sys_exit(const syscall_regs* regs)
 {
-	auto code = static_cast<task::task_return_code>(syscall::args_get<0>(regs));
+	auto code = static_cast<task_return_code>(syscall::args_get<0>(regs));
 	cur_proc->exit(code); // this never return
 
 	return -ERROR_SHOULD_NOT_REACH_HERE;
