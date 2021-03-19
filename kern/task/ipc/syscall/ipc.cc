@@ -61,8 +61,20 @@ error_code sys_ipc_send(const syscall_regs* regs)
 
 error_code sys_ipc_receive(const syscall_regs* regs)
 {
-	auto from_koid = args_get<object::handle_type, 0>(regs);
+	auto from_handle = args_get<object::handle_type, 0>(regs);
 	auto timeout = args_get<time_type, 1>(regs);
+
+	auto handle_entry = cur_proc->handle_table()->get_handle_entry(from_handle);
+	if (auto ret = cur_proc->handle_table()->object_from_handle<thread>(handle_entry);has_error(ret))
+	{
+		return get_error_code(ret);
+	}
+	else
+	{
+		auto th = get_result(ret);
+
+
+	}
 
 	return ERROR_SUCCESS;
 }
