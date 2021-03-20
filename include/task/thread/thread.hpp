@@ -172,12 +172,23 @@ class ipc_state
 
 	friend error_code (::sys_ipc_load_message(const syscall::syscall_regs* regs));
 
+	enum [[clang::enum_extensibility(closed)]] states
+	{
+		IPC_RECEIVING,
+		IPC_SENDING,
+		IPC_FREE,
+	};
+
 	ipc_state() = delete;
 	explicit ipc_state(thread* parent) : parent_(parent)
 	{
 	}
 	ipc_state(const ipc_state&) = delete;
 	ipc_state& operator=(const ipc_state&) = delete;
+
+	error_code receive_locked(thread* from, const deadline& ddl) TA_REQ(global_thread_lock);
+
+	error_code send_locked(thread* to, const deadline& ddl) TA_REQ(global_thread_lock);
 
 	ipc::message_register_type get_mr(size_t index)
 	{
@@ -223,6 +234,12 @@ class ipc_state
 	size_t br_count_{ 0 };
 
 	thread* parent_{ nullptr };
+
+	states state_{ IPC_FREE };
+
+	wait_queue send_wait_queue_{};
+
+	wait_queue receive_wait_queue_{};
 
 	mutable lock::spinlock lock_{ "ipc_lock" };
 };

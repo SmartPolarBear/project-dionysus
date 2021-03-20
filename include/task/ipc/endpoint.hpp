@@ -13,15 +13,15 @@ namespace task::ipc
 
 
 
-/// \brief an endpoint is a set of process waiting to receive
+/// \brief an endpoint is a set of process waiting to receive_locked
 class endpoint final
 	: object::kernel_object<endpoint>
 {
  public:
 
-	/// \brief send a message
+	/// \brief send_locked a message
 	/// \param tag the message tag
-	/// \return ERROR_IPC_NO_RECEIVER if not a single process is waiting to receive
+	/// \return ERROR_IPC_NO_RECEIVER if not a single process is waiting to receive_locked
 	error_code try_send(message_tag* tag);
 
  private:

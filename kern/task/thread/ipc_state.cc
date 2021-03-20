@@ -58,3 +58,37 @@ void task::ipc_state::set_acceptor(const ipc::message_acceptor* acc) noexcept
 	br_[0] = acc->raw();
 	br_count_ = 1;
 }
+
+error_code task::ipc_state::receive_locked(thread* from, const deadline& ddl)
+{
+	this->state_ = IPC_RECEIVING;
+
+	error_code err = ERROR_SUCCESS;
+	while (from->ipc_state_.state_ != IPC_SENDING)
+	{
+		err = from->ipc_state_.receive_wait_queue_.block(wait_queue::interruptible::Yes, ddl);
+	}
+
+	send_wait_queue_.wake_all(true, ERROR_SUCCESS);
+	return err;
+}
+
+error_code task::ipc_state::send_locked(thread* to, const deadline& ddl)
+{
+	this->state_ = IPC_SENDING;
+
+	error_code err = ERROR_SUCCESS;
+	while (to->ipc_state_.state_ != IPC_RECEIVING)
+	{
+		err = to->ipc_state_.send_wait_queue_.block(wait_queue::interruptible::Yes, ddl);
+	}
+
+	parent_->lock.assert_held();
+	to->lock.assert_held();
+
+	copy_mrs_to_locked(to, 0, task::ipc_state::MR_SIZE);
+
+	receive_wait_queue_.wake_all(true, ERROR_SUCCESS);
+	return err;
+
+}
