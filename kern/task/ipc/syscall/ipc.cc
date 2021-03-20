@@ -39,7 +39,6 @@ error_code sys_ipc_load_message(const syscall_regs* regs)
 error_code sys_ipc_send(const syscall_regs* regs)
 {
 	auto target_handle = args_get<object::handle_type, 0>(regs);
-	auto timeout = args_get<time_type, 1>(regs);
 
 	auto handle_entry = cur_proc->handle_table()->get_handle_entry(target_handle);
 	if (auto ret = cur_proc->handle_table()->object_from_handle<thread>(handle_entry);has_error(ret))
@@ -71,7 +70,7 @@ error_code sys_ipc_receive(const syscall_regs* regs)
 	}
 	else
 	{
-		auto th = get_result(ret);
+		auto from = get_result(ret);
 
 
 	}

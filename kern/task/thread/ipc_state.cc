@@ -58,3 +58,34 @@ void task::ipc_state::set_acceptor(const ipc::message_acceptor* acc) noexcept
 	br_[0] = acc->raw();
 	br_count_ = 1;
 }
+
+error_code task::ipc_state::receive(thread* from, const deadline& ddl)
+{
+	this->state_ = IPC_RECEIVING;
+	send_wait_queue_.wake_all(true, ERROR_SUCCESS);
+
+	error_code err = ERROR_SUCCESS;
+	while (from->ipc_state_.state_ != IPC_SENDING)
+	{
+		send_wait_queue_.wake_all(true, ERROR_SUCCESS);
+		err = from->ipc_state_.receive_wait_queue_.block(wait_queue::interruptible::Yes, ddl);
+	}
+
+	return err;
+}
+
+error_code task::ipc_state::send(thread* to, const deadline& ddl)
+{
+	this->state_ = IPC_SENDING;
+	receive_wait_queue_.wake_all(true, ERROR_SUCCESS);
+
+	error_code err = ERROR_SUCCESS;
+	while (to->ipc_state_.state_ != IPC_RECEIVING)
+	{
+		receive_wait_queue_.wake_all(true, ERROR_SUCCESS);
+		err = to->ipc_state_.send_wait_queue_.block(wait_queue::interruptible::Yes, ddl);
+	}
+
+	return err;
+
+}
