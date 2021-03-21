@@ -110,6 +110,9 @@ class process final
 
 	friend error_code (::sys_get_current_process(const syscall::syscall_regs* regs));
 	friend error_code (::sys_get_current_thread(const syscall::syscall_regs* regs));
+	friend error_code (::sys_get_process_by_id(const syscall::syscall_regs* regs));
+	friend error_code (::sys_get_process_by_name(const syscall::syscall_regs* regs));
+
 
 	static error_code_with_result<process*> create(const char* name,
 		const ktl::shared_ptr<job>& parent);

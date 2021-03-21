@@ -63,6 +63,7 @@ class handle_table final
 
 	handle_type add_handle(handle_entry_owner owner);
 	handle_type add_handle_locked(handle_entry_owner owner)TA_REQ(lock_);
+	handle_type entry_to_handle(handle_entry *h) const;
 
 	handle_entry_owner remove_handle(handle_type h);
 	handle_entry_owner remove_handle_locked(handle_type h) TA_REQ(lock_);
@@ -130,4 +131,25 @@ class handle_table final
 	static handle_table global_handle_table_;
 };
 
+template<typename T>
+handle_entry* handle_table::query_handle(T&& pred)
+{
+	lock::lock_guard g{ lock_ };
+	return query_handle_locked(pred);
 }
+
+template<typename T>
+handle_entry* handle_table::query_handle_locked(T&& pred) TA_REQ(lock_)
+{
+	for (auto& handle:handles_)
+	{
+		if (pred(handle))
+		{
+			return &handle;
+		}
+	}
+	return nullptr;
+}
+
+}
+

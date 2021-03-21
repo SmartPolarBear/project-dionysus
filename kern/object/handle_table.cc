@@ -50,6 +50,15 @@ handle_type handle_table::add_handle_locked(handle_entry_owner owner)
 	return MAKE_HANDLE(attr, (uintptr_t)&ptr->link_);
 }
 
+handle_type handle_table::entry_to_handle(handle_entry* ptr) const
+{
+	uint16_t attr = 0;
+
+	if (local_)attr |= HATTR_LOCAL_PROC;
+	else attr |= HATTR_GLOBAL;
+	return MAKE_HANDLE(attr, (uintptr_t)&ptr->link_);
+}
+
 handle_entry_owner handle_table::remove_handle(handle_type h)
 {
 	lock::lock_guard g{ lock_ };
@@ -136,27 +145,4 @@ handle_entry* handle_table::query_handle_by_name_locked(ktl::string_view name) T
 	}
 	return nullptr;
 }
-
-template<typename T>
-handle_entry* handle_table::query_handle(T&& pred)
-{
-	lock_guard g{ lock_ };
-	return query_handle_locked(std::forward(pred));
-}
-
-template<typename T>
-handle_entry* handle_table::query_handle_locked(T&& pred) TA_REQ(lock_)
-{
-	for (auto& handle:handles_)
-	{
-		if (pred(handle))
-		{
-			return &handle;
-		}
-	}
-	return nullptr;
-}
-
-
-
 

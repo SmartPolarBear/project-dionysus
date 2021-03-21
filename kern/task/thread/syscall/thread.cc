@@ -43,3 +43,13 @@ error_code sys_get_current_thread(const syscall_regs* regs)
 
 	return ERROR_SUCCESS;
 }
+
+error_code sys_get_thread_by_id(const syscall_regs* regs)
+{
+	return ERROR_SUCCESS;
+}
+
+error_code sys_get_thread_by_name(const syscall_regs* regs)
+{
+	return ERROR_SUCCESS;
+}
