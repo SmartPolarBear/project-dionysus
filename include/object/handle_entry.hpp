@@ -86,6 +86,11 @@ class handle_entry final
 	[[nodiscard]] static handle_entry_owner duplicate(handle_entry* h);
 
 	static void release(handle_entry_owner h);
+
+	[[nodiscard]] dispatcher* object() const
+	{
+		return ptr_;
+	}
  private:
 	static void release(handle_entry* h);
 

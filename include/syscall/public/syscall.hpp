@@ -17,11 +17,15 @@ enum SYSCALL_NUMBER
 	SYS_put_str,
 	SYS_put_char,
 
-	SYS_get_current_process,
 	SYS_exit,
 	SYS_set_heap_size,
+	SYS_get_current_process,
+	SYS_get_process_by_id,
+	SYS_get_process_by_name,
 
 	SYS_get_current_thread,
+	SYS_get_thread_by_id,
+	SYS_get_thread_by_name,
 
 	SYS_ipc_load_message,
 	SYS_ipc_send,

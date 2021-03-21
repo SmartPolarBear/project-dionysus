@@ -1,5 +1,6 @@
 #include "syscall.h"
 #include "syscall/syscall_args.hpp"
+#include "syscall/args_validation.hpp"
 
 #include "system/mmu.h"
 #include "system/syscall.h"
@@ -48,9 +49,83 @@ error_code sys_get_current_process(const syscall_regs* regs)
 		return -ERROR_INVALID;
 	}
 
-	auto handle = handle_entry::create("current_thread"sv, cur_proc.get());
+	auto handle = handle_table::get_global_handle_table()->query_handle([](const handle_entry& h)
+	{
+	  return downcast_dispatcher<process>(h.object())->get_koid() == cur_proc->get_koid();
+	});
 
-	*out = cur_proc->handle_table_.add_handle(std::move(handle));
+	*out = cur_proc->handle_table_.add_handle(handle_entry::duplicate(handle));
 
 	return ERROR_SUCCESS;
 }
+
+error_code sys_get_process_by_id(const syscall_regs* regs)
+{
+	auto out = args_get<object::handle_type*, 0>(regs);
+	auto pid = args_get<koid_type, 1>(regs);
+
+	if (!arg_valid_pointer(out))
+	{
+		return -ERROR_INVALID;
+	}
+
+	auto pred = [id = pid](const handle_entry& h)
+	{
+	  return downcast_dispatcher<process>(h.object())->get_koid() == id;
+	};
+
+	auto local_handle = cur_proc.is_valid() ?
+	                    cur_proc->handle_table_.query_handle(pred) : nullptr;
+
+	if (!local_handle)
+	{
+		auto handle = handle_table::get_global_handle_table()->query_handle(pred);
+
+		*out = cur_proc->handle_table_.add_handle(handle_entry::duplicate(handle));
+	}
+	else
+	{
+		*out = cur_proc->handle_table_.entry_to_handle(local_handle);
+	}
+
+	return ERROR_SUCCESS;
+}
+
+error_code sys_get_process_by_name(const syscall_regs* regs)
+{
+	auto out = args_get<object::handle_type*, 0>(regs);
+	auto name = args_get<char*, 1>(regs);
+
+	if (!arg_valid_pointer(out))
+	{
+		return -ERROR_INVALID;
+	}
+
+	if (!arg_valid_string(name))
+	{
+		return -ERROR_INVALID;
+	}
+
+	auto pred = [n = const_cast<const char*>(name)](const handle_entry& h)
+	{
+	  return downcast_dispatcher<process>(h.object())->get_name().compare(n) == 0;
+	};
+
+	auto local_handle = cur_proc.is_valid() ?
+	                    cur_proc->handle_table_.query_handle(pred) : nullptr;
+
+	if (!local_handle)
+	{
+		auto handle = handle_table::get_global_handle_table()->query_handle(pred);
+
+		*out = cur_proc->handle_table_.add_handle(handle_entry::duplicate(handle));
+	}
+	else
+	{
+		*out = cur_proc->handle_table_.entry_to_handle(local_handle);
+	}
+
+	return ERROR_SUCCESS;
+}
+
+

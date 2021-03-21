@@ -43,8 +43,8 @@ struct canary_tag;
     {static constexpr auto magic=kbl::magic(MAGIC);}; \
 
 
-DECLARE_TAG(task, job_dispatcher, object::object_type::JOB, "JOB_")
-DECLARE_TAG(task, process_dispatcher, object::object_type::PROCESS, "PROC")
+DECLARE_TAG(task, job, object::object_type::JOB, "JOB_")
+DECLARE_TAG(task, process, object::object_type::PROCESS, "PROC")
 DECLARE_TAG(task, thread, object::object_type::THREAD, "THRD")
 
 #undef DECLARE_TAG
