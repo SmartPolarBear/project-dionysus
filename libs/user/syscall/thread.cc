@@ -7,7 +7,9 @@
 
 #include "dionysus_api.hpp"
 
-#include "process.hpp"
+#include "handle_type.hpp"
+
+#include "thread.hpp"
 
 DIONYSUS_API error_code get_current_thread(OUT object::handle_type* out)
 {

@@ -8,10 +8,11 @@
 
 #include "kbl/singleton/singleton.hpp"
 
+#include "object/public/kernel_object.hpp"
+
 namespace object
 {
 
-using koid_type = int64_t;
 
 class koid_allocator final
 {

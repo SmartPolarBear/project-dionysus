@@ -50,7 +50,7 @@ bool arg_valid_string(T arg)
 
 	auto str = reinterpret_cast<char*>(ptr), begin = reinterpret_cast<char*>(ptr);
 	size_t len = 0;
-	for (str; VALID_USER_PTR(str) && (*str) && static_cast<uint64_t>(len = str - begin) < USER_STR_MAX;
+	for (; VALID_USER_PTR(str) && (*str) && static_cast<uint64_t>(len = str - begin) < USER_STR_MAX;
 	     str++)
 	{
 		if (!VALID_USER_PTR(str))
