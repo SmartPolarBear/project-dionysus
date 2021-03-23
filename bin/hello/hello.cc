@@ -44,12 +44,35 @@ error:
 	while (true);
 }
 
+void test_get_proc_by_name()
+{
+	handle_type process = INVALID_HANDLE_VALUE;
+	auto err = get_process_by_name(&process, "/ipctest");
+	if (err != ERROR_SUCCESS)
+	{
+		goto error;
+	}
+
+	if (process == INVALID_HANDLE_VALUE)
+	{
+		goto error;
+	}
+
+	write_format("ipc_test process handle : %lld!\n", process);
+	return;
+error:
+	write_format("ERROR %d getting ipc_test process!", err);
+	while (true);
+}
+
 int main()
 {
 	hello(1, 2, 3, 4);
 
 	test_this_proc();
 	test_this_thread();
+
+	test_get_proc_by_name();
 
 	return 0;
 

@@ -81,6 +81,11 @@ error_code sys_get_process_by_id(const syscall_regs* regs)
 	{
 		auto handle = handle_table::get_global_handle_table()->query_handle(pred);
 
+		if (!handle)
+		{
+			return -ERROR_NOT_EXIST;
+		}
+
 		*out = cur_proc->handle_table_.add_handle(handle_entry::duplicate(handle));
 	}
 	else
@@ -108,7 +113,8 @@ error_code sys_get_process_by_name(const syscall_regs* regs)
 
 	auto pred = [n = const_cast<const char*>(name)](const handle_entry& h)
 	{
-	  return downcast_dispatcher<process>(h.object())->get_name().compare(n) == 0;
+	  auto obj = downcast_dispatcher<process>(h.object());
+	  return obj ? obj->get_name().compare(n) == 0 : false;
 	};
 
 	auto local_handle = cur_proc.is_valid() ?
@@ -117,6 +123,11 @@ error_code sys_get_process_by_name(const syscall_regs* regs)
 	if (!local_handle)
 	{
 		auto handle = handle_table::get_global_handle_table()->query_handle(pred);
+
+		if (!handle)
+		{
+			return -ERROR_NOT_EXIST;
+		}
 
 		*out = cur_proc->handle_table_.add_handle(handle_entry::duplicate(handle));
 	}

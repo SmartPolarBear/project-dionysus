@@ -369,7 +369,12 @@ class thread final
 	[[deprecated("We rarely force terminate a thread using this."), maybe_unused]]
 	void forget() TA_REQ(!global_thread_lock);
 
-	const char* get_name_raw() const
+	[[nodiscard]] ktl::string_view get_name() const
+	{
+		return name_.data();
+	}
+
+	[[nodiscard]]const char* get_name_raw() const
 	{
 		return name_.data();
 	}

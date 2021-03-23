@@ -111,24 +111,24 @@ error_code init_routine([[maybe_unused]]void* arg)
 
 	if (cpu->id == 0)
 	{
-
-		auto ta = task::thread::create(nullptr, "a", routine_a, nullptr);
-		if (has_error(ta))
-		{
-			KDEBUG_GERNERALPANIC_CODE(get_error_code(ta));
-		}
-
-		auto tb = task::thread::create(nullptr, "b", routine_b, (void*)get_result(ta));
-		if (has_error(tb))
-		{
-			KDEBUG_GERNERALPANIC_CODE(get_error_code(tb));
-		}
-
-		{
-			lock::lock_guard g{ task::global_thread_lock };
-			task::scheduler::current::unblock(get_result(ta));
-			task::scheduler::current::unblock(get_result(tb));
-		}
+//
+//		auto ta = task::thread::create(nullptr, "a", routine_a, nullptr);
+//		if (has_error(ta))
+//		{
+//			KDEBUG_GERNERALPANIC_CODE(get_error_code(ta));
+//		}
+//
+//		auto tb = task::thread::create(nullptr, "b", routine_b, (void*)get_result(ta));
+//		if (has_error(tb))
+//		{
+//			KDEBUG_GERNERALPANIC_CODE(get_error_code(tb));
+//		}
+//
+//		{
+//			lock::lock_guard g{ task::global_thread_lock };
+//			task::scheduler::current::unblock(get_result(ta));
+//			task::scheduler::current::unblock(get_result(tb));
+//		}
 	}
 	else if (cpu->id == 1)
 	{
