@@ -127,17 +127,17 @@ static inline error_code kernel_io_context_init()
 		return err;
 	}
 
-	err = test_read();
-	if (err != ERROR_SUCCESS)
-	{
-		return err;
-	}
-
-	err = test_rw();
-	if (err != ERROR_SUCCESS)
-	{
-		return err;
-	}
+//	err = test_read();
+//	if (err != ERROR_SUCCESS)
+//	{
+//		return err;
+//	}
+//
+//	err = test_rw();
+//	if (err != ERROR_SUCCESS)
+//	{
+//		return err;
+//	}
 
 	return ERROR_SUCCESS;
 }
