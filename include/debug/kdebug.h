@@ -13,7 +13,6 @@ namespace kdebug
 {
 extern bool panicked;
 
-
 // use uint32_t for the bool value to make va_args happy.
 [[noreturn]] void kdebug_panic(const char* fmt, uint32_t topleft, ...);
 
@@ -62,6 +61,19 @@ void kdebug_log(const char* fmt, ...);
                              true,                                          \
                              "The expression \" %s \" is expected to be 1\n", \
                              #cond);                                        \
+        }                                                                   \
+    } while (0)
+
+#define KDEBUG_ASSERT_MSG(cond, msg)                                                 \
+    do                                                                      \
+    {                                                                       \
+        if (!(cond))                                                        \
+        {                                                                   \
+            KDEBUG_RICHPANIC("Assertion failed",                            \
+                             "ASSERT_PANIC",                                \
+                             true,                                          \
+                             "The expression \" %s \" is expected to be 1\nMessage: %s\n", \
+                             #cond,msg);                                        \
         }                                                                   \
     } while (0)
 

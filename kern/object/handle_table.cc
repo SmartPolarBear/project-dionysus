@@ -65,6 +65,12 @@ handle_entry_owner handle_table::remove_handle(handle_type h)
 	return remove_handle_locked(h);
 }
 
+handle_entry_owner handle_table::remove_handle(handle_entry* e)
+{
+	lock::lock_guard g{ lock_ };
+	return remove_handle_locked(e);
+}
+
 handle_entry_owner handle_table::remove_handle_locked(handle_type h)
 {
 	auto handle = get_handle_entry_locked(h);
@@ -145,4 +151,5 @@ handle_entry* handle_table::query_handle_by_name_locked(ktl::string_view name) T
 	}
 	return nullptr;
 }
+
 

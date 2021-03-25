@@ -66,6 +66,8 @@ class handle_table final
 	handle_type entry_to_handle(handle_entry *h) const;
 
 	handle_entry_owner remove_handle(handle_type h);
+	handle_entry_owner remove_handle(handle_entry* e);
+
 	handle_entry_owner remove_handle_locked(handle_type h) TA_REQ(lock_);
 	handle_entry_owner remove_handle_locked(handle_entry* e)TA_REQ(lock_);
 

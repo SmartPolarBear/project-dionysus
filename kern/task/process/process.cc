@@ -242,7 +242,7 @@ error_code_with_result<process*> task::process::create(const char* name,
 
 	thread* main_thread = nullptr;
 
-	// name_ the main thread with the parent_'s name_
+	// name the main thread with the parent_'s name
 	if (auto ret = thread::create(proc, name, (task::thread_routine_type)entry_addr, nullptr);has_error(ret))
 	{
 		return get_error_code(ret);

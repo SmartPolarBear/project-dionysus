@@ -69,10 +69,10 @@ int main()
 {
 	hello(1, 2, 3, 4);
 
-	test_this_proc();
-	test_this_thread();
-
-	test_get_proc_by_name();
+//	test_this_proc();
+//	test_this_thread();
+//
+//	test_get_proc_by_name();
 
 	return 0;
 
