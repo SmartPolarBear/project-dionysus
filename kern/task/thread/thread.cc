@@ -268,42 +268,42 @@ thread::thread(process* prt, ktl::string_view nm, cpu_affinity aff)
 	  parent_{ prt },
 	  affinity_{ aff }
 {
-
 	auto this_handle = object::handle_entry::create(name_.data(), this);
-	object::handle_table::get_global_handle_table()->add_handle(std::move(this_handle));
 
-	if (parent_)
+	if (prt != nullptr)
 	{
 		auto local_handle = object::handle_entry::duplicate(this_handle.get());
 		parent_->handle_table_.add_handle(std::move(local_handle));
 	}
+
+	object::handle_table::get_global_handle_table()->add_handle(std::move(this_handle));
 }
 
 thread::~thread()
 {
+	auto pred = [this](const object::handle_entry& h)
+	{
+	  auto obj = downcast_dispatcher<thread>(h.object());
+	  return obj ? obj->get_name().compare(this->name_.data()) == 0 : false;
+	};
+
+	{
+		auto global_handle = object::handle_table::get_global_handle_table()->query_handle(pred);
+
+		KDEBUG_ASSERT_MSG(global_handle != nullptr, "~thread: global_handle can't be null");
+
+		auto _ = parent_->handle_table_.remove_handle(global_handle);
+	}
+
 	if (parent_)
 	{
-		auto pred = [this](const object::handle_entry& h)
-		{
-		  auto obj = downcast_dispatcher<thread>(h.object());
-		  return obj ? obj->get_name().compare(this->name_.data()) == 0 : false;
-		};
 
-		{
-			auto local_handle = parent_->handle_table_.query_handle(pred);
+		auto local_handle = parent_->handle_table_.query_handle(pred);
 
-			KDEBUG_ASSERT_MSG(local_handle != nullptr, "~thread: local_handle can't be null");
+		KDEBUG_ASSERT_MSG(local_handle != nullptr, "~thread: local_handle can't be null");
 
-			auto _ = parent_->handle_table_.remove_handle(local_handle);
-		}
+		auto _ = parent_->handle_table_.remove_handle(local_handle);
 
-		{
-			auto global_handle = object::handle_table::get_global_handle_table()->query_handle(pred);
-			if (global_handle)
-			{
-				auto _ = parent_->handle_table_.remove_handle(global_handle);
-			}
-		}
 	}
 }
 
