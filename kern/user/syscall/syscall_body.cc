@@ -15,8 +15,10 @@
 #include "builtin_text_io.hpp"
 
 #include "task/process/process.hpp"
+#include "task/thread/thread.hpp"
 
 using namespace syscall;
+using namespace task;
 //
 //size_t get_nth_arg(const syscall_regs* regs, size_t n)
 //{

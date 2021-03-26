@@ -48,20 +48,20 @@ error_code sys_ipc_send(const syscall_regs* regs)
 	}
 	else
 	{
-		auto th = get_result(ret);
+		auto target = get_result(ret);
 
-		lock::lock_guard g1{ cur_thread->lock };
-		lock::lock_guard g2{ th->lock };
+//		lock::lock_guard g1{ cur_thread->lock };
+//		lock::lock_guard g2{ target->lock };
 
 		if (!global_thread_lock.holding())
 		{
 			lock::lock_guard g{ global_thread_lock };
-			cur_thread->ipc_state_.send_locked(th, deadline::after(timeout));
+			cur_thread->ipc_state_.send_locked(target, deadline::after(timeout));
 		}
 		else
 		{
 			global_thread_lock.assert_held();
-			cur_thread->ipc_state_.send_locked(th, deadline::after(timeout));
+			cur_thread->ipc_state_.send_locked(target, deadline::after(timeout));
 		}
 
 	}
@@ -82,9 +82,9 @@ error_code sys_ipc_receive(const syscall_regs* regs)
 	else
 	{
 		auto from = get_result(ret);
-
-		lock::lock_guard g1{ cur_thread->lock };
-		lock::lock_guard g2{ from->lock };
+//
+//		lock::lock_guard g1{ cur_thread->lock };
+//		lock::lock_guard g2{ from->lock };
 
 		if (!global_thread_lock.holding())
 		{
@@ -94,7 +94,7 @@ error_code sys_ipc_receive(const syscall_regs* regs)
 		else
 		{
 			global_thread_lock.assert_held();
-			cur_thread->ipc_state_.send_locked(from, deadline::after(timeout));
+			cur_thread->ipc_state_.receive_locked(from, deadline::after(timeout));
 		}
 
 	}
