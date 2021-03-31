@@ -251,7 +251,7 @@ class thread final
 	friend class process;
 
 	friend class scheduler;
-	friend class scheduler_class_base;
+	friend class scheduler_class;
 	friend class round_rubin_scheduler_class;
 
 	friend class kernel_stack;
@@ -444,6 +444,7 @@ class thread final
 	                                                                 &thread::process_link,
 	                                                                 true>;
 };
+
 
 extern thread::master_list_type global_thread_list;
 

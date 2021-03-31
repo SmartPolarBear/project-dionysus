@@ -120,7 +120,7 @@ task::thread* task::round_rubin_scheduler_class::steal(cpu_struct* stealer_cpu)
 
 	return nullptr;
 }
-task::scheduler_class_base::size_type task::round_rubin_scheduler_class::workload_size() const
+task::scheduler_class::size_type task::round_rubin_scheduler_class::workload_size() const
 {
 	return run_queue.size();
 }
