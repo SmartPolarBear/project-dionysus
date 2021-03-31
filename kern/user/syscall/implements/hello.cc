@@ -15,13 +15,16 @@
 #include "builtin_text_io.hpp"
 
 #include "task/process/process.hpp"
+#include "task/thread/thread.hpp"
+
 using namespace syscall;
 
 error_code sys_hello(const syscall_regs* regs)
 {
 
-	write_format("[pid %d]hello ! %lld %lld %lld %lld\n",
+	write_format("[pid %d,tid=%d]hello ! %lld %lld %lld %lld\n",
 		cur_proc->get_koid(),
+		task::cur_thread->get_koid(),
 		args_get<0>(regs),
 		args_get<1>(regs),
 		args_get<2>(regs),

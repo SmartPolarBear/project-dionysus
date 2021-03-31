@@ -29,7 +29,7 @@ void task::scheduler::reschedule()
 
 void task::scheduler::reschedule_locked() TA_REQ(global_thread_lock)
 {
-// terminate current thread
+	// terminate current thread
 	if (cur_thread->state == thread::thread_states::RUNNING)
 	{
 		cur_thread->state = thread::thread_states::READY;

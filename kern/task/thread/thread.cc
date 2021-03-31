@@ -218,46 +218,42 @@ void thread::switch_to(interrupt_saved_state_type state_to_restore) TA_REQ(globa
 	  arch_interrupt_restore(state_to_restore);
 	});
 
-	if (this != cur_thread)
+	auto prev = cur_thread.get();
+
 	{
-		auto prev = cur_thread.get();
+//			lock_guard g{ lock };
+		state = thread_states::RUNNING;
 
+		//FIXME
+		if (this->parent_)
 		{
-			lock_guard g{ lock };
-			state = thread_states::RUNNING;
-
-			//FIXME
-			if (this->parent_)
-			{
-				cur_proc = this->parent_;
-			}
+			cur_proc = this->parent_;
 		}
-
-		uintptr_t kstack_addr = this->kstack_->get_address();
-		cpu->tss.rsp0 = kstack_addr + kernel_stack::MAX_SIZE;
-
-		// Set gs. without calling swapgs to ensure atomic
-		gs_put_cpu_dependent(KERNEL_GS_KSTACK, kstack_addr);
-
-		auto mm = this->get_mm();
-		if (mm == nullptr)
-		{
-			lcr3(V2P((uintptr_t)vmm::g_kpml4t));
-		}
-		else
-		{
-			lcr3(V2P((uintptr_t)
-				this->get_mm()->pgdir));
-		}
-
-		cur_thread = this;
-
-		// manually restore interrupt state
-		arch_interrupt_restore(state_to_restore);
-
-		context_switch(&prev->kstack_->context, this->kstack_->context);
-
 	}
+
+	uintptr_t kstack_addr = this->kstack_->get_address();
+	cpu->tss.rsp0 = kstack_addr + kernel_stack::MAX_SIZE;
+
+	// Set gs. without calling swapgs to ensure atomic
+	gs_put_cpu_dependent(KERNEL_GS_KSTACK, kstack_addr);
+
+	auto mm = this->get_mm();
+	if (mm == nullptr)
+	{
+		lcr3(V2P((uintptr_t)vmm::g_kpml4t));
+	}
+	else
+	{
+		lcr3(V2P((uintptr_t)
+			this->get_mm()->pgdir));
+	}
+
+	cur_thread = this;
+
+	// manually restore interrupt state
+	arch_interrupt_restore(state_to_restore);
+
+	context_switch(&prev->kstack_->context, this->kstack_->context);
 
 	// automatically restore interrupt state here
 }
