@@ -24,7 +24,7 @@ class round_rubin_scheduler_class final
 	                                                                      true>;
 
  public:
-	explicit round_rubin_scheduler_class(class scheduler* pa) : parent(pa)
+	explicit round_rubin_scheduler_class(class scheduler* pa) : parent_(pa)
 	{
 	}
 
@@ -47,12 +47,12 @@ class round_rubin_scheduler_class final
 	void tick() final;
 
  private:
+	class scheduler* parent_{ nullptr };
 
-	cpu_struct* owner_cpu{ nullptr };
-	class scheduler* parent{ nullptr };
+	run_queue_list_type run_queue_ TA_GUARDED(lock_);
+	zombie_queue_list_type zombie_queue_ TA_GUARDED(lock_);
 
-	run_queue_list_type run_queue TA_GUARDED(global_thread_lock);
-	zombie_queue_list_type zombie_queue TA_GUARDED(global_thread_lock);
+	mutable lock::spinlock lock_;
 };
 
 }

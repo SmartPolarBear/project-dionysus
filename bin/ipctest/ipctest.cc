@@ -27,7 +27,7 @@ error:
 
 int main()
 {
-	hello(9, 8, 7, 6);
+	while(true)hello(9, 8, 7, 6);
 
 	message msg{};
 

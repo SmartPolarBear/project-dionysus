@@ -38,6 +38,8 @@ class scheduler
 
 	friend class thread;
 
+	friend scheduler_class_type;
+
  public:
 
 	scheduler() = delete;

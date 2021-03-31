@@ -12,51 +12,66 @@
 #include "kbl/lock/lock_guard.hpp"
 #include "ktl/algorithm.hpp"
 
-
 using namespace kbl;
+using namespace lock;
 
 void task::round_rubin_scheduler_class::enqueue(task::thread* thread)
 {
+	KDEBUG_ASSERT(cpu->id == parent_->owner_cpu->id);
+
+	lock_guard lk_this{ lock_ };
+
 	if (thread->state == thread::thread_states::DYING)
 	{
-		zombie_queue.push_back(thread);
+		zombie_queue_.push_back(thread);
 	}
 	else
 	{
-		run_queue.push_back(thread);
+		run_queue_.push_back(thread);
 	}
 }
 
 void task::round_rubin_scheduler_class::dequeue(task::thread* thread)
 {
+	KDEBUG_ASSERT(cpu->id == parent_->owner_cpu->id);
+
+	lock_guard lk_this{ lock_ };
+
 	KDEBUG_ASSERT(thread->run_queue_link.is_valid());
 
 	if (!thread->run_queue_link.is_empty_or_detached())
 	{
-		run_queue.remove(thread);
+		run_queue_.remove(thread);
 	}
 }
 
 task::thread* task::round_rubin_scheduler_class::fetch()
 {
+	KDEBUG_ASSERT(cpu->id == parent_->owner_cpu->id);
 
-	if (run_queue.empty())
+	lock_guard lk_this{ lock_ };
+
+	if (run_queue_.empty())
 	{
 		return nullptr;
 	}
 
-	auto ret = run_queue.front_ptr();
-	run_queue.pop_front();
+	auto ret = run_queue_.front_ptr();
+	run_queue_.pop_front();
 
 	return ret;
 }
 
 void task::round_rubin_scheduler_class::tick()
 {
-	while (!zombie_queue.empty())
+	KDEBUG_ASSERT(cpu->id == parent_->owner_cpu->id);
+
+	lock_guard lk_this{ lock_ };
+
+	while (!zombie_queue_.empty())
 	{
-		auto t = zombie_queue.front_ptr();
-		zombie_queue.pop_front();
+		auto t = zombie_queue_.front_ptr();
+		zombie_queue_.pop_front();
 
 		t->finish_dead_transition();
 	}
@@ -66,54 +81,57 @@ void task::round_rubin_scheduler_class::tick()
 
 task::thread* task::round_rubin_scheduler_class::steal(cpu_struct* stealer_cpu)
 {
-	KDEBUG_ASSERT(global_thread_lock.holding());
+	stealer_cpu->scheduler->scheduler_class.lock_.assert_held();
+	lock_guard lk_this{ lock_ };
 
-	if (!run_queue.empty())
+	if (run_queue_.empty())
 	{
-		// check affinity_
-		for (auto& t:run_queue | reversed)
+		return nullptr;
+	}
+
+	// check affinity_
+	for (auto& t:run_queue_ | reversed)
+	{
+		if (cur_thread.get() != &t &&
+			t.state == thread::thread_states::READY &&
+			(t.flags_ & thread::thread_flags::FLAG_IDLE) == 0 &&
+			(t.flags_ & thread::thread_flags::FLAG_INIT) == 0)
 		{
-			if (cur_thread.get() != &t &&
-				t.state == thread::thread_states::READY &&
-				(t.flags_ & thread::thread_flags::FLAG_IDLE) == 0 &&
-				(t.flags_ & thread::thread_flags::FLAG_INIT) == 0)
+			if (t.affinity_.cpu == stealer_cpu->id)
 			{
-				if (t.affinity_.cpu == stealer_cpu->id)
-				{
-					run_queue.remove(t);
-					return &t;
-				}
+				run_queue_.remove(t);
+				return &t;
 			}
 		}
+	}
 
-		for (auto& t:run_queue | reversed)
+	for (auto& t:run_queue_ | reversed)
+	{
+		if (cur_thread.get() != &t &&
+			t.state == thread::thread_states::READY &&
+			(t.flags_ & thread::thread_flags::FLAG_IDLE) == 0 &&
+			(t.flags_ & thread::thread_flags::FLAG_INIT) == 0)
 		{
-			if (cur_thread.get() != &t &&
-				t.state == thread::thread_states::READY &&
-				(t.flags_ & thread::thread_flags::FLAG_IDLE) == 0 &&
-				(t.flags_ & thread::thread_flags::FLAG_INIT) == 0)
+			if (t.affinity_.type == cpu_affinity_type::SOFT)
 			{
-				if (t.affinity_.type == cpu_affinity_type::SOFT)
-				{
-					run_queue.remove(t);
-					return &t;
-				}
+				run_queue_.remove(t);
+				return &t;
 			}
 		}
+	}
 
-		// No soft-affinity_ thread available, we use hard
-		for (auto& t:run_queue | reversed)
+	// No soft-affinity_ thread available, we use hard
+	for (auto& t:run_queue_ | reversed)
+	{
+		if (cur_thread.get() != &t &&
+			t.state == thread::thread_states::READY &&
+			(t.flags_ & thread::thread_flags::FLAG_IDLE) == 0 &&
+			(t.flags_ & thread::thread_flags::FLAG_INIT) == 0)
 		{
-			if (cur_thread.get() != &t &&
-				t.state == thread::thread_states::READY &&
-				(t.flags_ & thread::thread_flags::FLAG_IDLE) == 0 &&
-				(t.flags_ & thread::thread_flags::FLAG_INIT) == 0)
+			if (t.affinity_.type == cpu_affinity_type::HARD)
 			{
-				if (t.affinity_.type == cpu_affinity_type::HARD)
-				{
-					run_queue.remove(t);
-					return &t;
-				}
+				run_queue_.remove(t);
+				return &t;
 			}
 		}
 	}
@@ -122,5 +140,7 @@ task::thread* task::round_rubin_scheduler_class::steal(cpu_struct* stealer_cpu)
 }
 task::scheduler_class::size_type task::round_rubin_scheduler_class::workload_size() const
 {
-	return run_queue.size();
+	lock_guard lk_this{ lock_ };
+
+	return run_queue_.size();
 }
