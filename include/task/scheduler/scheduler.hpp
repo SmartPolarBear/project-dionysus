@@ -48,8 +48,7 @@ class scheduler
 	scheduler& operator=(const scheduler&) = delete;
 
 	explicit scheduler(cpu_struct* cpu)
-		: scheduler_class(this),
-		  owner_cpu(cpu)
+		: owner_cpu(cpu), scheduler_class(this)
 	{
 	}
 
@@ -97,12 +96,14 @@ class scheduler
 	};
 
  private:
+	static constexpr uintptr_t INVALID_PTR_MAGIC = 0xdeadbeef;
 
-	void enqueue(thread* t) TA_REQ(global_thread_lock);
-	void dequeue(thread* t) TA_REQ(global_thread_lock);
-	thread* fetch() TA_REQ(global_thread_lock);
-	thread* steal() TA_REQ(global_thread_lock);
-	void tick(thread* t) TA_REQ(!global_thread_lock);
+	void enqueue(thread* t);
+	void dequeue(thread* t);
+	thread* fetch();
+	thread* steal();
+	void tick(thread* t);
+
 	void check_timers_locked() TA_REQ(timer_lock);
 
 	[[nodiscard]] size_type workload_size() const TA_REQ(!global_thread_lock);
@@ -110,13 +111,13 @@ class scheduler
 
 	void timer_tick_handle() TA_REQ(!global_thread_lock, !timer_lock);
 
-	scheduler_class_type scheduler_class{ this };
+	cpu_struct* owner_cpu{ (cpu_struct*)INVALID_PTR_MAGIC };
 
-	cpu_struct* owner_cpu{ (cpu_struct*)0xdeadbeef };
+	scheduler_class_type scheduler_class{ this };
 
 	timer_list_type timer_list TA_GUARDED(timer_lock) {};
 
-	mutable lock::spinlock timer_lock{ "scheduler timer" };
+	mutable lock::spinlock timer_lock{ "scheduler_timer" };
 };
 
 }

@@ -18,105 +18,15 @@ using namespace trap;
 // TODO: cpu scheduler ( load balance )
 
 
-void task::scheduler::reschedule()
-{
-	KDEBUG_ASSERT(!global_thread_lock.holding());
-
-	lock_guard guard{ global_thread_lock };
-
-	reschedule_locked();
-}
-
-void task::scheduler::reschedule_locked() TA_REQ(global_thread_lock)
-{
-	// terminate current thread
-	if (cur_thread->state == thread::thread_states::RUNNING)
-	{
-		cur_thread->state = thread::thread_states::READY;
-	}
-
-	this->schedule();
-}
-
-void task::scheduler::yield()
-{
-	lock_guard g{ global_thread_lock };
-
-	yield_locked();
-}
-
-void task::scheduler::yield_locked() TA_REQ(global_thread_lock)
-{
-	cur_thread->state = thread::thread_states::READY;
-
-	cur_thread->need_reschedule_ = true;
-}
-
-void task::scheduler::schedule()
-{
-	KDEBUG_ASSERT(this->owner_cpu);
-
-	KDEBUG_ASSERT(!global_thread_list.empty());
-	KDEBUG_ASSERT(global_thread_lock.holding());
-
-	auto state = arch_interrupt_save();
-
-	thread* next = nullptr;
-
-	cur_thread->need_reschedule_ = false;
-
-	if (cur_thread->state == thread::thread_states::READY)
-	{
-		enqueue(cur_thread.get());
-	}
-
-	next = fetch();
-	if (next != nullptr)
-	{
-		dequeue(next);
-	}
-
-	if (next == nullptr)
-	{
-		next = cpu->idle;
-	}
-
-	if (next != cur_thread.get())
-	{
-		next->switch_to(state);
-	}
-
-}
-
-void task::scheduler::timer_tick_handle()
-{
-	timer_lock.assert_not_held();
-
-	{
-		lock_guard g2{ timer_lock };
-		check_timers_locked();
-	}
-	tick(cur_thread.get());
-}
-
-void task::scheduler::unblock_locked(task::thread* t)
-{
-	t->state = thread::thread_states::READY;
-	enqueue(t);
-}
+// Helpers to interact with scheduler class
 
 void task::scheduler::enqueue(task::thread* t)
 {
-	if (t->state == thread::thread_states::DYING)
+	if (t->state == thread::thread_states::DYING && t == cpu->idle))
 	{
-		if (t == cpu->idle)
-		{
-			KDEBUG_GENERALPANIC("idle thread exiting.\n");
-		}
-
-		scheduler_class.enqueue(t);
+		KDEBUG_GENERALPANIC("idle thread exiting.\n");
 	}
-	else if (t != cpu->idle)
+	else
 	{
 		scheduler_class.enqueue(t);
 	}
@@ -132,15 +42,91 @@ task::thread* task::scheduler::fetch()
 	return scheduler_class.fetch();
 }
 
+task::thread* task::scheduler::steal()
+{
+	return scheduler_class.steal(cpu.get());
+}
+
+// Scheduler timer implementation
+
+void task::scheduler::check_timers_locked()
+{
+	if (timer_list.empty())return;
+
+	auto timer = timer_list.front_ptr();
+	--timer->expires;
+
+	while (!timer->expires)
+	{
+		auto next = timer->link.next_->parent_;
+
+		timer->callback(timer, cmos::cmos_read_rtc_timestamp(), timer->arg);
+
+		remove_timer(timer);
+		if (!next) break;
+		timer = next;
+	}
+}
+
+
+void task::scheduler::timer_tick_handle()
+{
+	timer_lock.assert_not_held();
+
+	{
+		lock_guard g2{ timer_lock };
+		check_timers_locked();
+	}
+	tick(cur_thread.get());
+}
+
+void task::scheduler::add_timer(task::scheduler_timer* timer)
+{
+	lock_guard g{ timer_lock };
+
+	auto iter = timer_list.begin();
+	while (iter != timer_list.end())
+	{
+		if (timer->expires < iter->expires)
+		{
+			iter->expires -= timer->expires;
+			break;
+		}
+
+		timer->expires -= iter->expires;
+		iter++;
+	}
+
+	if (iter != timer_list.begin())iter--;
+
+	timer_list.insert(iter, timer);
+}
+
+void task::scheduler::remove_timer(task::scheduler_timer* timer)
+{
+	lock_guard g{ timer_lock };
+
+	if (timer_list.empty())return;
+
+	if (timer->expires != 0)
+	{
+		auto next = timer->link.next_->parent_;
+		if (next != nullptr)
+		{
+			next->expires += timer->expires;
+		}
+	}
+
+	timer_list.remove(timer);
+}
+
+
+// Scheduler itself's implementation
+
 void task::scheduler::insert(task::thread* t)
 {
 	lock_guard g{ global_thread_lock };
 	insert_locked(t);
-}
-
-void task::scheduler::insert_locked(task::thread* t) TA_REQ(global_thread_lock)
-{
-	enqueue(t);
 }
 
 void task::scheduler::tick(task::thread* t)
@@ -191,6 +177,87 @@ void task::scheduler::tick(task::thread* t)
 		t->need_reschedule_ = true;
 	}
 
+}
+
+void task::scheduler::reschedule()
+{
+	KDEBUG_ASSERT(!global_thread_lock.holding());
+
+	lock_guard guard{ global_thread_lock };
+
+	reschedule_locked();
+}
+
+void task::scheduler::reschedule_locked() TA_REQ(global_thread_lock)
+{
+	// terminate current thread
+	if (cur_thread->state == thread::thread_states::RUNNING)
+	{
+		cur_thread->state = thread::thread_states::READY;
+	}
+
+	this->schedule();
+}
+
+void task::scheduler::yield()
+{
+	lock_guard g{ global_thread_lock };
+
+	yield_locked();
+}
+
+void task::scheduler::yield_locked() TA_REQ(global_thread_lock)
+{
+	cur_thread->need_reschedule_ = true;
+}
+
+void task::scheduler::schedule()
+{
+	KDEBUG_ASSERT((uintptr_t)this->owner_cpu != INVALID_PTR_MAGIC);
+
+	KDEBUG_ASSERT(!global_thread_list.empty());
+
+	KDEBUG_ASSERT(global_thread_lock.holding());
+
+	auto state = arch_interrupt_save();
+
+	thread* next = nullptr;
+
+	cur_thread->need_reschedule_ = false;
+
+	if (cur_thread->state == thread::thread_states::READY)
+	{
+		enqueue(cur_thread.get());
+	}
+
+	next = fetch();
+	if (next != nullptr)
+	{
+		dequeue(next);
+	}
+
+	if (next == nullptr)
+	{
+		next = cpu->idle;
+	}
+
+	if (next != cur_thread.get())
+	{
+		next->switch_to(state);
+	}
+
+}
+
+
+void task::scheduler::unblock_locked(task::thread* t)
+{
+	t->state = thread::thread_states::READY;
+	enqueue(t);
+}
+
+void task::scheduler::insert_locked(task::thread* t) TA_REQ(global_thread_lock)
+{
+	enqueue(t);
 }
 
 task::scheduler::size_type task::scheduler::workload_size() const
@@ -246,69 +313,7 @@ error_code task::scheduler::idle(void* arg __UNUSED) TA_NO_THREAD_SAFETY_ANALYSI
 	KDEBUG_ASSERT(ERROR_SHOULD_NOT_REACH_HERE);
 }
 
-task::thread* task::scheduler::steal()
-{
-	return scheduler_class.steal(cpu.get());
-}
 
-void task::scheduler::add_timer(task::scheduler_timer* timer)
-{
-	lock_guard g{ timer_lock };
-
-	auto iter = timer_list.begin();
-	while (iter != timer_list.end())
-	{
-		if (timer->expires < iter->expires)
-		{
-			iter->expires -= timer->expires;
-			break;
-		}
-
-		timer->expires -= iter->expires;
-		iter++;
-	}
-
-	if (iter != timer_list.begin())iter--;
-
-	timer_list.insert(iter, timer);
-}
-
-void task::scheduler::remove_timer(task::scheduler_timer* timer)
-{
-	lock_guard g{ timer_lock };
-
-	if (timer_list.empty())return;
-
-	if (timer->expires != 0)
-	{
-		auto next = timer->link.next_->parent_;
-		if (next != nullptr)
-		{
-			next->expires += timer->expires;
-		}
-	}
-
-	timer_list.remove(timer);
-}
-
-void task::scheduler::check_timers_locked()
-{
-	if (timer_list.empty())return;
-
-	auto timer = timer_list.front_ptr();
-	--timer->expires;
-
-	while (!timer->expires)
-	{
-		auto next = timer->link.next_->parent_;
-
-		timer->callback(timer, cmos::cmos_read_rtc_timestamp(), timer->arg);
-
-		remove_timer(timer);
-		if (!next) break;
-		timer = next;
-	}
-}
 
 void task::scheduler::current::reschedule()
 {
