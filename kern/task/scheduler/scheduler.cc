@@ -131,6 +131,8 @@ void task::scheduler::insert(task::thread* t)
 
 void task::scheduler::tick(task::thread* t)
 {
+	lock_guard g{ global_thread_lock };
+
 	auto state = arch_interrupt_save();
 	auto _ = gsl::finally([&state]()
 	{
@@ -139,7 +141,6 @@ void task::scheduler::tick(task::thread* t)
 
 	if (t != cpu->idle)
 	{
-		lock_guard g{ global_thread_lock };
 		scheduler_class.tick();
 	}
 	else if (t != nullptr) // idle is running
@@ -150,27 +151,22 @@ void task::scheduler::tick(task::thread* t)
 	// Push migrating approach to load balancing
 	cpu_struct* max_cpu = &(*valid_cpus.begin()), * min_cpu = &(*valid_cpus.begin());
 
+	for (auto& c:valid_cpus)
 	{
-		lock_guard g{ global_thread_lock };
-
-		for (auto& c:valid_cpus)
+		if (c.scheduler->workload_size_locked() > max_cpu->scheduler->workload_size_locked())
 		{
-			if (c.scheduler->workload_size_locked() > max_cpu->scheduler->workload_size_locked())
-			{
-				max_cpu = &c;
-			}
+			max_cpu = &c;
+		}
 
-			if (c.scheduler->workload_size_locked() < min_cpu->scheduler->workload_size_locked())
-			{
-				min_cpu = &c;
-			}
+		if (c.scheduler->workload_size_locked() < min_cpu->scheduler->workload_size_locked())
+		{
+			min_cpu = &c;
 		}
 	}
 
 	if (max_cpu != min_cpu
-		&& max_cpu->scheduler->workload_size() > min_cpu->scheduler->workload_size() + 1)
+		&& max_cpu->scheduler->workload_size_locked() > min_cpu->scheduler->workload_size_locked() + 1)
 	{
-		lock_guard g{ global_thread_lock };
 		if (auto victim = max_cpu->scheduler->steal();victim != nullptr)
 		{
 			min_cpu->scheduler->enqueue(victim);
@@ -253,37 +249,38 @@ error_code task::scheduler::idle(void* arg __UNUSED) TA_NO_THREAD_SAFETY_ANALYSI
 		auto this_cpu = cpu.get();
 
 		// Pull migration approach to load balancing
+
+		lock_guard g2{ global_thread_lock };
+
+		auto intr = arch_ints_disabled();
+
+		if (!intr)
 		{
-			auto intr = arch_ints_disabled();
+			cli();
+		}
 
-			if (!intr)
+		cpu_struct* max_cpu = &valid_cpus[0];
+
+		for (auto& c:valid_cpus)
+		{
+			if (c.scheduler->workload_size_locked() > max_cpu->scheduler->workload_size_locked() &&
+				this_cpu != &c)
 			{
-				cli();
-			}
-
-			lock_guard g2{ global_thread_lock };
-			cpu_struct* max_cpu = &valid_cpus[0];
-
-			for (auto& c:valid_cpus)
-			{
-				if (c.scheduler->workload_size_locked() > max_cpu->scheduler->workload_size_locked() &&
-					this_cpu != &c)
-				{
-					max_cpu = &c;
-				}
-			}
-
-			if (auto t = max_cpu->scheduler->steal();t != nullptr)
-			{
-				this_cpu->scheduler->enqueue(t);
-			}
-
-			if (!intr)
-			{
-				sti();
+				max_cpu = &c;
 			}
 		}
-		scheduler::current::reschedule();
+
+		if (auto t = max_cpu->scheduler->steal();t != nullptr)
+		{
+			this_cpu->scheduler->enqueue(t);
+		}
+
+		if (!intr)
+		{
+			sti();
+		}
+
+		scheduler::current::reschedule_locked();
 	}
 
 	// assert no return
@@ -307,6 +304,7 @@ void task::scheduler::current::yield()
 
 bool task::scheduler::current::unblock(task::thread* t)
 {
+
 	if (t->affinity_.cpu != CPU_NUM_INVALID)
 	{
 		KDEBUG_ASSERT(t->affinity_.cpu < valid_cpus.size());

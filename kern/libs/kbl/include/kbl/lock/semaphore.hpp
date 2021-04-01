@@ -2,6 +2,8 @@
 
 #include "task/thread/thread.hpp"
 
+#include "ktl/atomic.hpp"
+
 namespace kbl
 {
 
@@ -29,8 +31,8 @@ class semaphore final
 
 	uint64_t count() const
 	{
-		lock::lock_guard g{ task::global_thread_lock };
-		return count_;
+		lock::lock_guard g{ lock_ };
+		return count_.load(ktl::memory_order_acquire);
 	}
 
 	size_t waiter_count() const
@@ -42,6 +44,8 @@ class semaphore final
 
  private:
 	task::wait_queue wait_queue_{};
-	uint64_t count_{ 0 };
+
+	ktl::atomic<uint64_t> count_{ 0 };
+	mutable lock::spinlock lock_{ "semaphore" };
 };
 }

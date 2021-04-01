@@ -15,7 +15,7 @@
 using namespace kbl;
 using namespace task;
 
-thread* task::scheduler_class::steal(cpu_struct* stealer_cpu) TA_REQ(global_thread_lock)
+thread* task::scheduler_class::steal(cpu_struct* stealer_cpu)
 {
 	return nullptr;
 }
