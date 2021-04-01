@@ -22,7 +22,7 @@ using namespace trap;
 
 void task::scheduler::enqueue(task::thread* t)
 {
-	if (t->state == thread::thread_states::DYING && t == cpu->idle))
+	if (t->state == thread::thread_states::DYING && t == cpu->idle)
 	{
 		KDEBUG_GENERALPANIC("idle thread exiting.\n");
 	}
@@ -68,7 +68,6 @@ void task::scheduler::check_timers_locked()
 	}
 }
 
-
 void task::scheduler::timer_tick_handle()
 {
 	timer_lock.assert_not_held();
@@ -77,6 +76,7 @@ void task::scheduler::timer_tick_handle()
 		lock_guard g2{ timer_lock };
 		check_timers_locked();
 	}
+
 	tick(cur_thread.get());
 }
 
@@ -188,7 +188,7 @@ void task::scheduler::reschedule()
 	reschedule_locked();
 }
 
-void task::scheduler::reschedule_locked() TA_REQ(global_thread_lock)
+void task::scheduler::reschedule_locked()
 {
 	// terminate current thread
 	if (cur_thread->state == thread::thread_states::RUNNING)
@@ -210,44 +210,6 @@ void task::scheduler::yield_locked() TA_REQ(global_thread_lock)
 {
 	cur_thread->need_reschedule_ = true;
 }
-
-void task::scheduler::schedule()
-{
-	KDEBUG_ASSERT((uintptr_t)this->owner_cpu != INVALID_PTR_MAGIC);
-
-	KDEBUG_ASSERT(!global_thread_list.empty());
-
-	KDEBUG_ASSERT(global_thread_lock.holding());
-
-	auto state = arch_interrupt_save();
-
-	thread* next = nullptr;
-
-	cur_thread->need_reschedule_ = false;
-
-	if (cur_thread->state == thread::thread_states::READY)
-	{
-		enqueue(cur_thread.get());
-	}
-
-	next = fetch();
-	if (next != nullptr)
-	{
-		dequeue(next);
-	}
-
-	if (next == nullptr)
-	{
-		next = cpu->idle;
-	}
-
-	if (next != cur_thread.get())
-	{
-		next->switch_to(state);
-	}
-
-}
-
 
 void task::scheduler::unblock_locked(task::thread* t)
 {
@@ -312,8 +274,6 @@ error_code task::scheduler::idle(void* arg __UNUSED) TA_NO_THREAD_SAFETY_ANALYSI
 	// assert no return
 	KDEBUG_ASSERT(ERROR_SHOULD_NOT_REACH_HERE);
 }
-
-
 
 void task::scheduler::current::reschedule()
 {
@@ -389,4 +349,41 @@ bool task::scheduler::current::unblock_locked(wait_queue::wait_queue_list_type t
 	}
 
 	return true;
+}
+
+void task::scheduler::schedule()
+{
+	KDEBUG_ASSERT((uintptr_t)this->owner_cpu != INVALID_PTR_MAGIC);
+
+	KDEBUG_ASSERT(!global_thread_list.empty());
+
+	KDEBUG_ASSERT(global_thread_lock.holding());
+
+	auto state = arch_interrupt_save();
+
+	thread* next = nullptr;
+
+	cur_thread->need_reschedule_ = false;
+
+	if (cur_thread->state == thread::thread_states::READY)
+	{
+		enqueue(cur_thread.get());
+	}
+
+	next = fetch();
+	if (next != nullptr)
+	{
+		dequeue(next);
+	}
+
+	if (next == nullptr)
+	{
+		next = cpu->idle;
+	}
+
+	if (next != cur_thread.get())
+	{
+		next->switch_to(state);
+	}
+
 }

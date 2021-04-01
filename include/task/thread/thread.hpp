@@ -445,7 +445,6 @@ class thread final
 	                                                                 true>;
 };
 
-
 extern thread::master_list_type global_thread_list;
 
 extern cls_item<thread*, CLS_CUR_THREAD_PTR> cur_thread;

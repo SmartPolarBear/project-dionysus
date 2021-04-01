@@ -201,17 +201,23 @@ vmm::mm_struct* task::thread::get_mm()
 	return nullptr;
 }
 
-void thread::default_trampoline()  TA_REL(global_thread_lock) //TA_NO_THREAD_SAFETY_ANALYSIS
+void thread::default_trampoline() TA_NO_THREAD_SAFETY_ANALYSIS
 {
 	global_thread_lock.unlock();
+	cur_thread->lock.unlock();
 
 	// will return to thread_entry
 }
 
-void thread::switch_to(interrupt_saved_state_type state_to_restore) TA_REQ(global_thread_lock)
+void thread::switch_to(interrupt_saved_state_type state_to_restore) TA_REQ(global_thread_lock, !lock)
 {
 	KDEBUG_ASSERT(arch_ints_disabled());
 	KDEBUG_ASSERT(this->state == thread_states::READY);
+
+	global_thread_lock.assert_held();
+	lock.assert_not_held();
+
+	lock_guard g{ lock };
 
 	auto _ = gsl::finally([&state_to_restore]()
 	{
@@ -220,15 +226,12 @@ void thread::switch_to(interrupt_saved_state_type state_to_restore) TA_REQ(globa
 
 	auto prev = cur_thread.get();
 
-	{
-//			lock_guard g{ lock };
-		state = thread_states::RUNNING;
+	state = thread_states::RUNNING;
 
-		//FIXME
-		if (this->parent_)
-		{
-			cur_proc = this->parent_;
-		}
+	//FIXME
+	if (this->parent_)
+	{
+		cur_proc = this->parent_;
 	}
 
 	uintptr_t kstack_addr = this->kstack_->get_address();
