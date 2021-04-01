@@ -81,7 +81,7 @@ void task::round_rubin_scheduler_class::tick()
 
 task::thread* task::round_rubin_scheduler_class::steal(cpu_struct* stealer_cpu)
 {
-	stealer_cpu->scheduler->scheduler_class.lock_.assert_held();
+
 	lock_guard lk_this{ lock_ };
 
 	if (run_queue_.empty())

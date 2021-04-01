@@ -33,6 +33,7 @@ class TA_CAP("mutex") spinlock final
 {
  public:
 	constexpr spinlock() = default;
+
 	constexpr explicit spinlock(const char* name)
 	{
 		spinlock_.name = name;
@@ -47,10 +48,6 @@ class TA_CAP("mutex") spinlock final
 	bool try_lock() noexcept
 	TA_TRY_ACQ(true);
 
-	bool holding() noexcept;
-
-	bool not_holding() noexcept;
-
 	// assertions
 	void assert_held()  TA_ASSERT(this);
 
@@ -61,6 +58,10 @@ class TA_CAP("mutex") spinlock final
 	{
 		return *this;
 	}
+
+	bool holding() noexcept;
+
+	bool not_holding() noexcept;
 
  private:
 	arch_spinlock spinlock_{};

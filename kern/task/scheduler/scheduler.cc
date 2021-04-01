@@ -137,6 +137,16 @@ void task::scheduler::tick(task::thread* t)
 	  arch_interrupt_restore(state);
 	});
 
+	if (t != cpu->idle)
+	{
+		lock_guard g{ global_thread_lock };
+		scheduler_class.tick();
+	}
+	else if (t != nullptr) // idle is running
+	{
+		t->need_reschedule_ = true;
+	}
+
 	// Push migrating approach to load balancing
 	cpu_struct* max_cpu = &(*valid_cpus.begin()), * min_cpu = &(*valid_cpus.begin());
 
@@ -167,20 +177,11 @@ void task::scheduler::tick(task::thread* t)
 		}
 	}
 
-	if (t != cpu->idle)
-	{
-		lock_guard g{ global_thread_lock };
-		scheduler_class.tick();
-	}
-	else if (t != nullptr) // idle is running
-	{
-		t->need_reschedule_ = true;
-	}
-
 }
 
 void task::scheduler::reschedule()
 {
+	KDEBUG_ASSERT(cpu->id == owner_cpu->id);
 	KDEBUG_ASSERT(!global_thread_lock.holding());
 
 	lock_guard guard{ global_thread_lock };
@@ -190,6 +191,10 @@ void task::scheduler::reschedule()
 
 void task::scheduler::reschedule_locked()
 {
+	KDEBUG_ASSERT(cpu->id == owner_cpu->id);
+
+	global_thread_lock.assert_held();
+
 	// terminate current thread
 	if (cur_thread->state == thread::thread_states::RUNNING)
 	{
@@ -201,6 +206,8 @@ void task::scheduler::reschedule_locked()
 
 void task::scheduler::yield()
 {
+	KDEBUG_ASSERT(cpu->id == owner_cpu->id);
+
 	lock_guard g{ global_thread_lock };
 
 	yield_locked();
@@ -208,17 +215,23 @@ void task::scheduler::yield()
 
 void task::scheduler::yield_locked() TA_REQ(global_thread_lock)
 {
+	KDEBUG_ASSERT(cpu->id == owner_cpu->id);
+
 	cur_thread->need_reschedule_ = true;
 }
 
 void task::scheduler::unblock_locked(task::thread* t)
 {
+	KDEBUG_ASSERT(cpu->id == owner_cpu->id);
+
 	t->state = thread::thread_states::READY;
 	enqueue(t);
 }
 
 void task::scheduler::insert_locked(task::thread* t) TA_REQ(global_thread_lock)
 {
+	KDEBUG_ASSERT(cpu->id == owner_cpu->id);
+
 	enqueue(t);
 }
 
@@ -237,6 +250,8 @@ error_code task::scheduler::idle(void* arg __UNUSED) TA_NO_THREAD_SAFETY_ANALYSI
 {
 	for (;;)
 	{
+		auto this_cpu = cpu.get();
+
 		// Pull migration approach to load balancing
 		{
 			auto intr = arch_ints_disabled();
@@ -252,7 +267,7 @@ error_code task::scheduler::idle(void* arg __UNUSED) TA_NO_THREAD_SAFETY_ANALYSI
 			for (auto& c:valid_cpus)
 			{
 				if (c.scheduler->workload_size_locked() > max_cpu->scheduler->workload_size_locked() &&
-					cpu.get() != &c)
+					this_cpu != &c)
 				{
 					max_cpu = &c;
 				}
@@ -260,7 +275,7 @@ error_code task::scheduler::idle(void* arg __UNUSED) TA_NO_THREAD_SAFETY_ANALYSI
 
 			if (auto t = max_cpu->scheduler->steal();t != nullptr)
 			{
-				cpu->scheduler->enqueue(t);
+				this_cpu->scheduler->enqueue(t);
 			}
 
 			if (!intr)

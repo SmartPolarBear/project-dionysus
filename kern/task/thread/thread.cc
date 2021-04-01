@@ -168,7 +168,7 @@ error_code_with_result<task::thread*> thread::create(process* parent,
 
 error_code thread::create_idle()
 {
-	[[maybe_unused]]auto ret = create(nullptr, "idle", scheduler::idle, nullptr, default_trampoline,
+	[[maybe_unused]]auto ret = create(nullptr, "idle", cpu->scheduler->idle, nullptr, default_trampoline,
 		cpu_affinity{ cpu->id, cpu_affinity_type::HARD });
 
 	if (has_error(ret))
@@ -204,7 +204,6 @@ vmm::mm_struct* task::thread::get_mm()
 void thread::default_trampoline() TA_NO_THREAD_SAFETY_ANALYSIS
 {
 	global_thread_lock.unlock();
-	cur_thread->lock.unlock();
 
 	// will return to thread_entry
 }
@@ -217,16 +216,15 @@ void thread::switch_to(interrupt_saved_state_type state_to_restore) TA_REQ(globa
 	global_thread_lock.assert_held();
 	lock.assert_not_held();
 
-	lock_guard g{ lock };
-
 	auto _ = gsl::finally([&state_to_restore]()
 	{
 	  arch_interrupt_restore(state_to_restore);
 	});
 
-	auto prev = cur_thread.get();
-
-	state = thread_states::RUNNING;
+	{
+		lock_guard g{ lock };
+		state = thread_states::RUNNING;
+	}
 
 	//FIXME
 	if (this->parent_)
@@ -251,6 +249,7 @@ void thread::switch_to(interrupt_saved_state_type state_to_restore) TA_REQ(globa
 			this->get_mm()->pgdir));
 	}
 
+	auto prev = cur_thread.get();
 	cur_thread = this;
 
 	// manually restore interrupt state

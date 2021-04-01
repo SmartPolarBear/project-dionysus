@@ -52,10 +52,8 @@ class scheduler
 	{
 	}
 
-	[[noreturn]]  static error_code idle(void* arg __UNUSED);
+	[[noreturn]] static error_code idle(void* arg __UNUSED);
 	static_assert(ktl::convertible_to<decltype(idle), task::thread_routine_type>);
-
-	void schedule() TA_REQ(global_thread_lock);
 
 	void reschedule() TA_REQ(!global_thread_lock);
 	void reschedule_locked() TA_REQ(global_thread_lock);
@@ -97,6 +95,8 @@ class scheduler
 
  private:
 	static constexpr uintptr_t INVALID_PTR_MAGIC = 0xdeadbeef;
+
+	void schedule() TA_REQ(global_thread_lock);
 
 	void enqueue(thread* t);
 	void dequeue(thread* t);
