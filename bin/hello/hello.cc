@@ -67,8 +67,8 @@ error:
 
 int main()
 {
-	while (true)hello(1, 2, 3, 4);
-//	hello(1, 2, 3, 4);
+//	while (true)hello(1, 2, 3, 4);
+	hello(1, 2, 3, 4);
 
 //	test_this_proc();
 //	test_this_thread();
