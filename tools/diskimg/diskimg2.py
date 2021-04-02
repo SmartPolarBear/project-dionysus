@@ -6,6 +6,9 @@ import pathlib
 import logging
 import errno
 import getpass
+import datetime
+
+import time
 
 
 class LoopDevice:
@@ -208,6 +211,8 @@ def update_image(parser: argparse, args):
                 sync_grub_configuration(args, mp)
                 parse_config(args, mp)
                 workaround_permission(args, mp)
+
+                logging.info("Finished at {}".format(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
 
 
 def resolve_args_dependency(parser: argparse, args):
