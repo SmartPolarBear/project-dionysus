@@ -7,7 +7,7 @@ using namespace object;
 handle_type get_receiver()
 {
 	handle_type thread = INVALID_HANDLE_VALUE;
-	auto err = get_thread_by_name(&thread, "/ipctest");
+	auto err = get_thread_by_name(&thread, "/hello");
 	if (err != ERROR_SUCCESS)
 	{
 		goto error;

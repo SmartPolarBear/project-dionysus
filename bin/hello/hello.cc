@@ -65,6 +65,27 @@ error:
 	while (true);
 }
 
+handle_type get_sender()
+{
+	handle_type thread = INVALID_HANDLE_VALUE;
+	auto err = get_thread_by_name(&thread, "/ipctest");
+	if (err != ERROR_SUCCESS)
+	{
+		goto error;
+	}
+
+	if (thread == INVALID_HANDLE_VALUE)
+	{
+		goto error;
+	}
+
+	write_format("sender handle : %lld \n", thread);
+	return thread;
+error:
+	write_format("ERROR %d getting this process", err);
+	while (true);
+}
+
 int main()
 {
 //	while (true)hello(1, 2, 3, 4);
@@ -74,6 +95,8 @@ int main()
 //	test_this_thread();
 //
 //	test_get_proc_by_name();
+
+	ipc_receive(get_sender(), TIME_INFINITE);
 
 	return 0;
 
