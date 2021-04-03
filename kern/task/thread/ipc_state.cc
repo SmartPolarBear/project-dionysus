@@ -70,6 +70,7 @@ error_code task::ipc_state::receive_locked(thread* from, const deadline& ddl)
 	}
 
 	lock_guard g{ parent_->lock };
+
 	send_wait_queue_.wake_all(true, ERROR_SUCCESS);
 	return err;
 }
@@ -84,7 +85,6 @@ error_code task::ipc_state::send_locked(thread* to, const deadline& ddl)
 		err = to->ipc_state_.send_wait_queue_.block(wait_queue::interruptible::Yes, ddl);
 	}
 
-//	parent_->lock.assert_held();
 	lock_guard g{ parent_->lock };
 
 	copy_mrs_to_locked(to, 0, task::ipc_state::MR_SIZE);

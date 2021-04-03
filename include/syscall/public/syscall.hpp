@@ -30,6 +30,7 @@ enum SYSCALL_NUMBER
 	SYS_ipc_load_message,
 	SYS_ipc_send,
 	SYS_ipc_receive,
+	SYS_ipc_store,
 	SYS_ipc_call,
 	SYS_ipc_wait,
 };

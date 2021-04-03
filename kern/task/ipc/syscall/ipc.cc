@@ -101,3 +101,8 @@ error_code sys_ipc_receive(const syscall_regs* regs)
 
 	return ERROR_SUCCESS;
 }
+
+error_code sys_ipc_store(const syscall_regs* regs)
+{
+	return ERROR_SUCCESS;
+}
