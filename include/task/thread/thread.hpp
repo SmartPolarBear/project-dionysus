@@ -171,6 +171,7 @@ class ipc_state
 	friend class thread;
 
 	friend error_code (::sys_ipc_load_message(const syscall::syscall_regs* regs));
+	friend error_code (::sys_ipc_store(const syscall::syscall_regs* regs));
 
 	enum [[clang::enum_extensibility(closed)]] states
 	{
@@ -211,6 +212,8 @@ class ipc_state
 	}
 
 	void load_mrs_locked(size_t start, ktl::span<ipc::message_register_type> mrs);
+
+	void store_mrs_locked(size_t st, ktl::span<ipc::message_register_type> mrs);
 
 	void copy_mrs_to_locked(thread* another, size_t st, size_t cnt);
 
@@ -267,6 +270,7 @@ class thread final
 	friend error_code (::sys_ipc_load_message(const syscall::syscall_regs* regs));
 	friend error_code (::sys_ipc_send(const syscall::syscall_regs* regs));
 	friend error_code (::sys_ipc_receive(const syscall::syscall_regs* regs));
+	friend error_code (::sys_ipc_store(const syscall::syscall_regs* regs));
 
 	enum class [[clang::enum_extensibility(closed)]] thread_states
 	{

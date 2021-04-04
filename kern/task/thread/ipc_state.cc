@@ -47,6 +47,15 @@ void task::ipc_state::load_mrs_locked(size_t start, ktl::span<ipc::message_regis
 	"D"(&mr_[start]));
 }
 
+void task::ipc_state::store_mrs_locked(size_t start, ktl::span<ipc::message_register_type> mrs) TA_REQ(parent_->lock)
+{
+	auto mr = mr_ + start;
+	for (auto& m:mrs)
+	{
+		m = *mr++;
+	}
+}
+
 void task::ipc_state::set_message_tag_locked(const ipc::message_tag* tag) noexcept TA_REQ(parent_->lock)
 {
 	mr_[0] = tag->raw();

@@ -104,5 +104,17 @@ error_code sys_ipc_receive(const syscall_regs* regs)
 
 error_code sys_ipc_store(const syscall_regs* regs)
 {
+	auto tag = syscall::args_get<task::ipc::message_tag*, 0>(regs);
+	auto msg = syscall::args_get<task::ipc::message*, 1>(regs);
+
+	if (!VALID_USER_PTR(reinterpret_cast<uintptr_t>(msg)))
+	{
+		return -ERROR_INVALID;
+	}
+
+	lock::lock_guard g{ cur_thread->ipc_state_.lock_ };
+
+	cur_thread->ipc_state_.store_mrs_locked(1, msg->get_items_span());
+
 	return ERROR_SUCCESS;
 }
