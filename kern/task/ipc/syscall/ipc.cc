@@ -50,9 +50,6 @@ error_code sys_ipc_send(const syscall_regs* regs)
 	{
 		auto target = get_result(ret);
 
-//		lock::lock_guard g1{ cur_thread->lock };
-//		lock::lock_guard g2{ target->lock };
-
 		if (!global_thread_lock.holding())
 		{
 			lock::lock_guard g{ global_thread_lock };
@@ -82,9 +79,7 @@ error_code sys_ipc_receive(const syscall_regs* regs)
 	else
 	{
 		auto from = get_result(ret);
-//
-//		lock::lock_guard g1{ cur_thread->lock };
-//		lock::lock_guard g2{ from->lock };
+
 
 		if (!global_thread_lock.holding())
 		{

@@ -78,7 +78,7 @@ error_code task::ipc_state::receive_locked(thread* from, const deadline& ddl)
 		err = from->ipc_state_.receiver_wait_queue_.block(wait_queue::interruptible::No, ddl);
 	}
 
-	sender_wait_queue_.wake_all(true, ERROR_SUCCESS);
+	sender_wait_queue_.wake_all(false, ERROR_SUCCESS);
 
 	this->state_ = IPC_FREE;
 
@@ -95,11 +95,11 @@ error_code task::ipc_state::send_locked(thread* to, const deadline& ddl)
 		err = to->ipc_state_.sender_wait_queue_.block(wait_queue::interruptible::No, ddl);
 	}
 
-	lock_guard g{ to->parent_->lock };
+	lock_guard g{ to->lock };
 
 	copy_mrs_to_locked(to, 0, task::ipc_state::MR_SIZE);
 
-	receiver_wait_queue_.wake_all(true, ERROR_SUCCESS);
+	receiver_wait_queue_.wake_all(false, ERROR_SUCCESS);
 
 	this->state_ = IPC_FREE;
 
