@@ -108,6 +108,8 @@ class process final
 	friend class thread;
 	friend class process_user_stack_state;
 
+	friend class ipc_state;
+
 	friend error_code (::sys_get_current_process(const syscall::syscall_regs* regs));
 	friend error_code (::sys_get_current_thread(const syscall::syscall_regs* regs));
 	friend error_code (::sys_get_process_by_id(const syscall::syscall_regs* regs));
@@ -115,6 +117,10 @@ class process final
 	friend error_code (::sys_get_thread_by_id(const syscall::syscall_regs* regs));
 	friend error_code (::sys_get_thread_by_name(const syscall::syscall_regs* regs));
 
+	friend error_code (::sys_ipc_load_message(const syscall::syscall_regs* regs));
+	friend error_code (::sys_ipc_send(const syscall::syscall_regs* regs));
+	friend error_code (::sys_ipc_receive(const syscall::syscall_regs* regs));
+	friend error_code (::sys_ipc_store(const syscall::syscall_regs* regs));
 
 	static error_code_with_result<process*> create(const char* name,
 		const ktl::shared_ptr<job>& parent);

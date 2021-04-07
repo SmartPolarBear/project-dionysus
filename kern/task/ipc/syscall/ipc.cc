@@ -104,8 +104,7 @@ error_code sys_ipc_receive(const syscall_regs* regs)
 
 error_code sys_ipc_store(const syscall_regs* regs)
 {
-	auto tag = syscall::args_get<task::ipc::message_tag*, 0>(regs);
-	auto msg = syscall::args_get<task::ipc::message*, 1>(regs);
+	auto msg = syscall::args_get<task::ipc::message*, 0>(regs);
 
 	if (!VALID_USER_PTR(reinterpret_cast<uintptr_t>(msg)))
 	{

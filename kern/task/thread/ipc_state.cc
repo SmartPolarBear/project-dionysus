@@ -73,14 +73,15 @@ error_code task::ipc_state::receive_locked(thread* from, const deadline& ddl)
 	this->state_ = IPC_RECEIVING;
 
 	error_code err = ERROR_SUCCESS;
-	while (from->ipc_state_.state_ != IPC_SENDING)
+	if (from->ipc_state_.state_ != IPC_SENDING)
 	{
-		err = from->ipc_state_.receive_wait_queue_.block(wait_queue::interruptible::Yes, ddl);
+		err = from->ipc_state_.receiver_wait_queue_.block(wait_queue::interruptible::No, ddl);
 	}
 
-	lock_guard g{ parent_->lock };
+	sender_wait_queue_.wake_all(true, ERROR_SUCCESS);
 
-	send_wait_queue_.wake_all(true, ERROR_SUCCESS);
+	this->state_ = IPC_FREE;
+
 	return err;
 }
 
@@ -89,16 +90,19 @@ error_code task::ipc_state::send_locked(thread* to, const deadline& ddl)
 	this->state_ = IPC_SENDING;
 
 	error_code err = ERROR_SUCCESS;
-	while (to->ipc_state_.state_ != IPC_RECEIVING)
+	if (to->ipc_state_.state_ != IPC_RECEIVING)
 	{
-		err = to->ipc_state_.send_wait_queue_.block(wait_queue::interruptible::Yes, ddl);
+		err = to->ipc_state_.sender_wait_queue_.block(wait_queue::interruptible::No, ddl);
 	}
 
-	lock_guard g{ parent_->lock };
+	lock_guard g{ to->parent_->lock };
 
 	copy_mrs_to_locked(to, 0, task::ipc_state::MR_SIZE);
 
-	receive_wait_queue_.wake_all(true, ERROR_SUCCESS);
+	receiver_wait_queue_.wake_all(true, ERROR_SUCCESS);
+
+	this->state_ = IPC_FREE;
+
 	return err;
 
 }

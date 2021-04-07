@@ -15,7 +15,7 @@
 using namespace kbl;
 using namespace task;
 
-thread* task::scheduler_class::steal([[maybe_unused]] cpu_struct* stealer_cpu)
+[[maybe_unused]] thread* task::scheduler_class::steal([[maybe_unused]] cpu_struct* stealer_cpu)
 {
 	return nullptr;
 }

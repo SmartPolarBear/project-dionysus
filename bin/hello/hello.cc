@@ -1,5 +1,6 @@
 #include "dionysus.hpp"
 
+using namespace task::ipc;
 using namespace object;
 
 void test_this_proc()
@@ -95,8 +96,14 @@ int main()
 //	test_this_thread();
 //
 //	test_get_proc_by_name();
+	message msg{};
 
 	ipc_receive(get_sender(), TIME_INFINITE);
+
+	ipc_store(&msg);
+
+	hello(12, 22, 32, 42);
+
 
 	return 0;
 

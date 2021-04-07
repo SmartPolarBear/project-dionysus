@@ -42,5 +42,7 @@ int main()
 
 	ipc_send(get_receiver(), TIME_INFINITE);
 
+	hello(92, 82, 72, 62);
+
 	return 0;
 }

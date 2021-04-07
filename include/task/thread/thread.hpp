@@ -240,9 +240,9 @@ class ipc_state
 
 	states state_{ IPC_FREE };
 
-	wait_queue send_wait_queue_{};
+	wait_queue sender_wait_queue_{};
 
-	wait_queue receive_wait_queue_{};
+	wait_queue receiver_wait_queue_{};
 
 	mutable lock::spinlock lock_{ "ipc_lock" };
 };
