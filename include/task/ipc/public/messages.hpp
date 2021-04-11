@@ -459,6 +459,15 @@ class message final
 		return ret;
 	}
 
+	/// \brief get span for specified tag
+	/// \param tag
+	/// \return
+	[[nodiscard]] message_span get_items_span(const message_tag& tag) const
+	{
+		message_span ret{ const_cast<message_register_type*>(  raws_ + 1), tag.untyped_count() + tag.typed_count() };
+		return ret;
+	}
+
  private:
 	union
 	{

@@ -80,7 +80,6 @@ error_code sys_ipc_receive(const syscall_regs* regs)
 	{
 		auto from = get_result(ret);
 
-
 		if (!global_thread_lock.holding())
 		{
 			lock::lock_guard g{ global_thread_lock };
@@ -108,7 +107,8 @@ error_code sys_ipc_store(const syscall_regs* regs)
 
 	lock::lock_guard g{ cur_thread->ipc_state_.lock_ };
 
-	cur_thread->ipc_state_.store_mrs_locked(1, msg->get_items_span());
+	msg->set_tag(cur_thread->ipc_state_.get_message_tag());
+	cur_thread->ipc_state_.store_mrs_locked(1, msg->get_items_span(cur_thread->ipc_state_.get_message_tag()));
 
 	return ERROR_SUCCESS;
 }

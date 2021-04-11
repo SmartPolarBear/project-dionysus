@@ -217,6 +217,8 @@ class ipc_state
 
 	void copy_mrs_to_locked(thread* another, size_t st, size_t cnt);
 
+	[[nodiscard]] ipc::message_tag get_message_tag();
+
 	/// \brief set the message tag to mrs. will reset mr_count_, which influence exist items
 	/// \param tag
 	void set_message_tag_locked(const ipc::message_tag* tag) noexcept;

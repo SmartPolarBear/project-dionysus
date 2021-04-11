@@ -25,26 +25,30 @@ using lock::lock_guard;
 
 void task::ipc_state::copy_mrs_to_locked(thread* another, size_t st, size_t cnt)
 {
-	register_t dummy = 0xdeadbeaf;
-	asm volatile (
-	"repnz movsq (%%rsi), (%%rdi)\n"
-	: /* output */
-	"=S"(dummy), "=D"(dummy), "=c"(dummy)
-	: /* input */
-	"c"(cnt), "S"(&mr_[st]),
-	"D"(&another->ipc_state_.mr_[st]));
+//	register_t dummy = 0xdeadbeaf;
+//	asm volatile (
+//	"repnz movsq (%%rsi), (%%rdi)\n"
+//	: /* output */
+//	"=S"(dummy), "=D"(dummy), "=c"(dummy)
+//	: /* input */
+//	"c"(cnt), "S"(&mr_[st]),
+//	"D"(&another->ipc_state_.mr_[st]));
+
+	memmove(&another->ipc_state_.mr_[st], &mr_[st], sizeof(decltype(mr_[0])) * cnt);
 }
 
 void task::ipc_state::load_mrs_locked(size_t start, ktl::span<ipc::message_register_type> mrs) TA_REQ(parent_->lock)
 {
-	register_t dummy = 0xdeadbeaf;
-	asm volatile (
-	"repnz movsq (%%rsi), (%%rdi)\n"
-	: /* output */
-	"=S"(dummy), "=D"(dummy), "=c"(dummy)
-	: /* input */
-	"c"(mrs.size()), "S"(mrs.data()),
-	"D"(&mr_[start]));
+//	register_t dummy = 0xdeadbeaf;
+//	asm volatile (
+//	"repnz movsq (%%rsi), (%%rdi)\n"
+//	: /* output */
+//	"=S"(dummy), "=D"(dummy), "=c"(dummy)
+//	: /* input */
+//	"c"(mrs.size()), "S"(mrs.data()),
+//	"D"(&mr_[start]));
+
+	memmove(mrs.data(), &mr_[start], sizeof(decltype(mr_[0])) * mrs.size());
 }
 
 void task::ipc_state::store_mrs_locked(size_t start, ktl::span<ipc::message_register_type> mrs) TA_REQ(parent_->lock)
@@ -54,6 +58,11 @@ void task::ipc_state::store_mrs_locked(size_t start, ktl::span<ipc::message_regi
 	{
 		m = *mr++;
 	}
+}
+
+[[nodiscard]] ipc::message_tag task::ipc_state::get_message_tag()
+{
+	return static_cast<ipc::message_tag>(mr_[0]);
 }
 
 void task::ipc_state::set_message_tag_locked(const ipc::message_tag* tag) noexcept TA_REQ(parent_->lock)

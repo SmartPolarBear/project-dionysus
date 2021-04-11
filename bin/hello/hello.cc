@@ -102,8 +102,7 @@ int main()
 
 	ipc_store(&msg);
 
-	hello(12, 22, 32, 42);
-
+	hello(msg.get_tag().label(), 22, 32, 42);
 
 	return 0;
 
