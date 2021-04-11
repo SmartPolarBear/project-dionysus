@@ -33,10 +33,13 @@ int main()
 	message msg{};
 
 	message_tag tag{};
+	uint64_t untyped1 = 12345ull;
 
 	tag.set_label(0x12345);
 
 	msg.set_tag(tag);
+
+	msg.append(untyped1);
 
 	ipc_load_message(&msg);
 

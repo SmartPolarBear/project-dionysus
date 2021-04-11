@@ -23,32 +23,44 @@ using namespace task;
 
 using lock::lock_guard;
 
+#ifdef  IPC_MRCOPY_USE_SIMD
+#error "IPC_MRCOPY_USE_SIMD can't be defined"
+#endif
+
+#define IPC_MRCOPY_USE_SIMD
+
 void task::ipc_state::copy_mrs_to_locked(thread* another, size_t st, size_t cnt)
 {
-//	register_t dummy = 0xdeadbeaf;
-//	asm volatile (
-//	"repnz movsq (%%rsi), (%%rdi)\n"
-//	: /* output */
-//	"=S"(dummy), "=D"(dummy), "=c"(dummy)
-//	: /* input */
-//	"c"(cnt), "S"(&mr_[st]),
-//	"D"(&another->ipc_state_.mr_[st]));
 
+#ifdef IPC_MRCOPY_USE_SIMD
+	register_t dummy = 0xdeadbeaf;
+	asm volatile (
+	"repnz movsq (%%rsi), (%%rdi)\n"
+	: /* output */
+	"=S"(dummy), "=D"(dummy), "=c"(dummy)
+	: /* input */
+	"c"(cnt), "S"(&mr_[st]),
+	"D"(&another->ipc_state_.mr_[st]));
+#elif
 	memmove(&another->ipc_state_.mr_[st], &mr_[st], sizeof(decltype(mr_[0])) * cnt);
+#endif
 }
 
 void task::ipc_state::load_mrs_locked(size_t start, ktl::span<ipc::message_register_type> mrs) TA_REQ(parent_->lock)
 {
-//	register_t dummy = 0xdeadbeaf;
-//	asm volatile (
-//	"repnz movsq (%%rsi), (%%rdi)\n"
-//	: /* output */
-//	"=S"(dummy), "=D"(dummy), "=c"(dummy)
-//	: /* input */
-//	"c"(mrs.size()), "S"(mrs.data()),
-//	"D"(&mr_[start]));
-
+#ifdef IPC_MRCOPY_USE_SIMD
+	register_t dummy = 0xdeadbeaf;
+	asm volatile (
+	"repnz movsq (%%rsi), (%%rdi)\n"
+	: /* output */
+	"=S"(dummy), "=D"(dummy), "=c"(dummy)
+	: /* input */
+	"c"(mrs.size()), "S"(mrs.data()),
+	"D"(&mr_[start]));
+#elif
 	memmove(mrs.data(), &mr_[start], sizeof(decltype(mr_[0])) * mrs.size());
+#endif
+
 }
 
 void task::ipc_state::store_mrs_locked(size_t start, ktl::span<ipc::message_register_type> mrs) TA_REQ(parent_->lock)
