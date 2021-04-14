@@ -84,6 +84,7 @@ enum irqs
 	IRQ_COM1 = 4,
 	IRQ_IDE = 14,
 	IRQ_ERROR = 19,
+	IRQ_HALT_CPU_HANDLE = 30,
 	IRQ_SPURIOUS = 31,
 };
 

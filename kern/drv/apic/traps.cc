@@ -133,6 +133,11 @@ PANIC void trap::init_trap()
 		.enable = true
 	});
 
+	trap_handle_register(trap::irq_to_trap_number(IRQ_HALT_CPU_HANDLE), trap_handle{
+		.handle=spurious_trap_handle, //TODO
+		.enable=true
+	});
+
 	install_exception_handles();
 }
 

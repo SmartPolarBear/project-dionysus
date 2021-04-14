@@ -18,7 +18,6 @@ using std::make_pair;
 using color_scheme = std::pair<console::console_colors, console::console_colors>;
 
 constexpr color_scheme cs_default{ console::CONSOLE_COLOR_BLACK, console::CONSOLE_COLOR_LIGHT_GREY };
-constexpr color_scheme cs_panic{ console::CONSOLE_COLOR_BLUE, console::CONSOLE_COLOR_LIGHT_BROWN };
 constexpr color_scheme cs_warning{ console::CONSOLE_COLOR_BLUE, console::CONSOLE_COLOR_WHITE };
 
 bool kdebug::panicked = false;
@@ -66,24 +65,7 @@ static inline void kdebug_print_impl_v(const char* fmt, bool topleft, color_sche
 
 
 
-[[noreturn]] void kdebug::kdebug_panic(const char* fmt, uint32_t topleft, ...)
-{
-	// disable interrupts
-	cli();
 
-	va_list ap;
-	va_start(ap, topleft);
-
-	kdebug_print_impl_v(fmt, topleft, cs_panic, ap);
-
-	va_end(ap);
-
-	// set global panic state for other cpu
-	panicked = true;
-
-	// infinite loop
-	for (;;);
-}
 
 void kdebug::kdebug_warning(const char* fmt, ...)
 {
