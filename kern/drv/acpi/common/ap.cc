@@ -44,6 +44,7 @@
 #include <cstring>
 
 #include "task/process/process.hpp"
+using namespace apic;
 
 // in boot.S
 extern "C" void entry32mp(void);

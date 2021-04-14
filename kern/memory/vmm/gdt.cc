@@ -52,6 +52,8 @@ using kbl::list_empty;
 using kbl::list_init;
 using kbl::list_remove;
 
+using namespace apic;
+
 // cpu-individual variable containing info about current CPU
 cls_item<cpu_struct*, CLS_CPU_STRUCT_PTR> cpu{ false };
 

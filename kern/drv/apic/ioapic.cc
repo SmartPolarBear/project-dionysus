@@ -12,6 +12,8 @@
 
 #include "../../libs/basic_io/include/builtin_text_io.hpp"
 
+using namespace apic;
+
 using trap::TRAP_IRQ0;
 
 enum ioapic_regs
@@ -77,7 +79,7 @@ PANIC void io_apic::init_ioapic(void)
 
 void io_apic::enable_trap(uint32_t trapnum, uint32_t cpu_acpi_id_rounted)
 {
-	redirection_entry redir_new;
+	redirection_entry redir_new{};
 
 	redir_new.vector = TRAP_IRQ0 + trapnum;
 	redir_new.delievery_mode = DLM_FIXED;
@@ -93,19 +95,4 @@ void io_apic::enable_trap(uint32_t trapnum, uint32_t cpu_acpi_id_rounted)
 
 	write_ioapic(ioapic_addr, IOREDTBL_BASE + trapnum * 2 + 0, redir_new.raw_low);
 	write_ioapic(ioapic_addr, IOREDTBL_BASE + trapnum * 2 + 1, redir_new.raw_high);
-}
-
-void io_apic::ioapic_send_ipi(uint32_t dst_apic_id, delievery_mode mode, uint32_t vec, irq_destination irq_dest)
-{
-
-}
-
-void io_apic::ioapic_send_ipi(uint32_t dst_apic_id, delievery_mode mode, uint32_t vec)
-{
-
-}
-
-void io_apic::ioapic_broadcast_ipi(delievery_mode mode, uint32_t vec)
-{
-
 }

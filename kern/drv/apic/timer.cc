@@ -19,6 +19,8 @@
 
 #include "../../libs/basic_io/include/builtin_text_io.hpp"
 
+using namespace apic;
+
 using local_apic::TDCR;
 using local_apic::TIC_DEFUALT_VALUE;
 using local_apic::TICR;

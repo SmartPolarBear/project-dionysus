@@ -3,7 +3,25 @@
 #include "drivers/acpi/cpu.h"
 #include "system/types.h"
 
-namespace io_apic
+namespace apic
+{
+
+enum destination_mode
+{
+	DTM_PHYSICAL = 0,
+	DTM_LOGICAL = 1,
+};
+
+enum trigger_mode
+{
+	TRG_EDGE = 0,
+	TRG_LEVEL = 1,
+};
+
+
+}
+
+namespace apic::io_apic
 {
 
 /*
@@ -41,47 +59,9 @@ union redirection_entry
 	} __attribute__((packed));
 };
 
-enum delievery_mode
-{
-	DLM_FIXED = 0,
-	DLM_LOWEST_PRIORITY = 1,
-	DLM_SMI = 2,
-	DLM_NMI = 4,
-	DLM_INIT = 5,
-	DLM_EXTINT = 7,
-};
-
-enum trigger_mode
-{
-	TRG_EDGE = 0,
-	TRG_LEVEL = 1,
-};
-
-enum destination_mode
-{
-	DTM_PHYSICAL = 0,
-	DTM_LOGICAL = 1,
-};
-
-enum irq_destination
-{
-	IRQDST_BROADCAST,
-	IRQDST_BOOTSTRAP,
-	IRQDEST_SINGLE,
-};
 
 
 PANIC void init_ioapic(void);
 void enable_trap(uint32_t trapnum, uint32_t cpu_rounted);
-
-/// \brief the dst_apic_id for a broadcast ipi, which means all APICs
-static inline constexpr uint32_t BROADCAST_DST_APIC_ID = 0;
-
-void ioapic_send_ipi(uint32_t dst_apic_id, delievery_mode mode, uint32_t vec, irq_destination irq_dest);
-
-void ioapic_send_ipi(uint32_t dst_apic_id, delievery_mode mode, uint32_t vec);
-
-void ioapic_broadcast_ipi(delievery_mode mode, uint32_t vec);
-
 
 } // namespace io_apic

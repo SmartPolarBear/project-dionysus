@@ -15,6 +15,8 @@
 #include "builtin_text_io.hpp"
 
 using namespace kdebug;
+using namespace apic;
+
 using namespace io_apic;
 
 constexpr std::pair<console::console_colors, console::console_colors>
@@ -72,7 +74,7 @@ lock::arch_spinlock panic_lock{};
 
 	if (valid_cpus.size() > 1)
 	{
-		ioapic_broadcast_ipi(DLM_FIXED, 0);
+		apic::local_apic::apic_broadcast_ipi(DLM_FIXED, trap::IRQ_HALT_CPU_HANDLE);
 	}
 
 	// infinite loop to halt the cpu

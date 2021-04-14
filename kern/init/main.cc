@@ -164,7 +164,7 @@ extern "C" [[noreturn]] void kmain()
 	acpi::init_acpi();
 
 	// initialize local APIC
-	local_apic::init_lapic();
+	apic::local_apic::init_lapic();
 
 	// initialize apic timer
 	timer::init_apic_timer();
@@ -173,7 +173,7 @@ extern "C" [[noreturn]] void kmain()
 	cmos::cmos_rtc_init();
 
 	// initialize I/O APIC
-	io_apic::init_ioapic();
+	apic::io_apic::init_ioapic();
 
 	// initialize syscall
 	syscall::system_call_init();

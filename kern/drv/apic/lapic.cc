@@ -16,15 +16,15 @@ using trap::IRQ_ERROR;
 using trap::IRQ_SPURIOUS;
 using trap::TRAP_IRQ0;
 
+using namespace apic;
+
 volatile uint32_t* local_apic::lapic;
 
 // Spin for a given number of microseconds.
 // On real hardware would want to tune this dynamically.
 [[clang::optnone]] static void microdelay(size_t count)
 {
-	for (size_t i = 0; i < count; i++)
-	{ ; // do nothing. just cost time.
-	}
+	for (size_t i = 0; i < count; i++); // do nothing. just consume time.
 }
 
 void local_apic::write_lapic(size_t index, uint32_t value)
@@ -83,9 +83,8 @@ size_t local_apic::get_cpunum()
 	if (read_eflags() & EFLAG_IF)
 	{
 		KDEBUG_RICHPANIC("local_apic::get_cpunum can't be called with interrupts enabled\n", "KERNEL PANIC:LAPIC",
-				false, "Return address: 0x%x\n", __builtin_return_address(0));
+			false, "Return address: 0x%x\n", __builtin_return_address(0));
 	}
-
 
 	if (lapic == nullptr)
 	{
@@ -146,4 +145,43 @@ void local_apic::write_eoi(void)
 	{
 		write_lapic(EOI, 0);
 	}
+}
+
+void local_apic::apic_send_ipi(uint32_t dst_apic_id, delievery_modes mode, uint32_t vec, irq_destinations irq_dest)
+{
+	lapic_icr icr{};
+	icr.vector = vec;
+	icr.delivery_mode = mode;
+
+	switch (irq_dest)
+	{
+	case IRQDST_BROADCAST:
+		icr.dest_shorthand = APIC_DEST_SHORTHAND_ALL_BUT_SELF;
+		break;
+
+	case IRQDEST_SINGLE:
+		icr.dest_mode = DTM_PHYSICAL;
+		icr.dest = dst_apic_id;
+		break;
+
+	default:
+		KDEBUG_GERNERALPANIC_CODE(ERROR_INVALID);
+		break;
+	}
+
+	icr.level = APIC_LEVEL_ASSERT;
+	icr.trigger = TRG_EDGE;
+
+	write_lapic(ICRHI, icr.value_high);
+	write_lapic(ICRLO, icr.value_low);
+}
+
+void local_apic::apic_send_ipi(uint32_t dst_apic_id, delievery_modes mode, uint32_t vec)
+{
+	apic_send_ipi(dst_apic_id, mode, vec, IRQDEST_SINGLE);
+}
+
+void local_apic::apic_broadcast_ipi(delievery_modes mode, uint32_t vec)
+{
+	apic_send_ipi(BROADCAST_DST_APIC_ID, mode, vec, IRQDST_BROADCAST);
 }

@@ -30,6 +30,8 @@ using trap::TRAP_NUMBERMAX;
 using std::min;
 using std::max;
 
+using namespace apic;
+
 madt_ioapic ioapics[CPU_COUNT_LIMIT] = {};
 size_t ioapic_count = 0;
 
