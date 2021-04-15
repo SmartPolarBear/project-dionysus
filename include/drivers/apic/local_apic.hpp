@@ -1,6 +1,8 @@
 #pragma once
 
 #include "drivers/acpi/cpu.h"
+#include "drivers/apic/apic_resgiters.hpp"
+
 #include "system/types.h"
 
 namespace apic
@@ -64,9 +66,10 @@ enum apic_dest_shorthands
 	APIC_DEST_SHORTHAND_ALL_BUT_SELF = 0x3,
 };
 
-enum apic_levels{
-	APIC_LEVEL_DEASSERT = 0x0,	/* 82489DX Obsolete. _Never_ use */
-	APIC_LEVEL_ASSERT   = 0x1,	/* Always use assert */
+enum apic_levels
+{
+	APIC_LEVEL_DEASSERT = 0x0,    /* 82489DX Obsolete. _Never_ use */
+	APIC_LEVEL_ASSERT = 0x1,    /* Always use assert */
 };
 
 enum SVR_FLAGS

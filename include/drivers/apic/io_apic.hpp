@@ -1,7 +1,10 @@
 #pragma once
 
 #include "drivers/acpi/cpu.h"
+#include "drivers/apic/apic_resgiters.hpp"
+
 #include "system/types.h"
+
 
 namespace apic
 {
