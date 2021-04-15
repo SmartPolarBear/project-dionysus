@@ -30,7 +30,7 @@ void trap::pushcli()
 
 // only works after gdt installation
 
-void trap::popcli(void)
+void trap::popcli()
 {
 	if (read_eflags() & EFLAG_IF)
 	{

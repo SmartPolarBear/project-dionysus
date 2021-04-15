@@ -76,7 +76,6 @@ error_code default_trap_handle([[maybe_unused]] trap::trap_frame info)
 
 static error_code spurious_trap_handle([[maybe_unused]] trap::trap_frame info)
 {
-
 	return ERROR_SUCCESS;
 }
 
@@ -143,12 +142,12 @@ PANIC void trap::init_trap()
 
 	spinlock_initialize_lock(&handle_table.lock, "traphandles");
 
-	trap_handle_register(trap::irq_to_trap_number(IRQ_SPURIOUS), trap_handle{
+	trap_handle_register(trap::IRQ_TO_TRAPNUM(IRQ_SPURIOUS), trap_handle{
 		.handle = spurious_trap_handle,
 		.enable = true
 	});
 
-	trap_handle_register(trap::irq_to_trap_number(IRQ_HALT_CPU_HANDLE), trap_handle{
+	trap_handle_register(trap::IRQ_TO_TRAPNUM(IRQ_HALT_CPU_HANDLE), trap_handle{
 		.handle=handle_cpu_handle_trap_handle,
 		.enable=true
 	});

@@ -22,7 +22,7 @@ volatile uint32_t* local_apic::lapic;
 
 // Spin for a given number of microseconds.
 // On real hardware would want to tune this dynamically.
-[[clang::optnone]] static void microdelay(size_t count)
+[[clang::optnone]] static inline void microdelay(size_t count)
 {
 	for (size_t i = 0; i < count; i++); // do nothing. just consume time.
 }
@@ -41,7 +41,7 @@ PANIC void local_apic::init_lapic(void)
 	}
 
 	// enable local APIC
-	write_lapic(SVR, ENABLE | (trap::irq_to_trap_number(IRQ_SPURIOUS)));
+	write_lapic(SVR, ENABLE | (trap::IRQ_TO_TRAPNUM(IRQ_SPURIOUS)));
 
 	// setup timer
 	timer::setup_apic_timer();
@@ -58,7 +58,7 @@ PANIC void local_apic::init_lapic(void)
 	}
 
 	// Map error interrupt to IRQ_ERROR.
-	write_lapic(ERROR, trap::irq_to_trap_number(IRQ_ERROR));
+	write_lapic(ERROR, trap::IRQ_TO_TRAPNUM(IRQ_ERROR));
 
 	// Clear error status register (requires back-to-back writes).
 	write_lapic(ESR, 0);
@@ -139,7 +139,7 @@ void local_apic::start_ap(size_t apicid, uintptr_t addr)
 	}
 }
 
-void local_apic::write_eoi(void)
+void local_apic::write_eoi()
 {
 	if (lapic)
 	{

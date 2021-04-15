@@ -56,14 +56,14 @@ PANIC void timer::setup_apic_timer()
 {
 	// initialize apic values
 	write_lapic(TDCR, TIMER_FLAG_X1);
-	write_lapic(TIMER, TIMER_FLAG_PERIODIC | (trap::irq_to_trap_number(IRQ_TIMER)));
+	write_lapic(TIMER, TIMER_FLAG_PERIODIC | (trap::IRQ_TO_TRAPNUM(IRQ_TIMER)));
 	write_lapic(TICR, TIC_DEFUALT_VALUE);
 }
 
 PANIC void timer::init_apic_timer()
 {
 	// register the handle
-	trap::trap_handle_register(trap::irq_to_trap_number(IRQ_TIMER),
+	trap::trap_handle_register(trap::IRQ_TO_TRAPNUM(IRQ_TIMER),
 		trap::trap_handle
 			{
 				.handle = trap_handle_tick,

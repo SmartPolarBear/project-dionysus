@@ -64,6 +64,11 @@ lock::arch_spinlock panic_lock{};
 			hlt();
 	}
 
+	if (valid_cpus.size() > 1)
+	{
+		apic::local_apic::apic_broadcast_ipi(DLM_FIXED, trap::IRQ_TO_TRAPNUM(trap::IRQ_HALT_CPU_HANDLE));
+	}
+
 	va_list ap;
 	va_start(ap, topleft);
 	panic_print(fmt, topleft, ap);
@@ -71,11 +76,6 @@ lock::arch_spinlock panic_lock{};
 
 	// set global panic state for other cpu
 	panicked = true;
-
-	if (valid_cpus.size() > 1)
-	{
-		apic::local_apic::apic_broadcast_ipi(DLM_FIXED, trap::IRQ_HALT_CPU_HANDLE);
-	}
 
 	// infinite loop to halt the cpu
 	for (;;)

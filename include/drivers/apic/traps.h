@@ -88,7 +88,7 @@ enum irqs
 	IRQ_SPURIOUS = 31,
 };
 
-static inline constexpr size_t irq_to_trap_number(irqs irq)
+static inline constexpr size_t IRQ_TO_TRAPNUM(irqs irq)
 {
 	return static_cast<size_t>(irq) + static_cast<size_t>(TRAP_IRQ0);
 }
@@ -101,7 +101,7 @@ struct trap_handle
 	bool enable;
 };
 
-PANIC void init_trap(void);
+PANIC void init_trap();
 
 // returns the old handle
 PANIC trap_handle trap_handle_register(size_t trapnumber, trap_handle handle);
@@ -109,8 +109,8 @@ PANIC trap_handle trap_handle_register(size_t trapnumber, trap_handle handle);
 // enable the trap handle, returns the old state
 PANIC bool trap_handle_enable(size_t trapnumber, bool enable);
 
-PANIC [[deprecated("use arch-dependent interrupt saving")]] void pushcli(void);
-PANIC [[deprecated("use arch-dependent interrupt saving")]] void popcli(void);
+PANIC [[deprecated("use arch-dependent interrupt saving")]] void pushcli();
+PANIC [[deprecated("use arch-dependent interrupt saving")]] void popcli();
 
 void print_trap_frame(IN const trap_frame* frm);
 
