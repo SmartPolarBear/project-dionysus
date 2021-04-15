@@ -195,7 +195,6 @@ extern "C" [[noreturn]] void kmain()
 
 	write_format("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
 
-	KDEBUG_ASSERT(false);
 
 	// start kernel servers in user space
 //	init_servers();
