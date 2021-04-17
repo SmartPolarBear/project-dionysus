@@ -8,3 +8,6 @@
 [submodule "external/ms-gsl/ms-gsl"]
 	path = external/ms-gsl/ms-gsl
 	url = https://github.com/microsoft/GSL.git
+[submodule "libs/dbl"]
+	path = libs/dbl
+	url = https://github.com/SmartPolarBear/dionysus_baisc_library.git
