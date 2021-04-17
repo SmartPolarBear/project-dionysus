@@ -17,7 +17,8 @@ set(LIBCXXABI_THREADING_INCLUDE ${CMAKE_SOURCE_DIR}/kern/libs/cxxrt_support/incl
 #set(LIBCXXABI_THREADING_FLAGS "")
 set(LIBCXXABI_THREADING_FLAGS "-DHAS_THREAD_LOCAL -D_LIBCXXABI_HAS_NO_THREADS -D_LIBCPP_HAS_THREAD_API_EXTERNAL -D_LIBCPP_HAS_THREAD_LIBRARY_EXTERNAL -I${LIBCXXABI_THREADING_INCLUDE}")
 
-set(LIBCXXABI_CFLAGS "-ffreestanding -g -gdwarf -nostdlibinc -msoft-float -mno-sse -mno-avx -I${NEWLIB_INC_PATH}  -fdeclspec -mcmodel=large -D__ELF__ -U__APPLE__ -D_LIBCPP_STD_VER=20 -D_LDBL_EQ_DBL -D_LIBCPP_HAS_NO_LIBRARY_ALIGNED_ALLOCATION ${LIBCXXABI_THREADING_FLAGS}")
+#FIXME: this is a temporary workaround
+set(LIBCXXABI_CFLAGS "-ffreestanding -g -gdwarf -nostdlibinc -msoft-float -mno-sse -mno-avx -I${INSTALL_PREFIX}/include/c++/v1 -I${NEWLIB_INC_PATH}  -fdeclspec -mcmodel=large -D__ELF__ -U__APPLE__ -D_LIBCPP_STD_VER=20 -D_LDBL_EQ_DBL -D_LIBCPP_HAS_NO_LIBRARY_ALIGNED_ALLOCATION ${LIBCXXABI_THREADING_FLAGS}")
 
 list(APPEND LIBCXXABI_CMAKE_ARGS
         -DCMAKE_AR=${AR}
@@ -30,7 +31,7 @@ list(APPEND LIBCXXABI_CMAKE_ARGS
         -DCMAKE_RANLIB=${RANLIB}
         -DCMAKE_SHARED_LINKER_FLAGS="-L${INSTALL_PREFIX}/lib"
         -DCMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY
-        -DLIBCXXABI_LIBCXX_INCLUDES=${LIBCXX_INC_PATH}
+        -DLIBCXXABI_LIBCXX_INCLUDES=${INSTALL_PREFIX}/include/c++/v1
         -DLIBCXXABI_ENABLE_THREADS=ON
         -DLIBCXXABI_BUILD_EXTERNAL_THREAD_LIBRARY=OFF
         -DLIBCXXABI_HAS_EXTERNAL_THREAD_API=ON
@@ -54,7 +55,7 @@ ExternalProject_Add(
         CMAKE_ARGS ${LIBCXXABI_CMAKE_ARGS}
 )
 
-add_dependencies(libcxxabi_build newlib_build)
+add_dependencies(libcxxabi_build libcxx_build newlib_build)
 
 #libcxx
 set(LIBCXX_THREADING_INCLUDE ${CMAKE_SOURCE_DIR}/kern/libs/cxxrt_support/include)
@@ -103,11 +104,11 @@ ExternalProject_Add(
         CMAKE_ARGS ${LIBCXX_CMAKE_ARGS}
 )
 
-add_dependencies(libcxx_build libcxxabi_build newlib_build)
+add_dependencies(libcxx_build newlib_build)
 
 #libcxxabi user
 
-set(LIBCXXABI_CFLAGS_USER "-g -nostdlibinc -msoft-float -mno-sse -mno-avx -I${NEWLIB_USER_INC_PATH} -fdeclspec -mcmodel=large -D__ELF__ -U__APPLE__ -D_LDBL_EQ_DBL -D_LIBCPP_HAS_NO_THREADS -D_LIBCPP_HAS_NO_LIBRARY_ALIGNED_ALLOCATION")
+set(LIBCXXABI_CFLAGS_USER "-g -nostdlibinc -msoft-float -mno-sse -mno-avx -I${INSTALL_PREFIX}/include/c++/v1 -I${NEWLIB_USER_INC_PATH} -fdeclspec -mcmodel=large -D__ELF__ -U__APPLE__ -D_LDBL_EQ_DBL -D_LIBCPP_HAS_NO_THREADS -D_LIBCPP_HAS_NO_LIBRARY_ALIGNED_ALLOCATION")
 
 list(APPEND LIBCXXABI_CMAKE_ARGS_USER
         -DCMAKE_AR=${AR}
@@ -119,7 +120,7 @@ list(APPEND LIBCXXABI_CMAKE_ARGS_USER
         -DCMAKE_RANLIB=${RANLIB}
         -DCMAKE_SHARED_LINKER_FLAGS="-L${USER_INSTALL_PREFIX}/lib"
         -DCMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY
-        -DLIBCXXABI_LIBCXX_INCLUDES=${LIBCXX_INC_PATH}
+        -DLIBCXXABI_LIBCXX_INCLUDES=${INSTALL_PREFIX}/include/c++/v1
         -DLIBCXXABI_ENABLE_THREADS=OFF
         -DLIBCXXABI_ENABLE_EXCEPTIONS=OFF
         -DLIBCXXABI_TARGET_TRIPLE=x86_64-unknown-none-elf
@@ -141,7 +142,7 @@ ExternalProject_Add(
         CMAKE_ARGS ${LIBCXXABI_CMAKE_ARGS_USER}
 )
 
-add_dependencies(libcxxabi_build_user newlib_build_user)
+add_dependencies(libcxxabi_build_user libcxx_build_user newlib_build_user)
 
 
 #libcxx user
@@ -182,4 +183,4 @@ ExternalProject_Add(
         CMAKE_ARGS ${LIBCXX_CMAKE_ARGS_USER}
 )
 
-add_dependencies(libcxx_build_user libcxxabi_build_user newlib_build_user)
+add_dependencies(libcxx_build_user newlib_build_user)

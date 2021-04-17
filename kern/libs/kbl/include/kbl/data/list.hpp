@@ -7,6 +7,8 @@
 
 #include "ktl/concepts.hpp"
 
+#include <iterator>
+
 #pragma push_macro("KDEBUG_ASSERT")
 
 //#define ENABLE_DEBUG_MACRO
