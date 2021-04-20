@@ -113,7 +113,7 @@ target_link_options(kernel
         PRIVATE -Wl,--build-id=none
         PRIVATE -Wl,--verbose)
 
-add_dependencies(kernel libcxx_build libcxxabi_build newlib_build GSL)
+add_dependencies(kernel dbl libcxx_build libcxxabi_build newlib_build GSL)
 
 target_include_directories(kernel BEFORE
         PRIVATE "${CMAKE_BINARY_DIR}/external/third_party_root/include/sys"
