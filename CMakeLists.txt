@@ -9,6 +9,8 @@ option(VERSION_DISKIMG "diskimg tool version" "NEW")
 set(DISK_IMG_PATH "${CMAKE_SOURCE_DIR}/tools/diskimg/diskimg2.py")
 set(DISK_IMG_ARGS "")
 
+option(BUILD_GTEST "build google test instead of using prebuilt ones" ON)
+
 if (${VERSION_DISKIMG} STREQUAL "NEW")
     set(DISK_IMG_PATH "${CMAKE_SOURCE_DIR}/tools/diskimg/diskimg2.py")
     set(DISK_IMG_ARGS update -f disk.img -t ../disk.img -c ../config/build/image.json -d . -m mountpoint -g ../grub.cfg)

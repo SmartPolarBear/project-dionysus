@@ -11,3 +11,6 @@
 [submodule "libs/dbl"]
 	path = libs/dbl
 	url = https://github.com/SmartPolarBear/dionysus_baisc_library.git
+[submodule "external/gtest/gtest"]
+	path = external/gtest/gtest
+	url = https://github.com/google/googletest.git
