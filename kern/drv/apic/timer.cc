@@ -77,12 +77,6 @@ error_code trap_handle_tick([[maybe_unused]] trap::trap_frame info)
 {
 	size_t id = cpu->id;
 
-	if (kdebug::panicked)
-	{
-		hlt();
-		for (;;);
-	}
-
 	if (enable_irq[id])
 	{
 		spinlock_acquire(ticks_lock());

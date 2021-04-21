@@ -70,6 +70,7 @@ namespace console
 
 	void console_set_pos(cursor_pos pos);
 
+	void console_panic_lock();
 	void console_set_lock(bool enable);
 	bool console_get_lock(void);
 } // namespace console

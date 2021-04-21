@@ -45,9 +45,6 @@ using lock::spinlock_struct;
 
 	kdebug::kdebug_print_backtrace();
 
-	// set global panic state for other cpu
-	kdebug::panicked = true;
-
 	// infinite loop
 	for (;;);
 }

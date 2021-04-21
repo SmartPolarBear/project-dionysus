@@ -7,17 +7,9 @@
 
 #include "kbl/data/pod_list.h"
 
-using kbl::list_add;
-using kbl::list_init;
-using kbl::list_remove;
+using namespace kbl;
 
-// spinlock_struct
-using lock::spinlock_struct;
-using lock::spinlock_acquire;
-using lock::spinlock_holding;
-using lock::spinlock_initialize_lock;
-using lock::spinlock_release;
-
+using namespace lock;
 using namespace console;
 
 struct kconsole
@@ -29,16 +21,6 @@ struct kconsole
 	console_colors background;
 	console_colors foreground;
 } cons;
-
-static inline void check_panicked()
-{
-	if (kdebug::panicked)
-	{
-		cli();
-		hlt();
-		for (;;);
-	}
-}
 
 void console::console_add_dev(IN console_dev* dev)
 {
@@ -74,7 +56,6 @@ void console::console_set_color(console_colors background, console_colors foregr
 
 void console::console_write_char(char c)
 {
-	check_panicked();
 	// acquire the lock
 	bool locking = cons.lock_enable;
 	if (locking)
@@ -99,7 +80,6 @@ void console::console_write_char(char c)
 
 void console::cosnole_write_string(const char* str, size_t len)
 {
-	check_panicked();
 	// acquire the lock
 	bool locking = cons.lock_enable;
 	if (locking)
@@ -127,7 +107,6 @@ void console::cosnole_write_string(const char* str, size_t len)
 
 void console::cosnole_write_string(const char* str)
 {
-	check_panicked();
 	// acquire the lock
 	bool locking = cons.lock_enable;
 	if (locking)
@@ -177,12 +156,29 @@ void console::console_set_pos(cursor_pos pos)
 	}
 }
 
+void console::console_panic_lock()
+{
+	if (lock::arch_spinlock_try_lock(&cons.cons_lock.arch))
+	{
+		// infinite loop to halt the cpu
+		for (;;)
+			hlt();
+	}
+}
+
 void console::console_set_lock(bool enable)
 {
 	cons.lock_enable = enable;
+	if (!enable)
+	{
+		if (spinlock_holding(&cons.cons_lock))
+		{
+			spinlock_release(&cons.cons_lock);
+		}
+	}
 }
 
-bool console::console_get_lock(void)
+bool console::console_get_lock()
 {
 	return cons.lock_enable;
 }

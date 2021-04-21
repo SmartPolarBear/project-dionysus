@@ -20,8 +20,6 @@ using color_scheme = std::pair<console::console_colors, console::console_colors>
 constexpr color_scheme cs_default{ console::CONSOLE_COLOR_BLACK, console::CONSOLE_COLOR_LIGHT_GREY };
 constexpr color_scheme cs_warning{ console::CONSOLE_COLOR_BLUE, console::CONSOLE_COLOR_WHITE };
 
-bool kdebug::panicked = false;
-
 using namespace kdebug;
 
 static inline void kdebug_print_impl_v(const char* fmt, bool topleft, color_scheme clr, va_list ap)
@@ -35,7 +33,7 @@ static inline void kdebug_print_impl_v(const char* fmt, bool topleft, color_sche
 		console::console_set_pos(0);
 	}
 
-	if(cpu.is_valid())
+	if (cpu.is_valid())
 	{
 		write_format("[CPU%d] ", cpu->id);
 	}
@@ -62,10 +60,6 @@ static inline void kdebug_print_impl_v(const char* fmt, bool topleft, color_sche
 
 	write_format("\n");
 }
-
-
-
-
 
 void kdebug::kdebug_warning(const char* fmt, ...)
 {
