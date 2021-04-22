@@ -227,9 +227,4 @@ void ap::all_processor_main()
 	}
 
 	task::scheduler::current::enter();
-
-	for (;;);
-
-
-//	context::scheduler_loop();
 }

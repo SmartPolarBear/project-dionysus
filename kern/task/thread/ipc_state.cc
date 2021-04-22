@@ -77,6 +77,11 @@ void task::ipc_state::store_mrs_locked(size_t start, ktl::span<ipc::message_regi
 	return static_cast<ipc::message_tag>(mr_[0]);
 }
 
+[[nodiscard]] ipc::message_acceptor task::ipc_state::get_acceptor()
+{
+	return static_cast<ipc::message_acceptor>(br_[0]);
+}
+
 void task::ipc_state::set_message_tag_locked(const ipc::message_tag* tag) noexcept TA_REQ(parent_->lock)
 {
 	mr_[0] = tag->raw();
@@ -106,6 +111,19 @@ error_code task::ipc_state::receive_locked(thread* from, const deadline& ddl)
 	return err;
 }
 
+error_code task::ipc_state::send_extended_items(thread* to)
+{
+	auto acceptor = to->ipc_state_.get_acceptor();
+	if (!acceptor.allow_string())
+	{
+		return -ERROR_INVALID;
+	}
+
+
+
+	return ERROR_SUCCESS;
+}
+
 error_code task::ipc_state::send_locked(thread* to, const deadline& ddl)
 {
 	this->state_ = IPC_SENDING;
@@ -119,6 +137,11 @@ error_code task::ipc_state::send_locked(thread* to, const deadline& ddl)
 	lock_guard g{ to->lock };
 
 	copy_mrs_to_locked(to, 0, task::ipc_state::MR_SIZE);
+
+	if (err = send_extended_items(to);err != ERROR_SUCCESS)
+	{
+		return err;
+	}
 
 	receiver_wait_queue_.wake_all(false, ERROR_SUCCESS);
 

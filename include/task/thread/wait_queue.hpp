@@ -22,7 +22,6 @@
 
 #include "drivers/apic/traps.h"
 
-
 #include <compare>
 
 namespace task

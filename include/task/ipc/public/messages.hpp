@@ -244,6 +244,10 @@ class message_acceptor final
 	{
 	}
 
+	message_acceptor(buffer_register_type raw) : raw_(raw)
+	{
+	}
+
 	message_acceptor& operator=(const message_acceptor& another)
 	{
 		if (this == &another)return *this;

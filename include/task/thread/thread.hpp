@@ -219,6 +219,8 @@ class ipc_state
 
 	[[nodiscard]] ipc::message_tag get_message_tag();
 
+	[[nodiscard]] ipc::message_acceptor get_acceptor();
+
 	/// \brief set the message tag to mrs. will reset mr_count_, which influence exist items
 	/// \param tag
 	void set_message_tag_locked(const ipc::message_tag* tag) noexcept;
@@ -228,6 +230,11 @@ class ipc_state
 	void set_acceptor(const ipc::message_acceptor* acc) noexcept;
 
  private:
+	/// \brief handle extended items like strings and map/grant items
+	/// \param to
+	/// \return
+	error_code send_extended_items(thread *to);
+
 	/// \brief message registers
 	ipc::message_register_type mr_[MR_SIZE]{ 0 };
 
