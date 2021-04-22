@@ -15,7 +15,7 @@
 using namespace kbl;
 using namespace lock;
 
-void task::round_rubin_scheduler_class::enqueue(task::thread* thread)
+void task::fcfs_scheduler_class::enqueue(task::thread* thread)
 {
 	KDEBUG_ASSERT(cpu->id == parent_->owner_cpu->id);
 
@@ -31,7 +31,7 @@ void task::round_rubin_scheduler_class::enqueue(task::thread* thread)
 	}
 }
 
-void task::round_rubin_scheduler_class::dequeue(task::thread* thread)
+void task::fcfs_scheduler_class::dequeue(task::thread* thread)
 {
 	KDEBUG_ASSERT(cpu->id == parent_->owner_cpu->id);
 
@@ -45,7 +45,7 @@ void task::round_rubin_scheduler_class::dequeue(task::thread* thread)
 	}
 }
 
-task::thread* task::round_rubin_scheduler_class::fetch()
+task::thread* task::fcfs_scheduler_class::fetch()
 {
 	KDEBUG_ASSERT(cpu->id == parent_->owner_cpu->id);
 
@@ -62,7 +62,7 @@ task::thread* task::round_rubin_scheduler_class::fetch()
 	return ret;
 }
 
-void task::round_rubin_scheduler_class::tick()
+void task::fcfs_scheduler_class::tick()
 {
 	KDEBUG_ASSERT(cpu->id == parent_->owner_cpu->id);
 
@@ -79,7 +79,7 @@ void task::round_rubin_scheduler_class::tick()
 	cur_thread->need_reschedule_ = true;
 }
 
-task::thread* task::round_rubin_scheduler_class::steal(cpu_struct* stealer_cpu)
+task::thread* task::fcfs_scheduler_class::steal(cpu_struct* stealer_cpu)
 {
 
 	lock_guard lk_this{ lock_ };
@@ -138,7 +138,7 @@ task::thread* task::round_rubin_scheduler_class::steal(cpu_struct* stealer_cpu)
 
 	return nullptr;
 }
-task::scheduler_class::size_type task::round_rubin_scheduler_class::workload_size() const
+task::scheduler_class::size_type task::fcfs_scheduler_class::workload_size() const
 {
 	lock_guard lk_this{ lock_ };
 

@@ -6,7 +6,7 @@
 namespace task
 {
 
-class round_rubin_scheduler_class final
+class fcfs_scheduler_class final
 	: public scheduler_class
 {
  public:
@@ -24,15 +24,15 @@ class round_rubin_scheduler_class final
 	                                                                      true>;
 
  public:
-	explicit round_rubin_scheduler_class(class scheduler* pa) : parent_(pa)
+	explicit fcfs_scheduler_class(class scheduler* pa) : parent_(pa)
 	{
 	}
 
-	round_rubin_scheduler_class() = delete;
-	round_rubin_scheduler_class(const round_rubin_scheduler_class&) = delete;
-	round_rubin_scheduler_class(round_rubin_scheduler_class&&) = delete;
-	round_rubin_scheduler_class& operator=(const round_rubin_scheduler_class&) = delete;
-	round_rubin_scheduler_class& operator=(round_rubin_scheduler_class&&) = delete;
+	fcfs_scheduler_class() = delete;
+	fcfs_scheduler_class(const fcfs_scheduler_class&) = delete;
+	fcfs_scheduler_class(fcfs_scheduler_class&&) = delete;
+	fcfs_scheduler_class& operator=(const fcfs_scheduler_class&) = delete;
+	fcfs_scheduler_class& operator=(fcfs_scheduler_class&&) = delete;
 
 	thread* steal(cpu_struct* stealer_cpu) final;
 

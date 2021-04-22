@@ -114,12 +114,8 @@ error_code task::ipc_state::receive_locked(thread* from, const deadline& ddl)
 error_code task::ipc_state::send_extended_items(thread* to)
 {
 	auto acceptor = to->ipc_state_.get_acceptor();
-	if (!acceptor.allow_string())
-	{
-		return -ERROR_INVALID;
-	}
 
-
+	// TODO
 
 	return ERROR_SUCCESS;
 }

@@ -264,7 +264,7 @@ class thread final
 
 	friend class scheduler;
 	friend class scheduler_class;
-	friend class round_rubin_scheduler_class;
+	friend class fcfs_scheduler_class;
 
 	friend class kernel_stack;
 	friend class user_stack;
