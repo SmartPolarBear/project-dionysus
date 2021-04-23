@@ -1,3 +1,5 @@
+#include "include/lapic.hpp"
+
 #include "drivers/acpi/cpu.h"
 #include "drivers/apic/apic.h"
 #include "drivers/apic/traps.h"

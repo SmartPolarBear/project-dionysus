@@ -1,5 +1,6 @@
-#include "./traps.hpp"
-#include "./exception.hpp"
+#include "include/traps.hpp"
+#include "include/exception.hpp"
+#include "include/apic_trap_handles.hpp"
 
 #include "arch/amd64/cpu/x86.h"
 
@@ -32,7 +33,6 @@ using lock::spinlock_initialize_lock;
 using lock::spinlock_release;
 
 using namespace apic;
-
 
 constexpr size_t IDT_SIZE = 4_KB;
 
@@ -74,10 +74,6 @@ error_code default_trap_handle([[maybe_unused]] trap::trap_frame info)
 	return ERROR_SUCCESS;
 }
 
-static error_code spurious_trap_handle([[maybe_unused]] trap::trap_frame info)
-{
-	return ERROR_SUCCESS;
-}
 
 [[noreturn]] static error_code handle_cpu_handle_trap_handle([[maybe_unused]] trap::trap_frame info)
 {
@@ -148,8 +144,13 @@ PANIC void trap::init_trap()
 	});
 
 	trap_handle_register(trap::IRQ_TO_TRAPNUM(IRQ_HALT_CPU_HANDLE), trap_handle{
-		.handle=handle_cpu_handle_trap_handle,
-		.enable=true
+		.handle = handle_cpu_handle_trap_handle,
+		.enable = true
+	});
+
+	trap_handle_register(trap::IRQ_TO_TRAPNUM(IRQ_ERROR), trap_handle{
+		.handle = apic_error_trap_handle,
+		.enable = true,
 	});
 
 	install_exception_handles();

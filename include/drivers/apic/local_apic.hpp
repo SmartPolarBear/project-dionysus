@@ -118,8 +118,15 @@ extern volatile uint32_t* lapic;
 
 PANIC void init_lapic();
 size_t get_cpunum();
-void write_lapic(size_t index, uint32_t value);
 void write_eoi();
+
+template<_internals::APICRegister T>
+static inline T read_lapic(uintptr_t addr)
+{
+	return local_apic::lapic[addr];
+}
+
+void write_lapic(size_t index, uint32_t value);
 
 /// \brief the dst_apic_id for a broadcast ipi, which means all APICs
 static inline constexpr uint32_t BROADCAST_DST_APIC_ID = 0;

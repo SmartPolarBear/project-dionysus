@@ -1,5 +1,5 @@
-#include "./traps.hpp"
-#include "./exception.hpp"
+#include "include/traps.hpp"
+#include "include/exception.hpp"
 
 #include "arch/amd64/cpu/x86.h"
 

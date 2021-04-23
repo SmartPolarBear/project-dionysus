@@ -169,6 +169,7 @@ enum register_addresses
 	LINT0_ADDR = 0x350,
 	LINT1_ADDR = 0x360,
 	ERROR_ADDR = 0x370,
+	ESR_ADDR = 0x280,
 	SVR_ADDR = 0xF0,
 };
 
