@@ -123,7 +123,7 @@ void write_eoi();
 template<_internals::APICRegister T>
 static inline T read_lapic(uintptr_t addr)
 {
-	return local_apic::lapic[addr];
+	return *((T * )(void * )(&local_apic::lapic[addr]));
 }
 
 void write_lapic(size_t index, uint32_t value);
