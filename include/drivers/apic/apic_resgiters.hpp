@@ -55,28 +55,36 @@ struct lvt_timer_reg
 }__attribute__((packed));
 static_assert(APICRegister<lvt_timer_reg>);
 
-struct lvt_error_reg
+union lvt_error_reg
 {
-	uint64_t vector: 8;
-	uint64_t res0: 4;
-	uint64_t delivery_status: 1;
-	uint64_t res1: 3;
-	uint64_t mask: 1;
-	uint64_t res2: 15;
+	struct
+	{
+		uint64_t vector: 8;
+		uint64_t res0: 4;
+		uint64_t delivery_status: 1;
+		uint64_t res1: 3;
+		uint64_t mask: 1;
+		uint64_t res2: 15;
+	}__attribute__((packed));
+	uint32_t raw;
 }__attribute__((packed));
 static_assert(APICRegister<lvt_error_reg>);
 
-struct lvt_lint_reg
+union lvt_lint_reg
 {
-	uint64_t vector: 8;
-	uint64_t delivery_mode: 3;
-	uint64_t res0: 1;
-	uint64_t delivery_status: 1;
-	uint64_t input_pin_polarity: 1;
-	uint64_t remote_irr: 1;
-	uint64_t trigger_mode: 1;
-	uint64_t mask: 1;
-	uint64_t res1: 15;
+	struct
+	{
+		uint64_t vector: 8;
+		uint64_t delivery_mode: 3;
+		uint64_t res0: 1;
+		uint64_t delivery_status: 1;
+		uint64_t input_pin_polarity: 1;
+		uint64_t remote_irr: 1;
+		uint64_t trigger_mode: 1;
+		uint64_t mask: 1;
+		uint64_t res1: 15;
+	}__attribute__((packed));
+	uint32_t raw;
 }__attribute__((packed));
 static_assert(APICRegister<lvt_lint_reg>);
 
@@ -113,7 +121,36 @@ static_assert(APICRegister<timer_divide_configuration_reg>);
 using initial_count_reg = uint32_t;
 using current_count_reg = uint32_t;
 
+union svr_reg
+{
+	struct
+	{
+		uint64_t vector: 8;
+		uint64_t apic_software_enable: 1;
+		uint64_t focus_proc_checking: 1;
+		uint64_t res0: 2;
+		uint64_t eoi_broadcast_suppression: 1;
+		uint64_t res1: 19;
+	}__attribute__((packed));
+	uint32_t raw;
+}__attribute__((packed));
+
+static_assert(APICRegister<svr_reg>);
+
 }
+
+enum [[clang::enum_extensibility(closed)]] timer_divide_values
+{
+	TIMER_DIV1 = 0B1011,
+	TIMER_DIV2 = 0B0000,
+	TIMER_DIV4 = 0B1000,
+	TIMER_DIV8 = 0B0010,
+	TIMER_DIV16 = 0B0011,
+	TIMER_DIV32 = 0B0001,
+	TIMER_DIV64 = 0B1001,
+	TIMER_DIV128 = 0B0011
+
+};
 
 enum [[clang::flag_enum]] esr_error_bits
 {
@@ -125,6 +162,14 @@ enum [[clang::flag_enum]] esr_error_bits
 	ESR_SEND_ILLEGAL_VEC = 1 << 5,
 	ESR_RECEIVE_ILLEGAL_VEC = 1 << 6,
 	ESR_ILLEGAL_REG_ADDR = 1 << 7
+};
+
+enum register_addresses
+{
+	LINT0_ADDR = 0x350,
+	LINT1_ADDR = 0x360,
+	ERROR_ADDR = 0x370,
+	SVR_ADDR = 0xF0,
 };
 
 class apic_base_msr

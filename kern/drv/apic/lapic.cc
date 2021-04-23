@@ -18,6 +18,9 @@ using trap::TRAP_IRQ0;
 
 using namespace apic;
 
+// APIC internals
+using namespace _internals;
+
 volatile uint32_t* local_apic::lapic;
 
 // Spin for a given number of microseconds.
@@ -41,14 +44,21 @@ PANIC void local_apic::init_lapic(void)
 	}
 
 	// enable local APIC
-	write_lapic(SVR, ENABLE | (trap::IRQ_TO_TRAPNUM(IRQ_SPURIOUS)));
+	// write_lapic(SVR, ENABLE | (trap::IRQ_TO_TRAPNUM(IRQ_SPURIOUS)));
+	_internals::svr_reg svr{
+		.apic_software_enable=true,
+		.vector=trap::IRQ_TO_TRAPNUM(IRQ_SPURIOUS) };
+	write_lapic(SVR_ADDR, svr.raw);
 
 	// setup timer
 	timer::setup_apic_timer();
 
 	// disbale logical interrupt lines
-	write_lapic(LINT0, INTERRUPT_MASKED);
-	write_lapic(LINT1, INTERRUPT_MASKED);
+	lvt_lint_reg lint0{ .mask=true }, lint1{ .mask=1 };
+	write_lapic(LINT0_ADDR, lint0.raw);
+	write_lapic(LINT1_ADDR, lint1.raw);
+//	write_lapic(LINT0, INTERRUPT_MASKED);
+//	write_lapic(LINT1, INTERRUPT_MASKED);
 
 	// Disable performance counter overflow interrupts
 	// on machines that provide that interrupt entry.
@@ -58,7 +68,9 @@ PANIC void local_apic::init_lapic(void)
 	}
 
 	// Map error interrupt to IRQ_ERROR.
-	write_lapic(ERROR, trap::IRQ_TO_TRAPNUM(IRQ_ERROR));
+	lvt_error_reg error_reg{ .vector=trap::IRQ_TO_TRAPNUM(IRQ_ERROR) };
+	write_lapic(ERROR_ADDR, error_reg.raw);
+//	write_lapic(ERROR, trap::IRQ_TO_TRAPNUM(IRQ_ERROR));
 
 	// Clear error status register (requires back-to-back writes).
 	write_lapic(ESR, 0);
