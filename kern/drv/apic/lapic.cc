@@ -38,6 +38,12 @@ void local_apic::write_lapic(offset_t addr_off, uint32_t value)
 	[[maybe_unused]] auto id_reg = read_lapic<lapic_id_reg>(ID_ADDR); // wait to finish by reading
 }
 
+void local_apic::write_lapic(offset_t addr_off, uint64_t value)
+{
+	memmove((void*)&local_apic::lapic_base[addr_off], &value, sizeof(value));
+	[[maybe_unused]] auto id_reg = read_lapic<lapic_id_reg>(ID_ADDR); // wait to finish by reading
+}
+
 PANIC void local_apic::init_lapic()
 {
 	if (!lapic_base)
@@ -110,6 +116,7 @@ PANIC void local_apic::init_lapic()
 	// Enable interrupts on the APIC (but not on the processor).
 	lapic_task_priority_reg reg{ .p_class=0, .p_subclass=0 };
 	write_lapic(TASK_PRI_ADDR, reg);
+
 }
 
 // when interrupts are enable
@@ -150,7 +157,7 @@ void local_apic::start_ap(size_t apicid, uintptr_t addr)
 	// the AP startup code prior to the [universal startup algorithm]."
 	outb(CMOS_PORT, 0xF); // offset 0xF is shutdown code
 	outb(CMOS_PORT + 1, 0x0A);
-	uint16_t* wrv = reinterpret_cast<decltype(wrv)>(P2V((0x40 << 4 | 0x67))); // Warm reset vector
+	auto wrv = reinterpret_cast<uint16_t*>(P2V((0x40 << 4 | 0x67))); // Warm reset vector
 	wrv[0] = 0;
 	wrv[1] = addr >> 4;
 
