@@ -52,15 +52,28 @@ PANIC void local_apic::init_lapic()
 		.vector=trap::IRQ_TO_TRAPNUM(IRQ_SPURIOUS) };
 	write_lapic(SVR_ADDR, svr);
 
-	// setup timer
-	timer::setup_apic_timer();
+	// Configure timer
+//	timer::setup_apic_timer();
+	auto[eax, ebx, ecx, edx]= cpuid(cpuid_requests::CPUID_GETFEATURES);
+
+	if (ecx & features::ecx_bits::CPUID_ECX_BIT_TSCDeadline)
+	{
+		kdebug::kdebug_log("TSC-Deadline timer mode is supported.");
+		// TODO: use TSC-Deadline
+	}
+
+	lvt_timer_reg timer_reg{ .timer_mode=TIMER_PERIODIC, .vector=(trap::IRQ_TO_TRAPNUM(trap::IRQ_TIMER)) };
+
+	write_lapic(LVT_TIMER_ADDR, timer_reg);
+
+	timer_divide_configuration_reg dcr{ .divide_val=TIMER_DIV1 };
+	write_lapic(DCR_ADDR, dcr);
+	write_lapic(INITIAL_COUNT_ADDR, TIC_DEFUALT_VALUE);
 
 	// Disbale logical interrupt lines
-	lvt_lint_reg lint0{ .masked=true }, lint1{ .masked=1 };
+	lvt_lint_reg lint0{ .masked=true }, lint1{ .masked=true };
 	write_lapic(LINT0_ADDR, lint0);
 	write_lapic(LINT1_ADDR, lint1);
-//	write_lapic(LINT0, INTERRUPT_MASKED);
-//	write_lapic(LINT1, INTERRUPT_MASKED);
 
 	// Disable performance counter overflow interrupts
 	// on machines that provide that interrupt entry.
@@ -74,7 +87,6 @@ PANIC void local_apic::init_lapic()
 	// Map error interrupt to IRQ_ERROR.
 	lvt_error_reg error_reg{ .vector=trap::IRQ_TO_TRAPNUM(IRQ_ERROR) };
 	write_lapic(ERROR_ADDR, error_reg);
-//	write_lapic(ERROR, trap::IRQ_TO_TRAPNUM(IRQ_ERROR));
 
 	// Clear error status register (requires back-to-back writes).
 	error_status_reg esr{ .error_bits=0, .res0=0 };
@@ -93,10 +105,7 @@ PANIC void local_apic::init_lapic()
 	write_lapic(ICR_LO_ADDR, icr.value_low);
 	write_lapic(ICR_HI_ADDR, icr.value_high);
 
-//	write_lapic(ICRHI, 0);
-//	write_lapic(ICRLO, ICRLO_CMD_BCAST | ICRLO_CMD_INIT | ICRLO_CMD_LEVEL);
-
-	while (read_lapic<lapic_icr_reg>(ICRLO).delivery_status != 0);
+	while (read_lapic<lapic_icr_reg>(ICRLO).delivery_status != DLS_IDLE);
 
 	// Enable interrupts on the APIC (but not on the processor).
 	lapic_task_priority_reg reg{ .p_class=0, .p_subclass=0 };

@@ -17,6 +17,12 @@ enum delievery_modes
 	DLM_EXTINT = 7,
 };
 
+enum delivery_status
+{
+	DLS_IDLE = 0,
+	DLS_SEND_PENDING = 1,
+};
+
 namespace local_apic
 {
 

@@ -217,6 +217,10 @@ enum register_addresses
 	TASK_PRI_ADDR = 0x080,
 	PROC_PRI_ADDR = 0x0A0,
 	EOI_ADDR = 0x0B0,
+	LVT_TIMER_ADDR = 0x320,
+	DCR_ADDR = 0x3E0,
+	INITIAL_COUNT_ADDR = 0x380,
+	CURRENT_COUNT_ADDR = 0x390,
 	LINT0_ADDR = 0x350,
 	LINT1_ADDR = 0x360,
 	ERROR_ADDR = 0x370,
@@ -224,6 +228,14 @@ enum register_addresses
 	SVR_ADDR = 0xF0,
 	ICR_LO_ADDR = 0x300,
 	ICR_HI_ADDR = 0x310
+};
+
+enum apic_timer_modes
+{
+	TIMER_ONE_SHOT = 0b00,
+	TIMER_PERIODIC = 0b01,
+	TIMER_TSC_DEADLINE = 0b10,
+	TIMER_RESERVED = 0b11
 };
 
 class apic_base_msr
