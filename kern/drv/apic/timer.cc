@@ -21,19 +21,9 @@
 
 using namespace apic;
 
-using local_apic::TDCR;
-using local_apic::TIC_DEFUALT_VALUE;
-using local_apic::TICR;
-using local_apic::TIMER;
-using local_apic::TIMER_FLAG_PERIODIC;
-using local_apic::TIMER_FLAG_X1;
+using namespace local_apic;
 
-using local_apic::write_lapic;
-
-using lock::spinlock_struct;
-using lock::spinlock_acquire;
-using lock::spinlock_initialize_lock;
-using lock::spinlock_release;
+using namespace lock;
 
 using trap::IRQ_TIMER;
 using trap::TRAP_IRQ0;
@@ -51,14 +41,6 @@ static inline spinlock_struct* ticks_lock()
 
 // defined below
 error_code trap_handle_tick(trap::trap_frame info);
-
-PANIC void timer::setup_apic_timer()
-{
-	// initialize apic values
-	write_lapic(TDCR, TIMER_FLAG_X1);
-	write_lapic(TIMER, TIMER_FLAG_PERIODIC | (trap::IRQ_TO_TRAPNUM(IRQ_TIMER)));
-	write_lapic(TICR, TIC_DEFUALT_VALUE);
-}
 
 PANIC void timer::init_apic_timer()
 {

@@ -4,7 +4,6 @@
 
 namespace timer
 {
-	PANIC void setup_apic_timer();
 
 	PANIC void init_apic_timer();
 

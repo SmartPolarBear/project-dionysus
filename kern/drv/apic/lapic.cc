@@ -68,7 +68,7 @@ PANIC void local_apic::init_lapic()
 		// TODO: use TSC-Deadline
 	}
 
-	lvt_timer_reg timer_reg{ .timer_mode=TIMER_PERIODIC, .vector=(trap::IRQ_TO_TRAPNUM(trap::IRQ_TIMER)) };
+	lvt_timer_reg timer_reg{ .vector=(trap::IRQ_TO_TRAPNUM(trap::IRQ_TIMER)), .timer_mode=TIMER_PERIODIC };
 
 	write_lapic(LVT_TIMER_ADDR, timer_reg);
 
@@ -87,7 +87,7 @@ PANIC void local_apic::init_lapic()
 	if (ver.max_lvt >= 4u)
 	{
 		lvt_perf_mon_counters_reg reg{ .mask=true };
-		write_lapic(PCINT, reg);
+		write_lapic(LVT_PC_ADDR, reg);
 	}
 
 	// Map error interrupt to IRQ_ERROR.
@@ -111,7 +111,7 @@ PANIC void local_apic::init_lapic()
 	write_lapic(ICR_LO_ADDR, icr.value_low);
 	write_lapic(ICR_HI_ADDR, icr.value_high);
 
-	while (read_lapic<lapic_icr_reg>(ICRLO).delivery_status != DLS_IDLE);
+	while (read_lapic<lapic_icr_reg>(ICR_LO_ADDR).delivery_status != DLS_IDLE);
 
 	// Enable interrupts on the APIC (but not on the processor).
 	lapic_task_priority_reg reg{ .p_class=0, .p_subclass=0 };
@@ -163,12 +163,27 @@ void local_apic::start_ap(size_t apicid, uintptr_t addr)
 
 	// "Universal startup algorithm."
 	// Send INIT (level-triggered) interrupt to reset other CPU.
-	write_lapic(ICRHI, apicid << 24);
-	write_lapic(ICRLO, ICRLO_CMD_INIT | ICRLO_CMD_LEVEL | ICRLO_CMD_ASSERT);
-	delay_a_while(200);
+//	write_lapic(ICRHI, apicid << 24);
+//	write_lapic(ICRLO, ICRLO_CMD_INIT | ICRLO_CMD_LEVEL | ICRLO_CMD_ASSERT);
 
-	write_lapic(ICRLO, ICRLO_CMD_INIT | ICRLO_CMD_LEVEL);
-	delay_a_while(10000);
+	{
+		lapic_icr_reg icr{ .dest=static_cast<uint32_t>(apicid),
+			.delivery_mode=DLM_INIT,
+			.trigger=TRG_LEVEL,
+			.level=APIC_LEVEL_ASSERT };
+
+		write_lapic(ICR_HI_ADDR, icr.value_high);
+		write_lapic(ICR_LO_ADDR, icr.value_low);
+
+		delay_a_while(200);
+	}
+
+	{
+//		write_lapic(ICRLO, ICRLO_CMD_INIT | ICRLO_CMD_LEVEL);
+		lapic_icr_reg icr{ .delivery_mode=DLM_INIT, .trigger=TRG_LEVEL };
+		write_lapic(ICR_LO_ADDR, icr.value_low);
+		delay_a_while(10000);
+	}
 
 	// Send startup IPI (twice!) to enter code.
 	// Regular hardware is supposed to only accept a STARTUP
@@ -176,8 +191,16 @@ void local_apic::start_ap(size_t apicid, uintptr_t addr)
 	// should be ignored, but it is part of the official Intel algorithm.
 	for (int i = 0; i < 2; i++)
 	{
-		write_lapic(ICRHI, apicid << 24);
-		write_lapic(ICRLO, ICRLO_CMD_STARTUP | (addr >> 12));
+//		write_lapic(ICRHI, apicid << 24);
+//		write_lapic(ICRLO, ICRLO_CMD_STARTUP | (addr >> 12));
+
+		lapic_icr_reg icr{ .dest=static_cast<uint32_t>(apicid),
+			.delivery_mode=DLM_STARTUP,
+			.vector=static_cast<uint32_t>((addr >> 12)) };
+
+		write_lapic(ICR_HI_ADDR, icr.value_high);
+		write_lapic(ICR_LO_ADDR, icr.value_low);
+
 		delay_a_while(200);
 	}
 }
@@ -216,8 +239,8 @@ void local_apic::apic_send_ipi(uint32_t dst_apic_id, delievery_modes mode, uint3
 	icr.level = APIC_LEVEL_ASSERT;
 	icr.trigger = TRG_EDGE;
 
-	write_lapic(ICRHI, icr.value_high);
-	write_lapic(ICRLO, icr.value_low);
+	write_lapic(ICR_HI_ADDR, icr.value_high);
+	write_lapic(ICR_LO_ADDR, icr.value_low);
 }
 
 void local_apic::apic_send_ipi(uint32_t dst_apic_id, delievery_modes mode, uint32_t vec)
