@@ -20,12 +20,6 @@ enum delievery_modes
 namespace local_apic
 {
 
-constexpr size_t ID = 0x0020 / 4;
-constexpr size_t VER = 0x0030 / 4;
-constexpr size_t TASK_PRIORITY = 0x0080 / 4;
-constexpr size_t EOI = 0x00B0 / 4;
-constexpr size_t SVR = 0x00F0 / 4; // Spurious Interrupt Vector
-
 union lapic_icr
 {
 	struct
@@ -72,11 +66,8 @@ enum apic_levels
 	APIC_LEVEL_ASSERT = 0x1,    /* Always use assert */
 };
 
-enum SVR_FLAGS
-{
-	ENABLE = 0x00000100
-};
-constexpr size_t ESR = 0x0280 / 4;
+
+
 constexpr size_t ICRLO = 0x0300 / 4;
 enum ICRLO_COMMAND
 {
@@ -114,19 +105,25 @@ constexpr size_t TICR = 0x0380 / 4;                  // Timer Initial Count
 constexpr size_t TDCR = 0x03E0 / 4;                  // Timer Divide Configuration
 constexpr size_t TIC_DEFUALT_VALUE = 10000000;
 
-extern volatile uint32_t* lapic;
+extern volatile uint8_t* lapic_base;
 
 PANIC void init_lapic();
 size_t get_cpunum();
 void write_eoi();
 
 template<_internals::APICRegister T>
-static inline T read_lapic(uintptr_t addr)
+static inline T read_lapic(offset_t addr_off)
 {
-	return *((T * )(void * )(&local_apic::lapic[addr]));
+	return *((T * )(void * )(&local_apic::lapic_base[addr_off]));
 }
 
-void write_lapic(size_t index, uint32_t value);
+void write_lapic(offset_t addr_off, uint32_t value);
+
+template<_internals::APICRegister T>
+static inline void write_lapic(offset_t addr_off, T val)
+{
+	write_lapic(addr_off, *((uint32_t*)(void*)(&val)));
+}
 
 /// \brief the dst_apic_id for a broadcast ipi, which means all APICs
 static inline constexpr uint32_t BROADCAST_DST_APIC_ID = 0;

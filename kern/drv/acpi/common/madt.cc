@@ -58,7 +58,7 @@ size_t iso_count = 0;
 		return -ERROR_INVALID;
 	}
 
-	local_apic::lapic = IO2V<decltype(local_apic::lapic)>((void*)static_cast<uintptr_t>(madt->lapic_addr_phys));
+	local_apic::lapic_base = IO2V<decltype(local_apic::lapic_base)>((void*)static_cast<uintptr_t>(madt->lapic_addr_phys));
 
 	const madt_entry_header* begin = reinterpret_cast<decltype(begin)>(madt->table),
 		* end = reinterpret_cast<decltype(begin)>(madt->table + madt->header.length - sizeof(*madt));

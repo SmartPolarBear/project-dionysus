@@ -23,7 +23,7 @@ using namespace apic;
 // APIC internals
 using namespace _internals;
 
-volatile uint32_t* local_apic::lapic;
+volatile uint8_t* local_apic::lapic_base;
 
 // Spin for a given number of microseconds.
 // On real hardware would want to tune this dynamically.
@@ -32,15 +32,15 @@ volatile uint32_t* local_apic::lapic;
 	for (size_t i = 0; i < count; i++); // do nothing. just consume time.
 }
 
-void local_apic::write_lapic(size_t index, uint32_t value)
+void local_apic::write_lapic(offset_t addr_off, uint32_t value)
 {
-	local_apic::lapic[index] = value;
-	[[maybe_unused]] auto val = local_apic::lapic[local_apic::ID]; // wait to finish by reading
+	memmove((void*)&local_apic::lapic_base[addr_off], &value, sizeof(value));
+	[[maybe_unused]] auto id_reg = read_lapic<lapic_id_reg>(ID_ADDR); // wait to finish by reading
 }
 
 PANIC void local_apic::init_lapic(void)
 {
-	if (!lapic)
+	if (!lapic_base)
 	{
 		KDEBUG_RICHPANIC("LAPIC isn't avaiable.\n", "KERNEL PANIC: LAPIC", false, "");
 	}
@@ -50,44 +50,49 @@ PANIC void local_apic::init_lapic(void)
 	_internals::svr_reg svr{
 		.apic_software_enable=true,
 		.vector=trap::IRQ_TO_TRAPNUM(IRQ_SPURIOUS) };
-	write_lapic(SVR_ADDR, svr.raw);
+	write_lapic(SVR_ADDR, svr);
 
 	// setup timer
 	timer::setup_apic_timer();
 
 	// disbale logical interrupt lines
 	lvt_lint_reg lint0{ .mask=true }, lint1{ .mask=1 };
-	write_lapic(LINT0_ADDR, lint0.raw);
-	write_lapic(LINT1_ADDR, lint1.raw);
+	write_lapic(LINT0_ADDR, lint0);
+	write_lapic(LINT1_ADDR, lint1);
 //	write_lapic(LINT0, INTERRUPT_MASKED);
 //	write_lapic(LINT1, INTERRUPT_MASKED);
 
 	// Disable performance counter overflow interrupts
 	// on machines that provide that interrupt entry.
-	if (((lapic[VER] >> 16) & 0xFF) >= 4)
+	auto ver = read_lapic<lapic_version_reg>(VERSION_ADDR);
+	if (ver.max_lvt >= 4u)
 	{
-		write_lapic(PCINT, INTERRUPT_MASKED);
+		lvt_perf_mon_counters_reg reg{ .mask=true };
+		write_lapic(PCINT, reg);
 	}
 
 	// Map error interrupt to IRQ_ERROR.
 	lvt_error_reg error_reg{ .vector=trap::IRQ_TO_TRAPNUM(IRQ_ERROR) };
-	write_lapic(ERROR_ADDR, error_reg.raw);
+	write_lapic(ERROR_ADDR, error_reg);
 //	write_lapic(ERROR, trap::IRQ_TO_TRAPNUM(IRQ_ERROR));
 
 	// Clear error status register (requires back-to-back writes).
-	write_lapic(ESR, 0);
-	write_lapic(ESR, 0);
+	error_status_reg esr{ .error_bits=0, .res0=0 };
+	write_lapic(ESR_ADDR, esr);
+	write_lapic(ESR_ADDR, esr);
 
 	// Ack any outstanding interrupts.
-	write_lapic(EOI, 0);
+	write_eoi();
 
 	// Send an Init Level De-Assert to synchronise arbitration ID's.
 	write_lapic(ICRHI, 0);
 	write_lapic(ICRLO, ICRLO_CMD_BCAST | ICRLO_CMD_INIT | ICRLO_CMD_LEVEL);
-	while (lapic[ICRLO] & ICRLO_CMD_DELIVS);
+
+	while (lapic_base[ICRLO] & ICRLO_CMD_DELIVS);
 
 	// Enable interrupts on the APIC (but not on the processor).
-	write_lapic(TASK_PRIORITY, 0);
+	lapic_task_priority_reg reg{ .p_class=0, .p_subclass=0 };
+	write_lapic(TASK_PRI_ADDR, reg);
 }
 
 // when interrupts are enable
@@ -100,16 +105,16 @@ size_t local_apic::get_cpunum()
 			false, "Return address: 0x%x\n", __builtin_return_address(0));
 	}
 
-	if (lapic == nullptr)
+	if (lapic_base == nullptr)
 	{
 		return 0;
 	}
 
-	auto id = lapic[ID] >> 24;
+	auto id_reg = read_lapic<lapic_id_reg>(ID_ADDR);
 
 	for (size_t i = 0; i < cpu_count; i++)
 	{
-		if (id == cpus[i].apicid)
+		if (id_reg.apic_id == cpus[i].apicid)
 		{
 			return i;
 		}
@@ -155,9 +160,10 @@ void local_apic::start_ap(size_t apicid, uintptr_t addr)
 
 void local_apic::write_eoi()
 {
-	if (lapic)
+	if (lapic_base)
 	{
-		write_lapic(EOI, 0);
+		eoi_reg eoi = 0;
+		write_lapic(EOI_ADDR, eoi);
 	}
 }
 

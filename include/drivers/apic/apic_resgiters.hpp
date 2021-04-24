@@ -26,6 +26,21 @@ struct apic_base_msr_reg
 }__attribute__((packed));
 static_assert(MSRRegister<apic_base_msr_reg>);
 
+union lapic_priority_reg
+{
+	struct
+	{
+		uint64_t p_subclass: 4;
+		uint64_t p_class: 4;
+		uint64_t res0: 24;
+	}__attribute__((packed));
+	uint32_t raw;
+}__attribute__((packed));
+static_assert(APICRegister<lapic_priority_reg>);
+
+using lapic_process_priority_reg = lapic_priority_reg;
+using lapic_task_priority_reg = lapic_priority_reg;
+
 struct lapic_id_reg
 {
 	uint64_t res0: 24;
@@ -88,15 +103,19 @@ union lvt_lint_reg
 }__attribute__((packed));
 static_assert(APICRegister<lvt_lint_reg>);
 
-struct lvt_common_reg
+union lvt_common_reg
 {
-	uint64_t vector: 8;
-	uint64_t delivery_mode: 3;
-	uint64_t res0: 1;
-	uint64_t delivery_status: 1;
-	uint64_t res1: 3;
-	uint64_t mask: 1;
-	uint64_t res2: 15;
+	struct
+	{
+		uint64_t vector: 8;
+		uint64_t delivery_mode: 3;
+		uint64_t res0: 1;
+		uint64_t delivery_status: 1;
+		uint64_t res1: 3;
+		uint64_t mask: 1;
+		uint64_t res2: 15;
+	}__attribute__((packed));
+	uint32_t raw;
 }__attribute__((packed));
 static_assert(APICRegister<lvt_common_reg>);
 
@@ -120,6 +139,8 @@ static_assert(APICRegister<timer_divide_configuration_reg>);
 
 using initial_count_reg = uint32_t;
 using current_count_reg = uint32_t;
+
+using eoi_reg = uint32_t;
 
 union svr_reg
 {
@@ -166,6 +187,11 @@ enum [[clang::flag_enum]] esr_error_bits
 
 enum register_addresses
 {
+	ID_ADDR = 0x020,
+	VERSION_ADDR = 0x030,
+	TASK_PRI_ADDR = 0x080,
+	PROC_PRI_ADDR = 0x0A0,
+	EOI_ADDR = 0x0B0,
 	LINT0_ADDR = 0x350,
 	LINT1_ADDR = 0x360,
 	ERROR_ADDR = 0x370,
