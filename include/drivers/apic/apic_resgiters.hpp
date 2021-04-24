@@ -15,6 +15,9 @@ concept MSRRegister = sizeof(T) == sizeof(uint64_t) && std::is_standard_layout_v
 template<typename T>
 concept APICRegister= sizeof(T) == sizeof(uint32_t) && std::is_standard_layout_v<T>;
 
+template<typename T>
+concept APICLongRegister= sizeof(T) == sizeof(uint64_t) && std::is_standard_layout_v<T>;
+
 struct apic_base_msr_reg
 {
 	uint64_t res0_: 8;
@@ -96,7 +99,7 @@ union lvt_lint_reg
 		uint64_t input_pin_polarity: 1;
 		uint64_t remote_irr: 1;
 		uint64_t trigger_mode: 1;
-		uint64_t mask: 1;
+		uint64_t masked: 1;
 		uint64_t res1: 15;
 	}__attribute__((packed));
 	uint32_t raw;
@@ -158,6 +161,28 @@ union svr_reg
 
 static_assert(APICRegister<svr_reg>);
 
+union lapic_icr_reg
+{
+	struct
+	{
+		uint32_t vector: 8, delivery_mode: 3, dest_mode: 1,
+			delivery_status: 1, reserved0: 1, level: 1,
+			trigger: 1, reserved1: 2, dest_shorthand: 2,
+			reserved2: 12;
+		uint32_t reserved3: 24, dest: 8;
+	} __attribute__((__packed__));
+
+	struct
+	{
+		uint32_t value_low;
+		uint32_t value_high;
+	} __attribute__((__packed__));
+
+	uint64_t value;
+}__attribute__((__packed__));
+
+static_assert(APICLongRegister<lapic_icr_reg>);
+
 }
 
 enum [[clang::enum_extensibility(closed)]] timer_divide_values
@@ -197,6 +222,8 @@ enum register_addresses
 	ERROR_ADDR = 0x370,
 	ESR_ADDR = 0x280,
 	SVR_ADDR = 0xF0,
+	ICR_LO_ADDR = 0x300,
+	ICR_HI_ADDR = 0x310
 };
 
 class apic_base_msr

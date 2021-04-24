@@ -27,7 +27,7 @@ volatile uint8_t* local_apic::lapic_base;
 
 // Spin for a given number of microseconds.
 // On real hardware would want to tune this dynamically.
-[[clang::optnone]] static inline void microdelay(size_t count)
+[[clang::optnone]] static inline void delay_a_while(size_t count)
 {
 	for (size_t i = 0; i < count; i++); // do nothing. just consume time.
 }
@@ -38,7 +38,7 @@ void local_apic::write_lapic(offset_t addr_off, uint32_t value)
 	[[maybe_unused]] auto id_reg = read_lapic<lapic_id_reg>(ID_ADDR); // wait to finish by reading
 }
 
-PANIC void local_apic::init_lapic(void)
+PANIC void local_apic::init_lapic()
 {
 	if (!lapic_base)
 	{
@@ -55,8 +55,8 @@ PANIC void local_apic::init_lapic(void)
 	// setup timer
 	timer::setup_apic_timer();
 
-	// disbale logical interrupt lines
-	lvt_lint_reg lint0{ .mask=true }, lint1{ .mask=1 };
+	// Disbale logical interrupt lines
+	lvt_lint_reg lint0{ .masked=true }, lint1{ .masked=1 };
 	write_lapic(LINT0_ADDR, lint0);
 	write_lapic(LINT1_ADDR, lint1);
 //	write_lapic(LINT0, INTERRUPT_MASKED);
@@ -85,10 +85,18 @@ PANIC void local_apic::init_lapic(void)
 	write_eoi();
 
 	// Send an Init Level De-Assert to synchronise arbitration ID's.
-	write_lapic(ICRHI, 0);
-	write_lapic(ICRLO, ICRLO_CMD_BCAST | ICRLO_CMD_INIT | ICRLO_CMD_LEVEL);
+	lapic_icr_reg icr{};
+	icr.dest_shorthand = APIC_DEST_SHORTHAND_ALL_AND_SELF;
+	icr.delivery_mode = DLM_INIT;
+	icr.trigger = TRG_LEVEL;
 
-	while (lapic_base[ICRLO] & ICRLO_CMD_DELIVS);
+	write_lapic(ICR_LO_ADDR, icr.value_low);
+	write_lapic(ICR_HI_ADDR, icr.value_high);
+
+//	write_lapic(ICRHI, 0);
+//	write_lapic(ICRLO, ICRLO_CMD_BCAST | ICRLO_CMD_INIT | ICRLO_CMD_LEVEL);
+
+	while (read_lapic<lapic_icr_reg>(ICRLO).delivery_status != 0);
 
 	// Enable interrupts on the APIC (but not on the processor).
 	lapic_task_priority_reg reg{ .p_class=0, .p_subclass=0 };
@@ -141,10 +149,10 @@ void local_apic::start_ap(size_t apicid, uintptr_t addr)
 	// Send INIT (level-triggered) interrupt to reset other CPU.
 	write_lapic(ICRHI, apicid << 24);
 	write_lapic(ICRLO, ICRLO_CMD_INIT | ICRLO_CMD_LEVEL | ICRLO_CMD_ASSERT);
-	microdelay(200);
+	delay_a_while(200);
 
 	write_lapic(ICRLO, ICRLO_CMD_INIT | ICRLO_CMD_LEVEL);
-	microdelay(10000);
+	delay_a_while(10000);
 
 	// Send startup IPI (twice!) to enter code.
 	// Regular hardware is supposed to only accept a STARTUP
@@ -154,7 +162,7 @@ void local_apic::start_ap(size_t apicid, uintptr_t addr)
 	{
 		write_lapic(ICRHI, apicid << 24);
 		write_lapic(ICRLO, ICRLO_CMD_STARTUP | (addr >> 12));
-		microdelay(200);
+		delay_a_while(200);
 	}
 }
 
@@ -169,7 +177,7 @@ void local_apic::write_eoi()
 
 void local_apic::apic_send_ipi(uint32_t dst_apic_id, delievery_modes mode, uint32_t vec, irq_destinations irq_dest)
 {
-	lapic_icr icr{};
+	lapic_icr_reg icr{};
 	icr.vector = vec;
 	icr.delivery_mode = mode;
 

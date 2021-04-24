@@ -20,31 +20,6 @@ enum delievery_modes
 namespace local_apic
 {
 
-union lapic_icr
-{
-	struct
-	{
-		uint32_t vector: 8, delivery_mode: 3, dest_mode: 1,
-			delivery_status: 1, reserved0: 1, level: 1,
-			trigger: 1, reserved1: 2, dest_shorthand: 2,
-			reserved2: 12;
-		uint32_t reserved3: 24, dest: 8;
-	} __attribute__((__packed__));
-
-	struct
-	{
-		uint32_t value_low;
-		uint32_t value_high;
-	} __attribute__((__packed__));
-
-	uint64_t value;
-}__attribute__((__packed__));
-
-static_assert(sizeof(lapic_icr) == sizeof(uint64_t));
-
-
-
-
 enum irq_destinations
 {
 	IRQDST_BROADCAST,
@@ -65,8 +40,6 @@ enum apic_levels
 	APIC_LEVEL_DEASSERT = 0x0,    /* 82489DX Obsolete. _Never_ use */
 	APIC_LEVEL_ASSERT = 0x1,    /* Always use assert */
 };
-
-
 
 constexpr size_t ICRLO = 0x0300 / 4;
 enum ICRLO_COMMAND
@@ -117,6 +90,12 @@ static inline T read_lapic(offset_t addr_off)
 	return *((T * )(void * )(&local_apic::lapic_base[addr_off]));
 }
 
+template<_internals::APICLongRegister T>
+static inline T read_lapic(offset_t addr_off)
+{
+	return *((T * )(void * )(&local_apic::lapic_base[addr_off]));
+}
+
 void write_lapic(offset_t addr_off, uint32_t value);
 
 template<_internals::APICRegister T>
@@ -128,7 +107,8 @@ static inline void write_lapic(offset_t addr_off, T val)
 /// \brief the dst_apic_id for a broadcast ipi, which means all APICs
 static inline constexpr uint32_t BROADCAST_DST_APIC_ID = 0;
 
-void apic_send_ipi(uint32_t dst_apic_id, delievery_modes mode, uint32_t vec, irq_destinations irq_dest);
+void apic_send_ipi(uint32_t dst_apic_id, delievery_modes mode,
+	uint32_t vec, irq_destinations irq_dest);
 
 void apic_send_ipi(uint32_t dst_apic_id, delievery_modes mode, uint32_t vec);
 
