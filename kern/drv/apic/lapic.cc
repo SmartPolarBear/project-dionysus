@@ -34,13 +34,13 @@ volatile uint8_t* local_apic::lapic_base;
 
 void local_apic::write_lapic(offset_t addr_off, uint32_t value)
 {
-	memmove((void*)&local_apic::lapic_base[addr_off], &value, sizeof(value));
+	*((uint32_t*)(void*)(&local_apic::lapic_base[addr_off])) = value;
 	[[maybe_unused]] auto id_reg = read_lapic<lapic_id_reg>(ID_ADDR); // wait to finish by reading
 }
 
 void local_apic::write_lapic(offset_t addr_off, uint64_t value)
 {
-	memmove((void*)&local_apic::lapic_base[addr_off], &value, sizeof(value));
+	*((uint64_t*)(void*)(&local_apic::lapic_base[addr_off])) = value;
 	[[maybe_unused]] auto id_reg = read_lapic<lapic_id_reg>(ID_ADDR); // wait to finish by reading
 }
 
@@ -51,26 +51,40 @@ PANIC void local_apic::init_lapic()
 		KDEBUG_RICHPANIC("LAPIC isn't avaiable.\n", "KERNEL PANIC: LAPIC", false, "");
 	}
 
+
 	// enable local APIC
-	// write_lapic(SVR, ENABLE | (trap::IRQ_TO_TRAPNUM(IRQ_SPURIOUS)));
-	_internals::svr_reg svr{
-		.apic_software_enable=true,
-		.vector=trap::IRQ_TO_TRAPNUM(IRQ_SPURIOUS) };
-	write_lapic(SVR_ADDR, svr);
+	apic_svr_register::from_register()
+		.vector(trap::IRQ_TO_TRAPNUM(IRQ_SPURIOUS))
+		.enable(true)
+		.apply();
+
+//	_internals::svr_reg svr{
+//		.apic_software_enable=true,
+//		.vector=trap::IRQ_TO_TRAPNUM(IRQ_SPURIOUS) };
+//	write_lapic(SVR_ADDR, svr);
 
 	// Configure timer
-//	timer::setup_apic_timer();
 	auto[eax, ebx, ecx, edx]= cpuid(cpuid_requests::CPUID_GETFEATURES);
 
 	if (ecx & features::ecx_bits::CPUID_ECX_BIT_TSCDeadline)
 	{
-		kdebug::kdebug_log("TSC-Deadline timer mode is supported.");
+		kdebug::kdebug_log("TSC-Deadline timer mode is supported.\n");
 		// TODO: use TSC-Deadline
 	}
+	else
+	{
+		kdebug::kdebug_log("TSC-Deadline timer mode is not supported.\n");
+	}
 
-	lvt_timer_reg timer_reg{ .vector=(trap::IRQ_TO_TRAPNUM(trap::IRQ_TIMER)), .timer_mode=TIMER_PERIODIC };
+//	lvt_timer_reg timer_reg{ .vector=(trap::IRQ_TO_TRAPNUM(trap::IRQ_TIMER)), .timer_mode=TIMER_PERIODIC };
+//
+//	write_lapic(LVT_TIMER_ADDR, timer_reg);
 
-	write_lapic(LVT_TIMER_ADDR, timer_reg);
+	apic_lvt_timer_register::from_register()
+		.clear()
+		.vector(trap::IRQ_TO_TRAPNUM(trap::IRQ_TIMER))
+		.mode(TIMER_PERIODIC)
+		.apply();
 
 	timer_divide_configuration_reg dcr{ .divide_val=TIMER_DIV1 };
 	write_lapic(DCR_ADDR, dcr);
@@ -163,9 +177,6 @@ void local_apic::start_ap(size_t apicid, uintptr_t addr)
 
 	// "Universal startup algorithm."
 	// Send INIT (level-triggered) interrupt to reset other CPU.
-//	write_lapic(ICRHI, apicid << 24);
-//	write_lapic(ICRLO, ICRLO_CMD_INIT | ICRLO_CMD_LEVEL | ICRLO_CMD_ASSERT);
-
 	{
 		lapic_icr_reg icr{ .dest=static_cast<uint32_t>(apicid),
 			.delivery_mode=DLM_INIT,
@@ -179,7 +190,6 @@ void local_apic::start_ap(size_t apicid, uintptr_t addr)
 	}
 
 	{
-//		write_lapic(ICRLO, ICRLO_CMD_INIT | ICRLO_CMD_LEVEL);
 		lapic_icr_reg icr{ .delivery_mode=DLM_INIT, .trigger=TRG_LEVEL };
 		write_lapic(ICR_LO_ADDR, icr.value_low);
 		delay_a_while(10000);
@@ -191,9 +201,6 @@ void local_apic::start_ap(size_t apicid, uintptr_t addr)
 	// should be ignored, but it is part of the official Intel algorithm.
 	for (int i = 0; i < 2; i++)
 	{
-//		write_lapic(ICRHI, apicid << 24);
-//		write_lapic(ICRLO, ICRLO_CMD_STARTUP | (addr >> 12));
-
 		lapic_icr_reg icr{ .dest=static_cast<uint32_t>(apicid),
 			.delivery_mode=DLM_STARTUP,
 			.vector=static_cast<uint32_t>((addr >> 12)) };

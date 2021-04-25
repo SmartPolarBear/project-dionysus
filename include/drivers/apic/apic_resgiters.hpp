@@ -239,38 +239,118 @@ enum apic_timer_modes
 	TIMER_RESERVED = 0b11
 };
 
-class apic_base_msr
+enum delievery_modes
+{
+	DLM_FIXED = 0,
+	DLM_LOWEST_PRIORITY = 1,
+	DLM_SMI = 2,
+	DLM_NMI = 4,
+	DLM_INIT = 5,
+	DLM_STARTUP = 0b110,
+	DLM_EXTINT = 7,
+};
+
+enum delivery_statuses
+{
+	DLS_IDLE = 0,
+	DLS_SEND_PENDING = 1,
+};
+
+enum irq_destinations
+{
+	IRQDST_BROADCAST,
+	IRQDST_BOOTSTRAP,
+	IRQDEST_SINGLE,
+};
+
+enum apic_dest_shorthands
+{
+	APIC_DEST_SHORTHAND_NONE = 0x0,
+	APIC_DEST_SHORTHAND_SELF = 0x1,
+	APIC_DEST_SHORTHAND_ALL_AND_SELF = 0x2,
+	APIC_DEST_SHORTHAND_ALL_BUT_SELF = 0x3,
+};
+
+enum apic_levels
+{
+	APIC_LEVEL_DEASSERT = 0x0,    /* 82489DX Obsolete. _Never_ use */
+	APIC_LEVEL_ASSERT = 0x1,    /* Always use assert */
+};
+
+template<typename T>
+class i_apic_register
 {
  public:
-	apic_base_msr(uint64_t raw) : raw_(raw)
-	{
-	}
+	virtual T& load() = 0;
+	virtual T& clear() = 0;
+	virtual void apply() = 0;
+};
 
-	~apic_base_msr() = default;
+#ifdef ALL_DEFAULT_CONSTRUCTORS
+#error  "ALL_DEFAULT_CONSTRUCTORS can't be defined"
+#endif
 
-	apic_base_msr(const apic_base_msr& another) : raw_(another.raw_)
-	{
+#define ALL_DEFAULT_CONSTRUCTORS(name) \
+        name()=default;                     \
+        ~name()=default;                    \
+        name(const name &)=default;         \
+        name(name &&)=default;         \
 
-	}
+#define STATIC_LOAD(type_name) \
+	[[nodiscard]]static type_name& from_register() \
+    {                             \
+        type_name ret{};  \
+        return ret.load();           \
+    }                           \
 
-	apic_base_msr(apic_base_msr&& another) : raw_(std::exchange(another.raw_, 0))
-	{
+class apic_svr_register final
+	: public i_apic_register<apic_svr_register>
+{
+ public:
+	ALL_DEFAULT_CONSTRUCTORS(apic_svr_register);
+	STATIC_LOAD(apic_svr_register);
 
-	}
+	apic_svr_register& operator=(const apic_svr_register&) = default;
 
-	apic_base_msr& operator=(const apic_base_msr& another)
-	{
-		raw_ = another.raw_;
-		return *this;
-	}
+
+	apic_svr_register& load() override;
+	apic_svr_register& clear() override;
+
+	void apply() override;
+
+	apic_svr_register& vector(uint8_t vector);
+
+	apic_svr_register& enable(bool enable);
+
+	apic_svr_register& broadcast_suppression(bool sup);
 
  private:
-	union
-	{
-		_internals::apic_base_msr_reg msr;
-		uint64_t raw_;
-	};
-}__attribute__((packed));
+	_internals::svr_reg data{};
+};
 
-static_assert(_internals::MSRRegister<apic_base_msr>);
+class apic_lvt_timer_register
+	: public i_apic_register<apic_lvt_timer_register>
+{
+ public:
+	ALL_DEFAULT_CONSTRUCTORS(apic_lvt_timer_register)
+	STATIC_LOAD(apic_lvt_timer_register);
+
+
+	apic_lvt_timer_register& operator=(const apic_lvt_timer_register&) = default;
+
+	apic_lvt_timer_register& load() override;
+	apic_lvt_timer_register& clear() override;
+	void apply() override;
+
+	apic_lvt_timer_register& vector(uint8_t vec);
+	apic_lvt_timer_register& delivery_status(delivery_statuses dls);
+	apic_lvt_timer_register& masked(bool masked);
+	apic_lvt_timer_register mode(apic_timer_modes mode);
+
+ private:
+	_internals::lvt_timer_reg data;
+};
+
+#undef ALL_DEFAULT_CONSTRUCTORS
+#undef STATIC_LOAD
 }

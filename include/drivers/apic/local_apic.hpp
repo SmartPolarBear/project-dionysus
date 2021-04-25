@@ -7,46 +7,10 @@
 
 namespace apic
 {
-enum delievery_modes
-{
-	DLM_FIXED = 0,
-	DLM_LOWEST_PRIORITY = 1,
-	DLM_SMI = 2,
-	DLM_NMI = 4,
-	DLM_INIT = 5,
-	DLM_STARTUP = 0b110,
-	DLM_EXTINT = 7,
-};
 
-enum delivery_status
-{
-	DLS_IDLE = 0,
-	DLS_SEND_PENDING = 1,
-};
 
 namespace local_apic
 {
-
-enum irq_destinations
-{
-	IRQDST_BROADCAST,
-	IRQDST_BOOTSTRAP,
-	IRQDEST_SINGLE,
-};
-
-enum apic_dest_shorthands
-{
-	APIC_DEST_SHORTHAND_NONE = 0x0,
-	APIC_DEST_SHORTHAND_SELF = 0x1,
-	APIC_DEST_SHORTHAND_ALL_AND_SELF = 0x2,
-	APIC_DEST_SHORTHAND_ALL_BUT_SELF = 0x3,
-};
-
-enum apic_levels
-{
-	APIC_LEVEL_DEASSERT = 0x0,    /* 82489DX Obsolete. _Never_ use */
-	APIC_LEVEL_ASSERT = 0x1,    /* Always use assert */
-};
 
 constexpr size_t TIC_DEFUALT_VALUE = 10000000;
 
