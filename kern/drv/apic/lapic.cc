@@ -51,17 +51,11 @@ PANIC void local_apic::init_lapic()
 		KDEBUG_RICHPANIC("LAPIC isn't avaiable.\n", "KERNEL PANIC: LAPIC", false, "");
 	}
 
-
 	// enable local APIC
-	apic_svr_register::from_register()
-		.vector(trap::IRQ_TO_TRAPNUM(IRQ_SPURIOUS))
-		.enable(true)
-		.apply();
-
-//	_internals::svr_reg svr{
-//		.apic_software_enable=true,
-//		.vector=trap::IRQ_TO_TRAPNUM(IRQ_SPURIOUS) };
-//	write_lapic(SVR_ADDR, svr);
+	_internals::svr_reg svr{
+		.apic_software_enable=true,
+		.vector=trap::IRQ_TO_TRAPNUM(IRQ_SPURIOUS) };
+	write_lapic(SVR_ADDR, svr);
 
 	// Configure timer
 	auto[eax, ebx, ecx, edx]= cpuid(cpuid_requests::CPUID_GETFEATURES);
@@ -76,15 +70,9 @@ PANIC void local_apic::init_lapic()
 		kdebug::kdebug_log("TSC-Deadline timer mode is not supported.\n");
 	}
 
-//	lvt_timer_reg timer_reg{ .vector=(trap::IRQ_TO_TRAPNUM(trap::IRQ_TIMER)), .timer_mode=TIMER_PERIODIC };
-//
-//	write_lapic(LVT_TIMER_ADDR, timer_reg);
+	lvt_timer_reg timer_reg{ .vector=(trap::IRQ_TO_TRAPNUM(trap::IRQ_TIMER)), .timer_mode=TIMER_PERIODIC };
 
-	apic_lvt_timer_register::from_register()
-		.clear()
-		.vector(trap::IRQ_TO_TRAPNUM(trap::IRQ_TIMER))
-		.mode(TIMER_PERIODIC)
-		.apply();
+	write_lapic(LVT_TIMER_ADDR, timer_reg);
 
 	timer_divide_configuration_reg dcr{ .divide_val=TIMER_DIV1 };
 	write_lapic(DCR_ADDR, dcr);
