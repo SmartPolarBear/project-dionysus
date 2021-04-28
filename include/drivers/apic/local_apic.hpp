@@ -20,15 +20,8 @@ size_t get_cpunum();
 void write_eoi();
 
 void write_lapic(offset_t addr_off, uint32_t value);
-void write_lapic(offset_t addr_off, uint64_t value);
 
 template<_internals::APICRegister T>
-static inline T read_lapic(offset_t addr_off)
-{
-	return *((T*)(volatile void*)(&local_apic::lapic_base[addr_off]));
-}
-
-template<_internals::APICLongRegister T>
 static inline T read_lapic(offset_t addr_off)
 {
 	return *((T*)(volatile void*)(&local_apic::lapic_base[addr_off]));
@@ -38,12 +31,6 @@ template<_internals::APICRegister T>
 static inline void write_lapic(offset_t addr_off, T val)
 {
 	write_lapic(addr_off, *((uint32_t*)(void*)(&val)));
-}
-
-template<_internals::APICLongRegister T>
-static inline void write_lapic(offset_t addr_off, T val)
-{
-	write_lapic(addr_off, *((uint64_t*)(void*)(&val)));
 }
 
 /// \brief the dst_apic_id for a broadcast ipi, which means all APICs

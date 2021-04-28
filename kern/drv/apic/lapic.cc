@@ -40,14 +40,6 @@ void local_apic::write_lapic(offset_t addr_off, uint32_t value)
 	((volatile uint32_t*)local_apic::lapic_base)[ID_ADDR / sizeof(uint32_t)]; // wait to finish by reading
 }
 
-void local_apic::write_lapic(offset_t addr_off, uint64_t value)
-{
-	auto index = addr_off / sizeof(value);
-	((volatile uint64_t *)local_apic::lapic_base)[index] = value;
-
-	((volatile uint32_t*)local_apic::lapic_base)[ID_ADDR / sizeof(uint32_t)]; // wait to finish by reading
-}
-
 PANIC void local_apic::init_lapic()
 {
 	if (!lapic_base)
@@ -122,6 +114,9 @@ PANIC void local_apic::init_lapic()
 	// Enable interrupts on the APIC (but not on the processor).
 	lapic_task_priority_reg reg{ .p_class=0, .p_subclass=0 };
 	write_lapic(TASK_PRI_ADDR, reg);
+
+	// Ack any outstanding interrupts.
+	write_lapic(EOI_ADDR, 0);
 }
 
 // when interrupts are enable
