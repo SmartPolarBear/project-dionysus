@@ -1,6 +1,6 @@
 #include "include/traps.hpp"
 #include "include/exception.hpp"
-#include "include/apic_trap_handles.hpp"
+#include "include/spurious.hpp"
 
 #include "arch/amd64/cpu/x86.h"
 

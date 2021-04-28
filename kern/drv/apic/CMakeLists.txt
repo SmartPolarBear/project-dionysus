@@ -4,10 +4,10 @@ target_sources(kernel
         PRIVATE ioapic.cc
         PRIVATE lapic.cc
         PRIVATE apic_registers.cc
-        PRIVATE apic_trap_handles.cc
+        PRIVATE spurious.cc
         PRIVATE pic.cc
         PRIVATE traps.cc
         PRIVATE timer.cc
-        PRIVATE cli_sli.cc
-        PRIVATE exception_handles.cc
+        PRIVATE error.cc
+        PRIVATE x86_exceptions.cc
         PRIVATE msi.cc)
