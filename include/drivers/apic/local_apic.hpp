@@ -21,13 +21,13 @@ void write_eoi();
 
 void write_lapic(offset_t addr_off, uint32_t value);
 
-template<_internals::APICRegister T>
+template<APICRegister T>
 static inline T read_lapic(offset_t addr_off)
 {
 	return *((T*)(volatile void*)(&local_apic::lapic_base[addr_off]));
 }
 
-template<_internals::APICRegister T>
+template<APICRegister T>
 static inline void write_lapic(offset_t addr_off, T val)
 {
 	write_lapic(addr_off, *((uint32_t*)(void*)(&val)));

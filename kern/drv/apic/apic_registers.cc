@@ -17,4 +17,3 @@
 
 using namespace apic;
 using namespace local_apic;
-using namespace _internals;

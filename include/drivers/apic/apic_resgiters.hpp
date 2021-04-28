@@ -7,8 +7,6 @@
 namespace apic
 {
 
-namespace _internals
-{
 template<typename T>
 concept MSRRegister = sizeof(T) == sizeof(uint64_t) && std::is_standard_layout_v<T>;
 
@@ -183,7 +181,7 @@ union lapic_icr_reg
 
 static_assert(APICLongRegister<lapic_icr_reg>);
 
-}
+
 
 enum [[clang::enum_extensibility(closed)]] timer_divide_values
 {

@@ -20,9 +20,6 @@ using trap::TRAP_IRQ0;
 
 using namespace apic;
 
-// APIC internals
-using namespace _internals;
-
 volatile uint8_t* local_apic::lapic_base;
 
 // Spin for a given number of microseconds.
@@ -48,7 +45,7 @@ PANIC void local_apic::init_lapic()
 	}
 
 	// enable local APIC
-	_internals::svr_reg svr{
+	svr_reg svr{
 		.apic_software_enable=true,
 		.vector=trap::IRQ_TO_TRAPNUM(IRQ_SPURIOUS) };
 	write_lapic(SVR_ADDR, svr);
@@ -98,7 +95,7 @@ PANIC void local_apic::init_lapic()
 	write_lapic(ESR_ADDR, esr);
 
 	// Ack any outstanding interrupts.
-	write_lapic(EOI_ADDR, 0);
+	write_eoi();
 
 	// Send an Init Level De-Assert to synchronise arbitration ID's.
 	lapic_icr_reg icr{ .value_high=0, .value_low=0 };
@@ -116,7 +113,7 @@ PANIC void local_apic::init_lapic()
 	write_lapic(TASK_PRI_ADDR, reg);
 
 	// Ack any outstanding interrupts.
-	write_lapic(EOI_ADDR, 0);
+	write_eoi();
 }
 
 // when interrupts are enable
