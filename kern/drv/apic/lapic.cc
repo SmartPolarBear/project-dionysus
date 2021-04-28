@@ -34,14 +34,18 @@ volatile uint8_t* local_apic::lapic_base;
 
 void local_apic::write_lapic(offset_t addr_off, uint32_t value)
 {
-	*((uint32_t*)(void*)(&local_apic::lapic_base[addr_off])) = value;
-	[[maybe_unused]] auto id_reg = read_lapic<lapic_id_reg>(ID_ADDR); // wait to finish by reading
+	auto index = addr_off / sizeof(value);
+	((volatile uint32_t*)local_apic::lapic_base)[index] = value;
+
+	((volatile uint32_t*)local_apic::lapic_base)[ID_ADDR / sizeof(uint32_t)]; // wait to finish by reading
 }
 
 void local_apic::write_lapic(offset_t addr_off, uint64_t value)
 {
-	*((uint64_t*)(void*)(&local_apic::lapic_base[addr_off])) = value;
-	[[maybe_unused]] auto id_reg = read_lapic<lapic_id_reg>(ID_ADDR); // wait to finish by reading
+	auto index = addr_off / sizeof(value);
+	((volatile uint64_t *)local_apic::lapic_base)[index] = value;
+
+	((volatile uint32_t*)local_apic::lapic_base)[ID_ADDR / sizeof(uint32_t)]; // wait to finish by reading
 }
 
 PANIC void local_apic::init_lapic()
@@ -70,12 +74,12 @@ PANIC void local_apic::init_lapic()
 		kdebug::kdebug_log("TSC-Deadline timer mode is not supported.\n");
 	}
 
-	lvt_timer_reg timer_reg{ .vector=(trap::IRQ_TO_TRAPNUM(trap::IRQ_TIMER)), .timer_mode=TIMER_PERIODIC };
-
-	write_lapic(LVT_TIMER_ADDR, timer_reg);
-
 	timer_divide_configuration_reg dcr{ .divide_val=TIMER_DIV1 };
 	write_lapic(DCR_ADDR, dcr);
+
+	lvt_timer_reg timer_reg{ .vector=(trap::IRQ_TO_TRAPNUM(trap::IRQ_TIMER)), .mask=false, .timer_mode=TIMER_PERIODIC };
+	write_lapic(LVT_TIMER_ADDR, timer_reg);
+
 	write_lapic(INITIAL_COUNT_ADDR, TIC_DEFUALT_VALUE);
 
 	// Disbale logical interrupt lines
@@ -102,23 +106,22 @@ PANIC void local_apic::init_lapic()
 	write_lapic(ESR_ADDR, esr);
 
 	// Ack any outstanding interrupts.
-	write_eoi();
+	write_lapic(EOI_ADDR, 0);
 
 	// Send an Init Level De-Assert to synchronise arbitration ID's.
-	lapic_icr_reg icr{};
+	lapic_icr_reg icr{ .value_high=0, .value_low=0 };
 	icr.dest_shorthand = APIC_DEST_SHORTHAND_ALL_AND_SELF;
 	icr.delivery_mode = DLM_INIT;
 	icr.trigger = TRG_LEVEL;
 
-	write_lapic(ICR_LO_ADDR, icr.value_low);
 	write_lapic(ICR_HI_ADDR, icr.value_high);
+	write_lapic(ICR_LO_ADDR, icr.value_low);
 
-	while (read_lapic<lapic_icr_reg>(ICR_LO_ADDR).delivery_status != DLS_IDLE);
+	while (read_lapic<uint32_t>(ICR_LO_ADDR) & 0x00001000);
 
 	// Enable interrupts on the APIC (but not on the processor).
 	lapic_task_priority_reg reg{ .p_class=0, .p_subclass=0 };
 	write_lapic(TASK_PRI_ADDR, reg);
-
 }
 
 // when interrupts are enable

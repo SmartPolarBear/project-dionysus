@@ -250,7 +250,7 @@ enum delievery_modes
 	DLM_EXTINT = 7,
 };
 
-enum delivery_statuses
+enum delivery_statuses : uint32_t
 {
 	DLS_IDLE = 0,
 	DLS_SEND_PENDING = 1,
