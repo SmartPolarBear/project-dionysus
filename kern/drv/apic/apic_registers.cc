@@ -2,7 +2,7 @@
 
 #include "drivers/acpi/cpu.h"
 #include "drivers/apic/apic.h"
-#include "drivers/apic/apic_resgiters.hpp"
+#include "drivers/apic/lapic_regiters.hpp"
 #include "drivers/apic/traps.h"
 #include "drivers/console/console.h"
 #include "debug/kdebug.h"

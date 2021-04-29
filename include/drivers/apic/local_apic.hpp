@@ -1,14 +1,11 @@
 #pragma once
 
 #include "drivers/acpi/cpu.h"
-#include "drivers/apic/apic_resgiters.hpp"
+#include "drivers/apic/lapic_regiters.hpp"
 
 #include "system/types.h"
 
-namespace apic
-{
-
-namespace local_apic
+namespace apic::local_apic
 {
 
 constexpr size_t TIC_DEFUALT_VALUE = 10000000;
@@ -44,8 +41,5 @@ void apic_send_ipi(uint32_t dst_apic_id, delievery_modes mode, uint32_t vec);
 void apic_broadcast_ipi(delievery_modes mode, uint32_t vec);
 
 void start_ap(size_t apicid, uintptr_t addr);
-
-} // namespace local_apic
-
 
 }

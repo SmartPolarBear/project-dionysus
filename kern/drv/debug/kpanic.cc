@@ -17,6 +17,7 @@
 using namespace kdebug;
 using namespace apic;
 
+using namespace local_apic;
 using namespace io_apic;
 
 constexpr std::pair<console::console_colors, console::console_colors>

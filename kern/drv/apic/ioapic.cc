@@ -15,16 +15,9 @@
 using namespace apic;
 
 using trap::TRAP_IRQ0;
+using namespace local_apic;
 
-enum ioapic_regs
-{
-	IOAPICID = 0x00,
-	IOAPICVER = 0x01,
-	IOAPICARB = 0x02,
-	IOREDTBL_BASE = 0x10,
-};
-
-[[clang::optnone]] static inline void write_ioapic(const uintptr_t apic_base, const uint8_t reg, const uint32_t val)
+[[clang::optnone]] void apic::io_apic::write_ioapic(uintptr_t apic_base, uint8_t reg, uint32_t val)
 {
 	// tell IOREGSEL where we want to write to
 	*(volatile uint32_t*)(apic_base) = reg;
@@ -32,7 +25,7 @@ enum ioapic_regs
 	*(volatile uint32_t*)(apic_base + 0x10) = val;
 }
 
-[[clang::optnone]] static inline uint32_t read_ioapic(const uintptr_t apic_base, const uint8_t reg)
+[[clang::optnone]] uint32_t apic::io_apic::read_ioapic(uintptr_t apic_base, uint8_t reg)
 {
 	// tell IOREGSEL where we want to read from
 	*(volatile uint32_t*)(apic_base) = reg;
@@ -40,7 +33,7 @@ enum ioapic_regs
 	return *(volatile uint32_t*)(apic_base + 0x10);
 }
 
-PANIC void io_apic::init_ioapic(void)
+PANIC void io_apic::init_ioapic()
 {
 	pic8259A::initialize_pic();
 
@@ -50,36 +43,36 @@ PANIC void io_apic::init_ioapic(void)
 
 	write_ioapic(ioapic_addr, IOAPICID, ioapic->id);
 
-	size_t apicid = (read_ioapic(ioapic_addr, IOAPICID) >> 24) & 0b1111;
-	size_t redirection_count = (read_ioapic(ioapic_addr, IOAPICVER) >> 16) & 0b11111111;
+	auto id_reg = read_ioapic<io_apic_id_reg>(ioapic_addr, IOAPICID);
+	auto ver_reg = read_ioapic<io_apic_version_reg>(ioapic_addr, IOAPICVER);
 
-	if (apicid != ioapic->id)
+	if (id_reg.id != ioapic->id)
 	{
-		write_format("WARNING: inconsistence between apicid from IOAPICID register (%d) and ioapic.id (%d)\n",
-			apicid,
+		write_format("WARNING: inconsistency between apic id from IOAPICID register (%d) and ioapic.id (%d)\n",
+			id_reg.id,
 			ioapic->id);
 	}
 
-	for (size_t i = 0; i <= redirection_count; i++)
+	for (size_t i = 0; i <= ver_reg.max_redir_entries; i++)
 	{
-		redirection_entry redir{};
+		io_apic_redtbl_reg redtbl{};
 
-		redir.vector = TRAP_IRQ0 + i;
-		redir.delievery_mode = DLM_FIXED;
-		redir.destination_mode = DTM_PHYSICAL;
-		redir.polarity = 0;
-		redir.trigger_mode = TRG_EDGE;
-		redir.mask = true; // set to true to disable it
-		redir.destination_id = 0;
+		redtbl.vector = TRAP_IRQ0 + i;
+		redtbl.delievery_mode = local_apic::DLM_FIXED;
+		redtbl.destination_mode = DTM_PHYSICAL;
+		redtbl.polarity = 0;
+		redtbl.trigger_mode = TRG_EDGE;
+		redtbl.mask = true; // set to true to disable it
+		redtbl.destination_id = 0;
 
-		write_ioapic(ioapic_addr, IOREDTBL_BASE + i * 2 + 0, redir.raw_low);
-		write_ioapic(ioapic_addr, IOREDTBL_BASE + i * 2 + 1, redir.raw_high);
+		write_ioapic(ioapic_addr, IOREDTBL_BASE + i * 2 + 0, redtbl.raw_low);
+		write_ioapic(ioapic_addr, IOREDTBL_BASE + i * 2 + 1, redtbl.raw_high);
 	}
 };
 
 void io_apic::enable_trap(uint32_t trapnum, uint32_t cpu_acpi_id_rounted)
 {
-	redirection_entry redir_new{};
+	io_apic_redtbl_reg redir_new{};
 
 	redir_new.vector = TRAP_IRQ0 + trapnum;
 	redir_new.delievery_mode = DLM_FIXED;

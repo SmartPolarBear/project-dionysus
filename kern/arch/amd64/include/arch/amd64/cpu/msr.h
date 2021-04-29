@@ -1,6 +1,11 @@
 #pragma once
 #include <sys/types.h>
 
+// FIXME: inspect later
+//template<typename T>
+//concept MSRRegister = sizeof(T) == sizeof(uint64_t) && std::is_standard_layout_v<T>;
+
+
 // not all MSRs are listed. only a few.
 enum MSR_REGISTERS
 {

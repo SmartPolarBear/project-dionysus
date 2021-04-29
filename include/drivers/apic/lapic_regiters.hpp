@@ -4,11 +4,8 @@
 
 #include "ktl/concepts.hpp"
 
-namespace apic
+namespace apic::local_apic
 {
-
-template<typename T>
-concept MSRRegister = sizeof(T) == sizeof(uint64_t) && std::is_standard_layout_v<T>;
 
 template<typename T>
 concept APICRegister= sizeof(T) == sizeof(uint32_t) && std::is_standard_layout_v<T>;
@@ -25,7 +22,7 @@ struct apic_base_msr_reg
 	uint64_t base_: 24;
 	uint64_t res2_: 28;
 }__attribute__((packed));
-static_assert(MSRRegister<apic_base_msr_reg>);
+static_assert(sizeof(apic_base_msr_reg) == sizeof(uint64_t));
 
 union lapic_priority_reg
 {
@@ -183,7 +180,7 @@ static_assert(APICLongRegister<lapic_icr_reg>);
 
 
 
-enum [[clang::enum_extensibility(closed)]] timer_divide_values
+enum [[clang::enum_extensibility(closed)]] timer_divide_values : uint32_t
 {
 	TIMER_DIV1 = 0B1011,
 	TIMER_DIV2 = 0B0000,
@@ -196,7 +193,7 @@ enum [[clang::enum_extensibility(closed)]] timer_divide_values
 
 };
 
-enum [[clang::flag_enum]] esr_error_bits
+enum [[clang::flag_enum]] esr_error_bits : uint32_t
 {
 	ESR_SEND_CHECKSUM_ERROR = 1,
 	ESR_RECEIVE_CHECKSUM_ERROR = 1 << 1,
@@ -208,7 +205,7 @@ enum [[clang::flag_enum]] esr_error_bits
 	ESR_ILLEGAL_REG_ADDR = 1 << 7
 };
 
-enum register_addresses
+enum register_addresses : offset_t
 {
 	ID_ADDR = 0x020,
 	VERSION_ADDR = 0x030,
@@ -229,7 +226,7 @@ enum register_addresses
 	ICR_HI_ADDR = 0x310
 };
 
-enum apic_timer_modes
+enum apic_timer_modes : uint32_t
 {
 	TIMER_ONE_SHOT = 0b00,
 	TIMER_PERIODIC = 0b01,
@@ -237,7 +234,7 @@ enum apic_timer_modes
 	TIMER_RESERVED = 0b11
 };
 
-enum delievery_modes
+enum delievery_modes : uint32_t
 {
 	DLM_FIXED = 0,
 	DLM_LOWEST_PRIORITY = 1,
@@ -254,14 +251,20 @@ enum delivery_statuses : uint32_t
 	DLS_SEND_PENDING = 1,
 };
 
-enum irq_destinations
+enum trigger_mode : uint32_t
+{
+	TRG_EDGE = 0,
+	TRG_LEVEL = 1,
+};
+
+enum irq_destinations : uint32_t
 {
 	IRQDST_BROADCAST,
 	IRQDST_BOOTSTRAP,
 	IRQDEST_SINGLE,
 };
 
-enum apic_dest_shorthands
+enum apic_dest_shorthands : uint32_t
 {
 	APIC_DEST_SHORTHAND_NONE = 0x0,
 	APIC_DEST_SHORTHAND_SELF = 0x1,
@@ -269,10 +272,16 @@ enum apic_dest_shorthands
 	APIC_DEST_SHORTHAND_ALL_BUT_SELF = 0x3,
 };
 
-enum apic_levels
+enum apic_levels : uint32_t
 {
 	APIC_LEVEL_DEASSERT = 0x0,    /* 82489DX Obsolete. _Never_ use */
 	APIC_LEVEL_ASSERT = 0x1,    /* Always use assert */
+};
+
+enum destination_mode : uint32_t
+{
+	DTM_PHYSICAL = 0,
+	DTM_LOGICAL = 1,
 };
 
 template<typename T>
