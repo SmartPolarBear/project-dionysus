@@ -28,6 +28,6 @@ namespace cmos
 	timestamp_type cmos_read_rtc_timestamp();
 	timestamp_type datetime_to_timestamp(const cmos_date_time_struct& datetime);
 
-	cmos_date_time_struct&& get_boot_time();
+	cmos_date_time_struct get_boot_time();
 	timestamp_type get_boot_timestamp();
 }

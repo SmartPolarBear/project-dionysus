@@ -17,5 +17,6 @@ void mask_cpu_local_timer(bool masked);
 /// \param cpuid
 /// \param masked
 void mask_cpu_local_timer(size_t cpuid, bool masked);
+
 } // namespace timer
 

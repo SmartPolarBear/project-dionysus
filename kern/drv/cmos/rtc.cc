@@ -226,7 +226,7 @@ timestamp_type cmos::datetime_to_timestamp(const cmos_date_time_struct& datetime
 {
 	/* POSIX says:
 	 *
-	 * A value that approximates the number of seconds that have elapsed since the Epoch. A Coordinated Universal Time name_ (specified in terms of seconds (tm_sec), minutes (tm_min), hours (tm_hour), days since January 1 of the year (tm_yday), and calendar year minus 1900 (tm_year)) is related to a time represented as seconds since the Epoch, according to the expression below.
+	 * A value that approximates the number of seconds that have elapsed since the Epoch. A Coordinated Universal Time name (specified in terms of seconds (tm_sec), minutes (tm_min), hours (tm_hour), days since January 1 of the year (tm_yday), and calendar year minus 1900 (tm_year)) is related to a time represented as seconds since the Epoch, according to the expression below.
 	If the year is <1970 or the value is negative, the relationship is undefined. If the year is >=1970 and the value is non-negative, the value is related to a Coordinated Universal Time name_ according to the C-language expression, where tm_sec, tm_min, tm_hour, tm_yday, and tm_year are all integer types:
 	tm_sec + tm_min*60 + tm_hour*3600 + tm_yday*86400 +
     (tm_year-70)*31536000 + ((tm_year-69)/4)*86400 -
@@ -252,7 +252,7 @@ timestamp_type cmos::get_boot_timestamp()
 	return datetime_to_timestamp(boot_time);
 }
 
-cmos_date_time_struct&& cmos::get_boot_time()
+cmos_date_time_struct cmos::get_boot_time()
 {
-	return std::move(boot_time);
+	return boot_time;
 }
