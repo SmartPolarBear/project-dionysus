@@ -209,7 +209,7 @@ void ap::all_processor_main()
 	xchg(&cpu->started, 1u);
 
 	// enable timer interrupt
-	timer::set_enable_on_cpu(cpu->id, true);
+	timer::mask_cpu_local_timer(cpu->id, false);
 
 	KDEBUG_GERNERALPANIC_CODE(task::thread::create_idle());
 
