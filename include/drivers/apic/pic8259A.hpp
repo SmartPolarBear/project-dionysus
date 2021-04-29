@@ -6,7 +6,7 @@
 namespace pic8259A
 {
 
-void initialize_pic(void);
+void init_pic(void);
 
 } // namespace pic8259A
 

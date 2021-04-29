@@ -35,7 +35,7 @@ static inline void pic_setmask(uint16_t mask)
     pic_setmask(irqmask & ~(1 << irq));
 }
 
-void pic8259A::initialize_pic(void)
+void pic8259A::init_pic(void)
 {
     // mask all interrupts
     outb(IO_PIC1 + 1, 0xFF);

@@ -109,7 +109,7 @@ namespace acpi
 		uint32_t flags;
 	} __attribute__((__packed__));
 
-// 5.2.12.3
+	// 5.2.12.3
 	struct madt_ioapic
 	{
 		uint8_t type;
