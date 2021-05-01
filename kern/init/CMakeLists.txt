@@ -60,7 +60,7 @@ target_compile_options(ap_boot.elf BEFORE
 #        PRIVATE -Wl,--build-id=none)
 
 target_link_options(ap_boot.elf
-        PRIVATE -fuse-ld=lld-13
+        PRIVATE -fuse-ld=${LLD_NAME}
         PRIVATE -ffreestanding
         PRIVATE -nostartfiles
         PRIVATE -static

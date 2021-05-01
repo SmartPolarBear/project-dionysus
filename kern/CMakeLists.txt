@@ -104,7 +104,7 @@ if (THREAD_SAFETY_ANALYSIS)
 endif ()
 
 target_link_options(kernel
-        PRIVATE -fuse-ld=lld-13
+        PRIVATE -fuse-ld=${LLD_NAME}
         PRIVATE -ffreestanding
         PRIVATE -nostartfiles
         PRIVATE -static
