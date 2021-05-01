@@ -1,6 +1,7 @@
 [submodule "external/newlib/newlib"]
 	path = external/newlib/newlib
-	url = https://github.com/ourairquality/newlib.git
+	url = https://sourceware.org/git/newlib-cygwin.git
+	branch = master
 [submodule "external/llvm-project/llvm-project"]
 	path = external/llvm-project/llvm-project
 	url = https://mirrors.tuna.tsinghua.edu.cn/git/llvm-project.git
