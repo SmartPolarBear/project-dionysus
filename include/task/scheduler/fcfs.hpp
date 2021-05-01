@@ -1,3 +1,4 @@
+#pragma once
 #include "task/scheduler/scheduler_class.hpp"
 #include "task/thread/thread.hpp"
 
