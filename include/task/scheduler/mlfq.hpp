@@ -8,8 +8,10 @@
 namespace task
 {
 class mlfq_scheduler
-	:public scheduler_class
+	: public scheduler_class
 {
+ public:
+	static constexpr uint32_t PRIORITY_MIN = 0, PRIORITY_MAX = 7; // only 16 queues per core
  public:
 	[[nodiscard]] size_type workload_size() const override;
 	void enqueue(thread* t) override;
