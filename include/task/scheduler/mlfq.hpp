@@ -7,7 +7,7 @@
 
 namespace task
 {
-class mlfq_scheduler
+class mlfq_scheduler_class
 	: public scheduler_class
 {
  public:

@@ -2,11 +2,7 @@
 
 #include "system/types.h"
 
-#ifdef USE_SCHEDULER_CLASS
-#error "USE_SCHEDULER_CLASS can't have been defined"
-#endif
 
-#define USE_SCHEDULER_CLASS fcfs_scheduler_class
 
 struct cpu_struct;
 

@@ -28,7 +28,7 @@
 #include "task/thread/cpu_affinity.hpp"
 #include "task/thread/user_stack.hpp"
 
-#include "task/scheduler/scheduler_class.hpp"
+#include "task/scheduler/scheduler_config.hpp"
 
 #include "task/ipc/message.hpp"
 

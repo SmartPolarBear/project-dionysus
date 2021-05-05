@@ -5,12 +5,23 @@
 #include "debug/thread_annotations.hpp"
 
 #include "task/thread/thread.hpp"
-#include "task/scheduler/fcfs.hpp"
 
 #include "ktl/string_view.hpp"
 #include "ktl/list.hpp"
 
 #include "kbl/data/list.hpp"
+
+#include "task/scheduler/scheduler_config.hpp"
+
+#if defined(_SCHEDULER_FCFS)
+#include "task/scheduler/fcfs.hpp"
+
+#elif defined(_SCHEDULER_ULE)
+#include "task/scheduler/mlfq.hpp"
+
+#else
+#error "scheduler class isn't defined or is wrongly defined."
+#endif
 
 namespace task
 {
