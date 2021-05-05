@@ -14,10 +14,10 @@
 #include "task/scheduler/scheduler_config.hpp"
 
 #if defined(_SCHEDULER_FCFS)
-#include "task/scheduler/fcfs.hpp"
+#include "task/scheduler/fcfs/fcfs.hpp"
 
 #elif defined(_SCHEDULER_ULE)
-#include "task/scheduler/mlfq.hpp"
+#include "task/scheduler/ule/ule.hpp"
 
 #else
 #error "scheduler class isn't defined or is wrongly defined."

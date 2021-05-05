@@ -1,8 +1,12 @@
 cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
-add_subdirectory(fcfs)
-
-add_subdirectory(mlfq)
+if (${SCHEDULER} STREQUAL "FCFS")
+    add_subdirectory(fcfs)
+elseif (${SCHEDULER} STREQUAL "ULE")
+    add_subdirectory(ule)
+else ()
+    message(ERROR "${SCHEDULER} is not a valid scheduler option.")
+endif ()
 
 target_sources(kernel
         PRIVATE scheduler.cc

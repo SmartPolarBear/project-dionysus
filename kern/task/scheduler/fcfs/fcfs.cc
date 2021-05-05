@@ -1,5 +1,7 @@
 #include "internals/thread.hpp"
 
+#include "task/scheduler/fcfs/fcfs.hpp"
+
 #include "task/scheduler/scheduler.hpp"
 #include "task/thread/thread.hpp"
 
