@@ -182,7 +182,7 @@ error_code thread::create_idle()
 
 	th->flags_ |= FLAG_IDLE;
 
-	th->need_reschedule_ = true;
+	th->scheduler_state_.set_need_reschedule(true);
 
 	cpu->idle = th;
 
@@ -263,8 +263,7 @@ void thread::switch_to(interrupt_saved_state_type state_to_restore) TA_REQ(globa
 thread::thread(process* prt, ktl::string_view nm, cpu_affinity aff)
 	: object::solo_dispatcher<thread, 0>(),
 	  name_{ nm },
-	  parent_{ prt },
-	  affinity_{ aff }
+	  parent_{ prt }
 {
 	auto this_handle = object::handle_entry::create(name_.data(), this);
 
@@ -273,6 +272,8 @@ thread::thread(process* prt, ktl::string_view nm, cpu_affinity aff)
 		auto local_handle = object::handle_entry::duplicate(this_handle.get());
 		parent_->handle_table_.add_handle(std::move(local_handle));
 	}
+
+	scheduler_state_.affinity_ = aff;
 
 	object::handle_table::get_global_handle_table()->add_handle(std::move(this_handle));
 }
@@ -462,7 +463,7 @@ error_code thread::suspend()
 		}
 	}
 
-	if (need_reschedule_ && local_reschedule)
+	if (scheduler_state_.need_reschedule() && local_reschedule)
 	{
 		scheduler::current::reschedule();
 	}

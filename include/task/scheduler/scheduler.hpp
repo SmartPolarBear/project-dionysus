@@ -29,7 +29,8 @@ struct scheduler_timer
 class scheduler
 {
  public:
-	using scheduler_class_type = fcfs_scheduler_class;
+	using scheduler_class_type = USE_SCHEDULER_CLASS;
+
 	using timer_list_type = kbl::intrusive_list_with_default_trait<scheduler_timer,
 	                                                               lock::spinlock,
 	                                                               &scheduler_timer::link,

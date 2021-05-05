@@ -145,7 +145,7 @@ void task::scheduler::tick(task::thread* t)
 	}
 	else if (t != nullptr) // idle is running
 	{
-		t->need_reschedule_ = true;
+		t->scheduler_state_.set_need_reschedule(true);
 	}
 
 	// Push migrating approach to load balancing
@@ -213,7 +213,7 @@ void task::scheduler::yield_locked() TA_REQ(global_thread_lock)
 {
 	KDEBUG_ASSERT(cpu->id == owner_cpu->id);
 
-	cur_thread->need_reschedule_ = true;
+	cur_thread->scheduler_state_.set_need_reschedule(true);
 }
 
 void task::scheduler::unblock_locked(task::thread* t)
@@ -305,12 +305,12 @@ void task::scheduler::current::yield()
 bool task::scheduler::current::unblock(task::thread* t)
 {
 
-	if (t->affinity_.cpu != CPU_NUM_INVALID)
+	if (t->scheduler_state_.affinity()->cpu != CPU_NUM_INVALID)
 	{
-		KDEBUG_ASSERT(t->affinity_.cpu < valid_cpus.size());
-		valid_cpus[t->affinity_.cpu].scheduler->unblock_locked(t);
+		KDEBUG_ASSERT(t->scheduler_state_.affinity()->cpu < valid_cpus.size());
+		valid_cpus[t->scheduler_state_.affinity()->cpu].scheduler->unblock_locked(t);
 
-		return t->affinity_.cpu == cpu->id;
+		return t->scheduler_state_.affinity()->cpu == cpu->id;
 	}
 
 	cpu->scheduler->unblock_locked(t);
@@ -319,10 +319,10 @@ bool task::scheduler::current::unblock(task::thread* t)
 
 void task::scheduler::current::insert(task::thread* t)
 {
-	if (t->affinity_.cpu != CPU_NUM_INVALID)
+	if (t->scheduler_state_.affinity()->cpu != CPU_NUM_INVALID)
 	{
-		KDEBUG_ASSERT(t->affinity_.cpu < valid_cpus.size());
-		valid_cpus[t->affinity_.cpu].scheduler->insert(t);
+		KDEBUG_ASSERT(t->scheduler_state_.affinity()->cpu < valid_cpus.size());
+		valid_cpus[t->scheduler_state_.affinity()->cpu].scheduler->insert(t);
 	}
 
 	cpu->scheduler->insert(t);
@@ -375,8 +375,7 @@ void task::scheduler::schedule()
 	auto state = arch_interrupt_save();
 
 	thread* next = nullptr;
-
-	cur_thread->need_reschedule_ = false;
+	cur_thread->scheduler_state_.set_need_reschedule(false);
 
 	if (cur_thread->state == thread::thread_states::READY)
 	{

@@ -211,7 +211,7 @@ extern "C" void trap_body(trap::trap_frame info)
 	// if rescheduling needed, reschedule
 	if ((info.cs & 0b11) == DPL_USER &&
 		task::cur_thread != nullptr &&
-		task::cur_thread->get_need_reschedule())
+		task::cur_thread->get_scheduler_state()->need_reschedule())
 	{
 		task::global_thread_lock.assert_not_held();
 		task::scheduler::current::reschedule();
