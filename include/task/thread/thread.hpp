@@ -263,6 +263,7 @@ class ipc_state
 };
 
 class scheduler_state
+	: public SCHEDULER_STATE_BASE
 {
  public:
 	friend class thread;
