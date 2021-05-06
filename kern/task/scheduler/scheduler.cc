@@ -377,6 +377,8 @@ void task::scheduler::schedule()
 	thread* next = nullptr;
 	cur_thread->scheduler_state_.set_need_reschedule(false);
 
+	cur_thread->scheduler_state_.on_tick();
+
 	if (cur_thread->state == thread::thread_states::READY)
 	{
 		enqueue(cur_thread.get());
