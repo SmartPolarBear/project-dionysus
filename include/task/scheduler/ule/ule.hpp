@@ -11,8 +11,9 @@ class ule_scheduler_class
 	: public scheduler_class
 {
  public:
-	static constexpr uint32_t PRIORITY_MIN = 0, PRIORITY_MAX = 7; // only 16 queues per core
-
+	static constexpr uint64_t INTERACT_MAX = 100;
+	static constexpr uint64_t INTERACT_HALF = INTERACT_MAX / 2;
+	static constexpr uint64_t INTERACT_THRESHOLD = 30;
 
 	ule_scheduler_class() = delete;
 	~ule_scheduler_class() = default;
@@ -36,7 +37,5 @@ class ule_scheduler_class
 	class scheduler* parent_{ nullptr };
 	mutable lock::spinlock lock_;
 };
-
-
 
 }
