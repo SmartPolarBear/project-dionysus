@@ -49,3 +49,8 @@ task::ule_scheduler_state_base::interactivity_score_type task::ule_scheduler_sta
 	KDEBUG_GERNERALPANIC_CODE(-ERROR_SHOULD_NOT_REACH_HERE);
 	return 0;
 }
+
+task::ule_scheduler_state_base::priority_type task::ule_scheduler_state_base::priority() const
+{
+	return 0;
+}

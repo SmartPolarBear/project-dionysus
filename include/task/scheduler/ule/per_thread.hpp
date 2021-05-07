@@ -10,6 +10,7 @@ class ule_scheduler_state_base
  public:
 	using interactivity_score_type = uint64_t;
 	using nice_type = int32_t;
+	using priority_type = int32_t;
 
  public:
 	bool nice_available() override
@@ -30,7 +31,13 @@ class ule_scheduler_state_base
 		nice_ = nice;
 	}
 
+	/// \brief calculate interactive score according to runtime and sleep time
+	/// \return
 	[[nodiscard]]interactivity_score_type interactivity_score() const;
+
+	/// \brief calculate priority according to interactive score
+	/// \return
+	[[nodiscard]] priority_type priority() const;
 
  private:
 	nice_type nice_{ 0 };

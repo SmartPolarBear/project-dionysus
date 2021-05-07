@@ -3,15 +3,15 @@
 
 void task::fcfs_scheduler_state_base::on_tick()
 {
-
+	// Do nothing
 }
 
 void task::fcfs_scheduler_state_base::on_sleep()
 {
-
+	// Do nothing
 }
 
 void task::fcfs_scheduler_state_base::on_wakeup()
 {
-
+	// Do nothing
 }
