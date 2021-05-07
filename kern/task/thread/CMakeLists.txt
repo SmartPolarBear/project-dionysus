@@ -8,5 +8,6 @@ target_sources(kernel
         PRIVATE wait_queue.cc
         PRIVATE deadline.cc
         PRIVATE ipc_state.cc
+        PRIVATE scheduler_state.cc
         PRIVATE user_stack.cc)
 

@@ -5,12 +5,23 @@
 #include "debug/thread_annotations.hpp"
 
 #include "task/thread/thread.hpp"
-#include "task/scheduler/fcfs.hpp"
 
 #include "ktl/string_view.hpp"
 #include "ktl/list.hpp"
 
 #include "kbl/data/list.hpp"
+
+#include "task/scheduler/scheduler_config.hpp"
+
+#if defined(_SCHEDULER_FCFS)
+#include "task/scheduler/fcfs/fcfs.hpp"
+
+#elif defined(_SCHEDULER_ULE)
+#include "task/scheduler/ule/ule.hpp"
+
+#else
+#error "scheduler class isn't defined or is wrongly defined."
+#endif
 
 namespace task
 {
@@ -29,7 +40,8 @@ struct scheduler_timer
 class scheduler
 {
  public:
-	using scheduler_class_type = fcfs_scheduler_class;
+	using scheduler_class_type = USE_SCHEDULER_CLASS;
+
 	using timer_list_type = kbl::intrusive_list_with_default_trait<scheduler_timer,
 	                                                               lock::spinlock,
 	                                                               &scheduler_timer::link,

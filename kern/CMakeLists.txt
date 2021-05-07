@@ -84,12 +84,25 @@ endif ()
 if (KERNEL_ENABLE_DEBUG_FACILITY)
     message(STATUS "Debug facilities enabled.")
 
-    option (FORCE_COLORED_OUTPUT TRUE)
+    option(FORCE_COLORED_OUTPUT TRUE)
 
     target_compile_definitions(kernel
             PUBLIC -D_KERNEL_ENABLE_DEBUG_FACILITY)
     target_compile_options(kernel
             PUBLIC -fdiagnostics-color=always)
+endif ()
+
+if (${SCHEDULER} STREQUAL "FCFS")
+    message(STATUS "The ${SCHEDULER} scheduler class is used.")
+    target_compile_definitions(kernel
+            PUBLIC -D_SCHEDULER_FCFS)
+elseif (${SCHEDULER} STREQUAL "ULE")
+    message(STATUS "The ${SCHEDULER} scheduler class is used.")
+
+    target_compile_definitions(kernel
+            PUBLIC -D_SCHEDULER_ULE)
+else ()
+    message(ERROR "${SCHEDULER} is not a valid scheduler option.")
 endif ()
 
 if (THREAD_SAFETY_ANALYSIS)

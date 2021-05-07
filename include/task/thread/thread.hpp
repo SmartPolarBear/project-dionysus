@@ -28,9 +28,15 @@
 #include "task/thread/cpu_affinity.hpp"
 #include "task/thread/user_stack.hpp"
 
+#include "task/scheduler/scheduler_config.hpp"
+
 #include "task/ipc/message.hpp"
 
 #include <compare>
+
+#ifndef USE_SCHEDULER_CLASS
+#error "USE_SCHEDULER_CLASS MUST BE DEFINED"
+#endif
 
 namespace task
 {
@@ -233,7 +239,7 @@ class ipc_state
 	/// \brief handle extended items like strings and map/grant items
 	/// \param to
 	/// \return
-	error_code send_extended_items(thread *to);
+	error_code send_extended_items(thread* to);
 
 	/// \brief message registers
 	ipc::message_register_type mr_[MR_SIZE]{ 0 };
@@ -256,6 +262,47 @@ class ipc_state
 	mutable lock::spinlock lock_{ "ipc_lock" };
 };
 
+class scheduler_state
+	: public SCHEDULER_STATE_BASE
+{
+ public:
+	friend class thread;
+
+	scheduler_state() = delete;
+	scheduler_state(const scheduler_state&) = delete;
+	scheduler_state& operator=(const scheduler_state&) = delete;
+
+	~scheduler_state()
+	{
+	}
+
+	explicit scheduler_state(thread* parent) : parent_{ parent }
+	{
+
+	}
+
+	[[nodiscard]] bool need_reschedule() const
+	{
+		return need_reschedule_;
+	}
+
+	void set_need_reschedule(bool need)
+	{
+		need_reschedule_ = need;
+	}
+
+	[[nodiscard]] cpu_affinity* affinity()
+	{
+		return &affinity_;
+	}
+
+ private:
+	thread* parent_{ nullptr };
+
+	cpu_affinity affinity_{ CPU_NUM_INVALID, cpu_affinity_type::SOFT };
+	bool need_reschedule_{ false };
+};
+
 class thread final
 	: public object::solo_dispatcher<thread, 0>
 {
@@ -264,7 +311,8 @@ class thread final
 
 	friend class scheduler;
 	friend class scheduler_class;
-	friend class fcfs_scheduler_class;
+
+	friend class USE_SCHEDULER_CLASS;
 
 	friend class kernel_stack;
 	friend class user_stack;
@@ -340,11 +388,6 @@ class thread final
 
 	[[nodiscard]] vmm::mm_struct* get_mm();
 
-	[[nodiscard]] bool get_need_reschedule() const
-	{
-		return need_reschedule_;
-	}
-
 	[[nodiscard]] bool is_user_thread() const
 	{
 		return parent_ != nullptr;
@@ -402,6 +445,11 @@ class thread final
 		return &ipc_state_;
 	}
 
+	[[nodiscard]] scheduler_state* get_scheduler_state()
+	{
+		return &scheduler_state_;
+	}
+
 	thread_states state{ thread_states::INITIAL };
 
  private:
@@ -419,27 +467,25 @@ class thread final
 
 	kbl::name<64> name_{ "" };
 
-	task_state task_state_{};
-
-	wait_queue_state wait_queue_state_{ this };
-
-	ipc_state ipc_state_{ this };
-
 	ktl::unique_ptr<kernel_stack> kstack_{ nullptr };
 
 	user_stack* ustack_{ nullptr };
 
 	process* parent_{ nullptr };
 
-	bool need_reschedule_{ false };
-
 	bool critical_{ false };
-
-	cpu_affinity affinity_{ CPU_NUM_INVALID, cpu_affinity_type::SOFT };
 
 	uint64_t flags_{ 0 };
 
 	uint64_t signals_{ 0 };
+
+	task_state task_state_{};
+
+	wait_queue_state wait_queue_state_{ this };
+
+	ipc_state ipc_state_{ this };
+
+	scheduler_state scheduler_state_{ this };
 
 	link_type run_queue_link{ this };
 	link_type zombie_queue_link{ this };

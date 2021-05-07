@@ -1,3 +1,5 @@
+#pragma once
+
 #include "task/scheduler/scheduler_class.hpp"
 #include "task/thread/thread.hpp"
 
@@ -29,10 +31,10 @@ class fcfs_scheduler_class final
 	}
 
 	fcfs_scheduler_class() = delete;
+	~fcfs_scheduler_class() = default;
 	fcfs_scheduler_class(const fcfs_scheduler_class&) = delete;
 	fcfs_scheduler_class(fcfs_scheduler_class&&) = delete;
 	fcfs_scheduler_class& operator=(const fcfs_scheduler_class&) = delete;
-	fcfs_scheduler_class& operator=(fcfs_scheduler_class&&) = delete;
 
 	thread* steal(cpu_struct* stealer_cpu) final;
 

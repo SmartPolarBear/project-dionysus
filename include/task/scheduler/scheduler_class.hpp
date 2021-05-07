@@ -1,5 +1,10 @@
 #pragma once
-#include "task/thread/thread.hpp"
+
+#include "system/types.h"
+
+
+
+struct cpu_struct;
 
 namespace task
 {

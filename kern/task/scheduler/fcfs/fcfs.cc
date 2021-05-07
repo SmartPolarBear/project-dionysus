@@ -1,5 +1,7 @@
 #include "internals/thread.hpp"
 
+#include "task/scheduler/fcfs/fcfs.hpp"
+
 #include "task/scheduler/scheduler.hpp"
 #include "task/thread/thread.hpp"
 
@@ -76,7 +78,7 @@ void task::fcfs_scheduler_class::tick()
 		t->finish_dead_transition();
 	}
 
-	cur_thread->need_reschedule_ = true;
+	cur_thread->get_scheduler_state()->set_need_reschedule(true);
 }
 
 task::thread* task::fcfs_scheduler_class::steal(cpu_struct* stealer_cpu)
@@ -97,7 +99,7 @@ task::thread* task::fcfs_scheduler_class::steal(cpu_struct* stealer_cpu)
 			(t.flags_ & thread::thread_flags::FLAG_IDLE) == 0 &&
 			(t.flags_ & thread::thread_flags::FLAG_INIT) == 0)
 		{
-			if (t.affinity_.cpu == stealer_cpu->id)
+			if (t.scheduler_state_.affinity()->cpu == stealer_cpu->id)
 			{
 				run_queue_.remove(t);
 				return &t;
@@ -112,7 +114,7 @@ task::thread* task::fcfs_scheduler_class::steal(cpu_struct* stealer_cpu)
 			(t.flags_ & thread::thread_flags::FLAG_IDLE) == 0 &&
 			(t.flags_ & thread::thread_flags::FLAG_INIT) == 0)
 		{
-			if (t.affinity_.type == cpu_affinity_type::SOFT)
+			if (t.scheduler_state_.affinity()->type == cpu_affinity_type::SOFT)
 			{
 				run_queue_.remove(t);
 				return &t;
@@ -128,7 +130,7 @@ task::thread* task::fcfs_scheduler_class::steal(cpu_struct* stealer_cpu)
 			(t.flags_ & thread::thread_flags::FLAG_IDLE) == 0 &&
 			(t.flags_ & thread::thread_flags::FLAG_INIT) == 0)
 		{
-			if (t.affinity_.type == cpu_affinity_type::HARD)
+			if (t.scheduler_state_.affinity()->type == cpu_affinity_type::HARD)
 			{
 				run_queue_.remove(t);
 				return &t;

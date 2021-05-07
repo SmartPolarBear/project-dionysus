@@ -64,6 +64,7 @@ error_code wait_queue::block_etc(const deadline& ddl,
 	global_thread_lock)
 {
 	auto current_thread = cur_thread.get();
+	current_thread->scheduler_state_.on_sleep();
 
 	KDEBUG_ASSERT(arch_ints_disabled());
 	KDEBUG_ASSERT(current_thread->state == thread::thread_states::RUNNING);
@@ -140,6 +141,8 @@ bool wait_queue::wake_one(bool reschedule, error_code code) TA_REQ(global_thread
 	if (t)
 	{
 		dequeue(t, code);
+
+		t->scheduler_state_.on_wakeup();
 
 		bool local_reschedule = scheduler::current::unblock(t);
 
