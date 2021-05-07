@@ -50,7 +50,29 @@ task::ule_scheduler_state_base::interactivity_score_type task::ule_scheduler_sta
 	return 0;
 }
 
-task::ule_scheduler_state_base::priority_type task::ule_scheduler_state_base::priority() const
+void task::ule_scheduler_state_base::update_priority()
 {
-	return 0;
+	priority_ = compute_priority();
+}
+
+task::ule_scheduler_state_base::priority_type task::ule_scheduler_state_base::compute_priority()
+{
+	if (priority_class_ != priority_classes::TIMESHARE)
+	{
+		return 0;
+	}
+
+	auto score = max(0ul, interactivity_ + nice_);
+	priority_type ret{ 0 };
+	if (score < ule_scheduler_class::INTERACT_THRESHOLD)
+	{
+		ret = ule_scheduler_class::PRIORITY_MIN_INTERACT;
+		ret += ((ule_scheduler_class::PRIORITY_MAX_INTERACT - ule_scheduler_class::PRIORITY_MIN_INTERACT + 1)
+			/ ule_scheduler_class::INTERACT_THRESHOLD) * score;
+	}
+	else{
+
+	}
+
+	return ret;
 }
