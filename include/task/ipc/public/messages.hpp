@@ -3,6 +3,8 @@
 #include <compare>
 #include <cstring>
 
+#include "task/ipc/public/fpage.hpp"
+
 #if defined(_DIONYSUS_KERNEL_)
 #include "ktl/concepts.hpp"
 #include "ktl/span.hpp"
@@ -331,15 +333,30 @@ class string_item final
 static_assert(_internals::DoubleMessageItem<string_item>);
 
 ///// \brief map item share the page with threads
-//class map_item final
-//{
-// public:
-// private:
-//	[[maybe_unused]]uint64_t plchdl[2];
-//}__attribute__((packed));
-//
-//static_assert(_internals::DoubleMessageItem<map_item>);
-//
+class map_item final
+{
+ public:
+	message_span raw() const
+	{
+		return message_span{ raws_, 2 };
+	}
+ private:
+	union
+	{
+		struct
+		{
+			uint64_t type_: 4;
+			uint64_t res0_: 6;
+			uint64_t send_base: 54;
+
+			fpage send_fpage_;
+		}__attribute__((packed));
+		mutable uint64_t raws_[2];
+	};
+}__attribute__((packed));
+
+static_assert(_internals::DoubleMessageItem<map_item>);
+
 ///// \brief grant item map the page with receiver and unmap for sender
 //class grant_item final
 //{
