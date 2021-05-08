@@ -1,6 +1,7 @@
 [submodule "external/newlib/newlib"]
 	path = external/newlib/newlib
-	url = https://github.com/ourairquality/newlib.git
+	url = https://sourceware.org/git/newlib-cygwin.git
+	branch = master
 [submodule "external/llvm-project/llvm-project"]
 	path = external/llvm-project/llvm-project
 	url = https://mirrors.tuna.tsinghua.edu.cn/git/llvm-project.git
@@ -11,6 +12,7 @@
 [submodule "libs/dbl"]
 	path = libs/dbl
 	url = https://github.com/SmartPolarBear/dionysus_baisc_library.git
+	update = merge
 [submodule "external/gtest/gtest"]
 	path = external/gtest/gtest
 	url = https://github.com/google/googletest.git

@@ -109,3 +109,8 @@ extern "C" [[maybe_unused]]  int fork()
 {
 	return -1;
 }
+
+extern "C" [[maybe_unused]] void abort()
+{
+	KDEBUG_GENERALPANIC("Some of libraries called exit for kernel.");
+}
