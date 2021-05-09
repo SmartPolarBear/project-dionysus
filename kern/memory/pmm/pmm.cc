@@ -19,8 +19,10 @@
  * Date      	By	Comments
  * ----------	---	----------------------------------------------------------
  */
-#include "./pmm.h"
+#include "include/pmm.h"
 #include "./buddy_pmm.h"
+
+#include "memory/pmm.hpp"
 
 #include "arch/amd64/cpu/x86.h"
 
