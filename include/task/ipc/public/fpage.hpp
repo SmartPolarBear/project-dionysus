@@ -30,6 +30,21 @@ class fpage
 	{
 	}
 
+	[[nodiscard]] bool check_rights(uint64_t rights) const
+	{
+		return (rights & rights_) == rights;
+	}
+
+	[[nodiscard]] uint64_t get_size() const
+	{
+		return 1ull << s_;
+	}
+
+	[[nodiscard]] uintptr_t get_base_address() const
+	{
+		return 1ull << b_div_1024_;
+	}
+
  private:
 	union
 	{

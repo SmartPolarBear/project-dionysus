@@ -238,15 +238,15 @@ class message_acceptor final
 
 	~message_acceptor() = default;
 
-	message_acceptor(message_acceptor&& another) : raw_(std::exchange(another.raw_, 0))
+	constexpr message_acceptor(message_acceptor&& another) : raw_(std::exchange(another.raw_, 0))
 	{
 	}
 
-	message_acceptor(const message_acceptor& another) : raw_(another.raw_)
+	constexpr message_acceptor(const message_acceptor& another) : raw_(another.raw_)
 	{
 	}
 
-	message_acceptor(buffer_register_type raw) : raw_(raw)
+	constexpr message_acceptor(buffer_register_type raw) : raw_(raw)
 	{
 	}
 
@@ -306,6 +306,12 @@ class string_item final
 
 	static constexpr size_t STRING_ITEM_STR_LEN_BITS = sizeof(message_register_type) * 8 - 10;
 
+ public:
+
+	constexpr string_item() : type_{ static_cast<uint64_t>(message_item_types::STRING) }
+	{
+	}
+
 	[[nodiscard]] message_item_types type() const
 	{
 		return (message_item_types)type_;
@@ -326,7 +332,7 @@ class string_item final
 			uint64_t string_len_: STRING_ITEM_STR_LEN_BITS;
 			uint64_t string_ptr;
 		}__attribute__((packed));
-		mutable uint64_t raws_[2];
+		mutable uint64_t raws_[2]{ 0, 0 };
 	};
 }__attribute__((packed));
 
@@ -336,6 +342,10 @@ static_assert(_internals::DoubleMessageItem<string_item>);
 class map_item final
 {
  public:
+	constexpr map_item() : type_{ static_cast<uint64_t>(message_item_types::MAP) }
+	{
+	}
+
 	message_span raw() const
 	{
 		return message_span{ raws_, 2 };
@@ -351,39 +361,56 @@ class map_item final
 
 			fpage send_fpage_;
 		}__attribute__((packed));
-		mutable uint64_t raws_[2];
+		mutable uint64_t raws_[2]{ 0, 0 };
 	};
 }__attribute__((packed));
 
 static_assert(_internals::DoubleMessageItem<map_item>);
 
 ///// \brief grant item map the page with receiver and unmap for sender
-//class grant_item final
-//{
-// public:
-// private:
-//	[[maybe_unused]]uint64_t plchdl[2];
-//}__attribute__((packed));
+class grant_item final
+{
+ public:
+	constexpr grant_item() : type_{ static_cast<uint64_t>(message_item_types::GRANT) }
+	{
+	}
 
-//static_assert(_internals::DoubleMessageItem<grant_item>);
+	message_span raw() const
+	{
+		return message_span{ raws_, 2 };
+	}
+ private:
+	union
+	{
+		struct
+		{
+			uint64_t type_: 4;
+			uint64_t res0_: 6;
+			uint64_t send_base: 54;
 
+			fpage send_fpage_;
+		}__attribute__((packed));
+		mutable uint64_t raws_[2]{ 0, 0 };
+	};
+}__attribute__((packed));
 
+static_assert(_internals::DoubleMessageItem<grant_item>);
 
 /// \brief IPC message.
 class message final
 {
  public:
-	message()
+	constexpr message()
 	{
 	}
 	~message() = default;
 
-	message(const message& another)
+	constexpr message(const message& another)
 	{
 		memmove(raws_, another.raws_, sizeof(raws_));
 	}
 
-	message(message&& another)
+	constexpr message(message&& another)
 	{
 		memmove(raws_, another.raws_, sizeof(raws_));
 		memset(another.raws_, 0, sizeof(another.raws_));
@@ -476,7 +503,8 @@ class message final
 
 	[[nodiscard]] message_span get_items_span() const
 	{
-		message_span ret{ const_cast<message_register_type*>(  raws_ + 1), tag_.untyped_count() + tag_.typed_count() };
+		message_span
+			ret{ const_cast<message_register_type*>(  raws_ + 1), tag_.untyped_count() + tag_.typed_count() };
 		return ret;
 	}
 
@@ -485,7 +513,8 @@ class message final
 	/// \return
 	[[nodiscard]] message_span get_items_span(const message_tag& tag) const
 	{
-		message_span ret{ const_cast<message_register_type*>(  raws_ + 1), tag.untyped_count() + tag.typed_count() };
+		message_span
+			ret{ const_cast<message_register_type*>(  raws_ + 1), tag.untyped_count() + tag.typed_count() };
 		return ret;
 	}
 
