@@ -130,18 +130,8 @@ static inline page_info* pde_to_page(pde_ptr_t pde)
 
 namespace boot_mem
 {
-static inline void* boot_alloc_page(void)
-{
-	// shouldn't have interrupts.
-	// popcli&pushcli can neither be used because unprepared cpu local storage
-	KDEBUG_ASSERT(!(read_eflags() & EFLAG_IF));
+void* boot_alloc_page(void);
 
-	// we don't reuse alloc_page() because spinlock_struct may not be prepared.
-	auto page = pmm_entity->alloc_pages(1);
-	KDEBUG_ASSERT(page != nullptr);
-
-	return reinterpret_cast<void*>(page_to_va(page));
-}
 } // namespace boot_mem
 
 } // namespace pmm

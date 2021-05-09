@@ -48,6 +48,8 @@
 
 #include <gsl/util>
 
+using namespace memory;
+
 using pmm::page_count;
 using pmm::pages;
 using pmm::pmm_entity;
@@ -82,12 +84,19 @@ static inline void init_pmm_manager()
 {
 	// set the physical memory manager
 	pmm_entity = &pmm::buddy_pmm::buddy_pmm_manager;
-	pmm_entity->init();
+//	pmm_entity->init();
+
+	if (!memory::physical_memory_manager::instance()->is_well_constructed())
+	{
+		KDEBUG_GENERALPANIC("Can't initialize physical_memory_manager");
+	}
 }
 
 static inline void init_memmap(page_info* base, size_t sz)
 {
-	pmm_entity->init_memmap(base, sz);
+//	pmm_entity->init_memmap(base, sz);
+	physical_memory_manager::instance()->setup_for_base(base, sz);
+
 }
 
 static inline void page_remove_pde(pde_ptr_t pgdir, uintptr_t va, pde_ptr_t pde)
@@ -237,29 +246,6 @@ void pmm::init_pmm()
 
 page_info* pmm::alloc_pages(size_t n) TA_NO_THREAD_SAFETY_ANALYSIS
 {
-//	page_info* ret = nullptr;
-//
-//	interrupt_saved_state_type state = 0;
-//
-//	if (!pmm_entity->enable_lock)
-//	{
-//		state = arch_interrupt_save();
-//	}
-//	else
-//	{
-//		lock::spinlock_acquire(&pmm_entity->lock);
-//	}
-//
-//	ret = pmm_entity->alloc_pages(n);
-//
-//	if (!pmm_entity->enable_lock)
-//	{
-//		arch_interrupt_restore(state);
-//	}
-//	else
-//	{
-//		lock::spinlock_release(&pmm_entity->lock);
-//	}
 
 	auto state = arch_interrupt_save();
 	auto _ = gsl::finally([&state]()
@@ -270,11 +256,14 @@ page_info* pmm::alloc_pages(size_t n) TA_NO_THREAD_SAFETY_ANALYSIS
 	if (pmm_entity->enable_lock)
 	{
 		lock::lock_guard g{ pmm_entity->lock };
-		return pmm_entity->alloc_pages(n);
+//		return pmm_entity->alloc_pages(n);
+		return physical_memory_manager::instance()->allocate(n);
 	}
 	else
 	{
-		return pmm_entity->alloc_pages(n);
+//		return pmm_entity->alloc_pages(n);
+		return physical_memory_manager::instance()->allocate(n);
+
 	}
 }
 
@@ -290,11 +279,15 @@ void pmm::free_pages(page_info* base, size_t n) TA_NO_THREAD_SAFETY_ANALYSIS
 	if (pmm_entity->enable_lock)
 	{
 		lock::lock_guard g{ pmm_entity->lock };
-		pmm_entity->free_pages(base, n);
+//		pmm_entity->free_pages(base, n);
+		physical_memory_manager::instance()->free(base, n);
+
 	}
 	else
 	{
-		pmm_entity->free_pages(base, n);
+//		pmm_entity->free_pages(base, n);
+		physical_memory_manager::instance()->free(base, n);
+
 	}
 }
 
@@ -307,7 +300,8 @@ size_t pmm::get_free_page_count(void)
 	  arch_interrupt_restore(state);
 	});
 
-	auto ret = pmm_entity->get_free_pages_count();
+//	auto ret = pmm_entity->get_free_pages_count();
+	auto ret = physical_memory_manager::instance()->free_count();
 
 	return ret;
 }
@@ -431,4 +425,21 @@ error_code pmm::pgdir_alloc_pages(IN pde_ptr_t pgdir,
 
 	*ret_page = pages;
 	return ret;
+}
+
+void* pmm::boot_mem::boot_alloc_page()
+{
+
+	// shouldn't have interrupts.
+	// popcli&pushcli can neither be used because unprepared cpu local storage
+	KDEBUG_ASSERT(!(read_eflags() & EFLAG_IF));
+
+	// we don't reuse alloc_page() because spinlock_struct may not be prepared.
+//	auto page = pmm_entity->alloc_pages(1);
+	auto page = physical_memory_manager::instance()->allocate(1);
+
+	KDEBUG_ASSERT(page != nullptr);
+
+	return reinterpret_cast<void*>(page_to_va(page));
+
 }

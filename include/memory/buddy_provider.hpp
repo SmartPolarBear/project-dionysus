@@ -25,6 +25,7 @@ class buddy_provider final
 	[[nodiscard]] page_info* allocate(size_t n) override;
 	void free(page_info* base, size_t n) override;
 	[[nodiscard]] size_t free_count() const override;
+	bool is_well_constructed() const override;
 
  private:
 	bool is_buddy_page(page_info* page, size_t order, size_t zone);
@@ -39,6 +40,8 @@ class buddy_provider final
 
 	zone zones_[ZONE_COUNT_MAX]{};
 	size_t zone_count_{ 0 };
+
+	bool well_constructed_{ false };
 };
 
 }

@@ -30,5 +30,28 @@
 memory::physical_memory_manager::physical_memory_manager()
 	: provider_()
 {
+}
 
+void memory::physical_memory_manager::setup_for_base(page_info* base, size_t n)
+{
+	return provider_.setup_for_base(base, n);
+}
+
+page_info* memory::physical_memory_manager::allocate(size_t n)
+{
+	return provider_.allocate(n);
+}
+
+void memory::physical_memory_manager::free(page_info* base, size_t n)
+{
+	return provider_.free(base, n);
+}
+
+size_t memory::physical_memory_manager::free_count() const
+{
+	return provider_.free_count();
+}
+bool memory::physical_memory_manager::is_well_constructed() const
+{
+	return provider_.is_well_constructed();
 }

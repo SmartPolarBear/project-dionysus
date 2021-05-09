@@ -1,33 +1,10 @@
 #include "memory/buddy_provider.hpp"
 
-#include "include/pmm.h"
-#include "include/buddy_pmm.h"
-
-#include "memory/pmm.hpp"
-
-#include "arch/amd64/cpu/x86.h"
-
-#include "system/error.hpp"
-#include "system/kmem.hpp"
 #include "system/memlayout.h"
 #include "system/mmu.h"
-#include "system/multiboot.h"
 #include "system/pmm.h"
-#include "system/vmm.h"
-#include "system/segmentation.hpp"
 
-#include "drivers/apic/traps.h"
-#include "drivers/console/console.h"
 #include "debug/kdebug.h"
-
-#include "../../libs/basic_io/include/builtin_text_io.hpp"
-
-#include "kbl/lock/lock_guard.hpp"
-
-#include <algorithm>
-#include <utility>
-
-#include <gsl/util>
 
 using namespace kbl;
 
@@ -91,7 +68,8 @@ page_info* memory::buddy_provider::allocate(size_t n)
 	if (page != nullptr && n != order_size)
 	{
 //		pmm::free_pages(page + n, order_size - n);
-		pmm::buddy_pmm::buddy_free_pages(page + n, order_size - n);
+//		pmm::buddy_pmm::buddy_free_pages(page + n, order_size - n);
+		free(page + n, order_size - n);
 	}
 
 	return page;
@@ -144,7 +122,6 @@ size_t memory::buddy_provider::free_count() const
 	}
 	return ret;
 }
-
 
 bool memory::buddy_provider::is_buddy_page(page_info* page, size_t order, size_t zone)
 {
@@ -262,4 +239,11 @@ memory::buddy_provider::buddy_provider()
 		list_init(&free_areas_[i].freelist);
 		free_areas_[i].free_count = 0;
 	}
+
+	well_constructed_ = true;
+}
+
+bool memory::buddy_provider::is_well_constructed() const
+{
+	return well_constructed_;
 }
