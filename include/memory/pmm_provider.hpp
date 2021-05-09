@@ -13,9 +13,6 @@ class i_pmm_provider
 
 	virtual void free(page_info* base, size_t n) = 0;
 
-	virtual size_t free_count() const = 0;
-
-	virtual bool lock_enable() const = 0;
-	virtual void set_lock_enable(bool enable) = 0;
+	[[nodiscard]] virtual size_t free_count() const = 0;
 };
 }
