@@ -1,5 +1,6 @@
-#if !defined(__INCLUDE_SYS_BUDDY_ALLOC_H)
-#define __INCLUDE_SYS_BUDDY_ALLOC_H
+#pragma once
+
+#include "memory/pmm.hpp"
 
 #include "system/memlayout.h"
 #include "system/mmu.h"
@@ -24,4 +25,3 @@ extern pmm::pmm_desc buddy_pmm_manager;
 
 } // namespace allocators
 
-#endif // __INCLUDE_SYS_BUDDY_ALLOC_H
