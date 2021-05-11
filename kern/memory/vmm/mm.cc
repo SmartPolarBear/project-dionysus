@@ -45,7 +45,6 @@ using vmm::pde_ptr_t;
 using vmm::pde_t;
 using vmm::vma_struct;
 
-using pmm::boot_mem::boot_alloc_page;
 
 // linked list
 using kbl::list_add;

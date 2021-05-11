@@ -433,9 +433,3 @@ error_code pmm::pgdir_alloc_pages(IN pde_ptr_t pgdir,
 	*ret_page = pages;
 	return ret;
 }
-
-void* pmm::boot_mem::boot_alloc_page()
-{
-
-
-}

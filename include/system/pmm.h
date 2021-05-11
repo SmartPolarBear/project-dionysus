@@ -121,10 +121,4 @@ static inline page* pde_to_page(pde_ptr_t pde)
 	return pa_to_page(vmm::pde_to_pa(pde));
 }
 
-namespace boot_mem
-{
-void* boot_alloc_page();
-
-} // namespace boot_mem
-
 } // namespace pmm
