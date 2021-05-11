@@ -84,7 +84,7 @@ static inline void init_pmm_manager()
 {
 	// set the physical memory manager
 	pmm_entity = &pmm::buddy_pmm::buddy_pmm_manager;
-//	pmm_entity->init();
+	pmm_entity->init();
 
 	if (!memory::physical_memory_manager::instance()->is_well_constructed())
 	{
@@ -227,6 +227,16 @@ static inline void init_physical_mem()
 
 void pmm::init_pmm()
 {
+	auto tag = multiboot::acquire_tag_ptr<multiboot_tag_module>(MULTIBOOT_TAG_TYPE_MODULE, [](auto ptr) -> bool
+	{
+	  multiboot_tag_module* mdl_tag = reinterpret_cast<decltype(mdl_tag)>(ptr);
+	  const char* ap_boot_commandline = "/ap_boot";
+	  auto cmp = strncmp(mdl_tag->cmdline, ap_boot_commandline, strlen(ap_boot_commandline));
+	  return cmp == 0;
+	});
+
+	auto code=(uint8_t*)P2V(tag->mod_start);
+
 	init_pmm_manager();
 
 	init_physical_mem();

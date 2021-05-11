@@ -27,6 +27,14 @@
 
 #include <gsl/util>
 
+using namespace memory;
+
+physical_memory_manager* physical_memory_manager::instance()
+{
+	static physical_memory_manager inst;
+	return &inst;
+}
+
 memory::physical_memory_manager::physical_memory_manager()
 	: provider_()
 {

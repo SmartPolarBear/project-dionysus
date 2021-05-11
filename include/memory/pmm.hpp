@@ -14,11 +14,12 @@ namespace memory
 {
 
 class physical_memory_manager final
-	: public kbl::singleton<physical_memory_manager>
+	// we do not use singleton because it overwrite the ap_boot
+	//	: public kbl::singleton<physical_memory_manager>
 {
  public:
 	using provider_type = buddy_provider;
-
+	static physical_memory_manager* instance();
  public:
 
 	physical_memory_manager();
@@ -28,7 +29,7 @@ class physical_memory_manager final
 	void free(page_info* base, size_t n);
 	[[nodiscard]] size_t free_count() const;
 
-	[[nodiscard]] bool is_well_constructed()const;
+	[[nodiscard]] bool is_well_constructed() const;
 
  private:
 	provider_type provider_{};
