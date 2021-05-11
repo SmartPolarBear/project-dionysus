@@ -63,7 +63,7 @@ error_code_with_result<void*> task::process_user_stack_state::make_next_user_sta
 	     i++)
 	{
 		uintptr_t va = current_top - USTACK_USABLE_SIZE_PER_THREAD + i * PAGE_SIZE;
-		page_info* page_ret = nullptr;
+		page* page_ret = nullptr;
 
 		ret = pmm::pgdir_alloc_page(parent_->mm->pgdir,
 			true,
@@ -77,7 +77,7 @@ error_code_with_result<void*> task::process_user_stack_state::make_next_user_sta
 		}
 	}
 
-	[[maybe_unused]]page_info* guard_page = nullptr;
+	[[maybe_unused]]page* guard_page = nullptr;
 
 	ret = pmm::pgdir_alloc_page(parent_->mm->pgdir,
 		true,

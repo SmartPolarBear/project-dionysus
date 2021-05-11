@@ -71,7 +71,7 @@ using reserved_space = pair<uintptr_t, uintptr_t>;
 pmm::pmm_desc fuck;
 pmm::pmm_desc* pmm::pmm_entity = &fuck;
 
-page_info* pmm::pages = nullptr;
+page* pmm::pages = nullptr;
 size_t pmm::page_count = 0;
 
 constexpr size_t RESERVED_SPACES_MAX_COUNT = 32;
@@ -93,7 +93,7 @@ static inline void init_pmm_manager()
 	}
 }
 
-static inline void init_memmap(page_info* base, size_t sz)
+static inline void init_memmap(page* base, size_t sz)
 {
 //	pmm_entity->init_memmap(base, sz);
 	physical_memory_manager::instance()->setup_for_base(base, sz);
@@ -168,7 +168,7 @@ static inline void init_physical_mem()
 	page_count = max_pa / PAGE_SIZE;
 	// The page management structure is placed a page after kernel
 	// So as to protect the multiboot info
-	pages = (page_info*)roundup((uintptr_t)(end + PAGE_SIZE * 2), PAGE_SIZE);
+	pages = (page*)roundup((uintptr_t)(end + PAGE_SIZE * 2), PAGE_SIZE);
 
 	for (size_t i = 0; i < page_count; i++)
 	{
@@ -228,15 +228,6 @@ static inline void init_physical_mem()
 
 void pmm::init_pmm()
 {
-	auto tag = multiboot::acquire_tag_ptr<multiboot_tag_module>(MULTIBOOT_TAG_TYPE_MODULE, [](auto ptr) -> bool
-	{
-	  multiboot_tag_module* mdl_tag = reinterpret_cast<decltype(mdl_tag)>(ptr);
-	  const char* ap_boot_commandline = "/ap_boot";
-	  auto cmp = strncmp(mdl_tag->cmdline, ap_boot_commandline, strlen(ap_boot_commandline));
-	  return cmp == 0;
-	});
-
-	auto code=(uint8_t*)P2V(tag->mod_start);
 
 	init_pmm_manager();
 
@@ -255,7 +246,7 @@ void pmm::init_pmm()
 	pmm_entity->enable_lock = true;
 }
 
-page_info* pmm::alloc_pages(size_t n) TA_NO_THREAD_SAFETY_ANALYSIS
+page* pmm::alloc_pages(size_t n) TA_NO_THREAD_SAFETY_ANALYSIS
 {
 
 	auto state = arch_interrupt_save();
@@ -278,7 +269,7 @@ page_info* pmm::alloc_pages(size_t n) TA_NO_THREAD_SAFETY_ANALYSIS
 	}
 }
 
-void pmm::free_pages(page_info* base, size_t n) TA_NO_THREAD_SAFETY_ANALYSIS
+void pmm::free_pages(page* base, size_t n) TA_NO_THREAD_SAFETY_ANALYSIS
 {
 	auto state = arch_interrupt_save();
 
@@ -326,7 +317,7 @@ void pmm::page_remove(pde_ptr_t pgdir, uintptr_t va)
 	}
 }
 
-error_code pmm::page_insert(pde_ptr_t pgdir, bool allow_rewrite, page_info* page, uintptr_t va, size_t perm)
+error_code pmm::page_insert(pde_ptr_t pgdir, bool allow_rewrite, page* page, uintptr_t va, size_t perm)
 {
 	auto pde = vmm::walk_pgdir(pgdir, va, true);
 	if (pde == nullptr)
@@ -371,9 +362,9 @@ error_code pmm::pgdir_alloc_page(IN pde_ptr_t pgdir,
 	bool rewrite_if_exist,
 	uintptr_t va,
 	size_t perm,
-	OUT page_info** ret_page)
+	OUT page** ret_page)
 {
-	page_info* page = alloc_page();
+	page* page = alloc_page();
 	error_code ret = ERROR_SUCCESS;
 	if (page != nullptr)
 	{
@@ -393,14 +384,14 @@ error_code pmm::pgdir_alloc_pages(IN pde_ptr_t pgdir,
 	size_t n,
 	uintptr_t va,
 	size_t perm,
-	OUT page_info** ret_page)
+	OUT page** ret_page)
 {
 
-	page_info* pages = alloc_pages(n);
+	page* pages = alloc_pages(n);
 	error_code ret = ERROR_SUCCESS;
 	if (pages != nullptr)
 	{
-		page_info* p = pages;
+		page* p = pages;
 		size_t va_cnt = 0;
 		do
 		{

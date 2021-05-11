@@ -1,8 +1,11 @@
+\
 #pragma once
 
 #include "system/types.h"
 
-enum page_info_flags
+#include "ktl/concepts.hpp"
+
+enum [[clang::flag_enum]] page_flags
 {
 	PHYSICAL_PAGE_FLAG_RESERVED = 0b01,
 	PHYSICAL_PAGE_FLAG_PROPERTY = 0b10,
@@ -11,8 +14,8 @@ enum page_info_flags
 	PHYSICAL_PAGE_FLAG_SWAP = 0b1000,
 };
 
-// descriptor of physical memory pages
-struct page_info
+// Physical memory pages
+struct page
 {
 	size_t ref;
 	size_t flags;
@@ -20,18 +23,19 @@ struct page_info
 	size_t zone_id;
 	list_head page_link;
 };
+static_assert(ktl::is_standard_layout_v<page>);
 
-static inline bool page_has_flag(const page_info* pg, page_info_flags fl)
+static inline bool page_has_flag(const page* pg, page_flags fl)
 {
 	return pg->flags & fl;
 }
 
-static inline void page_set_flag(page_info* pg, page_info_flags fl)
+static inline void page_set_flag(page* pg, page_flags fl)
 {
 	pg->flags |= fl;
 }
 
-static inline void page_clear_flag(page_info* pg, page_info_flags fl)
+static inline void page_clear_flag(page* pg, page_flags fl)
 {
 	pg->flags &= ~fl;
 }

@@ -1,3 +1,23 @@
+// Copyright (c) 2021 SmartPolarBear
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 #include "memory/buddy_provider.hpp"
 
 #include "system/memlayout.h"
@@ -14,12 +34,12 @@ size_t memory::buddy_provider::get_order(size_t n)
 	return log2(roundup);
 }
 
-void memory::buddy_provider::setup_for_base(page_info* base, size_t n)
+void memory::buddy_provider::setup_for_base(page* base, size_t n)
 {
 	KDEBUG_ASSERT(n > 0);
 	KDEBUG_ASSERT(zone_count_ < ZONE_COUNT_MAX);
 
-	for (page_info* p = base; p != base + n; p++)
+	for (page* p = base; p != base + n; p++)
 	{
 		// KDEBUG_ASSERT(page_has_flag(p, PHYSICAL_PAGE_FLAG_RESERVED));
 		if (!page_has_flag(p, PHYSICAL_PAGE_FLAG_RESERVED))
@@ -38,7 +58,7 @@ void memory::buddy_provider::setup_for_base(page_info* base, size_t n)
 
 	size_t order = MAX_ORDER, order_size = (1 << order);
 
-	for (page_info* p = base + (n - 1); n != 0;)
+	for (page* p = base + (n - 1); n != 0;)
 	{
 		while (n >= order_size)
 		{
@@ -58,13 +78,13 @@ void memory::buddy_provider::setup_for_base(page_info* base, size_t n)
 	}
 }
 
-page_info* memory::buddy_provider::allocate(size_t n)
+page* memory::buddy_provider::allocate(size_t n)
 {
 	KDEBUG_ASSERT(n > 0);
 
 	size_t order = get_order(n), order_size = (1 << order);
 
-	page_info* page = do_allocate(order);
+	page* page = do_allocate(order);
 	if (page != nullptr && n != order_size)
 	{
 //		pmm::free_pages(page + n, order_size - n);
@@ -75,7 +95,7 @@ page_info* memory::buddy_provider::allocate(size_t n)
 	return page;
 }
 
-void memory::buddy_provider::free(page_info* base, size_t n)
+void memory::buddy_provider::free(page* base, size_t n)
 {
 	KDEBUG_ASSERT(n > 0);
 
@@ -123,7 +143,7 @@ size_t memory::buddy_provider::free_count() const
 	return ret;
 }
 
-bool memory::buddy_provider::is_buddy_page(page_info* page, size_t order, size_t zone)
+bool memory::buddy_provider::is_buddy_page(page* page, size_t order, size_t zone)
 {
 
 	if (pmm::page_to_index(page) < pmm::page_count)
@@ -138,23 +158,23 @@ bool memory::buddy_provider::is_buddy_page(page_info* page, size_t order, size_t
 
 }
 
-page_info* memory::buddy_provider::index_to_page(size_t zone_id, size_t index)
+page* memory::buddy_provider::index_to_page(size_t zone_id, size_t index)
 {
 	return zones_[zone_id].base + index;
 }
 
-size_t memory::buddy_provider::page_to_index(page_info* page)
+size_t memory::buddy_provider::page_to_index(page* page)
 {
 	return page - zones_[page->zone_id].base;
 }
 
-void memory::buddy_provider::do_free(page_info* base, size_t order)
+void memory::buddy_provider::do_free(page* base, size_t order)
 {
 	size_t buddy_index = 0, page_index = page_to_index(base);
 
 	KDEBUG_ASSERT((page_index & ((1 << order) - 1)) == 0);
 
-	for (page_info* p = base; p != base + (1 << order); p++)
+	for (page* p = base; p != base + (1 << order); p++)
 	{
 		KDEBUG_ASSERT(!page_has_flag(p, PHYSICAL_PAGE_FLAG_RESERVED));
 		KDEBUG_ASSERT(!page_has_flag(p, PHYSICAL_PAGE_FLAG_PROPERTY));
@@ -191,7 +211,7 @@ void memory::buddy_provider::do_free(page_info* base, size_t order)
 	list_add(&page->page_link, &free_areas_[order].freelist);
 }
 
-page_info* memory::buddy_provider::do_allocate(size_t order)
+page* memory::buddy_provider::do_allocate(size_t order)
 {
 	KDEBUG_ASSERT(order <= MAX_ORDER);
 
@@ -201,7 +221,7 @@ page_info* memory::buddy_provider::do_allocate(size_t order)
 		{
 
 			auto entry = free_areas_[cur_order].freelist.next;
-			page_info* page = list_entry(entry, page_info, page_link);
+			page* pg = list_entry(entry, page, page_link);
 
 			free_areas_[cur_order].free_count--;
 
@@ -214,7 +234,7 @@ page_info* memory::buddy_provider::do_allocate(size_t order)
 				cur_order--;
 				sz >>= 1;
 
-				page_info* buddy = page + sz;
+				page* buddy = pg + sz;
 				buddy->property = cur_order;
 
 				page_set_flag(buddy, PHYSICAL_PAGE_FLAG_PROPERTY);
@@ -224,8 +244,8 @@ page_info* memory::buddy_provider::do_allocate(size_t order)
 				list_add(&buddy->page_link, &free_areas_[cur_order].freelist);
 			}
 
-			page_clear_flag(page, PHYSICAL_PAGE_FLAG_PROPERTY);
-			return page;
+			page_clear_flag(pg, PHYSICAL_PAGE_FLAG_PROPERTY);
+			return pg;
 		}
 	}
 

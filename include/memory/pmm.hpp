@@ -28,15 +28,19 @@ class physical_memory_manager final
 
 	physical_memory_manager();
 
-	void setup_for_base(page_info* base, size_t n);
-	[[nodiscard]] page_info* allocate(size_t n);
-	void free(page_info* base, size_t n);
+	void setup_for_base(page* base, size_t n);
+	[[nodiscard]] page* allocate(size_t n);
+
+	void free(page* base);
+	void free(page* base, size_t n);
+
 	[[nodiscard]] size_t free_count() const;
 
 	[[nodiscard]] bool is_well_constructed() const;
 
  private:
 	provider_type provider_{};
+	lock::spinlock lock_{ "pmm" };
 };
 
 }

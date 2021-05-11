@@ -40,17 +40,22 @@ memory::physical_memory_manager::physical_memory_manager()
 {
 }
 
-void memory::physical_memory_manager::setup_for_base(page_info* base, size_t n)
+void memory::physical_memory_manager::setup_for_base(page* base, size_t n)
 {
 	return provider_.setup_for_base(base, n);
 }
 
-page_info* memory::physical_memory_manager::allocate(size_t n)
+page* memory::physical_memory_manager::allocate(size_t n)
 {
 	return provider_.allocate(n);
 }
 
-void memory::physical_memory_manager::free(page_info* base, size_t n)
+void physical_memory_manager::free(page* base)
+{
+	free(base, 1);
+}
+
+void memory::physical_memory_manager::free(page* base, size_t n)
 {
 	return provider_.free(base, n);
 }
@@ -63,3 +68,4 @@ bool memory::physical_memory_manager::is_well_constructed() const
 {
 	return provider_.is_well_constructed();
 }
+

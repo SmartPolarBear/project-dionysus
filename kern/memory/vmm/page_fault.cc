@@ -92,7 +92,7 @@ static inline error_code page_fault_impl(mm_struct* mm, size_t err, uintptr_t ad
 
 		addr = rounddown(addr, PAGE_SIZE);
 
-		page_info* page_ret = nullptr;
+		page* page_ret = nullptr;
 		if (pmm::pgdir_alloc_page(mm->pgdir, true, addr, page_perm, &page_ret)
 			!= ERROR_SUCCESS) // map to any free space
 		{
