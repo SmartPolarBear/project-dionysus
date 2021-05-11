@@ -45,6 +45,27 @@ void memory::physical_memory_manager::setup_for_base(page* base, size_t n)
 	return provider_.setup_for_base(base, n);
 }
 
+void* physical_memory_manager::asserted_allocate()
+{
+
+	// shouldn't have interrupts.
+	// popcli&pushcli can neither be used because unprepared cpu local storage
+	KDEBUG_ASSERT(!(read_eflags() & EFLAG_IF));
+
+	// we don't reuse alloc_page() because spinlock_struct may not be prepared.
+//	auto page = pmm_entity->alloc_pages(1);
+	auto page = physical_memory_manager::instance()->allocate(1);
+
+	KDEBUG_ASSERT(page != nullptr);
+
+	return reinterpret_cast<void*>(pmm::page_to_va(page));
+}
+
+page* physical_memory_manager::allocate()
+{
+	return allocate(1);
+}
+
 page* memory::physical_memory_manager::allocate(size_t n)
 {
 	return provider_.allocate(n);
@@ -68,4 +89,5 @@ bool memory::physical_memory_manager::is_well_constructed() const
 {
 	return provider_.is_well_constructed();
 }
+
 

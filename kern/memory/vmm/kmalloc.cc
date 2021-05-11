@@ -42,9 +42,7 @@ using memory::kmem::kmem_init;
 extern kmem_cache* sized_caches[KMEM_SIZED_CACHE_COUNT];
 
 // pmm
-using pmm::alloc_page;
 using pmm::alloc_pages;
-using pmm::free_page;
 using pmm::free_pages;
 
 constexpr size_t GUARDIAN_BYTES_AFTER = 16;

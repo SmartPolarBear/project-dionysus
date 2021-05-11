@@ -29,6 +29,10 @@ class physical_memory_manager final
 	physical_memory_manager();
 
 	void setup_for_base(page* base, size_t n);
+
+	[[nodiscard]] void* asserted_allocate();
+
+	[[nodiscard]] page* allocate();
 	[[nodiscard]] page* allocate(size_t n);
 
 	void free(page* base);

@@ -107,7 +107,8 @@ static inline void page_remove_pde(pde_ptr_t pgdir, uintptr_t va, pde_ptr_t pde)
 		auto page = pmm::pde_to_page(pde);
 		if ((--page->ref) == 0)
 		{
-			pmm::free_page(page);
+//			pmm::free_page(page);
+			physical_memory_manager::instance()->free(page);
 		}
 		*pde = 0;
 		pmm::tlb_invalidate(pgdir, va);
@@ -364,14 +365,16 @@ error_code pmm::pgdir_alloc_page(IN pde_ptr_t pgdir,
 	size_t perm,
 	OUT page** ret_page)
 {
-	page* page = alloc_page();
+	page* page = memory::physical_memory_manager::instance()->allocate(); //alloc_page();
 	error_code ret = ERROR_SUCCESS;
 	if (page != nullptr)
 	{
 		if ((ret = page_insert(pgdir, rewrite_if_exist, page, va, perm)) != ERROR_SUCCESS)
 		{
-			free_page(page);
+			physical_memory_manager::instance()->free(page);
+
 			ret_page = nullptr;
+
 			return ret;
 		}
 	}
@@ -420,7 +423,9 @@ error_code pmm::pgdir_alloc_pages(IN pde_ptr_t pgdir,
 		{
 			for (; p != pages + n; p++)
 			{
-				free_page(p);
+//				free_page(p);
+				physical_memory_manager::instance()->free(p);
+
 			}
 		}
 	}
@@ -432,16 +437,5 @@ error_code pmm::pgdir_alloc_pages(IN pde_ptr_t pgdir,
 void* pmm::boot_mem::boot_alloc_page()
 {
 
-	// shouldn't have interrupts.
-	// popcli&pushcli can neither be used because unprepared cpu local storage
-	KDEBUG_ASSERT(!(read_eflags() & EFLAG_IF));
-
-	// we don't reuse alloc_page() because spinlock_struct may not be prepared.
-//	auto page = pmm_entity->alloc_pages(1);
-	auto page = physical_memory_manager::instance()->allocate(1);
-
-	KDEBUG_ASSERT(page != nullptr);
-
-	return reinterpret_cast<void*>(page_to_va(page));
 
 }

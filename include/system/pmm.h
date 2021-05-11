@@ -86,15 +86,6 @@ static inline uintptr_t pavailable_start(void)
 	return V2P(roundup((uintptr_t)(&pages[page_count]), PAGE_SIZE));
 }
 
-static inline page* alloc_page(void)
-{
-	return alloc_pages(1);
-}
-
-static inline void free_page(page* pg)
-{
-	free_pages(pg, 1);
-}
 
 static inline size_t page_to_index(page* pg)
 {
@@ -132,7 +123,7 @@ static inline page* pde_to_page(pde_ptr_t pde)
 
 namespace boot_mem
 {
-void* boot_alloc_page(void);
+void* boot_alloc_page();
 
 } // namespace boot_mem
 

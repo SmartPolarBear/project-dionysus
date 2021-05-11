@@ -18,6 +18,8 @@
 #include "fs/device/ata_devices.hpp"
 #include "fs/vfs/vfs.hpp"
 
+#include "memory/pmm.hpp"
+
 #include "../../../libs/basic_io/include/builtin_text_io.hpp"
 
 #include <cstring>
@@ -33,6 +35,8 @@ using namespace ahci;
 using namespace kbl;
 
 using namespace file_system;
+
+using namespace memory;
 
 using std::min;
 using std::max;
@@ -101,7 +105,7 @@ static inline error_code ahci_port_allocate(ahci_port* port)
 	ahci_port_stop(port);
 
 	// 2MB-sized page
-	auto page = pmm::alloc_page();
+	auto page = physical_memory_manager::instance()->allocate();   //pmm::alloc_page();
 
 	if (page == nullptr)
 	{
