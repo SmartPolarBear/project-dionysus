@@ -68,7 +68,8 @@ using vmm::pde_ptr_t;
 using reserved_space = pair<uintptr_t, uintptr_t>;
 
 // use buddy allocator to allocate physical pages
-pmm::pmm_desc* pmm::pmm_entity = nullptr;
+pmm::pmm_desc fuck;
+pmm::pmm_desc* pmm::pmm_entity = &fuck;
 
 page_info* pmm::pages = nullptr;
 size_t pmm::page_count = 0;
@@ -83,8 +84,8 @@ multiboot::multiboot_tag_ptr module_tags[RESERVED_SPACES_MAX_COUNT];
 static inline void init_pmm_manager()
 {
 	// set the physical memory manager
-	pmm_entity = &pmm::buddy_pmm::buddy_pmm_manager;
-	pmm_entity->init();
+//	pmm_entity = &pmm::buddy_pmm::buddy_pmm_manager;
+//	pmm_entity->init();
 
 	if (!memory::physical_memory_manager::instance()->is_well_constructed())
 	{

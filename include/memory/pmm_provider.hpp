@@ -1,6 +1,6 @@
 #pragma once
 
-#include "system/memlayout.h"
+#include "memory/page.hpp"
 
 namespace memory
 {

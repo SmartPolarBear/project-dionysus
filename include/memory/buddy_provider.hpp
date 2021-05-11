@@ -3,6 +3,8 @@
 #include "pmm_provider.hpp"
 #include "kbl/lock/spinlock.h"
 
+#include "memory/page.hpp"
+
 namespace memory
 {
 
@@ -17,6 +19,13 @@ class buddy_provider final
 	{
 		page_info* base;
 	};
+
+	struct free_area
+	{
+		list_head freelist;
+		size_t free_count;
+	};
+
 
  public:
 	buddy_provider();
@@ -36,7 +45,7 @@ class buddy_provider final
 	void do_free(page_info* base, size_t n);
 	[[nodiscard]] page_info* do_allocate(size_t n);
 
-	free_area_info free_areas_[MAX_ORDER + 1]{};
+	free_area free_areas_[MAX_ORDER + 1]{};
 
 	zone zones_[ZONE_COUNT_MAX]{};
 	size_t zone_count_{ 0 };

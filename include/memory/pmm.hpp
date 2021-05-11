@@ -19,6 +19,10 @@ class physical_memory_manager final
 {
  public:
 	using provider_type = buddy_provider;
+
+	physical_memory_manager(const physical_memory_manager&) = delete;
+	physical_memory_manager& operator=(const physical_memory_manager&) = delete;
+
 	static physical_memory_manager* instance();
  public:
 

@@ -30,6 +30,8 @@
 #include "kbl/lock/spinlock.h"
 #include "drivers/apic/traps.h"
 
+#include "memory/page.hpp"
+
 using vmm::pde_ptr_t;
 namespace pmm
 {
