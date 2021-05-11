@@ -8,10 +8,10 @@ template<typename T>
 class singleton
 {
  public:
-	static T& instance()
+	static T* instance()
 	{
 		static T inst;
-		return inst;
+		return &inst;
 	}
 
 	singleton(const singleton&) = delete;

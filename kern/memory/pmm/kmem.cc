@@ -148,7 +148,7 @@ static inline void slab_destory(kmem_cache *cache, slab *slb)
 
     uintptr_t va = (uintptr_t)slb;
 
-    free_page((page_info *)(pmm::va_to_page(va)));
+    free_page((page *)(pmm::va_to_page(va)));
 }
 
 // ATTENTION: BE CAUTIOUS FOR RACE CONDITION

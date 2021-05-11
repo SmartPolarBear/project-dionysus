@@ -63,7 +63,7 @@ static error_code load_ph(IN const Elf64_Phdr& prog_header,
 
 	// ph->p_filesz <= ph->p_memsz
 	size_t page_count = PAGE_ROUNDUP(prog_header.p_memsz) / PAGE_SIZE;
-	page_info* pages = nullptr;
+	page* pages = nullptr;
 	auto error = pmm::pgdir_alloc_pages(proc_mm->pgdir, false, page_count, prog_header.p_vaddr, perms, &pages);
 
 	if (error != ERROR_SUCCESS)
@@ -116,7 +116,7 @@ static error_code alloc_sh(IN const Elf64_Shdr& shdr,
 	}
 
 	size_t page_count = PAGE_ROUNDUP(shdr.sh_size) / PAGE_SIZE;
-	page_info* pages = nullptr;
+	page* pages = nullptr;
 	auto error = pmm::pgdir_alloc_pages(proc_mm->pgdir, true, page_count, shdr.sh_addr, perms, &pages);
 
 	if (error != ERROR_SUCCESS)

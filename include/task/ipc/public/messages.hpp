@@ -3,7 +3,7 @@
 #include <compare>
 #include <cstring>
 
-#include "task/ipc/public/fpage.hpp"
+#include "memory/fpage.hpp"
 
 #if defined(_DIONYSUS_KERNEL_)
 #include "ktl/concepts.hpp"
