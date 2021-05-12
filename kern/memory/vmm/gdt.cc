@@ -125,7 +125,11 @@ void vmm::install_gdt()
 	wrmsr(MSR_FS_BASE, ((uintptr_t)cpu_fs));
 	current_cpu->local_fs = cpu_fs;
 
-	uint8_t* cpu_kernel_gs = reinterpret_cast<decltype(cpu_kernel_gs)>(
+	auto cpu_kernel_gs = reinterpret_cast<uint8_t* >(
+		memory::physical_memory_manager::instance()->asserted_allocate()
+	);
+
+	auto double_fault_stack = reinterpret_cast<uint8_t* >(
 		memory::physical_memory_manager::instance()->asserted_allocate()
 	);
 
@@ -140,8 +144,9 @@ void vmm::install_gdt()
 	current_cpu->kernel_gs = cpu_kernel_gs;
 
 	current_cpu->tss.iopb_offset = sizeof(current_cpu->tss);
+	current_cpu->tss.ist1 = reinterpret_cast<uintptr_t>(double_fault_stack);
 
-	set_gdt_entry(&current_cpu->gdt_table.kernel_code, 0, 0, DPL_KERNEL, true, false);
+		set_gdt_entry(&current_cpu->gdt_table.kernel_code, 0, 0, DPL_KERNEL, true, false);
 	set_gdt_entry(&current_cpu->gdt_table.kernel_data, 0, 0, DPL_KERNEL, false, true);
 	set_gdt_entry(&current_cpu->gdt_table.user_code, 0, 0, DPL_USER, true, false);
 	set_gdt_entry(&current_cpu->gdt_table.user_data, 0, 0, DPL_USER, false, true);
@@ -150,7 +155,7 @@ void vmm::install_gdt()
 
 	current_cpu->install_gdt_and_tss();
 
-// --target=x86_64-pc-none-elf and -mcmodel=large can cause a triple fault here
-// work it around by building with x86_64-pc-linux-elf
+	// --target=x86_64-pc-none-elf and -mcmodel=large can cause a triple fault here
+	// work it around by building with x86_64-pc-linux-elf
 	cpu = current_cpu;
 }
