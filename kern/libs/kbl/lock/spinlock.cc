@@ -4,6 +4,7 @@
 
 #include "drivers/apic/traps.h"
 #include "drivers/console/console.h"
+#include "drivers/apic/local_apic.hpp"
 #include "drivers/acpi/cpu.h"
 #include "debug/kdebug.h"
 #include "kbl/lock/spinlock.h"

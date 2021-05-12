@@ -16,6 +16,12 @@ namespace trap
 constexpr size_t TRAP_NUMBERMAX = 256;
 constexpr uint16_t TRAP_MSI_BASE = 0x80;
 
+enum tss_ists : uint8_t
+{
+	IST_DISABLED = 0,
+	IST_DOUBLE_FAULT = 1,
+};
+
 // Processor-defined:
 enum processor_defined_traps
 {

@@ -29,6 +29,10 @@ class physical_memory_manager final
 	physical_memory_manager();
 
 	void setup_for_base(page* base, size_t n);
+
+	[[nodiscard]] void* asserted_allocate();
+
+	[[nodiscard]] page* allocate();
 	[[nodiscard]] page* allocate(size_t n);
 
 	void free(page* base);
@@ -39,8 +43,11 @@ class physical_memory_manager final
 	[[nodiscard]] bool is_well_constructed() const;
 
  private:
+	page* allocate_locked(size_t n);
+
 	provider_type provider_{};
-	lock::spinlock lock_{ "pmm" };
+	mutable lock::spinlock lock_{ "pmm" };
+	mutable lock::arch_spinlock lk_{ .value=0 };
 };
 
 }

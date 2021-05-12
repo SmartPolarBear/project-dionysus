@@ -45,7 +45,6 @@ using vmm::pde_ptr_t;
 using vmm::pde_t;
 using vmm::vma_struct;
 
-using pmm::boot_mem::boot_alloc_page;
 
 // linked list
 using kbl::list_add;
@@ -91,8 +90,8 @@ bool vmm::check_user_memory(IN mm_struct* mm, uintptr_t addr, size_t len, bool w
 
 		vma_struct* vma = nullptr;
 		for (uintptr_t start = addr, end = addr + len;
-			 start < end;
-			 start = vma->vm_end)
+		     start < end;
+		     start = vma->vm_end)
 		{
 			if ((vma = find_vma(mm, start)) == nullptr || start < vma->vm_start)
 			{

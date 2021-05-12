@@ -1,24 +1,22 @@
-/*
- * Last Modified: Sun May 17 2020
- * Modified By: SmartPolarBear
- * -----
- * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
- *
- * Permission to use, copy, modify, and/or distribute this software for any
- * purpose with or without fee is hereby granted.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
- * REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
- * FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
- * INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
- * LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
- * OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
- * PERFORMANCE OF THIS SOFTWARE.
- * -----
- * HISTORY:
- * Date      	By	Comments
- * ----------	---	----------------------------------------------------------
- */
+// Copyright (c) 2021 SmartPolarBear
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 
 #include "system/error.hpp"
 #include "system/kmalloc.hpp"
@@ -36,6 +34,8 @@
 #include "drivers/console/console.h"
 #include "debug/kdebug.h"
 
+#include "memory/pmm.hpp"
+
 #include <algorithm>
 #include <cstring>
 
@@ -44,7 +44,6 @@ using vmm::pde_ptr_t;
 using vmm::pde_t;
 using vmm::vma_struct;
 
-using pmm::boot_mem::boot_alloc_page;
 
 // linked list
 using kbl::list_add;
@@ -113,7 +112,9 @@ void vmm::install_gdt()
 {
 	auto current_cpu = &cpus[local_apic::get_cpunum()];
 
-	uint8_t* cpu_fs = reinterpret_cast<decltype(cpu_fs)>(boot_alloc_page());
+	uint8_t* cpu_fs = reinterpret_cast<decltype(cpu_fs)>(
+		memory::physical_memory_manager::instance()->asserted_allocate()
+	);
 
 	if (cpu_fs == nullptr)
 	{
@@ -124,7 +125,13 @@ void vmm::install_gdt()
 	wrmsr(MSR_FS_BASE, ((uintptr_t)cpu_fs));
 	current_cpu->local_fs = cpu_fs;
 
-	uint8_t* cpu_kernel_gs = reinterpret_cast<decltype(cpu_kernel_gs)>(boot_alloc_page());
+	auto cpu_kernel_gs = reinterpret_cast<uint8_t* >(
+		memory::physical_memory_manager::instance()->asserted_allocate()
+	);
+
+	auto double_fault_stack = reinterpret_cast<uint8_t* >(
+		memory::physical_memory_manager::instance()->asserted_allocate()
+	);
 
 	if (cpu_kernel_gs == nullptr)
 	{
@@ -137,8 +144,9 @@ void vmm::install_gdt()
 	current_cpu->kernel_gs = cpu_kernel_gs;
 
 	current_cpu->tss.iopb_offset = sizeof(current_cpu->tss);
+	current_cpu->tss.ist1 = reinterpret_cast<uintptr_t>(double_fault_stack);
 
-	set_gdt_entry(&current_cpu->gdt_table.kernel_code, 0, 0, DPL_KERNEL, true, false);
+		set_gdt_entry(&current_cpu->gdt_table.kernel_code, 0, 0, DPL_KERNEL, true, false);
 	set_gdt_entry(&current_cpu->gdt_table.kernel_data, 0, 0, DPL_KERNEL, false, true);
 	set_gdt_entry(&current_cpu->gdt_table.user_code, 0, 0, DPL_USER, true, false);
 	set_gdt_entry(&current_cpu->gdt_table.user_data, 0, 0, DPL_USER, false, true);
@@ -147,7 +155,7 @@ void vmm::install_gdt()
 
 	current_cpu->install_gdt_and_tss();
 
-// --target=x86_64-pc-none-elf and -mcmodel=large can cause a triple fault here
-// work it around by building with x86_64-pc-linux-elf
+	// --target=x86_64-pc-none-elf and -mcmodel=large can cause a triple fault here
+	// work it around by building with x86_64-pc-linux-elf
 	cpu = current_cpu;
 }
