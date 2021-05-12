@@ -43,8 +43,11 @@ class physical_memory_manager final
 	[[nodiscard]] bool is_well_constructed() const;
 
  private:
+	page* allocate_locked(size_t n);
+
 	provider_type provider_{};
-	lock::spinlock lock_{ "pmm" };
+	mutable lock::spinlock lock_{ "pmm" };
+	mutable lock::arch_spinlock lk_{ .value=0 };
 };
 
 }
