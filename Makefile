@@ -2,22 +2,22 @@ TOP_SRC=.
 include $(TOP_SRC)/Makefile.mk
 
 qemu: #all 
-	$(QEMU_EXE) -serial mon:stdio -cpu Icelake-Client-v2 $(QEMUOPTS)
+	$(QEMU_EXE) -serial mon:stdio  $(QEMUOPTS)
 
 qemu-native: #all
-	$(QEMU) -serial mon:stdio -cpu Icelake-Client-v2 $(QEMUOPTS)
+	$(QEMU) -serial mon:stdio  $(QEMUOPTS)
 
 qemu-kvm: #all
-	$(QEMU) -serial mon:stdio --enable-kvm -cpu host $(QEMUOPTS)
+	$(QEMU) -serial mon:stdio --enable-kvm  $(QEMUOPTS)
 
 qemu-whpx: #all
-	$(QEMU_EXE) -serial mon:stdio -accel whpx -cpu Icelake-Server $(QEMUOPTS)
+	$(QEMU_EXE) -serial mon:stdio -accel whpx $(QEMUOPTS)
 
 idedebug: #all
-	@$(QEMU) -serial mon:stdio $(QEMUOPTS) -cpu Icelake-Server -S $(QEMUGDB) &
+	@$(QEMU) -serial mon:stdio $(QEMUOPTS) -S $(QEMUGDB) &
 
 idedebug-kvm: #all
-	@$(QEMU) -serial mon:stdio --enable-kvm -cpu host $(QEMUOPTS) -S $(QEMUGDB) &
+	@$(QEMU) -serial mon:stdio --enable-kvm $(QEMUOPTS) -S $(QEMUGDB) &
 
 vbox: #all $(BUILD)/disk.qcow2
 	$(VBOXMANAGE) $(VBOXMANAGE_FALGS) $(VBOX_MACHINENAME)
