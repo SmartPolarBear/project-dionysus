@@ -13,9 +13,13 @@
 
 #include "task/process/process.hpp"
 
+#include "memory/pmm.hpp"
+
 #include <utility>
 
 using namespace executable;
+
+using namespace memory;
 
 static inline auto parse_ph_flags(const Elf64_Phdr& prog_header)
 {
@@ -63,14 +67,16 @@ static error_code load_ph(IN const Elf64_Phdr& prog_header,
 
 	// ph->p_filesz <= ph->p_memsz
 	size_t page_count = PAGE_ROUNDUP(prog_header.p_memsz) / PAGE_SIZE;
-	page* pages = nullptr;
-	auto error = pmm::pgdir_alloc_pages(proc_mm->pgdir, false, page_count, prog_header.p_vaddr, perms, &pages);
 
-	if (error != ERROR_SUCCESS)
+	auto alloc_ret =
+		physical_memory_manager::instance()->allocate(prog_header.p_vaddr, page_count, perms, proc_mm->pgdir, false);
+
+	if (has_error(alloc_ret))
 	{
-		return error;
+		return get_error_code(alloc_ret);
 	}
 
+	auto pages = get_result(alloc_ret);
 	memset((uint8_t*)pmm::page_to_va(pages), 0, page_count * PAGE_SIZE);
 	memmove((uint8_t*)pmm::page_to_va(pages), bin + prog_header.p_offset, prog_header.p_filesz);
 
@@ -116,16 +122,17 @@ static error_code alloc_sh(IN const Elf64_Shdr& shdr,
 	}
 
 	size_t page_count = PAGE_ROUNDUP(shdr.sh_size) / PAGE_SIZE;
-	page* pages = nullptr;
-	auto error = pmm::pgdir_alloc_pages(proc_mm->pgdir, true, page_count, shdr.sh_addr, perms, &pages);
 
-	if (error != ERROR_SUCCESS)
+	auto alloc_ret =
+		physical_memory_manager::instance()->allocate(shdr.sh_addr, page_count, perms, proc_mm->pgdir, true);
+
+	if (has_error(alloc_ret))
 	{
-		return error;
+		return get_error_code(alloc_ret);
 	}
 
 	// set to zero
-	memset((uint8_t*)pmm::page_to_va(pages), 0, page_count * PAGE_SIZE);
+	memset((uint8_t*)pmm::page_to_va(get_result(alloc_ret)), 0, page_count * PAGE_SIZE);
 
 	return ret;
 }

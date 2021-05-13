@@ -79,10 +79,6 @@ multiboot::multiboot_tag_ptr module_tags[RESERVED_SPACES_MAX_COUNT];
 
 static inline void init_pmm_manager()
 {
-	// set the physical memory manager
-//	pmm_entity = &pmm::buddy_pmm::buddy_pmm_manager;
-//	pmm_entity->init();
-
 	if (!memory::physical_memory_manager::instance()->is_well_constructed())
 	{
 		KDEBUG_GENERALPANIC("Can't initialize physical_memory_manager");
@@ -94,21 +90,6 @@ static inline void init_memmap(page* base, size_t sz)
 //	pmm_entity->init_memmap(base, sz);
 	physical_memory_manager::instance()->setup_for_base(base, sz);
 
-}
-
-static inline void page_remove_pde(pde_ptr_t pgdir, uintptr_t va, pde_ptr_t pde)
-{
-	if ((*pde) & PG_P)
-	{
-		auto page = pmm::pde_to_page(pde);
-		if ((--page->ref) == 0)
-		{
-//			pmm::free_page(page);
-			physical_memory_manager::instance()->free(page);
-		}
-		*pde = 0;
-		pmm::tlb_invalidate(pgdir, va);
-	}
 }
 
 /*
@@ -242,127 +223,3 @@ void pmm::init_pmm()
 
 }
 
-void pmm::page_remove(pde_ptr_t pgdir, uintptr_t va)
-{
-	auto pde = vmm::walk_pgdir(pgdir, va, false);
-	if (pde != nullptr)
-	{
-		page_remove_pde(pgdir, va, pde);
-	}
-}
-
-error_code pmm::page_insert(pde_ptr_t pgdir, bool allow_rewrite, page* page, uintptr_t va, size_t perm)
-{
-	auto pde = vmm::walk_pgdir(pgdir, va, true);
-	if (pde == nullptr)
-	{
-		return -ERROR_MEMORY_ALLOC;
-	}
-
-	++page->ref;
-
-	if (*pde != 0)
-	{
-		if ((!allow_rewrite) && (pde_to_page(pde) != page))
-		{
-			return -ERROR_REWRITE;
-		}
-
-		if ((*pde & PG_P) && pde_to_page(pde) == page)
-		{
-			--page->ref;
-		}
-		else
-		{
-			page_remove_pde(pgdir, va, pde);
-		}
-	}
-
-	*pde = page_to_pa(page) | PG_PS | PG_P | perm;
-	tlb_invalidate(pgdir, va);
-
-	return ERROR_SUCCESS;
-}
-
-void pmm::tlb_invalidate(pde_ptr_t pgdir, uintptr_t va)
-{
-	if (rcr3() == V2P((uintptr_t)pgdir))
-	{
-		invlpg((void*)va);
-	}
-}
-
-error_code pmm::pgdir_alloc_page(IN pde_ptr_t pgdir,
-	bool rewrite_if_exist,
-	uintptr_t va,
-	size_t perm,
-	OUT page** ret_page)
-{
-	page* page = memory::physical_memory_manager::instance()->allocate(); //alloc_page();
-	error_code ret = ERROR_SUCCESS;
-	if (page != nullptr)
-	{
-		if ((ret = page_insert(pgdir, rewrite_if_exist, page, va, perm)) != ERROR_SUCCESS)
-		{
-			physical_memory_manager::instance()->free(page);
-
-			ret_page = nullptr;
-
-			return ret;
-		}
-	}
-	*ret_page = page;
-	return ret;
-}
-
-error_code pmm::pgdir_alloc_pages(IN pde_ptr_t pgdir,
-	bool rewrite_if_exist,
-	size_t n,
-	uintptr_t va,
-	size_t perm,
-	OUT page** ret_page)
-{
-
-	auto pages = physical_memory_manager::instance()->allocate(n);
-	error_code ret = ERROR_SUCCESS;
-	if (pages != nullptr)
-	{
-		page* p = pages;
-		size_t va_cnt = 0;
-		do
-		{
-			if ((ret = page_insert(pgdir, rewrite_if_exist, p, va + va_cnt * PAGE_SIZE, perm)) != ERROR_SUCCESS)
-			{
-				if (ret == -ERROR_REWRITE)
-				{
-					va_cnt++;
-				}
-				else
-				{
-					physical_memory_manager::instance()->free(pages, n);
-					ret_page = nullptr;
-					return ret;
-				}
-			}
-			else
-			{
-				p++;
-				va_cnt++;
-			}
-		}
-		while (p != pages + n);
-
-		if (p != pages + n)
-		{
-			for (; p != pages + n; p++)
-			{
-//				free_page(p);
-				physical_memory_manager::instance()->free(p);
-
-			}
-		}
-	}
-
-	*ret_page = pages;
-	return ret;
-}

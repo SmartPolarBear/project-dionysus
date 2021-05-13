@@ -1,24 +1,23 @@
-/*
- * Last Modified: Sun May 10 2020
- * Modified By: SmartPolarBear
- * -----
- * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
- * 
- * Permission to use, copy, modify, and/or distribute this software for any
- * purpose with or without fee is hereby granted.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
- * REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
- * FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
- * INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
- * LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
- * OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
- * PERFORMANCE OF THIS SOFTWARE.
- * -----
- * HISTORY:
- * Date      	By	Comments
- * ----------	---	----------------------------------------------------------
- */
+
+// Copyright (c) 2021 SmartPolarBear
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 
 #include "vmm.h"
 
@@ -36,6 +35,8 @@
 #include "drivers/apic/traps.h"
 #include "drivers/console/console.h"
 #include "debug/kdebug.h"
+
+#include "memory/pmm.hpp"
 
 #include "../../libs/basic_io/include/builtin_text_io.hpp"
 #include <cstring>
@@ -228,8 +229,8 @@ static inline error_code map_pages(pde_ptr_t pml4, uintptr_t va_start, uintptr_t
 
 	// map the kernel memory
 	for (uintptr_t pa = pa_start, va = va_start;
-		 pa < pa_end && pa + PAGE_SIZE <= pa_end;
-		 pa += PAGE_SIZE, va += PAGE_SIZE)
+	     pa < pa_end && pa + PAGE_SIZE <= pa_end;
+	     pa += PAGE_SIZE, va += PAGE_SIZE)
 	{
 		ret = map_page(pml4, va, pa, PG_W | PG_U);
 
@@ -254,7 +255,7 @@ void vmm::unmap_range(pde_ptr_t pgdir, uintptr_t start, uintptr_t end)
 		if ((*pte) & PG_P)
 		{
 			*pte = 0;
-			pmm::tlb_invalidate(pgdir, addr);
+			memory::physical_memory_manager::instance()->flush_tlb(pgdir,addr);
 		}
 	}
 }
@@ -277,7 +278,9 @@ void vmm::copy_range(pde_ptr_t from, pde_ptr_t to, uintptr_t start, uintptr_t en
 		if ((*pte) & PG_P)
 		{
 			auto perm = *pte & (PG_P | PG_W | PG_U);
-			pmm::page_insert(to, true, pmm::pde_to_page(pte), addr, perm);
+
+			memory::physical_memory_manager::instance()->insert_page(pmm::pde_to_page(pte), addr, perm, to, true);
+//			pmm::page_insert(to, true, pmm::pde_to_page(pte), addr, perm);
 		}
 	}
 }

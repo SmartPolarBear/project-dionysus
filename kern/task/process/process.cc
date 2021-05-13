@@ -13,6 +13,8 @@
 #include "system/vmm.h"
 #include "system/scheduler.h"
 
+#include "memory/pmm.hpp"
+
 #include "drivers/apic/traps.h"
 
 #include "kbl/lock/spinlock.h"
@@ -63,31 +65,27 @@ error_code_with_result<void*> task::process_user_stack_state::make_next_user_sta
 	     i++)
 	{
 		uintptr_t va = current_top - USTACK_USABLE_SIZE_PER_THREAD + i * PAGE_SIZE;
-		page* page_ret = nullptr;
 
-		ret = pmm::pgdir_alloc_page(parent_->mm->pgdir,
-			true,
-			va,
+		auto alloc_ret = memory::physical_memory_manager::instance()->allocate(va,
 			PG_W | PG_U | PG_PS | PG_P,
-			&page_ret);
+			parent_->mm->pgdir,
+			true);
 
-		if (ret != ERROR_SUCCESS)
+		if (has_error(alloc_ret))
 		{
-			return -ERROR_MEMORY_ALLOC;
+			return get_error_code(alloc_ret);
 		}
 	}
 
-	[[maybe_unused]]page* guard_page = nullptr;
+	auto guard_page_ret =
+		memory::physical_memory_manager::instance()->allocate(current_top - USTACK_TOTAL_PAGES_PER_THREAD,
+			PG_U | PG_PS | PG_P,
+			parent_->mm->pgdir,
+			true);
 
-	ret = pmm::pgdir_alloc_page(parent_->mm->pgdir,
-		true,
-		current_top - USTACK_TOTAL_PAGES_PER_THREAD,
-		PG_U | PG_PS | PG_P, // guard page can't be written
-		&guard_page);
-
-	if (ret != ERROR_SUCCESS)
+	if (has_error(guard_page_ret))
 	{
-		return -ERROR_MEMORY_ALLOC;
+		return get_error_code(guard_page_ret);
 	}
 
 	return (void*)(current_top - USTACK_USABLE_SIZE_PER_THREAD);

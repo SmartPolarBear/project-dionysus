@@ -17,6 +17,8 @@
 using namespace memory;
 using namespace lock;
 
+using namespace pmm;
+
 physical_memory_manager* physical_memory_manager::instance()
 {
 	static physical_memory_manager inst;
@@ -65,7 +67,6 @@ page* physical_memory_manager::allocate_locked(size_t n)
 	return provider_.allocate(n);
 }
 
-
 void physical_memory_manager::free(page* base)
 {
 	free(base, 1);
@@ -86,6 +87,137 @@ size_t memory::physical_memory_manager::free_count() const
 bool memory::physical_memory_manager::is_well_constructed() const
 {
 	return provider_.is_well_constructed();
+}
+
+error_code_with_result<page*> physical_memory_manager::allocate(uintptr_t va,
+	size_t n,
+	uint64_t perm,
+	vmm::pde_ptr_t pgdir,
+	bool rewrite_if_exist)
+{
+	auto pages = physical_memory_manager::instance()->allocate(n);
+	if (pages != nullptr)
+	{
+		page* p = pages;
+		size_t va_cnt = 0;
+		do
+		{
+			if (auto ret = insert_page(p, va + va_cnt * PAGE_SIZE, perm, pgdir, rewrite_if_exist);ret != ERROR_SUCCESS)
+			{
+				if (ret == -ERROR_REWRITE)
+				{
+					va_cnt++;
+				}
+				else
+				{
+					physical_memory_manager::instance()->free(pages, n);
+					return ret;
+				}
+			}
+			else
+			{
+				p++;
+				va_cnt++;
+			}
+		}
+		while (p != pages + n);
+
+		if (p != pages + n)
+		{
+			for (; p != pages + n; p++)
+			{
+				physical_memory_manager::instance()->free(p);
+			}
+		}
+	}
+
+	return pages;
+}
+error_code_with_result<page*> physical_memory_manager::allocate(uintptr_t va,
+	uint64_t perm,
+	vmm::pde_ptr_t pgdir,
+	bool rewrite_if_exist)
+{
+	page* page = memory::physical_memory_manager::instance()->allocate(); //alloc_page();
+	if (page != nullptr)
+	{
+		if (auto ret = insert_page(page, va, perm, pgdir, rewrite_if_exist);ret != ERROR_SUCCESS)
+		{
+			physical_memory_manager::instance()->free(page);
+
+			return ret;
+		}
+	}
+	return page;
+}
+
+error_code physical_memory_manager::insert_page(page* page,
+	uintptr_t va,
+	uint64_t perm,
+	vmm::pde_ptr_t pgdir,
+	bool allow_rewrite)
+{
+	auto pde = vmm::walk_pgdir(pgdir, va, true);
+	if (pde == nullptr)
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
+
+	++page->ref;
+
+	if (*pde != 0)
+	{
+		if ((!allow_rewrite) && (pde_to_page(pde) != page))
+		{
+			return -ERROR_REWRITE;
+		}
+
+		if ((*pde & PG_P) && pde_to_page(pde) == page)
+		{
+			--page->ref;
+		}
+		else
+		{
+			remove_from_pgdir(pde, pgdir, va);
+		}
+	}
+
+	*pde = page_to_pa(page) | PG_PS | PG_P | perm;
+	memory::physical_memory_manager::instance()->flush_tlb(pgdir, va);
+
+	return ERROR_SUCCESS;
+}
+
+void physical_memory_manager::flush_tlb(vmm::pde_ptr_t pgdir, uintptr_t va)
+{
+	if (rcr3() == V2P((uintptr_t)pgdir))
+	{
+		invlpg((void*)va);
+	}
+}
+
+void physical_memory_manager::remove_from_pgdir(vmm::pde_ptr_t pde, vmm::pde_ptr_t pgdir, uintptr_t va)
+{
+	if ((*pde) & PG_P)
+	{
+		auto page = pmm::pde_to_page(pde);
+		if ((--page->ref) == 0)
+		{
+			physical_memory_manager::instance()->free(page);
+		}
+		*pde = 0;
+
+		memory::physical_memory_manager::instance()->flush_tlb(pgdir, va);
+	}
+}
+
+void physical_memory_manager::remove_page(uintptr_t va, vmm::pde_ptr_t pgdir)
+{
+	auto pde = vmm::walk_pgdir(pgdir, va, false);
+	if (pde != nullptr)
+	{
+		remove_from_pgdir(pde, pgdir, va);
+	}
 }
 
 

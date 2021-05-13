@@ -9,6 +9,8 @@
 #include "drivers/pci/pci_header.hpp"
 #include "drivers/pci/pci_capability.hpp"
 
+#include "memory/pmm.hpp"
+
 #include "drivers/ahci/ahci.hpp"
 #include "drivers/ahci/ata/ata.hpp"
 #include "drivers/ahci/atapi/atapi.hpp"
@@ -115,7 +117,8 @@ static inline error_code ahci_port_allocate(ahci_port* port)
 	auto vmm_pg = vmm::walk_pgdir(vmm::g_kpml4t, pmm::page_to_va(page), false);
 	*vmm_pg |= PG_PWT;
 	*vmm_pg |= PG_PCD;
-	pmm::tlb_invalidate(vmm::g_kpml4t, pmm::page_to_va(page));
+
+	memory::physical_memory_manager::instance()->flush_tlb(vmm::g_kpml4t, pmm::page_to_va(page));
 
 	memset(reinterpret_cast<void*>(pmm::page_to_va(page)), 0, PAGE_SIZE);
 

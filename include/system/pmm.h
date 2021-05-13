@@ -43,28 +43,11 @@ extern size_t page_count;
 
 void init_pmm();
 
-page* alloc_pages(size_t n);
-
-void free_pages(page* base, size_t n);
-
-void page_remove(pde_ptr_t pgdir, uintptr_t va_to_page);
-
-void tlb_invalidate(pde_ptr_t pgdir, uintptr_t va);
-
-error_code page_insert(pde_ptr_t pgdir, bool allow_rewrite, page* page, uintptr_t va, size_t perm);
-
-// insert a free page to pgdir
-error_code
-pgdir_alloc_page(IN pde_ptr_t pgdir, bool rewrite_if_exist, uintptr_t va, size_t perm, OUT page** page);
-
-error_code pgdir_alloc_pages(IN pde_ptr_t pgdir, bool rewrite_if_exist, size_t n, uintptr_t va, size_t perm, OUT
-	page** page);
 
 static inline uintptr_t pavailable_start(void)
 {
 	return V2P(roundup((uintptr_t)(&pages[page_count]), PAGE_SIZE));
 }
-
 
 static inline size_t page_to_index(page* pg)
 {
