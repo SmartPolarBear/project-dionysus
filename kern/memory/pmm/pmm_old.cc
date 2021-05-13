@@ -20,7 +20,6 @@
  * ----------	---	----------------------------------------------------------
  */
 #include "include/pmm.h"
-#include "include/buddy_pmm.h"
 
 #include "memory/pmm.hpp"
 
@@ -39,6 +38,8 @@
 #include "drivers/console/console.h"
 #include "debug/kdebug.h"
 
+#include "memory/pmm.hpp"
+
 #include "../../libs/basic_io/include/builtin_text_io.hpp"
 
 #include "kbl/lock/lock_guard.hpp"
@@ -52,7 +53,6 @@ using namespace memory;
 
 using pmm::page_count;
 using pmm::pages;
-using pmm::pmm_entity;
 
 using std::make_pair;
 using std::max;
@@ -66,10 +66,6 @@ using vmm::pde_ptr_t;
 // TODO: i need to manually enable locks because popcli and pushcli relies on gdt
 
 using reserved_space = pair<uintptr_t, uintptr_t>;
-
-// use buddy allocator to allocate physical pages
-pmm::pmm_desc fuck;
-pmm::pmm_desc* pmm::pmm_entity = &fuck;
 
 page* pmm::pages = nullptr;
 size_t pmm::page_count = 0;
@@ -244,69 +240,6 @@ void pmm::init_pmm()
 
 	vmm::install_kernel_pml4t();
 
-	pmm_entity->enable_lock = true;
-}
-
-page* pmm::alloc_pages(size_t n) TA_NO_THREAD_SAFETY_ANALYSIS
-{
-
-	auto state = arch_interrupt_save();
-	auto _ = gsl::finally([&state]()
-	{
-	  arch_interrupt_restore(state);
-	});
-
-	if (pmm_entity->enable_lock)
-	{
-		lock::lock_guard g{ pmm_entity->lock };
-//		return pmm_entity->alloc_pages(n);
-		return physical_memory_manager::instance()->allocate(n);
-	}
-	else
-	{
-//		return pmm_entity->alloc_pages(n);
-		return physical_memory_manager::instance()->allocate(n);
-
-	}
-}
-
-void pmm::free_pages(page* base, size_t n) TA_NO_THREAD_SAFETY_ANALYSIS
-{
-	auto state = arch_interrupt_save();
-
-	auto _ = gsl::finally([&state]()
-	{
-	  arch_interrupt_restore(state);
-	});
-
-	if (pmm_entity->enable_lock)
-	{
-		lock::lock_guard g{ pmm_entity->lock };
-//		pmm_entity->free_pages(base, n);
-		physical_memory_manager::instance()->free(base, n);
-
-	}
-	else
-	{
-//		pmm_entity->free_pages(base, n);
-		physical_memory_manager::instance()->free(base, n);
-
-	}
-}
-
-size_t pmm::get_free_page_count(void)
-{
-	auto state = arch_interrupt_save();
-
-	auto _ = gsl::finally([&state]()
-	{
-	  arch_interrupt_restore(state);
-	});
-
-//	auto ret = pmm_entity->get_free_pages_count();
-	auto ret = physical_memory_manager::instance()->free_count();
-
-	return ret;
 }
 
 void pmm::page_remove(pde_ptr_t pgdir, uintptr_t va)
@@ -390,7 +323,7 @@ error_code pmm::pgdir_alloc_pages(IN pde_ptr_t pgdir,
 	OUT page** ret_page)
 {
 
-	page* pages = alloc_pages(n);
+	auto pages = physical_memory_manager::instance()->allocate(n);
 	error_code ret = ERROR_SUCCESS;
 	if (pages != nullptr)
 	{
@@ -406,7 +339,7 @@ error_code pmm::pgdir_alloc_pages(IN pde_ptr_t pgdir,
 				}
 				else
 				{
-					free_pages(pages, n);
+					physical_memory_manager::instance()->free(pages, n);
 					ret_page = nullptr;
 					return ret;
 				}

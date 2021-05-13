@@ -24,6 +24,8 @@
 #include "system/kmem.hpp"
 #include "system/pmm.h"
 
+#include "memory/pmm.hpp"
+
 // slab
 using memory::kmem::kmem_bufctl;
 using memory::kmem::kmem_cache;
@@ -40,10 +42,6 @@ using memory::kmem::kmem_init;
 
 // defined in slab.cc
 extern kmem_cache* sized_caches[KMEM_SIZED_CACHE_COUNT];
-
-// pmm
-using pmm::alloc_pages;
-using pmm::free_pages;
 
 constexpr size_t GUARDIAN_BYTES_AFTER = 16;
 
@@ -104,7 +102,7 @@ void* memory::kmalloc(size_t sz, [[maybe_unused]] size_t flags)
 
 		size_t npages = roundup(actual_size, PAGE_SIZE) / PAGE_SIZE;
 
-		ret = reinterpret_cast<decltype(ret)>(pmm::page_to_va(pmm::alloc_pages(npages)));
+		ret = reinterpret_cast<decltype(ret)>(pmm::page_to_va(physical_memory_manager::instance()->allocate(npages)));
 
 		ret->type = allocator_types::PMM;
 		ret->alloc_info.pmm.page_count = npages;
@@ -129,7 +127,8 @@ void memory::kfree(void* ptr)
 
 	if (block->type == allocator_types::PMM)
 	{
-		pmm::free_pages(pmm::va_to_page((uintptr_t)ptr), block->alloc_info.pmm.page_count);
+		physical_memory_manager::instance()->free(pmm::va_to_page((uintptr_t)ptr), block->alloc_info.pmm.page_count);
+
 	}
 	else if (block->type == allocator_types::SLAB)
 	{
