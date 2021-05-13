@@ -47,7 +47,6 @@ class physical_memory_manager final
 
 	provider_type provider_{};
 	mutable lock::spinlock lock_{ "pmm" };
-	mutable lock::arch_spinlock lk_{ .value=0 };
 };
 
 }

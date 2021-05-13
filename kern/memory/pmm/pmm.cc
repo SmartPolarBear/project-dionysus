@@ -82,9 +82,9 @@ size_t memory::physical_memory_manager::free_count() const
 	lock_guard g{ lock_ };
 	return provider_.free_count();
 }
+
 bool memory::physical_memory_manager::is_well_constructed() const
 {
-
 	return provider_.is_well_constructed();
 }
 
