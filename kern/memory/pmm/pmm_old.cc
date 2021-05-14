@@ -44,6 +44,10 @@
 
 #include "kbl/lock/lock_guard.hpp"
 
+#include "ktl/span.hpp"
+#include "ktl/pair.hpp"
+#include "ktl/algorithm.hpp"
+
 #include <algorithm>
 #include <utility>
 
@@ -54,13 +58,10 @@ using namespace memory;
 using pmm::page_count;
 using pmm::pages;
 
-using std::make_pair;
-using std::max;
-using std::min;
-using std::pair;
-using std::sort;
 
 using vmm::pde_ptr_t;
+
+using namespace ktl;
 
 // TODO: use lock
 // TODO: i need to manually enable locks because popcli and pushcli relies on gdt
@@ -128,22 +129,12 @@ static inline constexpr auto count_of_pages(uintptr_t st, uintptr_t ed)
 
 static inline void init_physical_mem()
 {
-	auto memtag = multiboot::acquire_tag_ptr<multiboot_tag_mmap>(MULTIBOOT_TAG_TYPE_MMAP);
-	size_t entry_count =
-		(memtag->size - sizeof(multiboot_uint32_t) * 4ul - sizeof(memtag->entry_size)) / memtag->entry_size;
-
-	auto max_pa = 0ull;
-
-	for (size_t i = 0; i < entry_count; i++)
-	{
-		const auto entry = memtag->entries + i;
-		if (entry->type == MULTIBOOT_MEMORY_AVAILABLE)
-		{
-			max_pa = max(max_pa, min(entry->addr + entry->len, (unsigned long long)PHYMEMORY_SIZE));
-		}
-	}
+	auto basic_mem = multiboot::acquire_tag_ptr<multiboot_tag_basic_meminfo>(MULTIBOOT_TAG_TYPE_BASIC_MEMINFO);
+	auto max_pa = static_cast<uint64_t>(basic_mem->mem_upper + basic_mem->mem_lower) << 10ull;
 
 	page_count = max_pa / PAGE_SIZE;
+
+	// FIXME: We may not need to do this ?
 	// The page management structure is placed a page after kernel
 	// So as to protect the multiboot info
 	pages = (page*)roundup((uintptr_t)(end + PAGE_SIZE * 2), PAGE_SIZE);
@@ -153,12 +144,10 @@ static inline void init_physical_mem()
 		pages[i].flags |= PHYSICAL_PAGE_FLAG_RESERVED; // set all pages as reserved
 	}
 
-	// reserve the multiboot info
-	if ((uintptr_t)mbi_structptr >= pmm::pavailable_start())
-	{
-		reserved_spaces[reserved_spaces_count++] =
-			std::make_pair((uintptr_t)mbi_structptr, (uintptr_t)mbi_structptr + PAGE_SIZE);
-	}
+	auto memtag = multiboot::acquire_tag_ptr<multiboot_tag_mmap>(MULTIBOOT_TAG_TYPE_MMAP);
+	span<multiboot_mmap_entry> entries{ memtag->entries,
+	                                    (memtag->size - sizeof(multiboot_uint32_t) * 4ul - sizeof(memtag->entry_size))
+		                                    / memtag->entry_size };
 
 	// reserve all the boot modules
 	size_t module_count = multiboot::get_all_tags(MULTIBOOT_TAG_TYPE_MODULE, module_tags, RESERVED_SPACES_MAX_COUNT);
