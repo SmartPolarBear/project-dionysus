@@ -146,7 +146,7 @@ void vmm::install_gdt()
 	current_cpu->tss.iopb_offset = sizeof(current_cpu->tss);
 	current_cpu->tss.ist1 = reinterpret_cast<uintptr_t>(double_fault_stack);
 
-		set_gdt_entry(&current_cpu->gdt_table.kernel_code, 0, 0, DPL_KERNEL, true, false);
+	set_gdt_entry(&current_cpu->gdt_table.kernel_code, 0, 0, DPL_KERNEL, true, false);
 	set_gdt_entry(&current_cpu->gdt_table.kernel_data, 0, 0, DPL_KERNEL, false, true);
 	set_gdt_entry(&current_cpu->gdt_table.user_code, 0, 0, DPL_USER, true, false);
 	set_gdt_entry(&current_cpu->gdt_table.user_data, 0, 0, DPL_USER, false, true);

@@ -152,7 +152,6 @@ static inline void init_physical_mem()
 
 void pmm::init_pmm()
 {
-
 	if (!memory::physical_memory_manager::instance()->is_well_constructed())
 	{
 		KDEBUG_GENERALPANIC("Can't initialize physical_memory_manager");
