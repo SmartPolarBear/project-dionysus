@@ -40,7 +40,7 @@ list_head multiboot_tag_heads[TAGS_COUNT_MAX] = {};
 multiboot_tag_node allnodes[TAGS_COUNT_MAX * 4] = {};
 size_t allnodes_counter = 0;
 
-static inline multiboot_tag_node* alloc_new_node(void)
+static inline multiboot_tag_node* alloc_new_node()
 {
 	KDEBUG_ASSERT(allnodes_counter < (sizeof(allnodes) / sizeof(allnodes[0])));
 	return allnodes + (allnodes_counter++);
@@ -48,7 +48,7 @@ static inline multiboot_tag_node* alloc_new_node(void)
 
 //Initialize the mboot_info and check the magic number
 //May panic the kernel if magic number checking failes
-void multiboot::init_mbi(void)
+void multiboot::init_mbi()
 {
 	if (mbi_magicnum != MULTIBOOT2_BOOTLOADER_MAGIC)
 	{

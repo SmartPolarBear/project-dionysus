@@ -38,54 +38,16 @@ namespace pmm
 
 constexpr size_t PMM_MANAGER_NAME_MAXLEN = 32;
 
-struct pmm_desc
-{
-	char name[PMM_MANAGER_NAME_MAXLEN];
-
-	void (* init)(void);                             // initialize internal description&management kbl structure
-	// (free superblock list, number of free superblock) of XXX_pmm_manager
-	void (* init_memmap)(page* base, size_t n); // setup description&management kbl structcure according to
-	// the initial free physical memory space
-	page* (* alloc_pages)(size_t n);            // allocate >=n pages, depend on the allocation algorithm
-	void (* free_pages)(page* base,
-		size_t n);  // free >=n pages with "base" Addr of Page descriptor structures(memlayout.h)
-	size_t (* get_free_pages_count)(void);           // return the number of free pages
-
-	lock::spinlock lock;
-	bool enable_lock;
-};
-
-extern pmm_desc* pmm_entity;
-
 extern page* pages;
 extern size_t page_count;
 
-void init_pmm(void);
+void init_pmm();
 
-page* alloc_pages(size_t n);
-
-void free_pages(page* base, size_t n);
-
-size_t get_free_page_count(void);
-
-void page_remove(pde_ptr_t pgdir, uintptr_t va_to_page);
-
-void tlb_invalidate(pde_ptr_t pgdir, uintptr_t va);
-
-error_code page_insert(pde_ptr_t pgdir, bool allow_rewrite, page* page, uintptr_t va, size_t perm);
-
-// insert a free page to pgdir
-error_code
-pgdir_alloc_page(IN pde_ptr_t pgdir, bool rewrite_if_exist, uintptr_t va, size_t perm, OUT page** page);
-
-error_code pgdir_alloc_pages(IN pde_ptr_t pgdir, bool rewrite_if_exist, size_t n, uintptr_t va, size_t perm, OUT
-	page** page);
 
 static inline uintptr_t pavailable_start(void)
 {
 	return V2P(roundup((uintptr_t)(&pages[page_count]), PAGE_SIZE));
 }
-
 
 static inline size_t page_to_index(page* pg)
 {

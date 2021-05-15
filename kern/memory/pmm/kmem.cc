@@ -26,39 +26,35 @@
 
 #include "memory/pmm.hpp"
 
+#include "kbl/lock/lock_guard.hpp"
+
 #include <cstring>
 
 using namespace memory;
 using namespace memory::kmem;
 
 // linked list
-using kbl::list_add;
-using kbl::list_empty;
-using kbl::list_init;
-using kbl::list_remove;
+using namespace kbl;
 
-//ATTENTION: IF ANY WEIRD BUG OCCURS IN THIS FILE, CONSIDER RACE CONDITION FIRST!
-// spinlock_struct
-using lock::spinlock_struct;
-using lock::spinlock_acquire;
-using lock::spinlock_holding;
-using lock::spinlock_initialize_lock;
-using lock::spinlock_release;
+using namespace lock;
 
 struct slab
 {
-	size_t ref;
-	kmem_cache* cache;
-	size_t inuse, next_free;
-	void* obj_ptr;
-	kmem_bufctl* freelist;
-	list_head slab_link;
+	size_t ref{};
+	kmem_cache* cache{};
+	size_t inuse{}, next_free{};
+	void* obj_ptr{};
+	kmem_bufctl* freelist{};
+
+	lock::spinlock lock{ "slab" };
+
+	list_head slab_link{};
 };
 
 list_head cache_head;
-spinlock_struct cache_head_lock;
-kmem_cache* sized_caches[KMEM_SIZED_CACHE_COUNT];
+spinlock cache_head_lock{ "kmem_cache_head" };
 
+kmem_cache* sized_caches[KMEM_SIZED_CACHE_COUNT];
 kmem_cache cache_cache;
 
 static inline constexpr size_t cache_obj_count(kmem_cache* cache, size_t obj_size)
@@ -75,8 +71,7 @@ static inline constexpr size_t cache_obj_count(kmem_cache* cache, size_t obj_siz
 
 static inline void* slab_cache_grow(kmem_cache* cache)
 {
-	// Precondition: the cache's lock must be held
-	KDEBUG_ASSERT(spinlock_holding(&cache->lock));
+	cache->lock.assert_held();
 
 	auto page = memory::physical_memory_manager::instance()->allocate(); //alloc_page();
 
@@ -87,7 +82,9 @@ static inline void* slab_cache_grow(kmem_cache* cache)
 		return block;
 	}
 
-	slab* slb = reinterpret_cast<decltype(slb)>(block);
+	auto slb = new(block) slab{};  //reinterpret_cast<decltype(slb)>(block);
+	lock::lock_guard g{ slb->lock };
+
 	slb->cache = cache;
 	slb->next_free = 0;
 	slb->inuse = 0;
@@ -124,7 +121,9 @@ static inline void* slab_cache_grow(kmem_cache* cache)
 static inline void slab_destory(kmem_cache* cache, slab* slb)
 {
 	// Precondition: the cache's lock must be held
-	KDEBUG_ASSERT(spinlock_holding(&cache->lock));
+	cache->lock.assert_held();
+
+	lock_guard g{ slb->lock };
 
 	void* obj = slb->obj_ptr;
 	for (size_t i = 0; i < cache->obj_count; i++)
@@ -169,7 +168,7 @@ static inline slab* slab_find(kmem_cache* cache, void* obj)
 	return slb;
 }
 
-void memory::kmem::kmem_init(void)
+void memory::kmem::kmem_init()
 {
 	cache_cache.obj_size = sizeof(decltype(cache_cache));
 	cache_cache.obj_count = cache_obj_count(&cache_cache, cache_cache.obj_size);
@@ -178,9 +177,6 @@ void memory::kmem::kmem_init(void)
 
 	auto cache_cache_name = "cache_cache";
 	strncpy(cache_cache.name, cache_cache_name, KMEM_CACHE_NAME_MAXLEN);
-
-	spinlock_initialize_lock(&cache_cache.lock, cache_cache_name);
-	spinlock_initialize_lock(&cache_head_lock, "cache_head");
 
 	list_init(&cache_cache.full);
 	list_init(&cache_cache.partial);
@@ -216,7 +212,8 @@ kmem_cache* memory::kmem::kmem_cache_create(const char* name,
 	size_t flags)
 {
 	KDEBUG_ASSERT(size < PAGE_SIZE - sizeof(kmem_bufctl));
-	kmem_cache* ret = reinterpret_cast<decltype(ret)>(kmem_cache_alloc(&cache_cache));
+	kmem_cache* ret =
+		new(kmem_cache_alloc(&cache_cache))kmem_cache{}; //reinterpret_cast<decltype(ret)>(kmem_cache_alloc(&cache_cache));
 
 	if (ret != nullptr)
 	{
@@ -229,17 +226,17 @@ kmem_cache* memory::kmem::kmem_cache_create(const char* name,
 		ret->flags = flags;
 
 		strncpy(ret->name, name, KMEM_CACHE_NAME_MAXLEN);
-		spinlock_initialize_lock(&ret->lock, ret->name);
 
 		list_init(&ret->full);
 		list_init(&ret->partial);
 		list_init(&ret->free);
 
-		spinlock_acquire(&cache_head_lock);
+		{
+			lock_guard gcache{ cache_head_lock };
 
-		list_add(&ret->cache_link, &cache_head);
+			list_add(&ret->cache_link, &cache_head);
+		}
 
-		spinlock_release(&cache_head_lock);
 	}
 	else
 	{
@@ -251,7 +248,7 @@ kmem_cache* memory::kmem::kmem_cache_create(const char* name,
 
 void* memory::kmem::kmem_cache_alloc(kmem_cache* cache)
 {
-	spinlock_acquire(&cache->lock);
+	lock_guard g1{ cache->lock };
 
 	list_head* entry = nullptr;
 	if (!list_empty(&cache->partial))
@@ -272,6 +269,7 @@ void* memory::kmem::kmem_cache_alloc(kmem_cache* cache)
 
 	list_remove(entry);
 	slab* slb = list_entry(entry, slab, slab_link);
+	lock_guard g{ slb->lock };
 
 	void* ret = (void*)(((uint8_t*)slb->obj_ptr) + slb->next_free * cache->obj_size);
 
@@ -287,8 +285,6 @@ void* memory::kmem::kmem_cache_alloc(kmem_cache* cache)
 		list_add(entry, &cache->partial);
 	}
 
-	spinlock_release(&cache->lock);
-
 	if (cache->flags & KMEM_CACHE_4KALIGN)
 	{
 		KDEBUG_ASSERT((((uintptr_t)ret) % 4_KB) == 0);
@@ -299,19 +295,21 @@ void* memory::kmem::kmem_cache_alloc(kmem_cache* cache)
 
 void memory::kmem::kmem_cache_destroy(kmem_cache* cache)
 {
-	spinlock_acquire(&cache->lock);
-	list_head* heads[] = { &cache->full, &cache->partial, &cache->free };
-	for (auto head : heads)
 	{
-		auto entry = head->next;
-		while (head != entry)
+		lock_guard g1{ cache->lock };
+
+		list_head* heads[] = { &cache->full, &cache->partial, &cache->free };
+		for (auto head : heads)
 		{
-			auto slb = list_entry(entry, slab, slab_link);
-			entry = entry->next;
-			slab_destory(cache, slb);
+			auto entry = head->next;
+			while (head != entry)
+			{
+				auto slb = list_entry(entry, slab, slab_link);
+				entry = entry->next;
+				slab_destory(cache, slb);
+			}
 		}
 	}
-	spinlock_release(&cache->lock);
 
 	kmem_cache_free(&cache_cache, cache);
 }
@@ -322,10 +320,12 @@ void memory::kmem::kmem_cache_free(kmem_cache* cache, void* obj)
 
 	slab* slb = slab_find(cache, obj);
 	KDEBUG_ASSERT(slb != nullptr);
+	lock_guard g{ slb->lock };
 
 	size_t offset = (((uintptr_t)obj) - ((uintptr_t)slb->obj_ptr)) / cache->obj_size;
 
-	spinlock_acquire(&cache->lock);
+	lock_guard g1{ cache->lock };
+
 	list_remove(&slb->slab_link);
 	slb->freelist[offset] = slb->next_free;
 	slb->next_free = offset;
@@ -340,15 +340,15 @@ void memory::kmem::kmem_cache_free(kmem_cache* cache, void* obj)
 		list_add(&slb->slab_link, &cache->partial);
 	}
 
-	spinlock_release(&cache->lock);
 }
 
 size_t memory::kmem::kmem_cache_shrink(kmem_cache* cache)
 {
+	lock_guard g1{ cache->lock };
+
 	size_t count = 0;
 	auto entry = cache->free.next;
 	auto head = &cache->free;
-	spinlock_acquire(&cache->lock);
 
 	while (head != entry)
 	{
@@ -357,8 +357,6 @@ size_t memory::kmem::kmem_cache_shrink(kmem_cache* cache)
 		slab_destory(cache, slb);
 		count++;
 	}
-
-	spinlock_release(&cache->lock);
 
 	return count;
 }

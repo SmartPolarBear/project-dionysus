@@ -1,28 +1,30 @@
-/*
- * Last Modified: Sun May 10 2020
- * Modified By: SmartPolarBear
- * -----
- * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
- * 
- * Permission to use, copy, modify, and/or distribute this software for any
- * purpose with or without fee is hereby granted.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
- * REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
- * FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
- * INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
- * LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
- * OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
- * PERFORMANCE OF THIS SOFTWARE.
- * -----
- * HISTORY:
- * Date      	By	Comments
- * ----------	---	----------------------------------------------------------
- */
+
+
+// Copyright (c) 2021 SmartPolarBear
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 
 #include "system/kmalloc.hpp"
 #include "system/kmem.hpp"
 #include "system/pmm.h"
+
+#include "memory/pmm.hpp"
 
 // slab
 using memory::kmem::kmem_bufctl;
@@ -40,10 +42,6 @@ using memory::kmem::kmem_init;
 
 // defined in slab.cc
 extern kmem_cache* sized_caches[KMEM_SIZED_CACHE_COUNT];
-
-// pmm
-using pmm::alloc_pages;
-using pmm::free_pages;
 
 constexpr size_t GUARDIAN_BYTES_AFTER = 16;
 
@@ -104,7 +102,7 @@ void* memory::kmalloc(size_t sz, [[maybe_unused]] size_t flags)
 
 		size_t npages = roundup(actual_size, PAGE_SIZE) / PAGE_SIZE;
 
-		ret = reinterpret_cast<decltype(ret)>(pmm::page_to_va(pmm::alloc_pages(npages)));
+		ret = reinterpret_cast<decltype(ret)>(pmm::page_to_va(physical_memory_manager::instance()->allocate(npages)));
 
 		ret->type = allocator_types::PMM;
 		ret->alloc_info.pmm.page_count = npages;
@@ -129,7 +127,8 @@ void memory::kfree(void* ptr)
 
 	if (block->type == allocator_types::PMM)
 	{
-		pmm::free_pages(pmm::va_to_page((uintptr_t)ptr), block->alloc_info.pmm.page_count);
+		physical_memory_manager::instance()->free(pmm::va_to_page((uintptr_t)ptr), block->alloc_info.pmm.page_count);
+
 	}
 	else if (block->type == allocator_types::SLAB)
 	{
