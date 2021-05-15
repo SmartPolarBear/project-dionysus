@@ -63,35 +63,12 @@ using vmm::pde_ptr_t;
 
 using namespace ktl;
 
-// TODO: use lock
-// TODO: i need to manually enable locks because popcli and pushcli relies on gdt
-
-using reserved_space = pair<uintptr_t, uintptr_t>;
-
 page* pmm::pages = nullptr;
 size_t pmm::page_count = 0;
 
 constexpr size_t RESERVED_SPACES_MAX_COUNT = 32;
-size_t reserved_spaces_count = 0;
-reserved_space reserved_spaces[RESERVED_SPACES_MAX_COUNT] = {};
-
 // the count of module tags can't be more than reserved spaces
 multiboot::multiboot_tag_ptr module_tags[RESERVED_SPACES_MAX_COUNT];
-
-static inline void init_pmm_manager()
-{
-	if (!memory::physical_memory_manager::instance()->is_well_constructed())
-	{
-		KDEBUG_GENERALPANIC("Can't initialize physical_memory_manager");
-	}
-}
-
-static inline void init_memmap(page* base, size_t sz)
-{
-//	pmm_entity->init_memmap(base, sz);
-	physical_memory_manager::instance()->setup_for_base(base, sz);
-
-}
 
 /*
 The memory layout for kernel:
@@ -122,15 +99,18 @@ The memory layout for kernel:
 ......
 */
 
-static inline constexpr auto count_of_pages(uintptr_t st, uintptr_t ed)
-{
-	return (ed - st) / PAGE_SIZE;
-}
-
 static inline void init_physical_mem()
 {
-	auto basic_mem = multiboot::acquire_tag_ptr<multiboot_tag_basic_meminfo>(MULTIBOOT_TAG_TYPE_BASIC_MEMINFO);
-	auto max_pa = static_cast<uint64_t>(basic_mem->mem_upper + basic_mem->mem_lower) << 10ull;
+	auto memtag = multiboot::acquire_tag_ptr<multiboot_tag_mmap>(MULTIBOOT_TAG_TYPE_MMAP);
+	span<multiboot_mmap_entry> entries{ memtag->entries,
+	                                    (memtag->size - sizeof(multiboot_tag_mmap)) / memtag->entry_size };
+
+	uintptr_t max_pa = entries.begin()->addr;
+
+	for (const auto& entry:entries)
+	{
+		max_pa = max((uintptr_t)(entry.addr + entry.len), max_pa);
+	}
 
 	page_count = max_pa / PAGE_SIZE;
 
@@ -144,10 +124,18 @@ static inline void init_physical_mem()
 		pages[i].flags |= PHYSICAL_PAGE_FLAG_RESERVED; // set all pages as reserved
 	}
 
-	auto memtag = multiboot::acquire_tag_ptr<multiboot_tag_mmap>(MULTIBOOT_TAG_TYPE_MMAP);
-	span<multiboot_mmap_entry> entries{ memtag->entries,
-	                                    (memtag->size - sizeof(multiboot_uint32_t) * 4ul - sizeof(memtag->entry_size))
-		                                    / memtag->entry_size };
+	for (const auto& entry:entries)
+	{
+		if (entry.addr + entry.len < pmm::pavailable_start())
+			continue;
+
+		if (entry.type == MULTIBOOT_MEMORY_AVAILABLE)
+		{
+			physical_memory_manager::instance()->setup_for_base(pmm::pa_to_page(max((uintptr_t)entry.addr,
+				pmm::pavailable_start())),
+				PAGE_ROUNDDOWN(entry.len) / PAGE_SIZE);
+		}
+	}
 
 	// reserve all the boot modules
 	size_t module_count = multiboot::get_all_tags(MULTIBOOT_TAG_TYPE_MODULE, module_tags, RESERVED_SPACES_MAX_COUNT);
@@ -156,47 +144,19 @@ static inline void init_physical_mem()
 		multiboot_tag_module* tag = reinterpret_cast<decltype(tag)>(module_tags[i]);
 		if (tag->mod_end >= pmm::pavailable_start())
 		{
-			reserved_spaces[reserved_spaces_count++] =
-				std::make_pair((uintptr_t)tag->mod_start, (uintptr_t)tag->mod_end);
+			KDEBUG_ASSERT(false);
 		}
 	}
 
-	sort(reserved_spaces, reserved_spaces + reserved_spaces_count, [](const auto& a, const auto& b)
-	{
-	  return a.first < b.first;
-	});
-
-	if (reserved_spaces_count == 0)
-	{
-		init_memmap(pmm::pa_to_page(pmm::pavailable_start()), page_count);
-	}
-	else
-	{
-		for (int i = reserved_spaces_count - 1; i >= 0; i--)
-		{
-			if (((size_t)i) == reserved_spaces_count - 1)
-			{
-				init_memmap(pmm::pa_to_page(reserved_spaces[i].second),
-					count_of_pages(reserved_spaces[i].second, max_pa));
-			}
-			else if (i == 0)
-			{
-				init_memmap(pmm::pa_to_page(pmm::pavailable_start()),
-					count_of_pages(pmm::pavailable_start(), reserved_spaces[i].first));
-			}
-			else
-			{
-				init_memmap(pmm::pa_to_page(reserved_spaces[i].second),
-					count_of_pages(reserved_spaces[i].second, reserved_spaces[i + 1].first));
-			}
-		}
-	}
 }
 
 void pmm::init_pmm()
 {
 
-	init_pmm_manager();
+	if (!memory::physical_memory_manager::instance()->is_well_constructed())
+	{
+		KDEBUG_GENERALPANIC("Can't initialize physical_memory_manager");
+	}
 
 	init_physical_mem();
 
