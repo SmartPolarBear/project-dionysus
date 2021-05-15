@@ -67,7 +67,7 @@ class TA_CAP("mutex") spinlock final
 	arch_spinlock spinlock_{};
 	interrupt_saved_state_type state_{ 0 };
 };
-
+static_assert(ktl::is_standard_layout_v<spinlock>);
 static_assert(Mutex<spinlock>, "Spinlock should satisfy the requirement of Mutex");
 
 } // namespace lock
