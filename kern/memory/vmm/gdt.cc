@@ -112,7 +112,7 @@ void vmm::install_gdt()
 {
 	auto current_cpu = &cpus[local_apic::get_cpunum()];
 
-	uint8_t* cpu_fs = reinterpret_cast<decltype(cpu_fs)>(
+	auto cpu_fs = reinterpret_cast<uint8_t*>(
 		memory::physical_memory_manager::instance()->asserted_allocate()
 	);
 
