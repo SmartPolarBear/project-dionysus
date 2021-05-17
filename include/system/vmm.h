@@ -107,7 +107,7 @@ namespace vmm
 
 // When called by pmm, first map [0,2GiB] to [KERNEL_VIRTUALBASE,KERNEL_VIRTUALEND]
 // and then map all the memories to PHYREMAP_VIRTUALBASE
-	void boot_map_kernel_mem(void);
+	void paging_init(void);
 
 // install GDT
 	void install_gdt(void);

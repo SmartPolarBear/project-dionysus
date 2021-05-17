@@ -38,9 +38,13 @@
 
 #include "memory/pmm.hpp"
 
+#include "ktl/span.hpp"
+
 #include "../../libs/basic_io/include/builtin_text_io.hpp"
 #include <cstring>
 #include <algorithm>
+
+using namespace ktl;
 
 using vmm::mm_struct;
 using vmm::pde_ptr_t;
@@ -223,7 +227,11 @@ static inline error_code map_page(pde_ptr_t pml4, uintptr_t va, uintptr_t pa, si
 	return ERROR_SUCCESS;
 }
 
-static inline error_code map_pages(pde_ptr_t pml4, uintptr_t va_start, uintptr_t pa_start, uintptr_t pa_end)
+static inline error_code map_pages(pde_ptr_t pml4,
+	uintptr_t va_start,
+	uintptr_t pa_start,
+	uintptr_t pa_end,
+	uint64_t perm)
 {
 	error_code ret = ERROR_SUCCESS;
 
@@ -232,7 +240,7 @@ static inline error_code map_pages(pde_ptr_t pml4, uintptr_t va_start, uintptr_t
 	     pa < pa_end && pa + PAGE_SIZE <= pa_end;
 	     pa += PAGE_SIZE, va += PAGE_SIZE)
 	{
-		ret = map_page(pml4, va, pa, PG_W | PG_U);
+		ret = map_page(pml4, va, pa, /*PG_W | PG_U*/ perm);
 
 		if (ret != -ERROR_SUCCESS)
 		{
@@ -255,7 +263,7 @@ void vmm::unmap_range(pde_ptr_t pgdir, uintptr_t start, uintptr_t end)
 		if ((*pte) & PG_P)
 		{
 			*pte = 0;
-			memory::physical_memory_manager::instance()->flush_tlb(pgdir,addr);
+			memory::physical_memory_manager::instance()->flush_tlb(pgdir, addr);
 		}
 	}
 }
@@ -290,7 +298,7 @@ error_code vmm::map_range(pde_ptr_t pgdir, uintptr_t va_start, uintptr_t pa_star
 	va_start = PAGE_ROUNDDOWN(va_start);
 	pa_start = PAGE_ROUNDDOWN(pa_start);
 	uintptr_t pa_end = PAGE_ROUNDUP(pa_start + len);
-	return map_pages(pgdir, va_start, pa_start, pa_end);
+	return map_pages(pgdir, va_start, pa_start, pa_end, PG_W | PG_U);
 }
 
 void vmm::install_kernel_pml4t()
@@ -308,49 +316,6 @@ void vmm::duplicate_kernel_pml4t(OUT pde_ptr_t pml4t)
 #endif
 }
 
-// When called by pmm, first map [0,2GiB] to [KERNEL_VIRTUALBASE,KERNEL_VIRTUALEND]
-// and then map all the memories to PHYREMAP_VIRTUALBASE
-void vmm::boot_map_kernel_mem()
-{
-	auto memtag = multiboot::acquire_tag_ptr<multiboot_tag_mmap>(MULTIBOOT_TAG_TYPE_MMAP);
-	size_t entry_count =
-		(memtag->size - sizeof(multiboot_uint32_t) * 4ul - sizeof(memtag->entry_size)) / memtag->entry_size;
-
-	auto max_pa = 0ull;
-
-	for (size_t i = 0; i < entry_count; i++)
-	{
-		const auto entry = memtag->entries + i;
-		max_pa = std::max(max_pa, std::min(entry->addr + entry->len, (unsigned long long)PHYMEMORY_SIZE));
-	}
-
-	// map the kernel memory
-	auto ret = map_pages(g_kpml4t, KERNEL_VIRTUALBASE, 0, KERNEL_SIZE);
-
-	if (ret == -ERROR_MEMORY_ALLOC)
-	{
-		KDEBUG_GENERALPANIC("Can't allocate enough space for paging.\n");
-	}
-	else if (ret == -ERROR_REWRITE)
-	{
-		KDEBUG_RICHPANIC("Remap a mapped page.", "KERNEL PANIC:ERROR_REMAP",
-			true, "");
-	}
-
-	// remap all the physical memory
-	ret = map_pages(g_kpml4t, PHYREMAP_VIRTUALBASE, 0, max_pa);
-
-	if (ret == -ERROR_MEMORY_ALLOC)
-	{
-		KDEBUG_GENERALPANIC("Can't allocate enough space for paging.\n");
-	}
-	else if (ret == -ERROR_REWRITE)
-	{
-		KDEBUG_RICHPANIC("Remap a mapped page.", "KERNEL PANIC:ERROR_REMAP",
-			true, "");
-	}
-}
-
 uintptr_t vmm::pde_to_pa(pde_ptr_t pde)
 {
 	constexpr size_t FLAGS_SHIFT = 8;
@@ -360,4 +325,65 @@ uintptr_t vmm::pde_to_pa(pde_ptr_t pde)
 pde_ptr_t vmm::walk_pgdir(pde_ptr_t pgdir, size_t va, bool create)
 {
 	return ::walk_pgdir(pgdir, va, create, PG_U | PG_W);
+}
+
+// When called by pmm, first map [0,2GiB] to [KERNEL_VIRTUALBASE,KERNEL_VIRTUALEND]
+// and then map all the memories to PHYREMAP_VIRTUALBASE
+void vmm::paging_init()
+{
+	constexpr auto DEFAULT_PERM = PG_W | PG_U;
+	// map the kernel memory: [0,2GiB] to [KERNEL_VIRTUALBASE,KERNEL_VIRTUALEND]
+	if (auto ret = map_pages(g_kpml4t, KERNEL_VIRTUALBASE, 0, KERNEL_SIZE, DEFAULT_PERM);ret == -ERROR_MEMORY_ALLOC)
+	{
+		KDEBUG_GENERALPANIC("Can't allocate enough space for paging.\n");
+	}
+	else if (ret == -ERROR_REWRITE)
+	{
+		KDEBUG_RICHPANIC("Remap a mapped page.", "KERNEL PANIC:ERROR_REMAP",
+			true, "");
+	}
+
+	auto memtag = multiboot::acquire_tag_ptr<multiboot_tag_mmap>(MULTIBOOT_TAG_TYPE_MMAP);
+	span<multiboot_mmap_entry> entries{ memtag->entries,
+	                                    (memtag->size - sizeof(multiboot_tag_mmap)) / memtag->entry_size };
+
+	KDEBUG_ASSERT(is_sorted(entries.begin(), entries.end(), [](const auto& a, const auto& b)
+	{
+	  return a.addr < b.addr;
+	}));
+
+	auto max_pa = 0ull;
+	for (const auto& entry:entries)
+	{
+		max_pa = std::max(max_pa, std::min(entry.addr + entry.len, (unsigned long long)PHYMEMORY_SIZE));
+	}
+
+	// remap all the physical memory
+	if (auto ret = map_pages(g_kpml4t, PHYREMAP_VIRTUALBASE, 0, max_pa, DEFAULT_PERM); ret == -ERROR_MEMORY_ALLOC)
+	{
+		KDEBUG_GENERALPANIC("Can't allocate enough space for paging.\n");
+	}
+	else if (ret == -ERROR_REWRITE)
+	{
+		KDEBUG_RICHPANIC("Remap a mapped page.", "KERNEL PANIC:ERROR_REMAP",
+			true, "");
+	}
+
+	for (const auto& entry:entries)
+	{
+		// By default, we treat all reserved space as device memory, by setting specified flages on page
+
+		if (entry.type != MULTIBOOT_MEMORY_AVAILABLE)
+		{
+			auto perm = DEFAULT_PERM | PG_PWT | PG_PCD;
+			auto vaddr = PAGE_ROUNDDOWN(P2V_PHYREMAP(entry.addr)),
+				vend = PAGE_ROUNDDOWN(P2V_PHYREMAP(entry.addr + entry.len));
+			for (uintptr_t addr = vaddr; addr <= vend; addr += PAGE_SIZE)
+			{
+				auto pte = walk_pgdir(g_kpml4t, addr, false);
+				*pte |= perm;
+			}
+		}
+	}
+
 }
