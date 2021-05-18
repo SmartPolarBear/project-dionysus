@@ -329,11 +329,15 @@ pde_ptr_t vmm::walk_pgdir(pde_ptr_t pgdir, size_t va, bool create)
 
 // When called by pmm, first map [0,2GiB] to [KERNEL_VIRTUALBASE,KERNEL_VIRTUALEND]
 // and then map all the memories to PHYREMAP_VIRTUALBASE
+
+
 void vmm::paging_init()
 {
-	constexpr auto DEFAULT_PERM = PG_W | PG_U;
+	constexpr auto PAGING_INIT_DEFAULT_PERM = PG_W | PG_U;
+
 	// map the kernel memory: [0,2GiB] to [KERNEL_VIRTUALBASE,KERNEL_VIRTUALEND]
-	if (auto ret = map_pages(g_kpml4t, KERNEL_VIRTUALBASE, 0, KERNEL_SIZE, DEFAULT_PERM);ret == -ERROR_MEMORY_ALLOC)
+	if (auto ret = map_pages(g_kpml4t, KERNEL_VIRTUALBASE, 0, KERNEL_SIZE, PAGING_INIT_DEFAULT_PERM);ret
+		== -ERROR_MEMORY_ALLOC)
 	{
 		KDEBUG_GENERALPANIC("Can't allocate enough space for paging.\n");
 	}
@@ -359,7 +363,8 @@ void vmm::paging_init()
 	}
 
 	// remap all the physical memory
-	if (auto ret = map_pages(g_kpml4t, PHYREMAP_VIRTUALBASE, 0, max_pa, DEFAULT_PERM); ret == -ERROR_MEMORY_ALLOC)
+	if (auto ret = map_pages(g_kpml4t, PHYREMAP_VIRTUALBASE, 0, max_pa, PAGING_INIT_DEFAULT_PERM); ret
+		== -ERROR_MEMORY_ALLOC)
 	{
 		KDEBUG_GENERALPANIC("Can't allocate enough space for paging.\n");
 	}
@@ -375,7 +380,7 @@ void vmm::paging_init()
 
 		if (entry.type != MULTIBOOT_MEMORY_AVAILABLE)
 		{
-			auto perm = DEFAULT_PERM | PG_PWT | PG_PCD;
+			auto perm = PAGING_INIT_DEFAULT_PERM | PG_PWT | PG_PCD;
 			auto vaddr = PAGE_ROUNDDOWN(P2V_PHYREMAP(entry.addr)),
 				vend = PAGE_ROUNDDOWN(P2V_PHYREMAP(entry.addr + entry.len));
 			for (uintptr_t addr = vaddr; addr <= vend; addr += PAGE_SIZE)
@@ -385,5 +390,4 @@ void vmm::paging_init()
 			}
 		}
 	}
-
 }
