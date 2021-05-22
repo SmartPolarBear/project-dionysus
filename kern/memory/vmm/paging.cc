@@ -330,7 +330,6 @@ pde_ptr_t vmm::walk_pgdir(pde_ptr_t pgdir, size_t va, bool create)
 // When called by pmm, first map [0,2GiB] to [KERNEL_VIRTUALBASE,KERNEL_VIRTUALEND]
 // and then map all the memories to PHYREMAP_VIRTUALBASE
 
-
 void vmm::paging_init()
 {
 	constexpr auto PAGING_INIT_DEFAULT_PERM = PG_W | PG_U;
