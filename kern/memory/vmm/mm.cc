@@ -132,6 +132,20 @@ error_code vmm::mm_map(IN mm_struct* mm, IN uintptr_t addr, IN size_t len, IN ui
 	return ret;
 }
 
+error_code vmm::mm_map(mm_struct* mm, const task::ipc::fpage& page, uint32_t vm_flags, vma_struct** vma_store)
+{
+	return 0;
+}
+error_code vmm::mm_grant(mm_struct* mm, const task::ipc::fpage& page, uint32_t vm_flags, vma_struct** vma_store)
+{
+	return 0;
+}
+
+error_code vmm::mm_unmap(mm_struct* mm, const task::ipc::fpage& page, size_t len)
+{
+	return 0;
+}
+
 error_code vmm::mm_unmap(IN mm_struct* mm, IN uintptr_t addr, IN size_t len)
 {
 	uintptr_t start = PAGE_ROUNDDOWN(addr), end = PAGE_ROUNDUP(addr + len);
