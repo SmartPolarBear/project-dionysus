@@ -57,7 +57,6 @@ struct vma_struct
 	list_head vma_link;
 };
 
-
 enum VM_FLAGS : size_t
 {
 	VM_READ = 0x00000001,
@@ -89,16 +88,17 @@ mm_struct* mm_create(void);
 error_code mm_map(IN mm_struct* mm, IN uintptr_t addr, IN size_t len, IN uint32_t vm_flags,
 	OPTIONAL OUT vma_struct** vma_store);
 
-error_code mm_map(IN mm_struct* mm, const task::ipc::fpage& page, IN uint32_t vm_flags,
-	OPTIONAL OUT vma_struct** vma_store);
+error_code mm_map(mm_struct* target, const task::ipc::fpage& page, vma_struct** vma_store);
 
-error_code mm_grant(IN mm_struct* mm, const task::ipc::fpage& page, IN uint32_t vm_flags,
-	OPTIONAL OUT vma_struct** vma_store);
+error_code mm_grant(mm_struct* from,
+	mm_struct* mm,
+	const task::ipc::fpage& page,
+	uint32_t vm_flags,
+	vma_struct** vma_store);
 
 error_code mm_unmap(IN mm_struct* mm, IN uintptr_t addr, IN size_t len);
 
-error_code mm_unmap(IN mm_struct* mm, const task::ipc::fpage& page, IN size_t len);
-
+error_code mm_unmap(mm_struct* mm, const task::ipc::fpage& page);
 
 error_code mm_duplicate(IN mm_struct* to, IN const mm_struct* from);
 
@@ -115,17 +115,17 @@ void mm_free(mm_struct* mm);
 // initialize the vmm
 // 1) register the page fault handle
 // 2) allocate an pml4 table
-void init_vmm(void);
+void init_vmm();
 
 // When called by pmm, first map [0,2GiB] to [KERNEL_VIRTUALBASE,KERNEL_VIRTUALEND]
 // and then map all the memories to PHYREMAP_VIRTUALBASE
-void paging_init(void);
+void paging_init();
 
 // install GDT
-void install_gdt(void);
+void install_gdt();
 
 // install g_kml4_t to cr3
-void install_kernel_pml4t(void);
+void install_kernel_pml4t();
 
 // get a copy of the kernel pml4t
 
