@@ -29,6 +29,8 @@ using lock::lock_guard;
 
 #define IPC_MRCOPY_USE_SIMD
 
+using namespace ipc;
+
 void task::ipc_state::copy_mrs_to_locked(thread* another, size_t st, size_t cnt)
 {
 
@@ -115,7 +117,31 @@ error_code task::ipc_state::send_extended_items(thread* to)
 {
 	auto acceptor = to->ipc_state_.get_acceptor();
 
-	// TODO
+	auto from = cur_thread.get();
+	auto tag = from->ipc_state_.get_message_tag();
+
+	for (size_t idx = tag.untyped_count() + 1; idx < tag.typed_count();)
+	{
+		auto mr = from->ipc_state_.get_mr(idx);
+
+		if (static_cast<ipc::message_item_types>(mr & 0xF) == ipc::message_item_types::MAP)
+		{
+			auto map = from->ipc_state_.get_typed_item<ipc::map_item>(idx);
+			idx += 2;
+		}
+		else if (static_cast<ipc::message_item_types>(mr & 0xF) == ipc::message_item_types::GRANT)
+		{
+			auto grant = from->ipc_state_.get_typed_item<ipc::grant_item>(idx);
+			idx += 2;
+
+		}
+		else if (static_cast<ipc::message_item_types>(mr & 0xF) == ipc::message_item_types::STRING)
+		{
+			auto grant = from->ipc_state_.get_typed_item<ipc::string_item>(idx);
+			idx += 2;
+
+		}
+	}
 
 	return ERROR_SUCCESS;
 }

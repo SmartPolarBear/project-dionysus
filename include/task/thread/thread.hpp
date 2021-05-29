@@ -197,6 +197,12 @@ class ipc_state
 
 	error_code send_locked(thread* to, const deadline& ddl) TA_REQ(global_thread_lock);
 
+	template<typename T>
+	T get_typed_item(size_t index)
+	{
+		return *reinterpret_cast<T*>(mr_ + index);
+	}
+
 	ipc::message_register_type get_mr(size_t index)
 	{
 		return mr_[index];
