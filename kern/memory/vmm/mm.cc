@@ -141,11 +141,7 @@ error_code vmm::mm_map(mm_struct* target, const task::ipc::fpage& page, vma_stru
 
 	return mm_map(target, page.get_base_address(), page.get_size(), flags, vma_store);
 }
-error_code vmm::mm_grant(mm_struct* from,
-	mm_struct* mm,
-	const task::ipc::fpage& page,
-	uint32_t vm_flags,
-	vma_struct** vma_store)
+error_code vmm::mm_grant(mm_struct* from, mm_struct* mm, const task::ipc::fpage& page, vma_struct** vma_store)
 {
 	uint32_t flags = VM_SHARE;
 	if (page.check_rights(task::ipc::AR_W))flags |= VM_WRITE;

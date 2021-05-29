@@ -272,6 +272,11 @@ class message_acceptor final
 		return receive_window_;
 	}
 
+	[[nodiscard]] fpage get_send_region(fpage original) const
+	{
+
+	}
+
 	[[nodiscard]] buffer_register_type raw() const
 	{
 		return raw_;
@@ -295,48 +300,48 @@ static_assert(_internals::SingleMessageItem<message_acceptor>);
 
 enum class message_item_types : uint8_t
 {
-	STRING, MAP, GRANT
+	/*STRING, */MAP = 1, GRANT
 };
 
-/// \brief string item is a block of memory less than 4MB
-class string_item final
-{
- public:
-	friend class message;
-
-	static constexpr size_t STRING_ITEM_STR_LEN_BITS = sizeof(message_register_type) * 8 - 10;
-
- public:
-
-	constexpr string_item() : type_{ static_cast<uint64_t>(message_item_types::STRING) }
-	{
-	}
-
-	[[nodiscard]] message_item_types type() const
-	{
-		return (message_item_types)type_;
-	}
-
-	message_span raw() const
-	{
-		return message_span{ raws_, 2 };
-	}
-
- private:
-	union
-	{
-		struct
-		{
-			uint64_t type_: 4;
-			uint64_t res0_: 6;
-			uint64_t string_len_: STRING_ITEM_STR_LEN_BITS;
-			uint64_t string_ptr;
-		}__attribute__((packed));
-		mutable uint64_t raws_[2]{ 0, 0 };
-	};
-}__attribute__((packed));
-
-static_assert(_internals::DoubleMessageItem<string_item>);
+// We will not support string
+//class string_item final
+//{
+// public:
+//	friend class message;
+//
+//	static constexpr size_t STRING_ITEM_STR_LEN_BITS = sizeof(message_register_type) * 8 - 10;
+//
+// public:
+//
+//	constexpr string_item() : type_{ static_cast<uint64_t>(message_item_types::STRING) }
+//	{
+//	}
+//
+//	[[nodiscard]] message_item_types type() const
+//	{
+//		return (message_item_types)type_;
+//	}
+//
+//	message_span raw() const
+//	{
+//		return message_span{ raws_, 2 };
+//	}
+//
+// private:
+//	union
+//	{
+//		struct
+//		{
+//			uint64_t type_: 4;
+//			uint64_t res0_: 6;
+//			uint64_t string_len_: STRING_ITEM_STR_LEN_BITS;
+//			uint64_t string_ptr;
+//		}__attribute__((packed));
+//		mutable uint64_t raws_[2]{ 0, 0 };
+//	};
+//}__attribute__((packed));
+//
+//static_assert(_internals::DoubleMessageItem<string_item>);
 
 ///// \brief map item share the page with threads
 class map_item final
@@ -346,10 +351,21 @@ class map_item final
 	{
 	}
 
-	message_span raw() const
+	[[nodiscard]]message_span raw() const
 	{
 		return message_span{ raws_, 2 };
 	}
+
+	[[nodiscard]]uint64_t base() const
+	{
+		return send_base_;
+	}
+
+	[[nodiscard]]fpage page() const
+	{
+		return send_fpage_;
+	}
+
  private:
 	union
 	{
@@ -357,7 +373,7 @@ class map_item final
 		{
 			uint64_t type_: 4;
 			uint64_t res0_: 6;
-			uint64_t send_base: 54;
+			uint64_t send_base_: 54;
 
 			fpage send_fpage_;
 		}__attribute__((packed));
@@ -379,6 +395,16 @@ class grant_item final
 	{
 		return message_span{ raws_, 2 };
 	}
+
+	[[nodiscard]]uint64_t base() const
+	{
+		return send_base_;
+	}
+
+	[[nodiscard]]fpage page() const
+	{
+		return send_fpage_;
+	}
  private:
 	union
 	{
@@ -386,7 +412,7 @@ class grant_item final
 		{
 			uint64_t type_: 4;
 			uint64_t res0_: 6;
-			uint64_t send_base: 54;
+			uint64_t send_base_: 54;
 
 			fpage send_fpage_;
 		}__attribute__((packed));
