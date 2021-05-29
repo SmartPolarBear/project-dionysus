@@ -132,6 +132,40 @@ error_code vmm::mm_map(IN mm_struct* mm, IN uintptr_t addr, IN size_t len, IN ui
 	return ret;
 }
 
+error_code vmm::mm_map(mm_struct* target, const task::ipc::fpage& page, vma_struct** vma_store)
+{
+	uint32_t flags = VM_SHARE;
+	if (page.check_rights(task::ipc::AR_W))flags |= VM_WRITE;
+	if (page.check_rights(task::ipc::AR_R))flags |= VM_READ;
+	if (page.check_rights(task::ipc::AR_X))flags |= VM_EXEC;
+
+	return mm_map(target, page.get_base_address(), page.get_size(), flags, vma_store);
+}
+error_code vmm::mm_grant(mm_struct* from,
+	mm_struct* mm,
+	const task::ipc::fpage& page,
+	uint32_t vm_flags,
+	vma_struct** vma_store)
+{
+	uint32_t flags = VM_SHARE;
+	if (page.check_rights(task::ipc::AR_W))flags |= VM_WRITE;
+	if (page.check_rights(task::ipc::AR_R))flags |= VM_READ;
+	if (page.check_rights(task::ipc::AR_X))flags |= VM_EXEC;
+
+	auto ret = mm_map(mm, page.get_base_address(), page.get_size(), flags, vma_store);
+	if (ret != ERROR_SUCCESS)
+	{
+		return ret;
+	}
+
+	return mm_unmap(from, page.get_base_address(), page.get_size());
+}
+
+error_code vmm::mm_unmap(mm_struct* mm, const task::ipc::fpage& page)
+{
+	return mm_unmap(mm, page.get_base_address(), page.get_size());
+}
+
 error_code vmm::mm_unmap(IN mm_struct* mm, IN uintptr_t addr, IN size_t len)
 {
 	uintptr_t start = PAGE_ROUNDDOWN(addr), end = PAGE_ROUNDUP(addr + len);

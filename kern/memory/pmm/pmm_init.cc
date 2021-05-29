@@ -19,7 +19,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "include/pmm.h"
 
 #include "memory/pmm.hpp"
 
@@ -124,6 +123,11 @@ static inline void init_physical_mem()
 		pages[i].flags |= PHYSICAL_PAGE_FLAG_RESERVED; // set all pages as reserved
 	}
 
+	sort(entries.begin(), entries.end(), [](const auto& a, const auto& b)
+	{
+	  return a.addr < b.addr;
+	});
+
 	for (const auto& entry:entries)
 	{
 		if (entry.addr + entry.len < pmm::pavailable_start())
@@ -165,7 +169,7 @@ void pmm::init_pmm()
 
 	vmm::init_vmm();
 
-	vmm::boot_map_kernel_mem();
+	vmm::paging_init();
 
 	vmm::install_kernel_pml4t();
 
