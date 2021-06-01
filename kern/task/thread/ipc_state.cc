@@ -132,7 +132,7 @@ error_code task::ipc_state::send_extended_items(thread* to)
 			copy_mrs_to_locked(to, idx++, 1);
 			copy_mrs_to_locked(to, idx++, 1);
 
-			auto ret = vmm::mm_map(to->get_mm(), send, nullptr);
+			auto ret = vmm::mm_fpage_map(to->get_mm(), send, receive, nullptr);
 
 			if (!ret)
 			{
@@ -147,7 +147,7 @@ error_code task::ipc_state::send_extended_items(thread* to)
 			copy_mrs_to_locked(to, idx++, 1);
 			copy_mrs_to_locked(to, idx++, 1);
 
-			auto ret = vmm::mm_grant(from->get_mm(), to->get_mm(), send, nullptr);
+			auto ret = vmm::mm_fpage_grant(from->get_mm(), to->get_mm(), send, receive, nullptr);
 
 			if (!ret)
 			{

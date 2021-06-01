@@ -65,7 +65,7 @@ using lock::spinlock_holding;
 // 3) handle the page fault so as to map pages on demand
 
 
-mm_struct* vmm::mm_create(void)
+mm_struct* vmm::mm_create()
 {
 	mm_struct* mm = reinterpret_cast<decltype(mm)>(memory::kmalloc(sizeof(mm_struct), 0));
 	if (mm != nullptr)
@@ -132,34 +132,58 @@ error_code vmm::mm_map(IN mm_struct* mm, IN uintptr_t addr, IN size_t len, IN ui
 	return ret;
 }
 
-error_code vmm::mm_map(mm_struct* target, const task::ipc::fpage& page, vma_struct** vma_store)
+error_code vmm::mm_fpage_map(mm_struct* target,
+	const task::ipc::fpage& send,
+	const task::ipc::fpage& receive,
+	vma_struct** vma_store)
 {
 	uint32_t flags = VM_SHARE;
-	if (page.check_rights(task::ipc::AR_W))flags |= VM_WRITE;
-	if (page.check_rights(task::ipc::AR_R))flags |= VM_READ;
-	if (page.check_rights(task::ipc::AR_X))flags |= VM_EXEC;
 
-	return mm_map(target, page.get_base_address(), page.get_size(), flags, vma_store);
-}
-error_code vmm::mm_grant(mm_struct* from, mm_struct* mm, const task::ipc::fpage& page, vma_struct** vma_store)
-{
-	uint32_t flags = VM_SHARE;
-	if (page.check_rights(task::ipc::AR_W))flags |= VM_WRITE;
-	if (page.check_rights(task::ipc::AR_R))flags |= VM_READ;
-	if (page.check_rights(task::ipc::AR_X))flags |= VM_EXEC;
+	if (send.check_rights(task::ipc::AR_W))flags |= VM_WRITE;
+	if (send.check_rights(task::ipc::AR_R))flags |= VM_READ;
+	if (send.check_rights(task::ipc::AR_X))flags |= VM_EXEC;
 
-	auto ret = mm_map(mm, page.get_base_address(), page.get_size(), flags, vma_store);
+	// Ensure the VMA exist
+	auto ret = mm_map(target, send.get_base_address(), send.get_size(), flags, vma_store);
 	if (ret != ERROR_SUCCESS)
 	{
 		return ret;
 	}
 
-	return mm_unmap(from, page.get_base_address(), page.get_size());
+	// Map the corresponding address;
+
+
+	return ERROR_SUCCESS;
 }
 
-error_code vmm::mm_unmap(mm_struct* mm, const task::ipc::fpage& page)
+error_code vmm::mm_fpage_grant(mm_struct* from,
+	mm_struct* mm,
+	const task::ipc::fpage& send,
+	const task::ipc::fpage& receive,
+	vma_struct** vma_store)
 {
-	return mm_unmap(mm, page.get_base_address(), page.get_size());
+	uint32_t flags = VM_SHARE;
+	if (send.check_rights(task::ipc::AR_W))flags |= VM_WRITE;
+	if (send.check_rights(task::ipc::AR_R))flags |= VM_READ;
+	if (send.check_rights(task::ipc::AR_X))flags |= VM_EXEC;
+
+	// Ensure the target is send
+	auto ret = mm_map(mm, send.get_base_address(), send.get_size(), flags, vma_store);
+	if (ret != ERROR_SUCCESS)
+	{
+		return ret;
+	}
+
+	// Remove the vma from the source
+	ret = mm_unmap(from, send.get_base_address(), send.get_size());
+	if (ret != ERROR_SUCCESS)
+	{
+		return ret;
+	}
+
+
+
+	return ERROR_SUCCESS;
 }
 
 error_code vmm::mm_unmap(IN mm_struct* mm, IN uintptr_t addr, IN size_t len)
