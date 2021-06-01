@@ -127,7 +127,7 @@ error_code task::ipc_state::send_extended_items(thread* to)
 		if (static_cast<ipc::message_item_types>(mr & 0xF) == ipc::message_item_types::MAP)
 		{
 			auto map = from->ipc_state_.get_typed_item<ipc::map_item>(idx);
-			auto send = acceptor.get_send_region(map.page());
+			auto[send, receive] = acceptor.get_send_receive_region(map.page(), map.base());
 
 			copy_mrs_to_locked(to, idx++, 1);
 			copy_mrs_to_locked(to, idx++, 1);
@@ -142,7 +142,7 @@ error_code task::ipc_state::send_extended_items(thread* to)
 		else if (static_cast<ipc::message_item_types>(mr & 0xF) == ipc::message_item_types::GRANT)
 		{
 			auto grant = from->ipc_state_.get_typed_item<ipc::grant_item>(idx);
-			auto send = acceptor.get_send_region(grant.page());
+			auto[send, receive] = acceptor.get_send_receive_region(grant.page(), grant.base());
 
 			copy_mrs_to_locked(to, idx++, 1);
 			copy_mrs_to_locked(to, idx++, 1);

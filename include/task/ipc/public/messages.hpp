@@ -272,9 +272,26 @@ class message_acceptor final
 		return receive_window_;
 	}
 
-	[[nodiscard]] fpage get_send_region(fpage original) const
+	[[nodiscard]] std::pair<fpage, fpage> get_send_receive_region(fpage send, uintptr_t sndbase) const
 	{
+		auto receive_s = (receive_window_ >> 4ull) & 0x3Full;
+		auto receive_b = (receive_window_ >> 10ull);
 
+		if (send.get_size() > (1 << receive_s))
+		{
+			auto new_send_base = rounddown(send.get_base_address() + (sndbase % send.get_size()), 2ul);
+			return std::make_pair(fpage(new_send_base, receive_s, AR_FULL),
+				fpage(receive_b << 10ull, receive_s, AR_FULL));
+		}
+		else if (send.get_size() < (1 << receive_s))
+		{
+			auto new_receive_base = rounddown((receive_s << 10ull) + (sndbase % (1 << receive_s)), 2ull);
+			return std::make_pair(send, fpage(new_receive_base << 10ull, receive_s, AR_FULL));
+		}
+		else
+		{
+			return std::make_pair(send, fpage(receive_b << 10ull, receive_s, AR_FULL));
+		}
 	}
 
 	[[nodiscard]] buffer_register_type raw() const

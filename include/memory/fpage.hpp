@@ -44,7 +44,7 @@ class fpage
 
 	[[nodiscard]] uintptr_t get_base_address() const
 	{
-		return 1ull << b_div_1024_;
+		return b_div_1024_ * (1ull << 10);
 	}
 
  private:
