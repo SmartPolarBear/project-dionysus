@@ -3,7 +3,10 @@
 #include <compare>
 #include <cstring>
 
+#include "system/mmu.h"
+
 #include "memory/fpage.hpp"
+
 
 #if defined(_DIONYSUS_KERNEL_)
 #include "ktl/concepts.hpp"
