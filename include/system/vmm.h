@@ -88,13 +88,14 @@ mm_struct* mm_create(void);
 error_code mm_map(IN mm_struct* mm, IN uintptr_t addr, IN size_t len, IN uint32_t vm_flags,
 	OPTIONAL OUT vma_struct** vma_store);
 
-error_code mm_fpage_map(mm_struct* target,
+error_code mm_fpage_map(mm_struct* from,
+	mm_struct* to,
 	const task::ipc::fpage& send,
 	const task::ipc::fpage& receive,
 	vma_struct** vma_store);
 
 error_code mm_fpage_grant(mm_struct* from,
-	mm_struct* mm,
+	mm_struct* to,
 	const task::ipc::fpage& send,
 	const task::ipc::fpage& receive,
 	vma_struct** vma_store);

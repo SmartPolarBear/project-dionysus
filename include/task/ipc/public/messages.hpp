@@ -279,18 +279,19 @@ class message_acceptor final
 
 		if (send.get_size() > (1 << receive_s))
 		{
-			auto new_send_base = rounddown(send.get_base_address() + (sndbase % send.get_size()), 2ul);
-			return std::make_pair(fpage(new_send_base, receive_s, AR_FULL),
-				fpage(receive_b << 10ull, receive_s, AR_FULL));
+			auto new_send_base = PAGE_ROUNDDOWN(send.get_base_address() + (sndbase % send.get_size()));
+			return std::make_pair(fpage(new_send_base, log2(PAGE_ROUNDUP((1 << receive_s))), AR_FULL),
+				fpage(receive_b << 10ull, log2(PAGE_ROUNDUP((1 << receive_s))), AR_FULL));
 		}
 		else if (send.get_size() < (1 << receive_s))
 		{
-			auto new_receive_base = rounddown((receive_s << 10ull) + (sndbase % (1 << receive_s)), 2ull);
-			return std::make_pair(send, fpage(new_receive_base << 10ull, receive_s, AR_FULL));
+			auto new_receive_base = PAGE_ROUNDDOWN((receive_s << 10ull) + (sndbase % (1 << receive_s)));
+			return std::make_pair(send,
+				fpage(new_receive_base << 10ull, log2(PAGE_ROUNDUP((1 << receive_s))), AR_FULL));
 		}
 		else
 		{
-			return std::make_pair(send, fpage(receive_b << 10ull, receive_s, AR_FULL));
+			return std::make_pair(send, fpage(receive_b << 10ull, log2(PAGE_ROUNDUP((1 << receive_s))), AR_FULL));
 		}
 	}
 

@@ -1,24 +1,23 @@
-/*
- * Last Modified: Sun May 10 2020
- * Modified By: SmartPolarBear
- * -----
- * Copyright (C) 2006 by SmartPolarBear <clevercoolbear@outlook.com>
- *
- * Permission to use, copy, modify, and/or distribute this software for any
- * purpose with or without fee is hereby granted.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
- * REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
- * FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
- * INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
- * LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
- * OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
- * PERFORMANCE OF THIS SOFTWARE.
- * -----
- * HISTORY:
- * Date      	By	Comments
- * ----------	---	----------------------------------------------------------
- */
+
+// Copyright (c) 2021 SmartPolarBear
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 
 #include "vmm.h"
 
@@ -28,6 +27,8 @@
 #include "system/mmu.h"
 #include "system/pmm.h"
 #include "system/vmm.h"
+
+#include "memory/pmm.hpp"
 
 #include "arch/amd64/cpu/x86.h"
 
@@ -132,11 +133,14 @@ error_code vmm::mm_map(IN mm_struct* mm, IN uintptr_t addr, IN size_t len, IN ui
 	return ret;
 }
 
-error_code vmm::mm_fpage_map(mm_struct* target,
+// TODO: lock
+error_code vmm::mm_fpage_map(mm_struct* from,
+	mm_struct* to,
 	const task::ipc::fpage& send,
 	const task::ipc::fpage& receive,
 	vma_struct** vma_store)
 {
+
 	uint32_t flags = VM_SHARE;
 
 	if (send.check_rights(task::ipc::AR_W))flags |= VM_WRITE;
@@ -144,20 +148,31 @@ error_code vmm::mm_fpage_map(mm_struct* target,
 	if (send.check_rights(task::ipc::AR_X))flags |= VM_EXEC;
 
 	// Ensure the VMA exist
-	auto ret = mm_map(target, send.get_base_address(), send.get_size(), flags, vma_store);
+	auto ret = mm_map(to, send.get_base_address(), send.get_size(), flags, vma_store);
 	if (ret != ERROR_SUCCESS)
 	{
 		return ret;
 	}
 
-	// Map the corresponding address;
+	// Map the corresponding address
 
+	for (auto start = send.get_base_address(); start + PAGE_SIZE <= send.get_base_address() + send.get_size();
+	     start += PAGE_SIZE)
+	{
+		auto pde = vmm::walk_pgdir(from->pgdir, start, false);
+
+		auto to_pde = vmm::walk_pgdir(to->pgdir, start, true);
+
+		*to_pde = *pde;
+
+		memory::physical_memory_manager::instance()->flush_tlb(to->pgdir, start);
+	}
 
 	return ERROR_SUCCESS;
 }
 
 error_code vmm::mm_fpage_grant(mm_struct* from,
-	mm_struct* mm,
+	mm_struct* to,
 	const task::ipc::fpage& send,
 	const task::ipc::fpage& receive,
 	vma_struct** vma_store)
@@ -168,7 +183,7 @@ error_code vmm::mm_fpage_grant(mm_struct* from,
 	if (send.check_rights(task::ipc::AR_X))flags |= VM_EXEC;
 
 	// Ensure the target is send
-	auto ret = mm_map(mm, send.get_base_address(), send.get_size(), flags, vma_store);
+	auto ret = mm_map(to, send.get_base_address(), send.get_size(), flags, vma_store);
 	if (ret != ERROR_SUCCESS)
 	{
 		return ret;
@@ -181,7 +196,23 @@ error_code vmm::mm_fpage_grant(mm_struct* from,
 		return ret;
 	}
 
+	// do real map and unmap
 
+	for (auto start = send.get_base_address(); start + PAGE_SIZE <= send.get_base_address() + send.get_size();
+	     start += PAGE_SIZE)
+	{
+		auto pde = vmm::walk_pgdir(from->pgdir, start, false);
+
+		auto to_pde = vmm::walk_pgdir(to->pgdir, start, true);
+
+		*to_pde = *pde;
+
+		*pde = 0;
+
+		memory::physical_memory_manager::instance()->flush_tlb(from->pgdir, start);
+
+		memory::physical_memory_manager::instance()->flush_tlb(to->pgdir, start);
+	}
 
 	return ERROR_SUCCESS;
 }
