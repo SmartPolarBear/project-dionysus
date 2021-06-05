@@ -141,6 +141,7 @@ error_code vmm::mm_fpage_map(mm_struct* from,
 	vma_struct** vma_store)
 {
 
+
 	uint32_t flags = VM_SHARE;
 
 	if (send.check_rights(task::ipc::AR_W))flags |= VM_WRITE;

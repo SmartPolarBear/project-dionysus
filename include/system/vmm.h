@@ -1,5 +1,3 @@
-
-
 // Copyright (c) 2021 SmartPolarBear
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
