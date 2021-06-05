@@ -19,3 +19,75 @@
 // SOFTWARE.
 
 #include "memory/address_space.hpp"
+
+using namespace memory;
+using namespace vmm;
+
+address_space_segment::address_space_segment(uintptr_t vm_start, uintptr_t vm_end, uint64_t vm_flags)
+{
+
+}
+address_space_segment::~address_space_segment()
+{
+
+}
+address_space_segment::address_space_segment(address_space_segment&& another)
+{
+
+}
+error_code address_space_segment::resize(uintptr_t start, uintptr_t end)
+{
+	return 0;
+}
+address_space::address_space()
+{
+
+}
+address_space::address_space(address_space&& another)
+{
+
+}
+address_space::~address_space()
+{
+
+}
+error_code_with_result<address_space_segment*> address_space::map(uintptr_t addr, size_t len, uint64_t flags)
+{
+	return error_code_with_result<address_space_segment*>();
+}
+error_code_with_result<address_space_segment*> address_space::mm_fpage_map(address_space* to,
+	const task::ipc::fpage& send,
+	const task::ipc::fpage& receive)
+{
+	return error_code_with_result<address_space_segment*>();
+}
+error_code_with_result<address_space_segment*> address_space::mm_fpage_grant(address_space* to,
+	const task::ipc::fpage& send,
+	const task::ipc::fpage& receive)
+{
+	return error_code_with_result<address_space_segment*>();
+}
+error_code address_space::unmap(uintptr_t addr, size_t len)
+{
+	return 0;
+}
+error_code_with_result<address_space> address_space::duplicate()
+{
+	return error_code_with_result<address_space>();
+}
+error_code address_space::resize(uintptr_t addr, size_t len)
+{
+	return 0;
+}
+void address_space::insert_vma(address_space_segment* vma)
+{
+
+}
+address_space_segment* address_space::find_vma(uintptr_t addr)
+{
+	return nullptr;
+}
+address_space_segment* address_space::intersect_vma(uintptr_t start, uintptr_t end)
+{
+	return nullptr;
+}

@@ -30,18 +30,45 @@
 
 #include "system/vmm.h"
 
+#include "kbl/data/list.hpp"
+
 namespace memory
 {
 
 class address_space_segment final
 {
+ public:
+	friend class address_space;
+	using link_type = kbl::list_link<address_space_segment, lock::spinlock>;
 
+	[[nodiscard]] address_space_segment(uintptr_t vm_start, uintptr_t vm_end, uint64_t vm_flags);
+	~address_space_segment();
+	address_space_segment(address_space_segment&& another);
+
+	address_space_segment(const address_space_segment&) = delete;
+	address_space_segment& operator=(const address_space_segment&) = delete;
+
+	error_code resize(uintptr_t start, uintptr_t end);
+ private:
+
+	uintptr_t start_{ 0 };
+	uintptr_t end_{ 0 };
+
+	uint64_t flags_{ 0 };
+
+	class address_space* parent_{ nullptr };
+
+	link_type link_{ this };
 };
 
 class address_space final
 	: public object::kernel_object<address_space>
 {
  public:
+	using segment_list_type = kbl::intrusive_list_with_default_trait<address_space_segment,
+	                                                                 lock::spinlock,
+	                                                                 &address_space_segment::link_,
+	                                                                 true>;
 
 	address_space();
 	address_space(address_space&& another);
@@ -66,13 +93,20 @@ class address_space final
 
 	error_code resize(uintptr_t addr, size_t len);
 
+	void insert_vma(address_space_segment* vma);
+
+	address_space_segment* find_vma(uintptr_t addr);
+
 	address_space_segment* intersect_vma(uintptr_t start, uintptr_t end);
 
  private:
 	uintptr_t uheap_begin{ 0 };
 	uintptr_t uheap_end{ 0 };
 
+	segment_list_type segments{};
+
 	vmm::pde_ptr_t pgdir{ nullptr };
 
 };
+
 }
