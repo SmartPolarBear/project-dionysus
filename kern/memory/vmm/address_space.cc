@@ -79,7 +79,16 @@ address_space::address_space()
 }
 
 address_space::address_space(address_space&& another)
+	: uheap_begin(std::exchange(another.uheap_begin, 0)),
+	  uheap_end(std::exchange(another.uheap_end, 0)),
+	  pgdir_(std::exchange(another.pgdir_, nullptr))
 {
+	for (auto& seg:another.segments)
+	{
+		segments.push_back(seg);
+	}
+
+	another.segments.clear();
 }
 
 address_space::~address_space()
