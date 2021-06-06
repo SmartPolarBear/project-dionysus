@@ -49,6 +49,22 @@ class address_space_segment final
 	address_space_segment& operator=(const address_space_segment&) = delete;
 
 	error_code resize(uintptr_t start, uintptr_t end);
+
+	[[nodiscard]] uintptr_t start() const
+	{
+		return this->start_;
+	}
+
+	[[nodiscard]] uintptr_t end() const
+	{
+		return end_;
+	}
+
+	[[nodiscard]] uint64_t flags() const
+	{
+		return flags_;
+	}
+
  private:
 
 	uintptr_t start_{ 0 };
@@ -89,7 +105,7 @@ class address_space final
 
 	error_code unmap(uintptr_t addr, size_t len);
 
-	error_code_with_result<address_space> duplicate();
+	error_code_with_result<address_space*> duplicate();
 
 	error_code resize(uintptr_t addr, size_t len);
 
@@ -100,12 +116,17 @@ class address_space final
 	address_space_segment* intersect_vma(uintptr_t start, uintptr_t end);
 
  private:
+	void assert_segment_overlap(address_space_segment* prev, address_space_segment* next);
+
 	uintptr_t uheap_begin{ 0 };
 	uintptr_t uheap_end{ 0 };
 
 	segment_list_type segments{};
 
-	vmm::pde_ptr_t pgdir{ nullptr };
+	vmm::pde_ptr_t pgdir_{ nullptr };
+
+
+	lock::spinlock lock_{"addr_space"};
 
 };
 

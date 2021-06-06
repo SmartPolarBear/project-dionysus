@@ -25,20 +25,26 @@
 
 #include <utility>
 
+#include "kbl/checker/allocate_checker.hpp"
+
 using namespace memory;
 using namespace vmm;
+
+using namespace kbl;
+using namespace lock;
 
 address_space_segment::address_space_segment(uintptr_t vm_start, uintptr_t vm_end, uint64_t vm_flags)
 	: start_(vm_start), end_(vm_end), flags_(vm_flags)
 {
+	KDEBUG_ASSERT(start_ < end_);
 }
-
 
 address_space_segment::address_space_segment(address_space_segment&& another)
 	: start_(std::exchange(another.start_, 0)),
 	  end_(std::exchange(another.end_, 0)),
 	  flags_(std::exchange(another.flags_, 0))
 {
+	KDEBUG_ASSERT(start_ < end_);
 }
 
 address_space_segment::~address_space_segment()
@@ -82,49 +88,306 @@ address_space::~address_space()
 
 error_code_with_result<address_space_segment*> address_space::map(uintptr_t addr, size_t len, uint64_t flags)
 {
-	return error_code_with_result<address_space_segment*>();
+	lock_guard g{ lock_ };
+
+	uintptr_t start = rounddown(addr, PAGE_SIZE), end = roundup(addr + len, PAGE_SIZE);
+
+	end = std::min(end, USER_TOP);
+
+	if (!VALID_USER_REGION(start, end))
+	{
+		return -ERROR_INVALID;
+	}
+
+	address_space_segment* vma = nullptr;
+	if ((vma = find_vma(start)) != nullptr && end > vma->start())
+	{
+		// the vma exists
+		return -ERROR_ALREADY_EXIST;
+	}
+	else
+	{
+		flags &= ~VM_SHARE;
+
+		kbl::allocate_checker ck{};
+		vma = new(&ck) address_space_segment(start, end, flags);
+
+		KDEBUG_ASSERT(uintptr_t(& vma) != uintptr_t (&ck));
+
+		if (!ck.check())
+		{
+			return -ERROR_MEMORY_ALLOC;
+		}
+
+		insert_vma(vma);
+
+	}
+
+	return vma;
 }
 
 error_code_with_result<address_space_segment*> address_space::mm_fpage_map(address_space* to,
 	const task::ipc::fpage& send,
 	const task::ipc::fpage& receive)
 {
-	return error_code_with_result<address_space_segment*>();
+
+	uint32_t flags = VM_SHARE;
+
+	if (send.check_rights(task::ipc::AR_W))flags |= VM_WRITE;
+	if (send.check_rights(task::ipc::AR_R))flags |= VM_READ;
+	if (send.check_rights(task::ipc::AR_X))flags |= VM_EXEC;
+
+	// Ensure the VMA exist
+	auto ret = to->map(send.get_base_address(), send.get_size(), flags);
+	if (has_error(ret))
+	{
+		return get_error_code(ret);
+	}
+
+	// Map the corresponding address
+
+	copy_range(pgdir_, to->pgdir_, send.get_base_address(), send.get_base_address() + send.get_size());
+
+	return ERROR_SUCCESS;
 }
 
 error_code_with_result<address_space_segment*> address_space::mm_fpage_grant(address_space* to,
 	const task::ipc::fpage& send,
 	const task::ipc::fpage& receive)
 {
-	return error_code_with_result<address_space_segment*>();
+	uint32_t flags = VM_SHARE;
+	if (send.check_rights(task::ipc::AR_W))flags |= VM_WRITE;
+	if (send.check_rights(task::ipc::AR_R))flags |= VM_READ;
+	if (send.check_rights(task::ipc::AR_X))flags |= VM_EXEC;
+
+	// Ensure the target is send
+	auto ret = to->map(send.get_base_address(), send.get_size(), flags);
+	if (has_error(ret))
+	{
+		return get_error_code(ret);
+	}
+
+	// Remove the vma from the source
+	ret = unmap(send.get_base_address(), send.get_size());
+	if (has_error(ret))
+	{
+		return get_error_code(ret);
+	}
+
+	// do real map and unmap
+	copy_range(pgdir_, to->pgdir_, send.get_base_address(), send.get_base_address() + send.get_size());
+	unmap_range(pgdir_, send.get_base_address(), send.get_base_address() + send.get_size());
+
+	return ERROR_SUCCESS;
 }
 
 error_code address_space::unmap(uintptr_t addr, size_t len)
 {
-	return 0;
+	uintptr_t start = PAGE_ROUNDDOWN(addr), end = PAGE_ROUNDUP(addr + len);
+	if (!VALID_USER_REGION(start, end))
+	{
+		return -ERROR_INVALID;
+	}
+
+	auto vma = find_vma(start);
+	if (vma == nullptr || end < vma->start_)
+	{
+		return ERROR_SUCCESS; // no need to remove
+	}
+
+	if (vma->start_ < start && end < vma->end_)
+	{
+		//           range to remove
+		//    [       [***********]       ]
+		//     |------|      ^    |-------|
+		//	  Create new     |     Shrink old
+		//                   |
+		//                 unmap
+		kbl::allocate_checker ck{};
+		auto new_vma = new(&ck) address_space_segment(vma->start_, start, vma->flags_);
+
+		KDEBUG_ASSERT(uintptr_t(& new_vma) != uintptr_t (&ck));
+
+		if (!ck.check())
+		{
+			return -ERROR_MEMORY_ALLOC;
+		}
+
+		auto ret = vma->resize(end, vma->end_);
+		if (ret != ERROR_SUCCESS)
+		{
+			return ret;
+		}
+
+		insert_vma(new_vma);
+
+		unmap_range(pgdir_, start, end);
+
+		return ERROR_SUCCESS;
+	}
+
+	segment_list_type freelist{};
+
+	for (segment_list_type::iterator_type iter{ &vma->link_ }; iter != segments.end(); iter++)
+	{
+		if (iter->start_ >= end)
+		{
+			break;
+		}
+
+		freelist.push_back(&(*iter));
+	}
+
+	for (auto& entry:freelist)
+	{
+		segments.remove(entry);
+
+		uintptr_t unmap_start = entry.start(), unmap_end = entry.end();
+
+		if (entry.start() < start)
+		{
+			unmap_start = start;
+			entry.resize(entry.start_, start);
+			insert_vma(&entry);
+		}
+		else
+		{
+			if (end < entry.end())
+			{
+				unmap_end = end;
+				entry.resize(end, entry.end());
+				insert_vma(&entry);
+			}
+			else
+			{
+				delete &entry;
+			}
+		}
+		unmap_range(pgdir_, unmap_start, unmap_end);
+	}
+
+	return ERROR_SUCCESS;
 }
 
-error_code_with_result<address_space> address_space::duplicate()
+error_code_with_result<address_space*> address_space::duplicate()
 {
-	return error_code_with_result<address_space>();
+	allocate_checker ck{};
+	auto to = new(&ck) address_space{};
+	KDEBUG_ASSERT(uintptr_t(& ck)!=uintptr_t(to));
+
+	if (!ck.check())
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
+
+	for (auto& seg:segments)
+	{
+		auto new_seg = new(&ck) address_space_segment(seg.start_, seg.end_, seg.flags_);
+		KDEBUG_ASSERT(uintptr_t(& ck)!=uintptr_t(new_seg));
+
+		if (!ck.check())
+		{
+			return -ERROR_MEMORY_ALLOC;
+		}
+
+		to->insert_vma(new_seg);
+
+		copy_range(pgdir_, to->pgdir_, seg.start_, seg.end_);
+	}
+
+	return to;
 }
 
 error_code address_space::resize(uintptr_t addr, size_t len)
 {
-	return 0;
+	uintptr_t start = PAGE_ROUNDDOWN(addr), end = PAGE_ROUNDUP((addr + len));
+	if (!VALID_USER_REGION(start, end))
+	{
+		return -ERROR_INVALID;
+	}
+
+	error_code ret = ERROR_SUCCESS;
+
+	if ((ret = unmap(start, end - start)) != ERROR_SUCCESS)
+	{
+		return ret;
+	}
+
+	constexpr auto VM_FLAGS = VM_READ | VM_WRITE;
+
+	auto vma = find_vma(start - 1);
+	if (vma != nullptr && vma->end_ == start && vma->flags_ == VM_FLAGS)
+	{
+		vma->end_ = end;
+		return ERROR_SUCCESS;
+	}
+
+	kbl::allocate_checker ck{};
+	vma = new(&ck) address_space_segment(start, end, VM_FLAGS);
+
+	// FIXME: remove this later
+	KDEBUG_ASSERT(uintptr_t(& vma) != uintptr_t (&ck));
+
+	if (!ck.check())
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
+
+	insert_vma(vma);
+
+	return ERROR_SUCCESS;
 }
 
 void address_space::insert_vma(address_space_segment* vma)
 {
+	address_space_segment* prev = nullptr;
+	segment_list_type::iterator_type prev_iter;
+	for (auto iter = segments.begin(); iter != segments.end(); iter++)
+	{
+		if (iter->start_ > vma->start_)
+		{
+			break;
+		}
+		prev = &(*iter);
+		prev_iter = iter;
+	}
 
+	auto next = prev->link_.next_->parent_;
+
+	assert_segment_overlap(prev, vma);
+	assert_segment_overlap(vma, next);
+
+	segments.insert(prev_iter, vma);
+
+	vma->parent_ = this;
 }
 
 address_space_segment* address_space::find_vma(uintptr_t addr)
 {
+	for (auto& seg:segments)
+	{
+		if (seg.start() <= addr && seg.end() > addr)
+		{
+			return &seg;
+		}
+	}
+
 	return nullptr;
 }
 
 address_space_segment* address_space::intersect_vma(uintptr_t start, uintptr_t end)
 {
-	return nullptr;
+	auto vma = find_vma(start);
+	if (vma != nullptr && end <= vma->start_)
+	{
+		return nullptr;
+	}
+	return vma;
+}
+
+void address_space::assert_segment_overlap(address_space_segment* prev, address_space_segment* next)
+{
+	KDEBUG_ASSERT(prev->start_ < prev->end_);
+	KDEBUG_ASSERT(prev->end_ <= next->start_);
+	KDEBUG_ASSERT(next->start_ < next->end_);
 }
