@@ -19,6 +19,7 @@
 // SOFTWARE.
 
 #include "memory/address_space.hpp"
+#include "memory/pmm.hpp"
 
 #include "system/memlayout.h"
 #include "system/mmu.h"
@@ -155,7 +156,17 @@ error_code_with_result<address_space_segment*> address_space::mm_fpage_map(addre
 
 	// Map the corresponding address
 
-	copy_range(pgdir_, to->pgdir_, send.get_base_address(), send.get_base_address() + send.get_size());
+	for (auto start = send.get_base_address(); start + PAGE_SIZE <= send.get_base_address() + send.get_size();
+	     start += PAGE_SIZE)
+	{
+		auto pde = vmm::walk_pgdir(pgdir_, start, false);
+
+		auto to_pde = vmm::walk_pgdir(to->pgdir_, start - send.get_base_address() + receive.get_base_address(), true);
+
+		*to_pde = *pde;
+
+		memory::physical_memory_manager::instance()->flush_tlb(to->pgdir_, start);
+	}
 
 	return ERROR_SUCCESS;
 }
@@ -184,8 +195,24 @@ error_code_with_result<address_space_segment*> address_space::mm_fpage_grant(add
 	}
 
 	// do real map and unmap
-	copy_range(pgdir_, to->pgdir_, send.get_base_address(), send.get_base_address() + send.get_size());
-	unmap_range(pgdir_, send.get_base_address(), send.get_base_address() + send.get_size());
+
+	for (auto start = send.get_base_address(); start + PAGE_SIZE <= send.get_base_address() + send.get_size();
+	     start += PAGE_SIZE)
+	{
+		auto pde = vmm::walk_pgdir(pgdir_, start, false);
+
+		auto to_pde = vmm::walk_pgdir(to->pgdir_, start - send.get_base_address() + receive.get_base_address(), true);
+
+		*to_pde = *pde;
+
+		*pde = 0;
+
+		memory::physical_memory_manager::instance()->flush_tlb(pgdir_, start);
+
+		memory::physical_memory_manager::instance()->flush_tlb(to->pgdir_, start);
+	}
+
+	return ERROR_SUCCESS;
 
 	return ERROR_SUCCESS;
 }
@@ -373,15 +400,29 @@ void address_space::insert_vma(address_space_segment* vma)
 
 address_space_segment* address_space::find_vma(uintptr_t addr)
 {
-	for (auto& seg:segments)
+	auto ret = search_cache_;
+
+	if (!(ret != nullptr &&
+		ret->start() <= addr &&
+		ret->end() > addr))
 	{
-		if (seg.start() <= addr && seg.end() > addr)
+		ret = nullptr;
+		for (auto& seg:segments)
 		{
-			return &seg;
+			if (seg.start() <= addr && seg.end() > addr)
+			{
+				ret = &seg;
+				break;
+			}
 		}
 	}
 
-	return nullptr;
+	if (ret != nullptr)
+	{
+		search_cache_ = ret;
+	}
+
+	return ret;
 }
 
 address_space_segment* address_space::intersect_vma(uintptr_t start, uintptr_t end)

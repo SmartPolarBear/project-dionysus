@@ -123,10 +123,11 @@ class address_space final
 
 	segment_list_type segments{};
 
+	address_space_segment* search_cache_{ nullptr };
+
 	vmm::pde_ptr_t pgdir_{ nullptr };
 
-
-	lock::spinlock lock_{"addr_space"};
+	lock::spinlock lock_{ "addr_space" };
 
 };
 
