@@ -127,19 +127,32 @@ error_code task::ipc_state::send_extended_items(thread* to)
 		if (static_cast<ipc::message_item_types>(mr & 0xF) == ipc::message_item_types::MAP)
 		{
 			auto map = from->ipc_state_.get_typed_item<ipc::map_item>(idx);
-			idx += 2;
+			auto[send, receive] = acceptor.get_send_receive_region(map.page(), map.base());
+
+			copy_mrs_to_locked(to, idx++, 1);
+			copy_mrs_to_locked(to, idx++, 1);
+
+			auto ret = vmm::mm_fpage_map(from->get_mm(), to->get_mm(), send, receive, nullptr);
+
+			if (!ret)
+			{
+				KDEBUG_GENERALPANIC(ret);
+			}
 		}
 		else if (static_cast<ipc::message_item_types>(mr & 0xF) == ipc::message_item_types::GRANT)
 		{
 			auto grant = from->ipc_state_.get_typed_item<ipc::grant_item>(idx);
-			idx += 2;
+			auto[send, receive] = acceptor.get_send_receive_region(grant.page(), grant.base());
 
-		}
-		else if (static_cast<ipc::message_item_types>(mr & 0xF) == ipc::message_item_types::STRING)
-		{
-			auto grant = from->ipc_state_.get_typed_item<ipc::string_item>(idx);
-			idx += 2;
+			copy_mrs_to_locked(to, idx++, 1);
+			copy_mrs_to_locked(to, idx++, 1);
 
+			auto ret = vmm::mm_fpage_grant(from->get_mm(), to->get_mm(), send, receive, nullptr);
+
+			if (!ret)
+			{
+				KDEBUG_GENERALPANIC(ret);
+			}
 		}
 	}
 

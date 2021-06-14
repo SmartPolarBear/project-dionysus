@@ -1,5 +1,3 @@
-
-
 // Copyright (c) 2021 SmartPolarBear
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -88,17 +86,19 @@ mm_struct* mm_create(void);
 error_code mm_map(IN mm_struct* mm, IN uintptr_t addr, IN size_t len, IN uint32_t vm_flags,
 	OPTIONAL OUT vma_struct** vma_store);
 
-error_code mm_map(mm_struct* target, const task::ipc::fpage& page, vma_struct** vma_store);
+error_code mm_fpage_map(mm_struct* from,
+	mm_struct* to,
+	const task::ipc::fpage& send,
+	const task::ipc::fpage& receive,
+	vma_struct** vma_store);
 
-error_code mm_grant(mm_struct* from,
-	mm_struct* mm,
-	const task::ipc::fpage& page,
-	uint32_t vm_flags,
+error_code mm_fpage_grant(mm_struct* from,
+	mm_struct* to,
+	const task::ipc::fpage& send,
+	const task::ipc::fpage& receive,
 	vma_struct** vma_store);
 
 error_code mm_unmap(IN mm_struct* mm, IN uintptr_t addr, IN size_t len);
-
-error_code mm_unmap(mm_struct* mm, const task::ipc::fpage& page);
 
 error_code mm_duplicate(IN mm_struct* to, IN const mm_struct* from);
 
