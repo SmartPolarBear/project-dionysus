@@ -12,6 +12,8 @@
 
 #include "object/handle_table.hpp"
 
+#include "memory/address_space.hpp"
+
 #include "system/scheduler.h"
 
 #include "drivers/acpi/cpu.h"
@@ -160,6 +162,11 @@ class process final
 		return mm;
 	}
 
+	memory::address_space& address_space()
+	{
+		return address_space_;
+	}
+
 	size_t get_flags() const
 	{
 		return flags;
@@ -219,6 +226,8 @@ class process final
 	task_return_code ret_code_;
 
 	vmm::mm_struct* mm;
+
+	memory::address_space address_space_{};
 
 	size_t flags;
 

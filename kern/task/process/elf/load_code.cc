@@ -54,10 +54,17 @@ static error_code load_ph(IN const Elf64_Phdr& prog_header,
 
 	auto proc_mm = proc->get_mm();
 
-	if ((ret = vmm::mm_map(proc_mm, prog_header.p_vaddr, prog_header.p_memsz, vm_flags, nullptr)) != ERROR_SUCCESS)
+//	if ((ret = vmm::mm_map(proc_mm, prog_header.p_vaddr, prog_header.p_memsz, vm_flags, nullptr)) != ERROR_SUCCESS)
+//	{
+//		//TODO do clean-ups
+//		return ret;
+//	}
 	{
-		//TODO do clean-ups
-		return ret;
+		auto map_ret = proc->address_space().map(prog_header.p_vaddr, prog_header.p_memsz, vm_flags);
+		if (has_error(map_ret))
+		{
+			return ret;
+		}
 	}
 
 	if (proc_mm->brk_start < prog_header.p_vaddr + prog_header.p_memsz)
@@ -110,10 +117,18 @@ static error_code alloc_sh(IN const Elf64_Shdr& shdr,
 	auto[vm_flags, perms] = parse_sh_flags(shdr);
 	auto proc_mm = proc->get_mm();
 
-	if ((ret = vmm::mm_map(proc_mm, shdr.sh_addr, shdr.sh_size, vm_flags, nullptr)) != ERROR_SUCCESS)
+//	if ((ret = vmm::mm_map(proc_mm, shdr.sh_addr, shdr.sh_size, vm_flags, nullptr)) != ERROR_SUCCESS)
+//	{
+//		//TODO do clean-ups
+//		return ret;
+//	}
+
 	{
-		//TODO do clean-ups
-		return ret;
+		auto map_ret = proc->address_space().map(shdr.sh_addr, shdr.sh_size, vm_flags);
+		if (has_error(map_ret))
+		{
+			return ret;
+		}
 	}
 
 	if (proc_mm->brk_start < shdr.sh_addr + shdr.sh_size)

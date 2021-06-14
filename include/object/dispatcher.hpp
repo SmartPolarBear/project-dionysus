@@ -18,6 +18,7 @@ enum class [[clang::enum_extensibility(closed)]] object_type
 	PROCESS = 1,
 	JOB,
 	THREAD,
+	ADDR_SPACE,
 };
 
 }
@@ -46,6 +47,7 @@ struct canary_tag;
 DECLARE_TAG(task, job, object::object_type::JOB, "JOB_")
 DECLARE_TAG(task, process, object::object_type::PROCESS, "PROC")
 DECLARE_TAG(task, thread, object::object_type::THREAD, "THRD")
+DECLARE_TAG(memory, address_space, object::object_type::ADDR_SPACE, "ASPC");
 
 #undef DECLARE_TAG
 

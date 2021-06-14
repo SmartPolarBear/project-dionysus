@@ -214,7 +214,6 @@ error_code_with_result<address_space_segment*> address_space::mm_fpage_grant(add
 
 	return ERROR_SUCCESS;
 
-	return ERROR_SUCCESS;
 }
 
 error_code address_space::unmap(uintptr_t addr, size_t len)

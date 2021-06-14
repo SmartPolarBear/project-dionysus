@@ -20,20 +20,20 @@ task::process* g_monitor_proc = nullptr;
 
 static inline error_code map_framebuffer(multiboot_tag_framebuffer* framebuffer_tag)
 {
-	vmm::mm_map(g_monitor_proc->get_mm(), framebuffer_tag->common.framebuffer_addr,
-		PAGE_SIZE, vmm::VM_WRITE, nullptr);
-
-	auto error = vmm::map_range(g_monitor_proc->get_mm()->pgdir,
-		framebuffer_tag->common.framebuffer_addr,
-		framebuffer_tag->common.framebuffer_addr,
-		PAGE_SIZE);
-
-	if (error != ERROR_SUCCESS)
-	{
-		return error;
-	}
-
-	return ERROR_SUCCESS;
+//	vmm::mm_map(g_monitor_proc->get_mm(), framebuffer_tag->common.framebuffer_addr,
+//		PAGE_SIZE, vmm::VM_WRITE, nullptr);
+//
+//	auto error = vmm::map_range(g_monitor_proc->get_mm()->pgdir,
+//		framebuffer_tag->common.framebuffer_addr,
+//		framebuffer_tag->common.framebuffer_addr,
+//		PAGE_SIZE);
+//
+//	if (error != ERROR_SUCCESS)
+//	{
+//		return error;
+//	}
+//
+//	return ERROR_SUCCESS;
 }
 
 static inline error_code load_monitor_executable()

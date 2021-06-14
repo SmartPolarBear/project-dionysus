@@ -115,6 +115,16 @@ class address_space final
 
 	address_space_segment* intersect_vma(uintptr_t start, uintptr_t end);
 
+	[[nodiscard]] uintptr_t heap_begin() const
+	{
+		return uheap_begin;
+	}
+
+	[[nodiscard]] uintptr_t heap_end() const
+	{
+		return uheap_end;
+	}
+
  private:
 	void assert_segment_overlap(address_space_segment* prev, address_space_segment* next);
 

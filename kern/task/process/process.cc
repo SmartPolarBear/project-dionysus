@@ -49,15 +49,24 @@ error_code_with_result<void*> task::process_user_stack_state::make_next_user_sta
 {
 	const uintptr_t current_top = USER_STACK_TOP - USTACK_TOTAL_SIZE * busy_list_.size();
 
-	auto ret = vmm::mm_map(parent_->mm,
-		current_top - USTACK_TOTAL_SIZE - 1, //TODO -1?
+	auto ret = parent_->address_space_.map(current_top - USTACK_TOTAL_SIZE - 1, //TODO -1?
 		USTACK_TOTAL_SIZE,
-		vmm::VM_STACK, nullptr);
+		vmm::VM_STACK);
 
-	if (ret != ERROR_SUCCESS)
+	if (has_error(ret))
 	{
-		return -ERROR_MEMORY_ALLOC;
+		return get_error_code(ret);
 	}
+
+//	auto ret = vmm::mm_map(parent_->mm,
+//		current_top - USTACK_TOTAL_SIZE - 1, //TODO -1?
+//		USTACK_TOTAL_SIZE,
+//		vmm::VM_STACK, nullptr);
+//
+//	if (ret != ERROR_SUCCESS)
+//	{
+//		return -ERROR_MEMORY_ALLOC;
+//	}
 
 	// allocate an stack
 	for (size_t i = 0;
@@ -277,6 +286,7 @@ task::process::process(std::span<char> name,
 	auto local_handle = object::handle_entry::duplicate(this_handle.get());
 
 	object::handle_table::get_global_handle_table()->add_handle(std::move(this_handle));
+
 	handle_table_.add_handle(std::move(local_handle));
 }
 
@@ -287,6 +297,7 @@ process::~process()
 
 error_code process::setup_mm()
 {
+
 	this->mm = vmm::mm_create();
 	if (this->mm == nullptr)
 	{
@@ -501,22 +512,37 @@ error_code task::process::resize_heap(IN OUT uintptr_t* heap_ptr)
 		}
 		else if (new_heap < old_heap) // shrink
 		{
-			if (mm_unmap(mm, new_heap, old_heap - new_heap) != ERROR_SUCCESS)
+//			if (mm_unmap(mm, new_heap, old_heap - new_heap) != ERROR_SUCCESS)
+//			{
+//				*heap_ptr = mm->brk_start;
+//			}
+			if (address_space_.unmap(new_heap, old_heap - new_heap) != ERROR_SUCCESS)
 			{
 				*heap_ptr = mm->brk_start;
 			}
 		}
 		else if (new_heap > old_heap) // expand
 		{
-			if (mm_intersect_vma(mm, old_heap, new_heap + PAGE_SIZE) != nullptr)
+//			if (mm_intersect_vma(mm, old_heap, new_heap + PAGE_SIZE) != nullptr)
+//			{
+//				*heap_ptr = mm->brk_start;
+//			}
+//			else
+//			{
+//				if (mm_change_size(mm, old_heap, (size_t)new_heap - old_heap) != ERROR_SUCCESS)
+//				{
+//					*heap_ptr = mm->brk_start;
+//				}
+//			}
+			if (address_space_.intersect_vma(old_heap, new_heap + PAGE_SIZE) != nullptr)
 			{
-				*heap_ptr = mm->brk_start;
+				*heap_ptr = address_space_.heap_begin();
 			}
 			else
 			{
-				if (mm_change_size(mm, old_heap, (size_t)new_heap - old_heap) != ERROR_SUCCESS)
+				if (address_space_.resize(old_heap, (size_t)new_heap - old_heap) != ERROR_SUCCESS)
 				{
-					*heap_ptr = mm->brk_start;
+					*heap_ptr = address_space_.heap_begin();
 				}
 			}
 		}
