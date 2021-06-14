@@ -157,10 +157,10 @@ class process final
 	}
 
 	// FIXME: remove first
-	vmm::mm_struct* get_mm() const
-	{
-		return mm;
-	}
+//	vmm::mm_struct* get_mm() const
+//	{
+//		return mm;
+//	}
 
 	memory::address_space& address_space()
 	{
@@ -225,7 +225,7 @@ class process final
 
 	task_return_code ret_code_;
 
-	vmm::mm_struct* mm;
+//	vmm::mm_struct* mm;
 
 	memory::address_space address_space_{};
 

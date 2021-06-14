@@ -32,6 +32,8 @@
 
 #include "task/ipc/message.hpp"
 
+#include "memory/address_space.hpp"
+
 #include <compare>
 
 #ifndef USE_SCHEDULER_CLASS
@@ -393,6 +395,8 @@ class thread final
 	}
 
 	[[nodiscard]] vmm::mm_struct* get_mm();
+
+	[[nodiscartd]] memory::address_space &address_space()const;
 
 	[[nodiscard]] bool is_user_thread() const
 	{

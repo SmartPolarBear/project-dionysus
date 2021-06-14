@@ -115,21 +115,47 @@ class address_space final
 
 	address_space_segment* intersect_vma(uintptr_t start, uintptr_t end);
 
+	[[nodiscard]] uintptr_t heap() const
+	{
+		return uheap_;
+	}
+
+	void set_heap(uintptr_t val)
+	{
+		uheap_ = val;
+	}
+
 	[[nodiscard]] uintptr_t heap_begin() const
 	{
-		return uheap_begin;
+		return uheap_begin_;
+	}
+
+	void set_heap_begin(uintptr_t val)
+	{
+		uheap_begin_ = val;
 	}
 
 	[[nodiscard]] uintptr_t heap_end() const
 	{
-		return uheap_end;
+		return uheap_end_;
+	}
+
+	void set_heap_end(uintptr_t val)
+	{
+		uheap_end_ = val;
+	}
+
+	vmm::pde_ptr_t pgdir()
+	{
+		return pgdir_;
 	}
 
  private:
 	void assert_segment_overlap(address_space_segment* prev, address_space_segment* next);
 
-	uintptr_t uheap_begin{ 0 };
-	uintptr_t uheap_end{ 0 };
+	uintptr_t uheap_{ 0 };
+	uintptr_t uheap_begin_{ 0 };
+	uintptr_t uheap_end_{ 0 };
 
 	segment_list_type segments{};
 

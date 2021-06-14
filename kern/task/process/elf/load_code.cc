@@ -52,7 +52,7 @@ static error_code load_ph(IN const Elf64_Phdr& prog_header,
 
 	auto[vm_flags, perms] = parse_ph_flags(prog_header);
 
-	auto proc_mm = proc->get_mm();
+//	auto proc_mm = proc->get_mm();
 
 //	if ((ret = vmm::mm_map(proc_mm, prog_header.p_vaddr, prog_header.p_memsz, vm_flags, nullptr)) != ERROR_SUCCESS)
 //	{
@@ -67,16 +67,25 @@ static error_code load_ph(IN const Elf64_Phdr& prog_header,
 		}
 	}
 
-	if (proc_mm->brk_start < prog_header.p_vaddr + prog_header.p_memsz)
+//	if (proc_mm->brk_start < prog_header.p_vaddr + prog_header.p_memsz)
+//	{
+//		proc_mm->brk_start = prog_header.p_vaddr + prog_header.p_memsz;
+//	}
+
+	if (proc->address_space().heap_begin() < prog_header.p_vaddr + prog_header.p_memsz)
 	{
-		proc_mm->brk_start = prog_header.p_vaddr + prog_header.p_memsz;
+		proc->address_space().set_heap_begin(prog_header.p_vaddr + prog_header.p_memsz);
 	}
 
 	// ph->p_filesz <= ph->p_memsz
 	size_t page_count = PAGE_ROUNDUP(prog_header.p_memsz) / PAGE_SIZE;
 
 	auto alloc_ret =
-		physical_memory_manager::instance()->allocate(prog_header.p_vaddr, page_count, perms, proc_mm->pgdir, false);
+		physical_memory_manager::instance()->allocate(prog_header.p_vaddr,
+			page_count,
+			perms,
+			proc->address_space().pgdir(),
+			false);
 
 	if (has_error(alloc_ret))
 	{
@@ -115,7 +124,7 @@ static error_code alloc_sh(IN const Elf64_Shdr& shdr,
 	error_code ret = ERROR_SUCCESS;
 
 	auto[vm_flags, perms] = parse_sh_flags(shdr);
-	auto proc_mm = proc->get_mm();
+//	auto proc_mm = proc->get_mm();
 
 //	if ((ret = vmm::mm_map(proc_mm, shdr.sh_addr, shdr.sh_size, vm_flags, nullptr)) != ERROR_SUCCESS)
 //	{
@@ -131,15 +140,25 @@ static error_code alloc_sh(IN const Elf64_Shdr& shdr,
 		}
 	}
 
-	if (proc_mm->brk_start < shdr.sh_addr + shdr.sh_size)
+//	if (proc_mm->brk_start < shdr.sh_addr + shdr.sh_size)
+//	{
+//		proc_mm->brk_start = shdr.sh_addr + shdr.sh_size;
+//	}
+	if (proc->address_space().heap_begin() < shdr.sh_addr + shdr.sh_size)
 	{
-		proc_mm->brk_start = shdr.sh_addr + shdr.sh_size;
+		proc->address_space().set_heap_begin(shdr.sh_addr + shdr.sh_size);
 	}
 
 	size_t page_count = PAGE_ROUNDUP(shdr.sh_size) / PAGE_SIZE;
 
+//	auto alloc_ret =
+//		physical_memory_manager::instance()->allocate(shdr.sh_addr, page_count, perms, proc_mm->pgdir, true);
 	auto alloc_ret =
-		physical_memory_manager::instance()->allocate(shdr.sh_addr, page_count, perms, proc_mm->pgdir, true);
+		physical_memory_manager::instance()->allocate(shdr.sh_addr,
+			page_count,
+			perms,
+			proc->address_space().pgdir(),
+			true);
 
 	if (has_error(alloc_ret))
 	{
@@ -157,7 +176,7 @@ error_code load_elf_binary(IN task::process* proc,
 {
 	Elf64_Phdr* prog_header = nullptr;
 	size_t count = 0;
-	auto proc_mm = proc->get_mm();
+//	auto proc_mm = proc->get_mm();
 
 	auto ret = elf.get_program_headers(&prog_header, &count);
 
@@ -197,7 +216,10 @@ error_code load_elf_binary(IN task::process* proc,
 		}
 	}
 
-	proc_mm->brk_start = proc_mm->brk = PAGE_ROUNDUP(proc_mm->brk_start);
+	proc->address_space().set_heap_begin(PAGE_ROUNDUP(proc->address_space().heap_begin()));
+	proc->address_space().set_heap(PAGE_ROUNDUP(proc->address_space().heap_begin()));
+
+//	proc_mm->brk_start = proc_mm->brk = PAGE_ROUNDUP(proc_mm->brk_start);
 
 	return ERROR_SUCCESS;
 }

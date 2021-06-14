@@ -80,8 +80,8 @@ address_space::address_space()
 }
 
 address_space::address_space(address_space&& another)
-	: uheap_begin(std::exchange(another.uheap_begin, 0)),
-	  uheap_end(std::exchange(another.uheap_end, 0)),
+	: uheap_begin_(std::exchange(another.uheap_begin_, 0)),
+	  uheap_end_(std::exchange(another.uheap_end_, 0)),
 	  pgdir_(std::exchange(another.pgdir_, nullptr))
 {
 	for (auto& seg:another.segments)
