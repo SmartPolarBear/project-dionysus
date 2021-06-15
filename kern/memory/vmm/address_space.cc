@@ -171,7 +171,7 @@ error_code_with_result<address_space_segment*> address_space::mm_fpage_map(addre
 	return ERROR_SUCCESS;
 }
 
-error_code_with_result<address_space_segment*> address_space::mm_fpage_grant(address_space* to,
+error_code_with_result<address_space_segment*> address_space::fpage_grant(address_space* to,
 	const task::ipc::fpage& send,
 	const task::ipc::fpage& receive)
 {
@@ -439,4 +439,19 @@ void address_space::assert_segment_overlap(address_space_segment* prev, address_
 	KDEBUG_ASSERT(prev->start_ < prev->end_);
 	KDEBUG_ASSERT(prev->end_ <= next->start_);
 	KDEBUG_ASSERT(next->start_ < next->end_);
+}
+error_code address_space::setup()
+{
+	vmm::pde_ptr_t pgdir = vmm::pgdir_entry_alloc();
+
+	if (pgdir == nullptr)
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
+
+	vmm::duplicate_kernel_pml4t(pgdir);
+
+	pgdir_ = pgdir;
+
+	return ERROR_SUCCESS;
 }

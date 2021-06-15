@@ -77,7 +77,7 @@ error_code_with_result<void*> task::process_user_stack_state::make_next_user_sta
 
 		auto alloc_ret = memory::physical_memory_manager::instance()->allocate(va,
 			PG_W | PG_U | PG_PS | PG_P,
-			parent_->mm->pgdir,
+			address_space().pgdir(),
 			true);
 
 		if (has_error(alloc_ret))
@@ -89,7 +89,7 @@ error_code_with_result<void*> task::process_user_stack_state::make_next_user_sta
 	auto guard_page_ret =
 		memory::physical_memory_manager::instance()->allocate(current_top - USTACK_TOTAL_PAGES_PER_THREAD,
 			PG_U | PG_PS | PG_P,
-			parent_->mm->pgdir,
+			address_space().pgdir(),
 			true);
 
 	if (has_error(guard_page_ret))
@@ -297,26 +297,7 @@ process::~process()
 
 error_code process::setup_mm()
 {
-
-	this->mm = vmm::mm_create();
-	if (this->mm == nullptr)
-	{
-		return -ERROR_MEMORY_ALLOC;
-	}
-
-	vmm::pde_ptr_t pgdir = vmm::pgdir_entry_alloc();
-
-	if (pgdir == nullptr)
-	{
-		vmm::mm_destroy(this->mm);
-		return -ERROR_MEMORY_ALLOC;
-	}
-
-	vmm::duplicate_kernel_pml4t(pgdir);
-
-	this->mm->pgdir = pgdir;
-
-	return ERROR_SUCCESS;
+	return address_space_.setup();
 }
 
 void process::finish_dead_transition() noexcept

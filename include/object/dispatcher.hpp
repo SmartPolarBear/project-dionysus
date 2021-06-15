@@ -76,7 +76,8 @@ class solo_dispatcher
 		return &lock;
 	}
 
-	mutable lock::spinlock lock{ "dispatcher" };
+	mutable lock::spinlock lock{ "dispatcher" }; // TODO: this should be removed
+	mutable lock::spinlock lock_{ "dispatcher" };
 };
 
 template<typename T>
