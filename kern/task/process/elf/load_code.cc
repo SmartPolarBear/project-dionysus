@@ -60,7 +60,7 @@ static error_code load_ph(IN const Elf64_Phdr& prog_header,
 //		return ret;
 //	}
 	{
-		auto map_ret = proc->address_space().map(prog_header.p_vaddr, prog_header.p_memsz, vm_flags);
+		auto map_ret = proc->address_space()->map(prog_header.p_vaddr, prog_header.p_memsz, vm_flags);
 		if (has_error(map_ret))
 		{
 			return ret;
@@ -72,9 +72,9 @@ static error_code load_ph(IN const Elf64_Phdr& prog_header,
 //		proc_mm->brk_start = prog_header.p_vaddr + prog_header.p_memsz;
 //	}
 
-	if (proc->address_space().heap_begin() < prog_header.p_vaddr + prog_header.p_memsz)
+if (proc->address_space()->heap_begin() < prog_header.p_vaddr + prog_header.p_memsz)
 	{
-		proc->address_space().set_heap_begin(prog_header.p_vaddr + prog_header.p_memsz);
+	proc->address_space()->set_heap_begin(prog_header.p_vaddr + prog_header.p_memsz);
 	}
 
 	// ph->p_filesz <= ph->p_memsz
@@ -84,7 +84,7 @@ static error_code load_ph(IN const Elf64_Phdr& prog_header,
 		physical_memory_manager::instance()->allocate(prog_header.p_vaddr,
 			page_count,
 			perms,
-			proc->address_space().pgdir(),
+			proc->address_space()->pgdir(),
 			false);
 
 	if (has_error(alloc_ret))
@@ -133,7 +133,7 @@ static error_code alloc_sh(IN const Elf64_Shdr& shdr,
 //	}
 
 	{
-		auto map_ret = proc->address_space().map(shdr.sh_addr, shdr.sh_size, vm_flags);
+		auto map_ret = proc->address_space()->map(shdr.sh_addr, shdr.sh_size, vm_flags);
 		if (has_error(map_ret))
 		{
 			return ret;
@@ -144,9 +144,9 @@ static error_code alloc_sh(IN const Elf64_Shdr& shdr,
 //	{
 //		proc_mm->brk_start = shdr.sh_addr + shdr.sh_size;
 //	}
-	if (proc->address_space().heap_begin() < shdr.sh_addr + shdr.sh_size)
+if (proc->address_space()->heap_begin() < shdr.sh_addr + shdr.sh_size)
 	{
-		proc->address_space().set_heap_begin(shdr.sh_addr + shdr.sh_size);
+	proc->address_space()->set_heap_begin(shdr.sh_addr + shdr.sh_size);
 	}
 
 	size_t page_count = PAGE_ROUNDUP(shdr.sh_size) / PAGE_SIZE;
@@ -157,7 +157,7 @@ static error_code alloc_sh(IN const Elf64_Shdr& shdr,
 		physical_memory_manager::instance()->allocate(shdr.sh_addr,
 			page_count,
 			perms,
-			proc->address_space().pgdir(),
+			proc->address_space()->pgdir(),
 			true);
 
 	if (has_error(alloc_ret))
@@ -216,8 +216,8 @@ error_code load_elf_binary(IN task::process* proc,
 		}
 	}
 
-	proc->address_space().set_heap_begin(PAGE_ROUNDUP(proc->address_space().heap_begin()));
-	proc->address_space().set_heap(PAGE_ROUNDUP(proc->address_space().heap_begin()));
+	proc->address_space()->set_heap_begin(PAGE_ROUNDUP(proc->address_space()->heap_begin()));
+	proc->address_space()->set_heap(PAGE_ROUNDUP(proc->address_space()->heap_begin()));
 
 //	proc_mm->brk_start = proc_mm->brk = PAGE_ROUNDUP(proc_mm->brk_start);
 

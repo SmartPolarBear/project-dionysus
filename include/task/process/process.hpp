@@ -156,7 +156,7 @@ class process final
 		return name_.data();
 	}
 
-	memory::address_space& address_space();
+	memory::address_space* address_space();
 
 	size_t get_flags() const
 	{
@@ -219,9 +219,9 @@ class process final
 //	vmm::mm_struct* mm;
 
 //	memory::address_space address_space_{};
-	object::handle_type address_space_handle_{};
+	object::handle_type address_space_handle_{ object::INVALID_HANDLE_VALUE };
 
-	object::handle_type this_handle_{};
+	object::handle_type this_handle_{ object::INVALID_HANDLE_VALUE };
 
 	size_t flags;
 

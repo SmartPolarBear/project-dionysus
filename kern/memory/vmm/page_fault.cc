@@ -57,7 +57,7 @@ using kbl::list_remove;
 static inline error_code page_fault_impl(size_t err, uintptr_t addr)
 {
 	auto proc = cur_proc.get();
-	auto vma = proc->address_space().find_vma(addr);
+	auto vma = proc->address_space()->find_vma(addr);
 	if (vma == nullptr || vma->start() > addr)
 	{
 		return -ERROR_VMA_NOT_FOUND;
@@ -92,7 +92,7 @@ static inline error_code page_fault_impl(size_t err, uintptr_t addr)
 	addr = rounddown(addr, PAGE_SIZE);
 
 	auto page_ret =
-		memory::physical_memory_manager::instance()->allocate(addr, page_perm, proc->address_space().pgdir(), true);
+		memory::physical_memory_manager::instance()->allocate(addr, page_perm, proc->address_space()->pgdir(), true);
 	if (has_error(page_ret)) // map to any free space
 	{
 		return get_error_code(page_ret);

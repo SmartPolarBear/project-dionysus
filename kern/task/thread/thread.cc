@@ -248,7 +248,7 @@ void thread::switch_to(interrupt_saved_state_type state_to_restore) TA_REQ(globa
 //		lcr3(V2P((uintptr_t)
 //			this->get_mm()->pgdir));
 //	}
-	lcr3(V2P((uintptr_t)address_space().pgdir()));
+	lcr3(V2P((uintptr_t)address_space()->pgdir()));
 
 	auto prev = cur_thread.get();
 	cur_thread = this;
@@ -578,7 +578,7 @@ void thread::process_pending_signals()
 		return;
 	}
 }
-memory::address_space& thread::address_space() const
+memory::address_space* thread::address_space() const
 {
 	return parent_->address_space();
 }

@@ -396,7 +396,7 @@ class thread final
 
 	[[nodiscard]] vmm::mm_struct* get_mm();
 
-	[[nodiscard]] memory::address_space &address_space()const;
+	[[nodiscard]] memory::address_space* address_space()const;
 
 	[[nodiscard]] bool is_user_thread() const
 	{

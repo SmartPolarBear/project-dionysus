@@ -49,7 +49,7 @@ error_code_with_result<void*> task::process_user_stack_state::make_next_user_sta
 {
 	const uintptr_t current_top = USER_STACK_TOP - USTACK_TOTAL_SIZE * busy_list_.size();
 
-	auto ret = parent_->address_space().map(current_top - USTACK_TOTAL_SIZE - 1, //TODO -1?
+	auto ret = parent_->address_space()->map(current_top - USTACK_TOTAL_SIZE - 1, //TODO -1?
 		USTACK_TOTAL_SIZE,
 		vmm::VM_STACK);
 
@@ -309,7 +309,7 @@ process::~process()
 
 error_code process::setup_mm()
 {
-	return address_space().setup();
+	return address_space()->setup();
 }
 
 void process::finish_dead_transition() noexcept
@@ -469,15 +469,15 @@ error_code task::process::resize_heap(IN OUT uintptr_t* heap_ptr)
 	uintptr_t heap = 0;
 	memmove(&heap, heap_ptr, sizeof(heap));
 
-	auto& as = address_space();
+	auto as = address_space();
 
-	if (heap < as.heap_begin())
+	if (heap < as->heap_begin())
 	{
-		*heap_ptr = as.heap_begin();
+		*heap_ptr = as->heap_begin();
 	}
 	else
 	{
-		uintptr_t new_heap = PAGE_ROUNDUP(heap), old_heap = as.heap();
+		uintptr_t new_heap = PAGE_ROUNDUP(heap), old_heap = as->heap();
 
 		if ((old_heap % PAGE_SIZE) != 0)
 		{
@@ -486,7 +486,7 @@ error_code task::process::resize_heap(IN OUT uintptr_t* heap_ptr)
 
 		if (new_heap == old_heap)
 		{
-			*heap_ptr = as.heap_begin();
+			*heap_ptr = as->heap_begin();
 		}
 		else if (new_heap < old_heap) // shrink
 		{
@@ -494,9 +494,9 @@ error_code task::process::resize_heap(IN OUT uintptr_t* heap_ptr)
 //			{
 //				*heap_ptr = mm->brk_start;
 //			}
-			if (as.unmap(new_heap, old_heap - new_heap) != ERROR_SUCCESS)
+			if (as->unmap(new_heap, old_heap - new_heap) != ERROR_SUCCESS)
 			{
-				*heap_ptr = as.heap_begin();
+				*heap_ptr = as->heap_begin();
 			}
 		}
 		else if (new_heap > old_heap) // expand
@@ -512,15 +512,15 @@ error_code task::process::resize_heap(IN OUT uintptr_t* heap_ptr)
 //					*heap_ptr = mm->brk_start;
 //				}
 //			}
-			if (as.intersect_vma(old_heap, new_heap + PAGE_SIZE) != nullptr)
+			if (as->intersect_vma(old_heap, new_heap + PAGE_SIZE) != nullptr)
 			{
-				*heap_ptr = as.heap_begin();
+				*heap_ptr = as->heap_begin();
 			}
 			else
 			{
-				if (address_space().resize(old_heap, (size_t)new_heap - old_heap) != ERROR_SUCCESS)
+				if (address_space()->resize(old_heap, (size_t)new_heap - old_heap) != ERROR_SUCCESS)
 				{
-					*heap_ptr = as.heap_begin();
+					*heap_ptr = as->heap_begin();
 				}
 			}
 		}
@@ -577,9 +577,14 @@ void process::resume()
 	}
 }
 
-memory::address_space& process::address_space()
+address_space* process::address_space()
 {
+	if (address_space_handle_ == object::INVALID_HANDLE_VALUE)
+	{
+		return nullptr;
+	}
+
 	auto handle = handle_table_.get_handle_entry(address_space_handle_);
-	return *downcast_dispatcher<memory::address_space>(handle->object());
+	return downcast_dispatcher<memory::address_space>(handle->object());
 }
 
