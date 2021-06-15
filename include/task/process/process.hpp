@@ -156,16 +156,7 @@ class process final
 		return name_.data();
 	}
 
-	// FIXME: remove first
-//	vmm::mm_struct* get_mm() const
-//	{
-//		return mm;
-//	}
-
-	memory::address_space& address_space()
-	{
-		return address_space_;
-	}
+	memory::address_space& address_space();
 
 	size_t get_flags() const
 	{
@@ -227,7 +218,10 @@ class process final
 
 //	vmm::mm_struct* mm;
 
-	memory::address_space address_space_{};
+//	memory::address_space address_space_{};
+	object::handle_type address_space_handle_{};
+
+	object::handle_type this_handle_{};
 
 	size_t flags;
 
