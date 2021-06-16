@@ -248,7 +248,15 @@ void thread::switch_to(interrupt_saved_state_type state_to_restore) TA_REQ(globa
 //		lcr3(V2P((uintptr_t)
 //			this->get_mm()->pgdir));
 //	}
-	lcr3(V2P((uintptr_t)address_space()->pgdir()));
+
+	if (parent_)
+	{
+		lcr3(V2P((uintptr_t)address_space()->pgdir()));
+	}
+	else // it's a kernel thread
+	{
+		lcr3(V2P((uintptr_t)vmm::g_kpml4t));
+	}
 
 	auto prev = cur_thread.get();
 	cur_thread = this;
@@ -580,6 +588,7 @@ void thread::process_pending_signals()
 }
 memory::address_space* thread::address_space() const
 {
+	if (!parent_)return nullptr;
 	return parent_->address_space();
 }
 

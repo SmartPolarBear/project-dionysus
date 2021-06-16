@@ -279,7 +279,21 @@ task::process::process(std::span<char> name,
 	  parent_(parent),
 	  critical_to_(critical_to)
 {
-	this->name_.set(name);
+	{
+		allocate_checker ck{};
+		auto mm = new(&ck)memory::address_space{};
+
+		if (!ck.check())
+		{
+			KDEBUG_GENERALPANIC(-ERROR_MEMORY_ALLOC);
+		}
+
+		auto mm_handle = object::handle_entry::create("mm", mm);
+		auto local_mm_handle = object::handle_entry::duplicate(mm_handle.get());
+
+		object::handle_table::get_global_handle_table()->add_handle(std::move(mm_handle));
+		address_space_handle_ = handle_table_.add_handle(std::move(local_mm_handle));
+	}
 
 	{
 		auto this_handle = object::handle_entry::create(name_.data(), this);
@@ -289,17 +303,7 @@ task::process::process(std::span<char> name,
 		this_handle_ = handle_table_.add_handle(std::move(local_handle));
 	}
 
-	{
-		allocate_checker ck{};
-		auto mm = new(&ck)memory::address_space{};
-
-		auto mm_handle = object::handle_entry::create("mm", mm);
-		auto local_mm_handle = object::handle_entry::duplicate(mm_handle.get());
-
-		object::handle_table::get_global_handle_table()->add_handle(std::move(mm_handle));
-		address_space_handle_ = handle_table_.add_handle(std::move(local_mm_handle));
-	}
-
+	this->name_.set(name);
 }
 
 process::~process()
@@ -579,6 +583,9 @@ void process::resume()
 
 address_space* process::address_space()
 {
+	// it really can be nullptr when it's wrongly called
+	KDEBUG_ASSERT(this != nullptr);
+
 	if (address_space_handle_ == object::INVALID_HANDLE_VALUE)
 	{
 		return nullptr;

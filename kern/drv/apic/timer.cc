@@ -74,14 +74,16 @@ void timer::mask_cpu_local_timer(bool masked)
 
 void timer::mask_cpu_local_timer(size_t cpuid, bool masked)
 {
+
 	if (masked)
 	{
 		timer_mask.fetch_or(1ull << cpuid);
 	}
 	else
 	{
-		timer_mask.fetch_add(~(1ull << cpuid));
+		timer_mask.fetch_and(~(1ull << cpuid));
 	}
+
 }
 
 uint64_t timer::get_ticks()
