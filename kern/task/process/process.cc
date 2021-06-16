@@ -54,7 +54,7 @@ error_code_with_result<void*> task::process_user_stack_state::make_next_user_sta
 
 	auto ret = as->map(current_top - USTACK_TOTAL_SIZE - 1, //TODO -1?
 		USTACK_TOTAL_SIZE,
-		vmm::VM_STACK);
+		VM_STACK);
 
 	if (has_error(ret))
 	{

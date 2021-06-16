@@ -27,17 +27,17 @@ static inline auto parse_ph_flags(const Elf64_Phdr& prog_header)
 
 	if (prog_header.p_type & PF_X)
 	{
-		vm_flags |= vmm::VM_EXEC;
+		vm_flags |= VM_EXEC;
 	}
 
 	if (prog_header.p_type & PF_R)
 	{
-		vm_flags |= vmm::VM_READ;
+		vm_flags |= VM_READ;
 	}
 
 	if (prog_header.p_type & PF_W)
 	{
-		vm_flags |= vmm::VM_WRITE;
+		vm_flags |= VM_WRITE;
 		perms |= PG_W;
 	}
 
@@ -101,16 +101,16 @@ static error_code load_ph(IN const Elf64_Phdr& prog_header,
 
 static inline auto parse_sh_flags(const Elf64_Shdr& shdr)
 {
-	size_t vm_flags = vmm::VM_READ, perms = PG_U;
+	size_t vm_flags = VM_READ, perms = PG_U;
 
 	if (shdr.sh_flags & SHF_EXECINSTR)
 	{
-		vm_flags |= vmm::VM_EXEC;
+		vm_flags |= VM_EXEC;
 	}
 
 	if (shdr.sh_flags & SHF_WRITE)
 	{
-		vm_flags |= vmm::VM_WRITE;
+		vm_flags |= VM_WRITE;
 		perms |= PG_W;
 	}
 

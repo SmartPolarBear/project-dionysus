@@ -36,6 +36,15 @@
 namespace memory
 {
 
+enum [[clang::flag_enum]] VM_FLAGS : size_t
+{
+	VM_READ = 0x00000001,
+	VM_WRITE = 0x00000002,
+	VM_EXEC = 0x00000004,
+	VM_STACK = 0x00000008,
+	VM_SHARE = 0x00000010,
+};
+
 class address_space_segment final
 {
  public:
