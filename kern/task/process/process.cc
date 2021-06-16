@@ -217,7 +217,7 @@ error_code_with_result<process*> process::create(const char* name,
 		return -ERROR_MEMORY_ALLOC;
 	}
 
-	if (auto ret = proc->setup_mm();ret != ERROR_SUCCESS)
+	if (auto ret = proc->setup_address_space();ret != ERROR_SUCCESS)
 	{
 		return ret;
 	}
@@ -314,9 +314,9 @@ process::~process()
 	this->handle_table_.clear();
 }
 
-error_code process::setup_mm()
+error_code process::setup_address_space()
 {
-	return address_space()->setup();
+	return address_space()->initialize();
 }
 
 void process::finish_dead_transition() noexcept

@@ -96,7 +96,7 @@ class address_space final
 	address_space(const address_space&) = delete;
 	address_space& operator=(const address_space&) = delete;
 
-	error_code setup();
+	error_code initialize();
 
 	error_code_with_result<address_space_segment*> map(uintptr_t addr, size_t len, uint64_t flags);
 

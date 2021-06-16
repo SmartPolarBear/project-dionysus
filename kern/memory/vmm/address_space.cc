@@ -386,7 +386,7 @@ void address_space::assert_segment_overlap(address_space_segment* prev, address_
 	KDEBUG_ASSERT(prev->end_ <= next->start_);
 	KDEBUG_ASSERT(next->start_ < next->end_);
 }
-error_code address_space::setup()
+error_code address_space::initialize()
 {
 	lock::lock_guard g{ lock_ };
 
