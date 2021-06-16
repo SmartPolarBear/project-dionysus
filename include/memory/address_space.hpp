@@ -36,6 +36,15 @@
 namespace memory
 {
 
+enum [[clang::flag_enum]] VM_FLAGS : size_t
+{
+	VM_READ = 0x00000001,
+	VM_WRITE = 0x00000002,
+	VM_EXEC = 0x00000004,
+	VM_STACK = 0x00000008,
+	VM_SHARE = 0x00000010,
+};
+
 class address_space_segment final
 {
  public:
@@ -75,6 +84,8 @@ class address_space_segment final
 
 	class address_space* parent_{ nullptr };
 
+	lock::spinlock lock_{ "ass" };
+
 	link_type link_{ this };
 };
 
@@ -94,7 +105,7 @@ class address_space final
 	address_space(const address_space&) = delete;
 	address_space& operator=(const address_space&) = delete;
 
-	error_code setup();
+	error_code initialize();
 
 	error_code_with_result<address_space_segment*> map(uintptr_t addr, size_t len, uint64_t flags);
 
@@ -125,51 +136,71 @@ class address_space final
 
 	[[nodiscard]] uintptr_t heap() const
 	{
+		lock::lock_guard g{ lock_ };
+
 		return uheap_;
 	}
 
 	void set_heap(uintptr_t val)
 	{
+		lock::lock_guard g{ lock_ };
+
 		uheap_ = val;
 	}
 
 	[[nodiscard]] uintptr_t heap_begin() const
 	{
+		lock::lock_guard g{ lock_ };
+
 		return uheap_begin_;
 	}
 
 	void set_heap_begin(uintptr_t val)
 	{
+		lock::lock_guard g{ lock_ };
+
 		uheap_begin_ = val;
 	}
 
 	[[nodiscard]] uintptr_t heap_end() const
 	{
+		lock::lock_guard g{ lock_ };
+
 		return uheap_end_;
 	}
 
 	void set_heap_end(uintptr_t val)
 	{
+		lock::lock_guard g{ lock_ };
+
 		uheap_end_ = val;
 	}
 
 	vmm::pde_ptr_t pgdir()
 	{
+		lock::lock_guard g{ lock_ };
+
 		return pgdir_;
 	}
 
  private:
 	void assert_segment_overlap(address_space_segment* prev, address_space_segment* next);
 
-	uintptr_t uheap_{ 0 };
-	uintptr_t uheap_begin_{ 0 };
-	uintptr_t uheap_end_{ 0 };
+	void insert_vma_locked(address_space_segment* vma) TA_ASSERT(lock_);
+
+	address_space_segment* find_vma_locked(uintptr_t addr) TA_ASSERT(lock_);
+
+	error_code resize_locked(uintptr_t addr, size_t len) TA_ASSERT(lock_);
+
+	uintptr_t uheap_ TA_GUARDED(lock_) { 0 };
+	uintptr_t uheap_begin_ TA_GUARDED(lock_) { 0 };
+	uintptr_t uheap_end_ TA_GUARDED(lock_){ 0 };
+
+	address_space_segment* search_cache_ TA_GUARDED(lock_) { nullptr };
+
+	vmm::pde_ptr_t pgdir_ TA_GUARDED(lock_) { nullptr };
 
 	segment_list_type segments{};
-
-	address_space_segment* search_cache_{ nullptr };
-
-	vmm::pde_ptr_t pgdir_{ nullptr };
 };
 
 }

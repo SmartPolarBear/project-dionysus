@@ -40,10 +40,7 @@
 #include <cstring>
 #include <algorithm>
 
-using vmm::mm_struct;
-using vmm::pde_ptr_t;
-using vmm::pde_t;
-using vmm::vma_struct;
+using namespace vmm;
 
 
 // linked list

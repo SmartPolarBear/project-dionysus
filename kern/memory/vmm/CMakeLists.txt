@@ -7,7 +7,4 @@ target_sources(kernel
         PRIVATE page_fault.cc
         PRIVATE paging.cc
         PRIVATE vmm.cc
-        PRIVATE vma.cc
-        PRIVATE mm.cc
-        PRIVATE address_space.cc
-        PRIVATE pgdir_cache.cc)
+        PRIVATE address_space.cc)

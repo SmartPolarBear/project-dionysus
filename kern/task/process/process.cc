@@ -49,9 +49,12 @@ error_code_with_result<void*> task::process_user_stack_state::make_next_user_sta
 {
 	const uintptr_t current_top = USER_STACK_TOP - USTACK_TOTAL_SIZE * busy_list_.size();
 
-	auto ret = parent_->address_space()->map(current_top - USTACK_TOTAL_SIZE - 1, //TODO -1?
+	auto as = parent_->address_space();
+	KDEBUG_ASSERT(as != nullptr);
+
+	auto ret = as->map(current_top - USTACK_TOTAL_SIZE - 1, //TODO -1?
 		USTACK_TOTAL_SIZE,
-		vmm::VM_STACK);
+		VM_STACK);
 
 	if (has_error(ret))
 	{
@@ -77,7 +80,7 @@ error_code_with_result<void*> task::process_user_stack_state::make_next_user_sta
 
 		auto alloc_ret = memory::physical_memory_manager::instance()->allocate(va,
 			PG_W | PG_U | PG_PS | PG_P,
-			address_space().pgdir(),
+			as->pgdir(),
 			true);
 
 		if (has_error(alloc_ret))
@@ -89,7 +92,7 @@ error_code_with_result<void*> task::process_user_stack_state::make_next_user_sta
 	auto guard_page_ret =
 		memory::physical_memory_manager::instance()->allocate(current_top - USTACK_TOTAL_PAGES_PER_THREAD,
 			PG_U | PG_PS | PG_P,
-			address_space().pgdir(),
+			as->pgdir(),
 			true);
 
 	if (has_error(guard_page_ret))
@@ -214,7 +217,7 @@ error_code_with_result<process*> process::create(const char* name,
 		return -ERROR_MEMORY_ALLOC;
 	}
 
-	if (auto ret = proc->setup_mm();ret != ERROR_SUCCESS)
+	if (auto ret = proc->setup_address_space();ret != ERROR_SUCCESS)
 	{
 		return ret;
 	}
@@ -311,9 +314,9 @@ process::~process()
 	this->handle_table_.clear();
 }
 
-error_code process::setup_mm()
+error_code process::setup_address_space()
 {
-	return address_space()->setup();
+	return address_space()->initialize();
 }
 
 void process::finish_dead_transition() noexcept

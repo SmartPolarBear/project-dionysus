@@ -27,17 +27,17 @@ static inline auto parse_ph_flags(const Elf64_Phdr& prog_header)
 
 	if (prog_header.p_type & PF_X)
 	{
-		vm_flags |= vmm::VM_EXEC;
+		vm_flags |= VM_EXEC;
 	}
 
 	if (prog_header.p_type & PF_R)
 	{
-		vm_flags |= vmm::VM_READ;
+		vm_flags |= VM_READ;
 	}
 
 	if (prog_header.p_type & PF_W)
 	{
-		vm_flags |= vmm::VM_WRITE;
+		vm_flags |= VM_WRITE;
 		perms |= PG_W;
 	}
 
@@ -48,33 +48,33 @@ static error_code load_ph(IN const Elf64_Phdr& prog_header,
 	IN const uint8_t* bin,
 	IN task::process* proc)
 {
-	error_code ret = ERROR_SUCCESS;
-
 	auto[vm_flags, perms] = parse_ph_flags(prog_header);
 
 //	auto proc_mm = proc->get_mm();
+	auto as = proc->address_space();
 
 //	if ((ret = vmm::mm_map(proc_mm, prog_header.p_vaddr, prog_header.p_memsz, vm_flags, nullptr)) != ERROR_SUCCESS)
 //	{
 //		//TODO do clean-ups
 //		return ret;
 //	}
+
+
+	auto map_ret = as->map(prog_header.p_vaddr, prog_header.p_memsz, vm_flags);
+	if (has_error(map_ret))
 	{
-		auto map_ret = proc->address_space()->map(prog_header.p_vaddr, prog_header.p_memsz, vm_flags);
-		if (has_error(map_ret))
-		{
-			return ret;
-		}
+		return get_error_code(map_ret);
 	}
+
 
 //	if (proc_mm->brk_start < prog_header.p_vaddr + prog_header.p_memsz)
 //	{
 //		proc_mm->brk_start = prog_header.p_vaddr + prog_header.p_memsz;
 //	}
 
-if (proc->address_space()->heap_begin() < prog_header.p_vaddr + prog_header.p_memsz)
+	if (as->heap_begin() < prog_header.p_vaddr + prog_header.p_memsz)
 	{
-	proc->address_space()->set_heap_begin(prog_header.p_vaddr + prog_header.p_memsz);
+		as->set_heap_begin(prog_header.p_vaddr + prog_header.p_memsz);
 	}
 
 	// ph->p_filesz <= ph->p_memsz
@@ -84,7 +84,7 @@ if (proc->address_space()->heap_begin() < prog_header.p_vaddr + prog_header.p_me
 		physical_memory_manager::instance()->allocate(prog_header.p_vaddr,
 			page_count,
 			perms,
-			proc->address_space()->pgdir(),
+			as->pgdir(),
 			false);
 
 	if (has_error(alloc_ret))
@@ -96,21 +96,21 @@ if (proc->address_space()->heap_begin() < prog_header.p_vaddr + prog_header.p_me
 	memset((uint8_t*)pmm::page_to_va(pages), 0, page_count * PAGE_SIZE);
 	memmove((uint8_t*)pmm::page_to_va(pages), bin + prog_header.p_offset, prog_header.p_filesz);
 
-	return ret;
+	return ERROR_SUCCESS;
 }
 
 static inline auto parse_sh_flags(const Elf64_Shdr& shdr)
 {
-	size_t vm_flags = vmm::VM_READ, perms = PG_U;
+	size_t vm_flags = VM_READ, perms = PG_U;
 
 	if (shdr.sh_flags & SHF_EXECINSTR)
 	{
-		vm_flags |= vmm::VM_EXEC;
+		vm_flags |= VM_EXEC;
 	}
 
 	if (shdr.sh_flags & SHF_WRITE)
 	{
-		vm_flags |= vmm::VM_WRITE;
+		vm_flags |= VM_WRITE;
 		perms |= PG_W;
 	}
 
@@ -144,9 +144,9 @@ static error_code alloc_sh(IN const Elf64_Shdr& shdr,
 //	{
 //		proc_mm->brk_start = shdr.sh_addr + shdr.sh_size;
 //	}
-if (proc->address_space()->heap_begin() < shdr.sh_addr + shdr.sh_size)
+	if (proc->address_space()->heap_begin() < shdr.sh_addr + shdr.sh_size)
 	{
-	proc->address_space()->set_heap_begin(shdr.sh_addr + shdr.sh_size);
+		proc->address_space()->set_heap_begin(shdr.sh_addr + shdr.sh_size);
 	}
 
 	size_t page_count = PAGE_ROUNDUP(shdr.sh_size) / PAGE_SIZE;

@@ -35,6 +35,7 @@
 #include "debug/kdebug.h"
 
 #include "memory/pmm.hpp"
+#include "memory/address_space.hpp"
 
 #include "task/process/process.hpp"
 #include "task/thread//thread.hpp"
@@ -42,17 +43,8 @@
 #include <cstring>
 #include <algorithm>
 
-using vmm::mm_struct;
-using vmm::pde_ptr_t;
-using vmm::pde_t;
-using vmm::vma_struct;
-
-
-// linked list
-using kbl::list_add;
-using kbl::list_empty;
-using kbl::list_init;
-using kbl::list_remove;
+using namespace vmm;
+using namespace memory;
 
 static inline error_code page_fault_impl(size_t err, uintptr_t addr)
 {
@@ -67,7 +59,7 @@ static inline error_code page_fault_impl(size_t err, uintptr_t addr)
 	{
 	default:
 	case 0b10: // write, not persent
-		if (!(vma->flags() & vmm::VM_WRITE))
+		if (!(vma->flags() & VM_WRITE))
 		{
 			return -ERROR_PAGE_NOT_PRESENT;
 		}
@@ -76,7 +68,7 @@ static inline error_code page_fault_impl(size_t err, uintptr_t addr)
 		return -ERROR_UNKOWN;
 		break;
 	case 0b00: // read not persent
-		if (!(vma->flags() & (vmm::VM_READ | vmm::VM_EXEC)))
+		if (!(vma->flags() & (VM_READ | VM_EXEC)))
 		{
 			return -ERROR_PAGE_NOT_PRESENT;
 		}
@@ -84,7 +76,7 @@ static inline error_code page_fault_impl(size_t err, uintptr_t addr)
 	}
 
 	size_t page_perm = PG_U;
-	if (vma->flags() & vmm::VM_WRITE)
+	if (vma->flags() & VM_WRITE)
 	{
 		page_perm |= PG_W;
 	}

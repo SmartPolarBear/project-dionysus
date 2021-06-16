@@ -191,15 +191,6 @@ error_code thread::create_idle()
 	return ERROR_SUCCESS;
 }
 
-vmm::mm_struct* task::thread::get_mm()
-{
-	if (parent_ != nullptr)
-	{
-//		return parent_->get_mm();
-	}
-
-	return nullptr;
-}
 
 void thread::default_trampoline() TA_NO_THREAD_SAFETY_ANALYSIS
 {

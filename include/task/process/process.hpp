@@ -195,7 +195,7 @@ class process final
 
 	void add_child_thread(thread* t) noexcept TA_EXCL(lock);
 
-	error_code setup_mm() TA_REQ(lock);
+	error_code setup_address_space() TA_REQ(lock);
 
 	Status status_;
 

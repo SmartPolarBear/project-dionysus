@@ -48,11 +48,16 @@ using namespace ktl;
 
 using namespace vmm;
 
+using namespace memory::kmem;
+
 // linked list
 using namespace kbl;
 
 // global variable for the sake of access and dynamically mapping
 pde_ptr_t vmm::g_kpml4t;
+
+// global cache for pgdir
+kmem_cache* pgdir_cache = nullptr;
 
 // remove all flags_ in entries to expose the address of the next level
 static inline constexpr size_t remove_flags(vmm::pde_t pde)
@@ -243,6 +248,21 @@ static inline error_code map_pages(pde_ptr_t pml4,
 	}
 
 	return ret;
+}
+
+void pgdir_cache_init()
+{
+	pgdir_cache = kmem_cache_create("pgdir", 4_KB, nullptr, nullptr, KMEM_CACHE_4KALIGN);
+}
+
+vmm::pde_ptr_t vmm::pgdir_entry_alloc()
+{
+	return (vmm::pde_ptr_t)kmem_cache_alloc(pgdir_cache);
+}
+
+void vmm::pgdir_entry_free(vmm::pde_ptr_t entry)
+{
+	kmem_cache_free(pgdir_cache, entry);
 }
 
 void vmm::unmap_range(pde_ptr_t pgdir, uintptr_t start, uintptr_t end)
