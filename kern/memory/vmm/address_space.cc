@@ -54,6 +54,8 @@ address_space_segment::~address_space_segment()
 
 error_code address_space_segment::resize(uintptr_t start, uintptr_t end)
 {
+	lock_guard g{ lock_ };
+
 	if ((start % PAGE_SIZE) != 0 || (end % PAGE_SIZE) != 0)
 	{
 		return -ERROR_INVALID;
@@ -98,7 +100,6 @@ address_space::~address_space()
 
 error_code_with_result<address_space_segment*> address_space::map(uintptr_t addr, size_t len, uint64_t flags)
 {
-	lock_guard g{ lock_ };
 
 	uintptr_t start = rounddown(addr, PAGE_SIZE), end = roundup(addr + len, PAGE_SIZE);
 
@@ -109,8 +110,10 @@ error_code_with_result<address_space_segment*> address_space::map(uintptr_t addr
 		return -ERROR_INVALID;
 	}
 
+	lock_guard g{ lock_ };
+
 	address_space_segment* vma = nullptr;
-	if ((vma = find_vma(start)) != nullptr && end > vma->start())
+	if ((vma = find_vma_locked(start)) != nullptr && end > vma->start())
 	{
 		// the vma exists
 		return -ERROR_ALREADY_EXIST;
@@ -129,7 +132,7 @@ error_code_with_result<address_space_segment*> address_space::map(uintptr_t addr
 			return -ERROR_MEMORY_ALLOC;
 		}
 
-		insert_vma(vma);
+		insert_vma_locked(vma);
 
 	}
 
@@ -155,6 +158,9 @@ error_code_with_result<address_space_segment*> address_space::mm_fpage_map(addre
 	}
 
 	// Map the corresponding address
+
+	lock_guard g1{ lock_ };
+	lock_guard g2{ to->lock_ };
 
 	for (auto start = send.get_base_address(); start + PAGE_SIZE <= send.get_base_address() + send.get_size();
 	     start += PAGE_SIZE)
@@ -195,6 +201,8 @@ error_code_with_result<address_space_segment*> address_space::fpage_grant(addres
 	}
 
 	// do real map and unmap
+	lock_guard g1{ lock_ };
+	lock_guard g2{ to->lock_ };
 
 	for (auto start = send.get_base_address(); start + PAGE_SIZE <= send.get_base_address() + send.get_size();
 	     start += PAGE_SIZE)
@@ -218,13 +226,16 @@ error_code_with_result<address_space_segment*> address_space::fpage_grant(addres
 
 error_code address_space::unmap(uintptr_t addr, size_t len)
 {
+
 	uintptr_t start = PAGE_ROUNDDOWN(addr), end = PAGE_ROUNDUP(addr + len);
 	if (!VALID_USER_REGION(start, end))
 	{
 		return -ERROR_INVALID;
 	}
 
-	auto vma = find_vma(start);
+	lock_guard g{ lock_ };
+
+	auto vma = find_vma_locked(start);
 	if (vma == nullptr || end < vma->start_)
 	{
 		return ERROR_SUCCESS; // no need to remove
@@ -254,7 +265,7 @@ error_code address_space::unmap(uintptr_t addr, size_t len)
 			return ret;
 		}
 
-		insert_vma(new_vma);
+		insert_vma_locked(new_vma);
 
 		unmap_range(pgdir_, start, end);
 
@@ -283,7 +294,7 @@ error_code address_space::unmap(uintptr_t addr, size_t len)
 		{
 			unmap_start = start;
 			entry.resize(entry.start_, start);
-			insert_vma(&entry);
+			insert_vma_locked(&entry);
 		}
 		else
 		{
@@ -291,7 +302,7 @@ error_code address_space::unmap(uintptr_t addr, size_t len)
 			{
 				unmap_end = end;
 				entry.resize(end, entry.end());
-				insert_vma(&entry);
+				insert_vma_locked(&entry);
 			}
 			else
 			{
@@ -306,6 +317,8 @@ error_code address_space::unmap(uintptr_t addr, size_t len)
 
 error_code_with_result<address_space*> address_space::duplicate()
 {
+	lock_guard g{ lock_ };
+
 	allocate_checker ck{};
 	auto to = new(&ck) address_space{};
 	KDEBUG_ASSERT(uintptr_t(& ck)!=uintptr_t(to));
@@ -325,7 +338,7 @@ error_code_with_result<address_space*> address_space::duplicate()
 			return -ERROR_MEMORY_ALLOC;
 		}
 
-		to->insert_vma(new_seg);
+		to->insert_vma_locked(new_seg);
 
 		copy_range(pgdir_, to->pgdir_, seg.start_, seg.end_);
 	}
@@ -335,46 +348,70 @@ error_code_with_result<address_space*> address_space::duplicate()
 
 error_code address_space::resize(uintptr_t addr, size_t len)
 {
-	uintptr_t start = PAGE_ROUNDDOWN(addr), end = PAGE_ROUNDUP((addr + len));
-	if (!VALID_USER_REGION(start, end))
-	{
-		return -ERROR_INVALID;
-	}
+	lock_guard g{ lock_ };
+	return resize_locked(addr, len);
 
-	error_code ret = ERROR_SUCCESS;
-
-	if ((ret = unmap(start, end - start)) != ERROR_SUCCESS)
-	{
-		return ret;
-	}
-
-	constexpr auto VM_FLAGS = VM_READ | VM_WRITE;
-
-	auto vma = find_vma(start - 1);
-	if (vma != nullptr && vma->end_ == start && vma->flags_ == VM_FLAGS)
-	{
-		vma->end_ = end;
-		return ERROR_SUCCESS;
-	}
-
-	kbl::allocate_checker ck{};
-	vma = new(&ck) address_space_segment(start, end, VM_FLAGS);
-
-	// FIXME: remove this later
-	KDEBUG_ASSERT(uintptr_t(& vma) != uintptr_t (&ck));
-
-	if (!ck.check())
-	{
-		return -ERROR_MEMORY_ALLOC;
-	}
-
-	insert_vma(vma);
-
-	return ERROR_SUCCESS;
 }
 
 void address_space::insert_vma(address_space_segment* vma)
 {
+	lock_guard g{ lock_ };
+
+	insert_vma_locked(vma);
+}
+
+address_space_segment* address_space::find_vma(uintptr_t addr)
+{
+	lock_guard g{ lock_ };
+
+	return find_vma_locked(addr);
+}
+
+address_space_segment* address_space::intersect_vma(uintptr_t start, uintptr_t end)
+{
+	lock_guard g{ lock_ };
+
+	auto vma = find_vma_locked(start);
+	if (vma != nullptr && end <= vma->start_)
+	{
+		return nullptr;
+	}
+	return vma;
+}
+
+void address_space::assert_segment_overlap(address_space_segment* prev, address_space_segment* next)
+{
+	if (prev == nullptr || next == nullptr)return;
+	KDEBUG_ASSERT(prev->start_ < prev->end_);
+	KDEBUG_ASSERT(prev->end_ <= next->start_);
+	KDEBUG_ASSERT(next->start_ < next->end_);
+}
+error_code address_space::setup()
+{
+	lock::lock_guard g{ lock_ };
+
+	vmm::pde_ptr_t pgdir = vmm::pgdir_entry_alloc();
+
+	if (pgdir == nullptr)
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
+
+	vmm::duplicate_kernel_pml4t(pgdir);
+
+	pgdir_ = pgdir;
+
+	return ERROR_SUCCESS;
+}
+
+void address_space::insert_vma_locked(address_space_segment* vma)
+{
+	if (segments.empty())
+	{
+		segments.push_back(vma);
+		return;
+	}
+
 	address_space_segment* prev = nullptr;
 	segment_list_type::iterator_type prev_iter;
 	for (auto iter = segments.begin(); iter != segments.end(); iter++)
@@ -397,7 +434,7 @@ void address_space::insert_vma(address_space_segment* vma)
 	vma->parent_ = this;
 }
 
-address_space_segment* address_space::find_vma(uintptr_t addr)
+address_space_segment* address_space::find_vma_locked(uintptr_t addr)
 {
 	auto ret = search_cache_;
 
@@ -423,35 +460,42 @@ address_space_segment* address_space::find_vma(uintptr_t addr)
 
 	return ret;
 }
-
-address_space_segment* address_space::intersect_vma(uintptr_t start, uintptr_t end)
+error_code address_space::resize_locked(uintptr_t addr, size_t len) TA_ASSERT(lock_)
 {
-	auto vma = find_vma(start);
-	if (vma != nullptr && end <= vma->start_)
+	uintptr_t start = PAGE_ROUNDDOWN(addr), end = PAGE_ROUNDUP((addr + len));
+	if (!VALID_USER_REGION(start, end))
 	{
-		return nullptr;
+		return -ERROR_INVALID;
 	}
-	return vma;
-}
 
-void address_space::assert_segment_overlap(address_space_segment* prev, address_space_segment* next)
-{
-	KDEBUG_ASSERT(prev->start_ < prev->end_);
-	KDEBUG_ASSERT(prev->end_ <= next->start_);
-	KDEBUG_ASSERT(next->start_ < next->end_);
-}
-error_code address_space::setup()
-{
-	vmm::pde_ptr_t pgdir = vmm::pgdir_entry_alloc();
+	error_code ret = ERROR_SUCCESS;
 
-	if (pgdir == nullptr)
+	if ((ret = unmap(start, end - start)) != ERROR_SUCCESS)
+	{
+		return ret;
+	}
+
+	constexpr auto VM_FLAGS = VM_READ | VM_WRITE;
+
+	auto vma = find_vma_locked(start - 1);
+	if (vma != nullptr && vma->end_ == start && vma->flags_ == VM_FLAGS)
+	{
+		vma->end_ = end;
+		return ERROR_SUCCESS;
+	}
+
+	kbl::allocate_checker ck{};
+	vma = new(&ck) address_space_segment(start, end, VM_FLAGS);
+
+	// FIXME: remove this later
+	KDEBUG_ASSERT(uintptr_t(& vma) != uintptr_t (&ck));
+
+	if (!ck.check())
 	{
 		return -ERROR_MEMORY_ALLOC;
 	}
 
-	vmm::duplicate_kernel_pml4t(pgdir);
-
-	pgdir_ = pgdir;
+	insert_vma_locked(vma);
 
 	return ERROR_SUCCESS;
 }

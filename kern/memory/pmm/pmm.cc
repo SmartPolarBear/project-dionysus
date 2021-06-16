@@ -138,6 +138,9 @@ error_code_with_result<page*> physical_memory_manager::allocate(uintptr_t va,
 	vmm::pde_ptr_t pgdir,
 	bool rewrite_if_exist)
 {
+	KDEBUG_ASSERT(pgdir != nullptr);
+	KDEBUG_ASSERT(va != 0);
+
 	page* page = memory::physical_memory_manager::instance()->allocate(); //alloc_page();
 	if (page != nullptr)
 	{
