@@ -39,17 +39,11 @@
 #include <algorithm>
 #include <cstring>
 
-using vmm::mm_struct;
-using vmm::pde_ptr_t;
-using vmm::pde_t;
-using vmm::vma_struct;
+using namespace vmm;
 
 
 // linked list
-using kbl::list_add;
-using kbl::list_empty;
-using kbl::list_init;
-using kbl::list_remove;
+using namespace kbl;
 
 using namespace apic;
 

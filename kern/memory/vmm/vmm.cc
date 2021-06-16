@@ -79,38 +79,38 @@ void vmm::init_vmm(void)
 		.enable = true });
 }
 
-bool vmm::check_user_memory(IN mm_struct* mm, uintptr_t addr, size_t len, bool writable)
-{
-	if (mm != nullptr)
-	{
-		if (!VALID_USER_REGION(addr, addr + len))
-		{
-			return false;
-		}
-
-		vma_struct* vma = nullptr;
-		for (uintptr_t start = addr, end = addr + len;
-		     start < end;
-		     start = vma->vm_end)
-		{
-			if ((vma = find_vma(mm, start)) == nullptr || start < vma->vm_start)
-			{
-				return false;
-			}
-			if (!(vma->flags & ((writable) ? VM_WRITE : VM_READ)))
-			{
-				return false;
-			}
-			if (writable && (vma->flags & VM_STACK))
-			{
-				if (start < vma->vm_start + PAGE_SIZE)
-				{
-					return false;
-				}
-			}
-		}
-		return true;
-	}
-
-	return VALID_KERNEL_REGION(addr, addr + len);
-}
+//bool vmm::check_user_memory(IN mm_struct* mm, uintptr_t addr, size_t len, bool writable)
+//{
+//	if (mm != nullptr)
+//	{
+//		if (!VALID_USER_REGION(addr, addr + len))
+//		{
+//			return false;
+//		}
+//
+//		vma_struct* vma = nullptr;
+//		for (uintptr_t start = addr, end = addr + len;
+//		     start < end;
+//		     start = vma->vm_end)
+//		{
+//			if ((vma = find_vma(mm, start)) == nullptr || start < vma->vm_start)
+//			{
+//				return false;
+//			}
+//			if (!(vma->flags & ((writable) ? VM_WRITE : VM_READ)))
+//			{
+//				return false;
+//			}
+//			if (writable && (vma->flags & VM_STACK))
+//			{
+//				if (start < vma->vm_start + PAGE_SIZE)
+//				{
+//					return false;
+//				}
+//			}
+//		}
+//		return true;
+//	}
+//
+//	return VALID_KERNEL_REGION(addr, addr + len);
+//}

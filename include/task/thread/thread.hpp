@@ -32,6 +32,8 @@
 
 #include "task/ipc/message.hpp"
 
+#include "memory/address_space.hpp"
+
 #include <compare>
 
 #ifndef USE_SCHEDULER_CLASS
@@ -303,7 +305,7 @@ class scheduler_state
 	}
 
  private:
-	thread* parent_{ nullptr };
+	[[maybe_unused]]thread* parent_{ nullptr };
 
 	cpu_affinity affinity_{ CPU_NUM_INVALID, cpu_affinity_type::SOFT };
 	bool need_reschedule_{ false };
@@ -393,6 +395,8 @@ class thread final
 	}
 
 	[[nodiscard]] vmm::mm_struct* get_mm();
+
+	[[nodiscard]] memory::address_space* address_space() const;
 
 	[[nodiscard]] bool is_user_thread() const
 	{

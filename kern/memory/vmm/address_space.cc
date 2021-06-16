@@ -80,8 +80,8 @@ address_space::address_space()
 }
 
 address_space::address_space(address_space&& another)
-	: uheap_begin(std::exchange(another.uheap_begin, 0)),
-	  uheap_end(std::exchange(another.uheap_end, 0)),
+	: uheap_begin_(std::exchange(another.uheap_begin_, 0)),
+	  uheap_end_(std::exchange(another.uheap_end_, 0)),
 	  pgdir_(std::exchange(another.pgdir_, nullptr))
 {
 	for (auto& seg:another.segments)
@@ -171,7 +171,7 @@ error_code_with_result<address_space_segment*> address_space::mm_fpage_map(addre
 	return ERROR_SUCCESS;
 }
 
-error_code_with_result<address_space_segment*> address_space::mm_fpage_grant(address_space* to,
+error_code_with_result<address_space_segment*> address_space::fpage_grant(address_space* to,
 	const task::ipc::fpage& send,
 	const task::ipc::fpage& receive)
 {
@@ -214,7 +214,6 @@ error_code_with_result<address_space_segment*> address_space::mm_fpage_grant(add
 
 	return ERROR_SUCCESS;
 
-	return ERROR_SUCCESS;
 }
 
 error_code address_space::unmap(uintptr_t addr, size_t len)
@@ -440,4 +439,19 @@ void address_space::assert_segment_overlap(address_space_segment* prev, address_
 	KDEBUG_ASSERT(prev->start_ < prev->end_);
 	KDEBUG_ASSERT(prev->end_ <= next->start_);
 	KDEBUG_ASSERT(next->start_ < next->end_);
+}
+error_code address_space::setup()
+{
+	vmm::pde_ptr_t pgdir = vmm::pgdir_entry_alloc();
+
+	if (pgdir == nullptr)
+	{
+		return -ERROR_MEMORY_ALLOC;
+	}
+
+	vmm::duplicate_kernel_pml4t(pgdir);
+
+	pgdir_ = pgdir;
+
+	return ERROR_SUCCESS;
 }

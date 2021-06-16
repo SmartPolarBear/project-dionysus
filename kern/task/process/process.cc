@@ -49,15 +49,24 @@ error_code_with_result<void*> task::process_user_stack_state::make_next_user_sta
 {
 	const uintptr_t current_top = USER_STACK_TOP - USTACK_TOTAL_SIZE * busy_list_.size();
 
-	auto ret = vmm::mm_map(parent_->mm,
-		current_top - USTACK_TOTAL_SIZE - 1, //TODO -1?
+	auto ret = parent_->address_space()->map(current_top - USTACK_TOTAL_SIZE - 1, //TODO -1?
 		USTACK_TOTAL_SIZE,
-		vmm::VM_STACK, nullptr);
+		vmm::VM_STACK);
 
-	if (ret != ERROR_SUCCESS)
+	if (has_error(ret))
 	{
-		return -ERROR_MEMORY_ALLOC;
+		return get_error_code(ret);
 	}
+
+//	auto ret = vmm::mm_map(parent_->mm,
+//		current_top - USTACK_TOTAL_SIZE - 1, //TODO -1?
+//		USTACK_TOTAL_SIZE,
+//		vmm::VM_STACK, nullptr);
+//
+//	if (ret != ERROR_SUCCESS)
+//	{
+//		return -ERROR_MEMORY_ALLOC;
+//	}
 
 	// allocate an stack
 	for (size_t i = 0;
@@ -68,7 +77,7 @@ error_code_with_result<void*> task::process_user_stack_state::make_next_user_sta
 
 		auto alloc_ret = memory::physical_memory_manager::instance()->allocate(va,
 			PG_W | PG_U | PG_PS | PG_P,
-			parent_->mm->pgdir,
+			address_space().pgdir(),
 			true);
 
 		if (has_error(alloc_ret))
@@ -80,7 +89,7 @@ error_code_with_result<void*> task::process_user_stack_state::make_next_user_sta
 	auto guard_page_ret =
 		memory::physical_memory_manager::instance()->allocate(current_top - USTACK_TOTAL_PAGES_PER_THREAD,
 			PG_U | PG_PS | PG_P,
-			parent_->mm->pgdir,
+			address_space().pgdir(),
 			true);
 
 	if (has_error(guard_page_ret))
@@ -270,14 +279,31 @@ task::process::process(std::span<char> name,
 	  parent_(parent),
 	  critical_to_(critical_to)
 {
+	{
+		allocate_checker ck{};
+		auto mm = new(&ck)memory::address_space{};
+
+		if (!ck.check())
+		{
+			KDEBUG_GENERALPANIC(-ERROR_MEMORY_ALLOC);
+		}
+
+		auto mm_handle = object::handle_entry::create("mm", mm);
+		auto local_mm_handle = object::handle_entry::duplicate(mm_handle.get());
+
+		object::handle_table::get_global_handle_table()->add_handle(std::move(mm_handle));
+		address_space_handle_ = handle_table_.add_handle(std::move(local_mm_handle));
+	}
+
+	{
+		auto this_handle = object::handle_entry::create(name_.data(), this);
+		auto local_handle = object::handle_entry::duplicate(this_handle.get());
+
+		object::handle_table::get_global_handle_table()->add_handle(std::move(this_handle));
+		this_handle_ = handle_table_.add_handle(std::move(local_handle));
+	}
+
 	this->name_.set(name);
-
-	auto this_handle = object::handle_entry::create(name_.data(), this);
-
-	auto local_handle = object::handle_entry::duplicate(this_handle.get());
-
-	object::handle_table::get_global_handle_table()->add_handle(std::move(this_handle));
-	handle_table_.add_handle(std::move(local_handle));
 }
 
 process::~process()
@@ -287,46 +313,11 @@ process::~process()
 
 error_code process::setup_mm()
 {
-	this->mm = vmm::mm_create();
-	if (this->mm == nullptr)
-	{
-		return -ERROR_MEMORY_ALLOC;
-	}
-
-	vmm::pde_ptr_t pgdir = vmm::pgdir_entry_alloc();
-
-	if (pgdir == nullptr)
-	{
-		vmm::mm_destroy(this->mm);
-		return -ERROR_MEMORY_ALLOC;
-	}
-
-	vmm::duplicate_kernel_pml4t(pgdir);
-
-	this->mm->pgdir = pgdir;
-
-	return ERROR_SUCCESS;
+	return address_space()->setup();
 }
 
 void process::finish_dead_transition() noexcept
 {
-	if (mm != nullptr)
-	{
-		if ((--mm->map_count) == 0)
-		{
-			// restore to kernel page table
-			vmm::install_kernel_pml4t();
-
-			// free memory
-			vmm::mm_free(mm);
-
-			vmm::pgdir_entry_free(mm->pgdir);
-
-			vmm::mm_destroy(mm);
-		}
-	}
-
-	mm = nullptr;
 
 	{
 		auto parent_ptr = parent_.lock();
@@ -469,10 +460,10 @@ error_code task::process::resize_heap(IN OUT uintptr_t* heap_ptr)
 	// FIXME
 //	lock_guard g2{ mm->lock };
 
-	if (mm == nullptr)
-	{
-		return -ERROR_INVALID;
-	}
+//	if (mm == nullptr)
+//	{
+//		return -ERROR_INVALID;
+//	}
 
 	if (!VALID_USER_REGION((uintptr_t)heap_ptr, ((uintptr_t)heap_ptr) + sizeof(uintptr_t)))
 	{
@@ -482,13 +473,15 @@ error_code task::process::resize_heap(IN OUT uintptr_t* heap_ptr)
 	uintptr_t heap = 0;
 	memmove(&heap, heap_ptr, sizeof(heap));
 
-	if (heap < mm->brk_start)
+	auto as = address_space();
+
+	if (heap < as->heap_begin())
 	{
-		*heap_ptr = mm->brk_start;
+		*heap_ptr = as->heap_begin();
 	}
 	else
 	{
-		uintptr_t new_heap = PAGE_ROUNDUP(heap), old_heap = mm->brk;
+		uintptr_t new_heap = PAGE_ROUNDUP(heap), old_heap = as->heap();
 
 		if ((old_heap % PAGE_SIZE) != 0)
 		{
@@ -497,26 +490,41 @@ error_code task::process::resize_heap(IN OUT uintptr_t* heap_ptr)
 
 		if (new_heap == old_heap)
 		{
-			*heap_ptr = mm->brk_start;
+			*heap_ptr = as->heap_begin();
 		}
 		else if (new_heap < old_heap) // shrink
 		{
-			if (mm_unmap(mm, new_heap, old_heap - new_heap) != ERROR_SUCCESS)
+//			if (mm_unmap(mm, new_heap, old_heap - new_heap) != ERROR_SUCCESS)
+//			{
+//				*heap_ptr = mm->brk_start;
+//			}
+			if (as->unmap(new_heap, old_heap - new_heap) != ERROR_SUCCESS)
 			{
-				*heap_ptr = mm->brk_start;
+				*heap_ptr = as->heap_begin();
 			}
 		}
 		else if (new_heap > old_heap) // expand
 		{
-			if (mm_intersect_vma(mm, old_heap, new_heap + PAGE_SIZE) != nullptr)
+//			if (mm_intersect_vma(mm, old_heap, new_heap + PAGE_SIZE) != nullptr)
+//			{
+//				*heap_ptr = mm->brk_start;
+//			}
+//			else
+//			{
+//				if (mm_change_size(mm, old_heap, (size_t)new_heap - old_heap) != ERROR_SUCCESS)
+//				{
+//					*heap_ptr = mm->brk_start;
+//				}
+//			}
+			if (as->intersect_vma(old_heap, new_heap + PAGE_SIZE) != nullptr)
 			{
-				*heap_ptr = mm->brk_start;
+				*heap_ptr = as->heap_begin();
 			}
 			else
 			{
-				if (mm_change_size(mm, old_heap, (size_t)new_heap - old_heap) != ERROR_SUCCESS)
+				if (address_space()->resize(old_heap, (size_t)new_heap - old_heap) != ERROR_SUCCESS)
 				{
-					*heap_ptr = mm->brk_start;
+					*heap_ptr = as->heap_begin();
 				}
 			}
 		}
@@ -572,3 +580,18 @@ void process::resume()
 		}
 	}
 }
+
+address_space* process::address_space()
+{
+	// it really can be nullptr when it's wrongly called
+	KDEBUG_ASSERT(this != nullptr);
+
+	if (address_space_handle_ == object::INVALID_HANDLE_VALUE)
+	{
+		return nullptr;
+	}
+
+	auto handle = handle_table_.get_handle_entry(address_space_handle_);
+	return downcast_dispatcher<memory::address_space>(handle->object());
+}
+

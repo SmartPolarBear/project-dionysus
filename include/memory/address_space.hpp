@@ -25,6 +25,7 @@
 #pragma once
 
 #include "object/kernel_object.hpp"
+#include "object/dispatcher.hpp"
 
 #include "memory/fpage.hpp"
 
@@ -78,7 +79,7 @@ class address_space_segment final
 };
 
 class address_space final
-	: public object::kernel_object<address_space>
+	: public object::solo_dispatcher<address_space, 0>
 {
  public:
 	using segment_list_type = kbl::intrusive_list_with_default_trait<address_space_segment,
@@ -93,13 +94,15 @@ class address_space final
 	address_space(const address_space&) = delete;
 	address_space& operator=(const address_space&) = delete;
 
+	error_code setup();
+
 	error_code_with_result<address_space_segment*> map(uintptr_t addr, size_t len, uint64_t flags);
 
 	error_code_with_result<address_space_segment*> mm_fpage_map(address_space* to,
 		const task::ipc::fpage& send,
 		const task::ipc::fpage& receive);
 
-	error_code_with_result<address_space_segment*> mm_fpage_grant(address_space* to,
+	error_code_with_result<address_space_segment*> fpage_grant(address_space* to,
 		const task::ipc::fpage& send,
 		const task::ipc::fpage& receive);
 
@@ -115,20 +118,58 @@ class address_space final
 
 	address_space_segment* intersect_vma(uintptr_t start, uintptr_t end);
 
+	[[nodiscard]] object::object_type get_type() const
+	{
+		return object::object_type::ADDR_SPACE;
+	}
+
+	[[nodiscard]] uintptr_t heap() const
+	{
+		return uheap_;
+	}
+
+	void set_heap(uintptr_t val)
+	{
+		uheap_ = val;
+	}
+
+	[[nodiscard]] uintptr_t heap_begin() const
+	{
+		return uheap_begin_;
+	}
+
+	void set_heap_begin(uintptr_t val)
+	{
+		uheap_begin_ = val;
+	}
+
+	[[nodiscard]] uintptr_t heap_end() const
+	{
+		return uheap_end_;
+	}
+
+	void set_heap_end(uintptr_t val)
+	{
+		uheap_end_ = val;
+	}
+
+	vmm::pde_ptr_t pgdir()
+	{
+		return pgdir_;
+	}
+
  private:
 	void assert_segment_overlap(address_space_segment* prev, address_space_segment* next);
 
-	uintptr_t uheap_begin{ 0 };
-	uintptr_t uheap_end{ 0 };
+	uintptr_t uheap_{ 0 };
+	uintptr_t uheap_begin_{ 0 };
+	uintptr_t uheap_end_{ 0 };
 
 	segment_list_type segments{};
 
 	address_space_segment* search_cache_{ nullptr };
 
 	vmm::pde_ptr_t pgdir_{ nullptr };
-
-	lock::spinlock lock_{ "addr_space" };
-
 };
 
 }

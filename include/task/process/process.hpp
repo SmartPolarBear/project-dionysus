@@ -12,6 +12,8 @@
 
 #include "object/handle_table.hpp"
 
+#include "memory/address_space.hpp"
+
 #include "system/scheduler.h"
 
 #include "drivers/acpi/cpu.h"
@@ -154,11 +156,7 @@ class process final
 		return name_.data();
 	}
 
-	// FIXME: remove first
-	vmm::mm_struct* get_mm() const
-	{
-		return mm;
-	}
+	memory::address_space* address_space();
 
 	size_t get_flags() const
 	{
@@ -218,7 +216,12 @@ class process final
 
 	task_return_code ret_code_;
 
-	vmm::mm_struct* mm;
+//	vmm::mm_struct* mm;
+
+//	memory::address_space address_space_{};
+	object::handle_type address_space_handle_{ object::INVALID_HANDLE_VALUE };
+
+	object::handle_type this_handle_{ object::INVALID_HANDLE_VALUE };
 
 	size_t flags;
 

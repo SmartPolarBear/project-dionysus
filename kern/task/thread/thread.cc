@@ -195,7 +195,7 @@ vmm::mm_struct* task::thread::get_mm()
 {
 	if (parent_ != nullptr)
 	{
-		return parent_->get_mm();
+//		return parent_->get_mm();
 	}
 
 	return nullptr;
@@ -238,15 +238,24 @@ void thread::switch_to(interrupt_saved_state_type state_to_restore) TA_REQ(globa
 	// Set gs. without calling swapgs to ensure atomic
 	gs_put_cpu_dependent(KERNEL_GS_KSTACK, kstack_addr);
 
-	auto mm = this->get_mm();
-	if (mm == nullptr)
+//	auto mm = this->get_mm();
+//	if (mm == nullptr)
+//	{
+//		lcr3(V2P((uintptr_t)vmm::g_kpml4t));
+//	}
+//	else
+//	{
+//		lcr3(V2P((uintptr_t)
+//			this->get_mm()->pgdir));
+//	}
+
+	if (parent_)
+	{
+		lcr3(V2P((uintptr_t)address_space()->pgdir()));
+	}
+	else // it's a kernel thread
 	{
 		lcr3(V2P((uintptr_t)vmm::g_kpml4t));
-	}
-	else
-	{
-		lcr3(V2P((uintptr_t)
-			this->get_mm()->pgdir));
 	}
 
 	auto prev = cur_thread.get();
@@ -576,6 +585,11 @@ void thread::process_pending_signals()
 	{
 		return;
 	}
+}
+memory::address_space* thread::address_space() const
+{
+	if (!parent_)return nullptr;
+	return parent_->address_space();
 }
 
 void thread::current::exit(error_code code)

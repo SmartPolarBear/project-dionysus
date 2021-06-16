@@ -81,36 +81,36 @@ void vma_destroy(vma_struct* vma);
 
 void insert_vma_struct(mm_struct* mm, vma_struct* vma);
 
-mm_struct* mm_create(void);
-
-error_code mm_map(IN mm_struct* mm, IN uintptr_t addr, IN size_t len, IN uint32_t vm_flags,
-	OPTIONAL OUT vma_struct** vma_store);
-
-error_code mm_fpage_map(mm_struct* from,
-	mm_struct* to,
-	const task::ipc::fpage& send,
-	const task::ipc::fpage& receive,
-	vma_struct** vma_store);
-
-error_code mm_fpage_grant(mm_struct* from,
-	mm_struct* to,
-	const task::ipc::fpage& send,
-	const task::ipc::fpage& receive,
-	vma_struct** vma_store);
-
-error_code mm_unmap(IN mm_struct* mm, IN uintptr_t addr, IN size_t len);
-
-error_code mm_duplicate(IN mm_struct* to, IN const mm_struct* from);
-
-error_code mm_change_size(IN mm_struct* mm, uintptr_t addr, size_t len);
-
-vma_struct* mm_intersect_vma(IN mm_struct* mm, uintptr_t start, uintptr_t end);
-
-bool check_user_memory(IN mm_struct* mm, uintptr_t addr, size_t len, bool writable);
-
-void mm_destroy(mm_struct* mm);
-
-void mm_free(mm_struct* mm);
+//mm_struct* mm_create(void);
+//
+//error_code mm_map(IN mm_struct* mm, IN uintptr_t addr, IN size_t len, IN uint32_t vm_flags,
+//	OPTIONAL OUT vma_struct** vma_store);
+//
+//error_code mm_fpage_map(mm_struct* from,
+//	mm_struct* to,
+//	const task::ipc::fpage& send,
+//	const task::ipc::fpage& receive,
+//	vma_struct** vma_store);
+//
+//error_code mm_fpage_grant(mm_struct* from,
+//	mm_struct* to,
+//	const task::ipc::fpage& send,
+//	const task::ipc::fpage& receive,
+//	vma_struct** vma_store);
+//
+//error_code mm_unmap(IN mm_struct* mm, IN uintptr_t addr, IN size_t len);
+//
+//error_code mm_duplicate(IN mm_struct* to, IN const mm_struct* from);
+//
+//error_code mm_change_size(IN mm_struct* mm, uintptr_t addr, size_t len);
+//
+//vma_struct* mm_intersect_vma(IN mm_struct* mm, uintptr_t start, uintptr_t end);
+//
+//bool check_user_memory(IN mm_struct* mm, uintptr_t addr, size_t len, bool writable);
+//
+//void mm_destroy(mm_struct* mm);
+//
+//void mm_free(mm_struct* mm);
 
 // initialize the vmm
 // 1) register the page fault handle
