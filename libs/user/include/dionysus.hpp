@@ -2,7 +2,6 @@
 
 #include "system/types.h"
 #include "system/error.hpp"
-#include "system/messaging.hpp"
 
 #include "dionysus_api.hpp"
 
