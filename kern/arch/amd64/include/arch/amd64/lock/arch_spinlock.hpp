@@ -40,6 +40,10 @@ constexpr arch_spinlock ARCH_SPINLOCK_INITIAL{ .value=0 };
 
 void arch_spinlock_lock(arch_spinlock* l) TA_ACQ(l);
 void arch_spinlock_unlock(arch_spinlock* l) TA_REL(l);
+
+/// \brief try to lock the given lock
+/// \param l the lock
+/// \return true if failed
 bool arch_spinlock_try_lock(arch_spinlock* l) TA_TRY_ACQ(false, l);
 
 static inline cpu_num_type arch_spinlock_cpu(const arch_spinlock* lock)

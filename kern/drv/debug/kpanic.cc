@@ -57,7 +57,7 @@ lock::arch_spinlock panic_lock{};
 	// disable interrupts
 	cli();
 
-	// only one attempt can succeeded panicking, otherwise directly go to halt status
+	// only one attempt can succeed in panicking, otherwise directly go to halt status
 	if (lock::arch_spinlock_try_lock(&panic_lock))
 	{
 		// infinite loop to halt the cpu
