@@ -45,6 +45,8 @@ class TA_CAP("mutex") spinlock final
 	void unlock() noexcept
 	TA_REL();
 
+	/// \brief Try to lock
+	/// \return true if succeeded
 	bool try_lock() noexcept
 	TA_TRY_ACQ(true);
 

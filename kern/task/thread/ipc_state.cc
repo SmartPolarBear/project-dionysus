@@ -132,11 +132,10 @@ error_code task::ipc_state::send_extended_items(thread* to)
 			copy_mrs_to_locked(to, idx++, 1);
 			copy_mrs_to_locked(to, idx++, 1);
 
-//			auto ret = vmm::mm_fpage_map(from->get_mm(), to->get_mm(), send, receive, nullptr);
 			auto ret = from->address_space()->fpage_grant(to->address_space(), send, receive);
 			if (has_error(ret))
 			{
-				KDEBUG_GENERALPANIC(get_error_code(ret));
+				return get_error_code(ret);
 			}
 		}
 		else if (static_cast<ipc::message_item_types>(mr & 0xF) == ipc::message_item_types::GRANT)
@@ -147,16 +146,12 @@ error_code task::ipc_state::send_extended_items(thread* to)
 			copy_mrs_to_locked(to, idx++, 1);
 			copy_mrs_to_locked(to, idx++, 1);
 
-//			auto ret = vmm::mm_fpage_grant(from->get_mm(), to->get_mm(), send, receive, nullptr);
-//
-//			if (!ret)
-//			{
-//				KDEBUG_GENERALPANIC(ret);
-//			}
+
 			auto ret = from->address_space()->fpage_grant(to->address_space(), send, receive);
 			if (has_error(ret))
 			{
-				KDEBUG_GENERALPANIC(get_error_code(ret));
+				return get_error_code(ret);
+
 			}
 		}
 	}
@@ -172,6 +167,10 @@ error_code task::ipc_state::send_locked(thread* to, const deadline& ddl)
 	if (to->ipc_state_.state_ != IPC_RECEIVING)
 	{
 		err = to->ipc_state_.sender_wait_queue_.block(wait_queue::interruptible::No, ddl);
+		if (err != ERROR_SUCCESS)
+		{
+			return err;
+		}
 	}
 
 	lock_guard g{ to->lock };

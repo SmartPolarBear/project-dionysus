@@ -3,8 +3,6 @@
 #include "system/syscall.h"
 #include "system/error.hpp"
 
-#include "system/messaging.hpp"
-
 #include "dionysus_api.hpp"
 
 #include "handle_type.hpp"

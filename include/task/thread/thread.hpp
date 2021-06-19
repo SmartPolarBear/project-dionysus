@@ -331,12 +331,7 @@ class thread final
 	friend struct wait_queue_list_node_trait;
 
 	friend class process_user_stack_state;
-
-	friend error_code (::sys_ipc_load_message(const syscall::syscall_regs* regs));
-	friend error_code (::sys_ipc_send(const syscall::syscall_regs* regs));
-	friend error_code (::sys_ipc_receive(const syscall::syscall_regs* regs));
-	friend error_code (::sys_ipc_store(const syscall::syscall_regs* regs));
-
+	
 	enum class [[clang::enum_extensibility(closed)]] thread_states
 	{
 		INITIAL,

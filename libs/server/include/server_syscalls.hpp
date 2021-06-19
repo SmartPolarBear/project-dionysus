@@ -2,7 +2,6 @@
 
 #include "system/types.h"
 #include "system/error.hpp"
-#include "system/messaging.hpp"
 
 extern "C" error_code terminate(error_code e);
 extern "C" error_code set_heap_size(uintptr_t* size);
