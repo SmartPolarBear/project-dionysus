@@ -96,23 +96,6 @@ void task::ipc_state::set_acceptor(const ipc::message_acceptor* acc) noexcept
 	br_count_ = 1;
 }
 
-error_code task::ipc_state::receive_locked(thread* from, const deadline& ddl)
-{
-	this->state_ = IPC_RECEIVING;
-
-	error_code err = ERROR_SUCCESS;
-	if (from->ipc_state_.state_ != IPC_SENDING)
-	{
-		err = from->ipc_state_.receiver_wait_queue_.block(wait_queue::interruptible::No, ddl);
-	}
-
-	sender_wait_queue_.wake_all(false, ERROR_SUCCESS);
-
-	this->state_ = IPC_FREE;
-
-	return err;
-}
-
 error_code task::ipc_state::send_extended_items(thread* to)
 {
 	auto acceptor = to->ipc_state_.get_acceptor();
@@ -146,7 +129,6 @@ error_code task::ipc_state::send_extended_items(thread* to)
 			copy_mrs_to_locked(to, idx++, 1);
 			copy_mrs_to_locked(to, idx++, 1);
 
-
 			auto ret = from->address_space()->fpage_grant(to->address_space(), send, receive);
 			if (has_error(ret))
 			{
@@ -163,10 +145,9 @@ error_code task::ipc_state::send_locked(thread* to, const deadline& ddl)
 {
 	this->state_ = IPC_SENDING;
 
-	error_code err = ERROR_SUCCESS;
 	if (to->ipc_state_.state_ != IPC_RECEIVING)
 	{
-		err = to->ipc_state_.sender_wait_queue_.block(wait_queue::interruptible::No, ddl);
+		auto err = to->ipc_state_.sender_wait_queue_.block(wait_queue::interruptible::No, ddl);
 		if (err != ERROR_SUCCESS)
 		{
 			return err;
@@ -177,7 +158,7 @@ error_code task::ipc_state::send_locked(thread* to, const deadline& ddl)
 
 	copy_mrs_to_locked(to, 0, task::ipc_state::MR_SIZE);
 
-	if (err = send_extended_items(to);err != ERROR_SUCCESS)
+	if (auto err = send_extended_items(to);err != ERROR_SUCCESS)
 	{
 		return err;
 	}
@@ -186,6 +167,25 @@ error_code task::ipc_state::send_locked(thread* to, const deadline& ddl)
 
 	this->state_ = IPC_FREE;
 
-	return err;
+	return ERROR_SUCCESS;
+}
 
+error_code task::ipc_state::receive_locked(thread* from, const deadline& ddl)
+{
+	this->state_ = IPC_RECEIVING;
+
+	if (from->ipc_state_.state_ != IPC_SENDING)
+	{
+		auto err = from->ipc_state_.receiver_wait_queue_.block(wait_queue::interruptible::No, ddl);
+		if (err != ERROR_SUCCESS)
+		{
+			return err;
+		}
+	}
+
+	sender_wait_queue_.wake_all(false, ERROR_SUCCESS);
+
+	this->state_ = IPC_FREE;
+
+	return ERROR_SUCCESS;
 }
