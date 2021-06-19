@@ -52,7 +52,7 @@ error_code sys_ipc_send(const syscall_regs* regs)
 
 		lock::lock_guard g{ global_thread_lock };
 
-		cur_thread->get_ipc_state()->send_locked(target, deadline::after(timeout));
+		return cur_thread->get_ipc_state()->send_locked(target, deadline::after(timeout));
 
 	}
 
@@ -75,7 +75,7 @@ error_code sys_ipc_receive(const syscall_regs* regs)
 
 		lock::lock_guard g{ global_thread_lock };
 
-		cur_thread->get_ipc_state()->receive_locked(from, deadline::after(timeout));
+		return cur_thread->get_ipc_state()->receive_locked(from, deadline::after(timeout));
 
 	}
 
