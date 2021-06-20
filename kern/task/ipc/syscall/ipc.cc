@@ -52,8 +52,13 @@ error_code sys_ipc_send(const syscall_regs* regs)
 
 		lock::lock_guard g{ global_thread_lock };
 
-		return cur_thread->get_ipc_state()->send_locked(target, deadline::after(timeout));
+		auto err = cur_thread->get_ipc_state()->send_locked(target, deadline::after(timeout));
+		if (err != ERROR_SUCCESS)
+		{
+			KDEBUG_GERNERALPANIC_CODE(err);
+		}
 
+		return err;
 	}
 
 	return ERROR_SUCCESS;
@@ -75,8 +80,13 @@ error_code sys_ipc_receive(const syscall_regs* regs)
 
 		lock::lock_guard g{ global_thread_lock };
 
-		return cur_thread->get_ipc_state()->receive_locked(from, deadline::after(timeout));
+		auto err = cur_thread->get_ipc_state()->receive_locked(from, deadline::after(timeout));
+		if (err != ERROR_SUCCESS)
+		{
+			KDEBUG_GERNERALPANIC_CODE(err);
+		}
 
+		return err;
 	}
 
 	return ERROR_SUCCESS;
@@ -94,6 +104,7 @@ error_code sys_ipc_store(const syscall_regs* regs)
 	lock::lock_guard g{ cur_thread->get_ipc_state()->lock_ };
 
 	msg->set_tag(cur_thread->get_ipc_state()->get_message_tag());
+
 	cur_thread->get_ipc_state()->store_mrs_locked(1,
 		msg->get_items_span(cur_thread->get_ipc_state()->get_message_tag()));
 

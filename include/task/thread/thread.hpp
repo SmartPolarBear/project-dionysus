@@ -29,8 +29,8 @@
 #include "task/thread/user_stack.hpp"
 
 #include "task/scheduler/scheduler_config.hpp"
-
 #include "task/ipc/message.hpp"
+#include "task/thread/ipc_state.hpp"
 
 #include "memory/address_space.hpp"
 
@@ -169,106 +169,6 @@ class task_state
 	wait_queue exit_code_wait_queue_{};
 };
 
-class ipc_state
-{
- public:
-	static constexpr size_t MR_SIZE = 64;
-	static constexpr size_t BR_SIZE = 33;
-
-	friend class wait_queue;
-	friend class thread;
-
-	friend error_code (::sys_ipc_load_message(const syscall::syscall_regs* regs));
-	friend error_code (::sys_ipc_store(const syscall::syscall_regs* regs));
-
-	enum [[clang::enum_extensibility(closed)]] states
-	{
-		IPC_RECEIVING,
-		IPC_SENDING,
-		IPC_FREE,
-	};
-
-	ipc_state() = delete;
-	explicit ipc_state(thread* parent) : parent_(parent)
-	{
-	}
-	ipc_state(const ipc_state&) = delete;
-	ipc_state& operator=(const ipc_state&) = delete;
-
-	error_code receive_locked(thread* from, const deadline& ddl) TA_REQ(global_thread_lock);
-
-	error_code send_locked(thread* to, const deadline& ddl) TA_REQ(global_thread_lock);
-
-	template<typename T>
-	T get_typed_item(size_t index)
-	{
-		return *reinterpret_cast<T*>(mr_ + index);
-	}
-
-	ipc::message_register_type get_mr(size_t index)
-	{
-		return mr_[index];
-	}
-
-	void set_mr(size_t index, ipc::message_register_type value)
-	{
-		mr_[index] = value;
-	}
-
-	ipc::message_register_type get_br(size_t index)
-	{
-		return br_[index];
-	}
-
-	void set_br(size_t index, ipc::message_register_type value)
-	{
-		br_[index] = value;
-	}
-
-	void load_mrs_locked(size_t start, ktl::span<ipc::message_register_type> mrs);
-
-	void store_mrs_locked(size_t st, ktl::span<ipc::message_register_type> mrs);
-
-	void copy_mrs_to_locked(thread* another, size_t st, size_t cnt);
-
-	[[nodiscard]] ipc::message_tag get_message_tag();
-
-	[[nodiscard]] ipc::message_acceptor get_acceptor();
-
-	/// \brief set the message tag to mrs. will reset mr_count_, which influence exist items
-	/// \param tag
-	void set_message_tag_locked(const ipc::message_tag* tag) noexcept;
-
-	/// \brief set acceptor to brs. will reset mr_count_, which influence exist items
-	/// \param acc
-	void set_acceptor(const ipc::message_acceptor* acc) noexcept;
-
- private:
-	/// \brief handle extended items like strings and map/grant items
-	/// \param to
-	/// \return
-	error_code send_extended_items(thread* to);
-
-	/// \brief message registers
-	ipc::message_register_type mr_[MR_SIZE]{ 0 };
-
-	size_t mr_count_{ 0 };
-
-	/// \brief buffer registers
-	ipc::buffer_register_type br_[BR_SIZE]{ 0 };
-
-	size_t br_count_{ 0 };
-
-	thread* parent_{ nullptr };
-
-	states state_{ IPC_FREE };
-
-	wait_queue sender_wait_queue_{};
-
-	wait_queue receiver_wait_queue_{};
-
-	mutable lock::spinlock lock_{ "ipc_lock" };
-};
 
 class scheduler_state
 	: public SCHEDULER_STATE_BASE

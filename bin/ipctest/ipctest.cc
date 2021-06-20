@@ -28,24 +28,28 @@ error:
 int main()
 {
 //	while(true)hello(9, 8, 7, 6);
-	hello(9, 8, 7, 6);
 
-	message msg{};
+	while (true)
+	{
+		hello(9, 8, 7, 6);
 
-	message_tag tag{};
-	uint64_t untyped1 = 12345ull;
+		message msg{};
 
-	tag.set_label(0x12345);
+		message_tag tag{};
+		uint64_t untyped1 = 12345ull;
 
-	msg.set_tag(tag);
+		tag.set_label(0x12345);
 
-	msg.append(untyped1);
+		msg.set_tag(tag);
 
-	ipc_load_message(&msg);
+		msg.append(untyped1);
 
-	ipc_send(get_receiver(), TIME_INFINITE);
+		ipc_load_message(&msg);
 
-	hello(92, 82, 72, 62);
+		ipc_send(get_receiver(), TIME_INFINITE);
+
+		hello(92, 82, 72, 62);
+	}
 
 	return 0;
 }

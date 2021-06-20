@@ -43,13 +43,15 @@ void task::ipc_state::copy_mrs_to_locked(thread* another, size_t st, size_t cnt)
 	: /* input */
 	"c"(cnt), "S"(&mr_[st]),
 	"D"(&another->ipc_state_.mr_[st]));
-#elif
-	memmove(&another->ipc_state_.mr_[st], &mr_[st], sizeof(decltype(mr_[0])) * cnt);
+#else
+	memmove(&another->ipc_state_.mr_[st], &mr_[st], sizeof(message_register_type[cnt]));
 #endif
+
 }
 
 void task::ipc_state::load_mrs_locked(size_t start, ktl::span<ipc::message_register_type> mrs) TA_REQ(parent_->lock)
 {
+
 #ifdef IPC_MRCOPY_USE_SIMD
 	register_t dummy = 0xdeadbeaf;
 	asm volatile (
@@ -59,8 +61,8 @@ void task::ipc_state::load_mrs_locked(size_t start, ktl::span<ipc::message_regis
 	: /* input */
 	"c"(mrs.size()), "S"(mrs.data()),
 	"D"(&mr_[start]));
-#elif
-	memmove(mrs.data(), &mr_[start], sizeof(decltype(mr_[0])) * mrs.size());
+#else
+	memmove(mrs.data(), &mr_[start], sizeof(message_register_type[mrs.size()]));
 #endif
 
 }
@@ -154,18 +156,24 @@ error_code task::ipc_state::send_locked(thread* to, const deadline& ddl)
 		}
 	}
 
-	lock_guard g{ to->lock };
-
-	copy_mrs_to_locked(to, 0, task::ipc_state::MR_SIZE);
-
-	if (auto err = send_extended_items(to);err != ERROR_SUCCESS)
+	// producer
 	{
-		return err;
+		to->get_ipc_state()->e_.wait(ddl);
+
+		copy_mrs_to_locked(to, 0, task::ipc_state::MR_SIZE);
+
+		if (auto err = send_extended_items(to);err != ERROR_SUCCESS)
+		{
+			return err;
+		}
+
+		to->get_ipc_state()->f_.signal();
+
 	}
 
-	receiver_wait_queue_.wake_all(false, ERROR_SUCCESS);
-
 	this->state_ = IPC_FREE;
+
+	receiver_wait_queue_.wake_all(false, ERROR_SUCCESS);
 
 	return ERROR_SUCCESS;
 }
@@ -185,7 +193,17 @@ error_code task::ipc_state::receive_locked(thread* from, const deadline& ddl)
 
 	sender_wait_queue_.wake_all(false, ERROR_SUCCESS);
 
-	this->state_ = IPC_FREE;
+	// consumer
+	{
+		f_.wait(ddl);
+
+		KDEBUG_ASSERT_MSG(this->get_message_tag().typed_count() != 0 || this->get_message_tag().untyped_count() != 0,
+			"Empty message isn't valid");
+
+		this->state_ = IPC_FREE;
+
+		e_.signal();
+	}
 
 	return ERROR_SUCCESS;
 }

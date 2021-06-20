@@ -1,6 +1,6 @@
 #pragma once
 
-#include "task/thread/thread.hpp"
+#include "task/thread/wait_queue.hpp"
 
 #include "ktl/atomic.hpp"
 
@@ -20,13 +20,18 @@ class semaphore final
 	semaphore& operator=(const semaphore&) = delete;
 	semaphore(const semaphore&&) = delete;
 
+	/// \brief P operation, or sleep, down
+	/// \return
 	error_code wait()
 	{
 		return wait(deadline::infinite());
 	}
 
+	/// \brief P operation, or sleep, down
+	/// \return
 	error_code wait(const deadline& ddl);
 
+	/// \brief V operation, or wakeup, up
 	void signal();
 
 	uint64_t count() const
@@ -46,6 +51,7 @@ class semaphore final
 	task::wait_queue wait_queue_{};
 
 	ktl::atomic<uint64_t> count_{ 0 };
+
 	mutable lock::spinlock lock_{ "semaphore" };
 };
 }

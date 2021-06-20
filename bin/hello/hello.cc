@@ -87,15 +87,10 @@ error:
 	while (true);
 }
 
-int main()
+int test()
 {
-//	while (true)hello(1, 2, 3, 4);
 	hello(1, 2, 3, 4);
 
-//	test_this_proc();
-//	test_this_thread();
-//
-//	test_get_proc_by_name();
 	message msg{};
 
 	ipc_receive(get_sender(), TIME_INFINITE);
@@ -104,7 +99,30 @@ int main()
 
 	msg.at<uint64_t>(0);
 
-	hello(msg.get_tag().label(), msg.at<uint64_t>(0), 32, 42);
+	int c = 0;
+	while (msg.get_tag().label() != 0x12345)
+	{
+		ipc_store(&msg);
+		c++;
+	}
+
+	hello(msg.get_tag().label(), msg.at<uint64_t>(0), 32, c);
+
+	return c;
+}
+
+int main()
+{
+//	while (true)hello(1, 2, 3, 4);
+
+//	test_this_proc();
+//	test_this_thread();
+//
+//	test_get_proc_by_name();
+
+//	for (int c = 0; c == 0; c = test())
+//	{}
+	test();
 
 	return 0;
 
