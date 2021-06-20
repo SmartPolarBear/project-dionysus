@@ -145,64 +145,29 @@ error_code task::ipc_state::send_extended_items(thread* to)
 
 error_code task::ipc_state::send_locked(thread* to, const deadline& ddl)
 {
-	this->state_ = IPC_SENDING;
+	to->get_ipc_state()->e_.wait_locked(ddl);
 
-	if (to->ipc_state_.state_ != IPC_RECEIVING)
+	copy_mrs_to_locked(to, 0, task::ipc_state::MR_SIZE);
+
+	if (auto err = send_extended_items(to);err != ERROR_SUCCESS)
 	{
-		auto err = to->ipc_state_.sender_wait_queue_.block(wait_queue::interruptible::No, ddl);
-		if (err != ERROR_SUCCESS)
-		{
-			return err;
-		}
+		return err;
 	}
 
-	// producer
-	{
-		to->get_ipc_state()->e_.wait_locked(ddl);
-
-		copy_mrs_to_locked(to, 0, task::ipc_state::MR_SIZE);
-
-		if (auto err = send_extended_items(to);err != ERROR_SUCCESS)
-		{
-			return err;
-		}
-
-		to->get_ipc_state()->f_.signal_locked();
-	}
-
-	this->state_ = IPC_FREE;
-
-	receiver_wait_queue_.wake_all(false, ERROR_SUCCESS);
+	to->get_ipc_state()->f_.signal_locked();
 
 	return ERROR_SUCCESS;
 }
 
 error_code task::ipc_state::receive_locked(thread* from, const deadline& ddl)
 {
-	this->state_ = IPC_RECEIVING;
 
-	if (from->ipc_state_.state_ != IPC_SENDING)
-	{
-		auto err = from->ipc_state_.receiver_wait_queue_.block(wait_queue::interruptible::No, ddl);
-		if (err != ERROR_SUCCESS)
-		{
-			return err;
-		}
-	}
+	f_.wait_locked(ddl);
 
-	sender_wait_queue_.wake_all(false, ERROR_SUCCESS);
+	KDEBUG_ASSERT_MSG(this->get_message_tag().typed_count() != 0 || this->get_message_tag().untyped_count() != 0,
+		"Empty message isn't valid");
 
-	// consumer
-	{
-		f_.wait_locked(ddl);
-
-		KDEBUG_ASSERT_MSG(this->get_message_tag().typed_count() != 0 || this->get_message_tag().untyped_count() != 0,
-			"Empty message isn't valid");
-
-		this->state_ = IPC_FREE;
-
-		e_.signal_locked();
-	}
+	e_.signal_locked();
 
 	return ERROR_SUCCESS;
 }

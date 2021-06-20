@@ -75,13 +75,6 @@ class ipc_state
 	friend error_code (::sys_ipc_load_message(const syscall::syscall_regs* regs));
 	friend error_code (::sys_ipc_store(const syscall::syscall_regs* regs));
 
-	enum [[clang::enum_extensibility(closed)]] states
-	{
-		IPC_RECEIVING,
-		IPC_SENDING,
-		IPC_FREE,
-	};
-
 	ipc_state() = delete;
 	explicit ipc_state(thread* parent) : parent_(parent)
 	{
@@ -89,7 +82,7 @@ class ipc_state
 	ipc_state(const ipc_state&) = delete;
 	ipc_state& operator=(const ipc_state&) = delete;
 
-	error_code receive_locked(thread* from, const deadline& ddl) TA_REQ(global_thread_lock);
+	error_code receive_locked([[maybe_unused]]thread* from, const deadline& ddl) TA_REQ(global_thread_lock);
 
 	error_code send_locked(thread* to, const deadline& ddl) TA_REQ(global_thread_lock);
 
@@ -155,11 +148,9 @@ class ipc_state
 
 	thread* parent_{ nullptr };
 
-	states state_{ IPC_FREE };
+	kbl::semaphore f_{ 0 }; // indicate that if items has been written but not yet read
 
-	kbl::semaphore f_{ 0 };
-
-	kbl::semaphore e_{ 1 };
+	kbl::semaphore e_{ 1 }; // indicate that if there's room to write
 
 	wait_queue sender_wait_queue_{};
 
