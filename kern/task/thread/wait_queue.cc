@@ -213,7 +213,7 @@ wait_queue::~wait_queue()
 {
 	if (!block_list_.empty())
 	{
-		KDEBUG_GENERALPANIC("wait queue is destructed before it become empty");
+		KDEBUG_GENERALPANIC("wait_locked queue is destructed before it become empty");
 	}
 }
 

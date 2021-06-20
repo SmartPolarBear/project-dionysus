@@ -43,13 +43,15 @@ void task::ipc_state::copy_mrs_to_locked(thread* another, size_t st, size_t cnt)
 	: /* input */
 	"c"(cnt), "S"(&mr_[st]),
 	"D"(&another->ipc_state_.mr_[st]));
-#elif
-	memmove(&another->ipc_state_.mr_[st], &mr_[st], sizeof(decltype(mr_[0])) * cnt);
+#else
+	memmove(&another->ipc_state_.mr_[st], &mr_[st], sizeof(message_register_type[cnt]));
 #endif
+
 }
 
 void task::ipc_state::load_mrs_locked(size_t start, ktl::span<ipc::message_register_type> mrs) TA_REQ(parent_->lock)
 {
+
 #ifdef IPC_MRCOPY_USE_SIMD
 	register_t dummy = 0xdeadbeaf;
 	asm volatile (
@@ -59,8 +61,8 @@ void task::ipc_state::load_mrs_locked(size_t start, ktl::span<ipc::message_regis
 	: /* input */
 	"c"(mrs.size()), "S"(mrs.data()),
 	"D"(&mr_[start]));
-#elif
-	memmove(mrs.data(), &mr_[start], sizeof(decltype(mr_[0])) * mrs.size());
+#else
+	memmove(mrs.data(), &mr_[start], sizeof(message_register_type[mrs.size()]));
 #endif
 
 }
@@ -143,18 +145,7 @@ error_code task::ipc_state::send_extended_items(thread* to)
 
 error_code task::ipc_state::send_locked(thread* to, const deadline& ddl)
 {
-	this->state_ = IPC_SENDING;
-
-	if (to->ipc_state_.state_ != IPC_RECEIVING)
-	{
-		auto err = to->ipc_state_.sender_wait_queue_.block(wait_queue::interruptible::No, ddl);
-		if (err != ERROR_SUCCESS)
-		{
-			return err;
-		}
-	}
-
-	lock_guard g{ to->lock };
+	to->get_ipc_state()->e_.wait_locked(ddl);
 
 	copy_mrs_to_locked(to, 0, task::ipc_state::MR_SIZE);
 
@@ -163,29 +154,20 @@ error_code task::ipc_state::send_locked(thread* to, const deadline& ddl)
 		return err;
 	}
 
-	receiver_wait_queue_.wake_all(false, ERROR_SUCCESS);
-
-	this->state_ = IPC_FREE;
+	to->get_ipc_state()->f_.signal_locked();
 
 	return ERROR_SUCCESS;
 }
 
 error_code task::ipc_state::receive_locked(thread* from, const deadline& ddl)
 {
-	this->state_ = IPC_RECEIVING;
 
-	if (from->ipc_state_.state_ != IPC_SENDING)
-	{
-		auto err = from->ipc_state_.receiver_wait_queue_.block(wait_queue::interruptible::No, ddl);
-		if (err != ERROR_SUCCESS)
-		{
-			return err;
-		}
-	}
+	f_.wait_locked(ddl);
 
-	sender_wait_queue_.wake_all(false, ERROR_SUCCESS);
+	KDEBUG_ASSERT_MSG(this->get_message_tag().typed_count() != 0 || this->get_message_tag().untyped_count() != 0,
+		"Empty message isn't valid");
 
-	this->state_ = IPC_FREE;
+	e_.signal_locked();
 
 	return ERROR_SUCCESS;
 }
