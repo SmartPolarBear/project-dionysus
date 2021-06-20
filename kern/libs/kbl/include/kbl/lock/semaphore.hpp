@@ -1,5 +1,7 @@
 #pragma once
 
+#include "debug/thread_annotations.hpp"
+
 #include "task/thread/wait_queue.hpp"
 
 #include "ktl/atomic.hpp"
@@ -22,17 +24,40 @@ class semaphore final
 
 	/// \brief P operation, or sleep, down
 	/// \return
-	error_code wait()
+	error_code wait_locked() TA_REQ(task::global_thread_lock)
 	{
-		return wait(deadline::infinite());
+		return wait_locked(deadline::infinite());
 	}
 
 	/// \brief P operation, or sleep, down
 	/// \return
-	error_code wait(const deadline& ddl);
+	error_code wait_locked(const deadline& ddl) TA_REQ(task::global_thread_lock);
+
+	/// \brief P operation, or sleep, down
+	/// \return
+	error_code wait() TA_REQ(!task::global_thread_lock)
+	{
+		lock::lock_guard g{ task::global_thread_lock };
+		return wait_locked();
+	}
+
+	/// \brief P operation, or sleep, down
+	/// \return
+	error_code wait(const deadline& ddl) TA_REQ(!task::global_thread_lock)
+	{
+		lock::lock_guard g{ task::global_thread_lock };
+		return wait_locked(ddl);
+	}
 
 	/// \brief V operation, or wakeup, up
-	void signal();
+	void signal_locked() TA_REQ(task::global_thread_lock);
+
+	/// \brief V operation, or wakeup, up
+	void signal() TA_REQ(!task::global_thread_lock)
+	{
+		lock::lock_guard g{ task::global_thread_lock };
+		signal_locked();
+	}
 
 	uint64_t count() const
 	{

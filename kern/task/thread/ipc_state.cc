@@ -158,7 +158,7 @@ error_code task::ipc_state::send_locked(thread* to, const deadline& ddl)
 
 	// producer
 	{
-		to->get_ipc_state()->e_.wait(ddl);
+		to->get_ipc_state()->e_.wait_locked(ddl);
 
 		copy_mrs_to_locked(to, 0, task::ipc_state::MR_SIZE);
 
@@ -167,8 +167,7 @@ error_code task::ipc_state::send_locked(thread* to, const deadline& ddl)
 			return err;
 		}
 
-		to->get_ipc_state()->f_.signal();
-
+		to->get_ipc_state()->f_.signal_locked();
 	}
 
 	this->state_ = IPC_FREE;
@@ -195,14 +194,14 @@ error_code task::ipc_state::receive_locked(thread* from, const deadline& ddl)
 
 	// consumer
 	{
-		f_.wait(ddl);
+		f_.wait_locked(ddl);
 
 		KDEBUG_ASSERT_MSG(this->get_message_tag().typed_count() != 0 || this->get_message_tag().untyped_count() != 0,
 			"Empty message isn't valid");
 
 		this->state_ = IPC_FREE;
 
-		e_.signal();
+		e_.signal_locked();
 	}
 
 	return ERROR_SUCCESS;
