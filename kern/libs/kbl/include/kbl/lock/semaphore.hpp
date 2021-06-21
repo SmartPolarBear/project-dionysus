@@ -41,6 +41,10 @@ class semaphore final
 		return wait_locked();
 	}
 
+	/// \brief Try to do a P operation.
+	/// \return true if P op is really done.
+	[[nodiscard]]bool try_wait();
+
 	/// \brief P operation, or sleep, down
 	/// \return
 	[[nodiscard]] error_code wait(const deadline& ddl) TA_REQ(!task::global_thread_lock)

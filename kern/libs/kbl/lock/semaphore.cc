@@ -3,6 +3,17 @@
 #include "kbl/lock/lock_guard.hpp"
 
 using namespace task;
+
+bool kbl::semaphore::try_wait()
+{
+	if (count_ > 0)
+	{
+		--count_;
+		return true;
+	}
+	return false;
+}
+
 error_code kbl::semaphore::wait_locked(const deadline& ddl)
 {
 //	lock::lock_guard g{ task::global_thread_lock };
@@ -39,3 +50,4 @@ size_t kbl::semaphore::waiter_count() const TA_REQ(!task::global_thread_lock)
 	lock::lock_guard g{ task::global_thread_lock };
 	return waiter_count_locked();
 }
+
