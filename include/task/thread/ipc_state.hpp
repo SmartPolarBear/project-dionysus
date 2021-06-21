@@ -131,15 +131,15 @@ class ipc_state
 	void set_acceptor(const ipc::message_acceptor* acc) noexcept;
 
  private:
-	void load_mrs_locked(size_t start, ktl::span<ipc::message_register_type> mrs);
+	void load_mrs_locked(size_t start, ktl::span<ipc::message_register_type> mrs) TA_REQ(lock_);
 
-	void store_mrs_locked(size_t st, ktl::span<ipc::message_register_type> mrs);
+	void store_mrs_locked(size_t st, ktl::span<ipc::message_register_type> mrs) TA_REQ(lock_);
 
-	void copy_mrs_to_locked(thread* another, size_t st, size_t cnt);
+	void copy_mrs_to_locked(thread* another, size_t st, size_t cnt) TA_REQ(lock_);
 
 	/// \brief set the message tag to mrs. will reset mr_count_, which influence exist items
 	/// \param tag
-	void set_message_tag_locked(const ipc::message_tag* tag) noexcept;
+	void set_message_tag_locked(const ipc::message_tag* tag) noexcept  TA_REQ(lock_);
 
 	/// \brief handle extended items like strings and map/grant items
 	/// \param to which thread to send extended items

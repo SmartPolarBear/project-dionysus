@@ -49,7 +49,7 @@ void task::ipc_state::copy_mrs_to_locked(thread* another, size_t st, size_t cnt)
 
 }
 
-void task::ipc_state::load_mrs_locked(size_t start, ktl::span<ipc::message_register_type> mrs) TA_REQ(parent_->lock)
+void task::ipc_state::load_mrs_locked(size_t start, ktl::span<ipc::message_register_type> mrs)
 {
 
 #ifdef IPC_MRCOPY_USE_SIMD
@@ -67,7 +67,7 @@ void task::ipc_state::load_mrs_locked(size_t start, ktl::span<ipc::message_regis
 
 }
 
-void task::ipc_state::store_mrs_locked(size_t start, ktl::span<ipc::message_register_type> mrs) TA_REQ(parent_->lock)
+void task::ipc_state::store_mrs_locked(size_t start, ktl::span<ipc::message_register_type> mrs)
 {
 	auto mr = mr_ + start;
 	for (auto& m:mrs)
@@ -86,7 +86,7 @@ void task::ipc_state::store_mrs_locked(size_t start, ktl::span<ipc::message_regi
 	return static_cast<ipc::message_acceptor>(br_[0]);
 }
 
-void task::ipc_state::set_message_tag_locked(const ipc::message_tag* tag) noexcept TA_REQ(parent_->lock)
+void task::ipc_state::set_message_tag_locked(const ipc::message_tag* tag) noexcept
 {
 	mr_[0] = tag->raw();
 	mr_count_ = 1;
@@ -187,23 +187,23 @@ error_code task::ipc_state::receive(thread* from, const deadline& ddl)
 
 void task::ipc_state::load_mrs(size_t start, ktl::span<ipc::message_register_type> mrs)
 {
-	lock::lock_guard g{ parent_->lock };
+	lock::lock_guard g{ lock_ };
 	load_mrs_locked(start, mrs);
 }
 void task::ipc_state::store_mrs(size_t st, ktl::span<ipc::message_register_type> mrs)
 {
-	lock::lock_guard g{ parent_->lock };
+	lock::lock_guard g{ lock_ };
 	store_mrs_locked(st, mrs);
 }
 
 void task::ipc_state::copy_mrs(thread* another, size_t st, size_t cnt)
 {
-	lock::lock_guard g{ parent_->lock };
+	lock::lock_guard g{ lock_ };
 	copy_mrs_to_locked(another, st, cnt);
 }
 
 void task::ipc_state::set_message_tag(const ipc::message_tag* tag) noexcept
 {
-	lock::lock_guard g{ parent_->lock };
+	lock::lock_guard g{ lock_ };
 	set_message_tag_locked(tag);
 }

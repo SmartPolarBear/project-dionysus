@@ -73,10 +73,9 @@ class solo_dispatcher
  protected:
 	[[nodiscard]]lock::spinlock* get_lock()
 	{
-		return &lock;
+		return &lock_;
 	}
 
-	mutable lock::spinlock lock{ "dispatcher" }; // TODO: this should be removed
 	mutable lock::spinlock lock_{ "dispatcher" };
 };
 

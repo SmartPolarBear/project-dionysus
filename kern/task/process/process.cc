@@ -210,7 +210,7 @@ error_code_with_result<process*> process::create(const char* name,
 	kbl::allocate_checker ck;
 	auto proc = new(&ck) process{ name_span, parent, nullptr };
 
-	lock_guard g1{ proc->lock };
+	lock_guard g1{ proc->lock_ };
 
 	if (!ck.check())
 	{
@@ -330,7 +330,7 @@ void process::finish_dead_transition() noexcept
 	ktl::shared_ptr<job> kill_job{ nullptr };
 
 	{
-		lock_guard guard{ lock };
+		lock_guard guard{ lock_ };
 
 		set_status_locked(Status::DEAD);
 
@@ -355,7 +355,7 @@ void process::exit(task_return_code code) noexcept
 	KDEBUG_ASSERT(cur_proc == this);
 
 	{
-		lock::lock_guard guard{ this->lock };
+		lock::lock_guard guard{ this->lock_ };
 
 		if (this->status_ == Status::DYING)
 		{
@@ -382,7 +382,7 @@ void process::kill(task_return_code code) noexcept
 	bool finish_dying = false;
 
 	{
-		lock_guard guard{ lock };
+		lock_guard guard{ lock_ };
 
 		if (status_ == Status::DEAD)
 		{
@@ -412,9 +412,9 @@ void process::kill(task_return_code code) noexcept
 	}
 }
 
-void process::set_status_locked(process::Status st) noexcept TA_REQ(lock)
+void process::set_status_locked(process::Status st) noexcept TA_REQ(lock_)
 {
-	KDEBUG_ASSERT(lock.holding());
+	KDEBUG_ASSERT(lock_.holding());
 
 	if (status_ == Status::DEAD && st != Status::DEAD)
 	{
@@ -445,20 +445,20 @@ void process::kill_all_threads_locked() noexcept
 
 void task::process::remove_thread(task::thread* t)
 {
-	lock_guard g{ lock };
+	lock_guard g{ lock_ };
 
 	threads_.remove(t);
 }
 
 void task::process::add_child_thread(thread* t) noexcept
 {
-	lock_guard g{ lock };
+	lock_guard g{ lock_ };
 	threads_.push_back(t);
 }
 
 error_code task::process::resize_heap(IN OUT uintptr_t* heap_ptr)
 {
-	lock_guard g1{ lock };
+	lock_guard g1{ lock_ };
 
 	// FIXME
 //	lock_guard g2{ mm->lock };
@@ -540,7 +540,7 @@ error_code process::suspend()
 {
 	canary_.assert();
 
-	lock_guard g{ lock };
+	lock_guard g{ lock_ };
 
 	if (status_ == Status::DYING || status_ == Status::DEAD)
 	{
@@ -566,7 +566,7 @@ void process::resume()
 {
 	canary_.assert();
 
-	lock_guard g{ lock };
+	lock_guard g{ lock_ };
 
 	if (status_ == Status::DYING || status_ == Status::DEAD)
 	{
