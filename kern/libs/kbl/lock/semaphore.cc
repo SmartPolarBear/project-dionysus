@@ -34,3 +34,8 @@ void kbl::semaphore::signal_locked()
 		wait_queue_.wake_one(true, ERROR_SUCCESS);
 	}
 }
+size_t kbl::semaphore::waiter_count() const TA_REQ(!task::global_thread_lock)
+{
+	lock::lock_guard g{ task::global_thread_lock };
+	return waiter_count_locked();
+}

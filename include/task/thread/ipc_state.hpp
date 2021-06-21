@@ -132,7 +132,7 @@ class ipc_state
 
  private:
 	/// \brief handle extended items like strings and map/grant items
-	/// \param to
+	/// \param to which thread to send extended items
 	/// \return
 	error_code send_extended_items(thread* to);
 
@@ -151,10 +151,6 @@ class ipc_state
 	kbl::semaphore f_{ 0 }; // indicate that if items has been written but not yet read
 
 	kbl::semaphore e_{ 1 }; // indicate that if there's room to write
-
-	wait_queue sender_wait_queue_{};
-
-	wait_queue receiver_wait_queue_{};
 
 	mutable lock::spinlock lock_{ "ipc_state" };
 };
