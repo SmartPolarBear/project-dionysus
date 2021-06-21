@@ -143,9 +143,12 @@ error_code task::ipc_state::send_extended_items(thread* to)
 	return ERROR_SUCCESS;
 }
 
-error_code task::ipc_state::send_locked(thread* to, const deadline& ddl)
+error_code task::ipc_state::send(thread* to, const deadline& ddl)
 {
-	to->get_ipc_state()->e_.wait_locked(ddl);
+	if (auto err = to->get_ipc_state()->e_.wait(ddl);err != ERROR_SUCCESS)
+	{
+		KDEBUG_GERNERALPANIC_CODE(err);
+	}
 
 	copy_mrs_to_locked(to, 0, task::ipc_state::MR_SIZE);
 
@@ -154,20 +157,45 @@ error_code task::ipc_state::send_locked(thread* to, const deadline& ddl)
 		return err;
 	}
 
-	to->get_ipc_state()->f_.signal_locked();
+	to->get_ipc_state()->f_.signal();
 
 	return ERROR_SUCCESS;
 }
 
-error_code task::ipc_state::receive_locked(thread* from, const deadline& ddl)
+error_code task::ipc_state::receive(thread* from, const deadline& ddl)
 {
-
-	f_.wait_locked(ddl);
+	if (auto err = f_.wait(ddl);err != ERROR_SUCCESS)
+	{
+		KDEBUG_GERNERALPANIC_CODE(err);
+	}
 
 	KDEBUG_ASSERT_MSG(this->get_message_tag().typed_count() != 0 || this->get_message_tag().untyped_count() != 0,
 		"Empty message isn't valid");
 
-	e_.signal_locked();
+	e_.signal();
 
 	return ERROR_SUCCESS;
+}
+
+void task::ipc_state::load_mrs(size_t start, ktl::span<ipc::message_register_type> mrs)
+{
+	lock::lock_guard g{ parent_->lock };
+	load_mrs_locked(start, mrs);
+}
+void task::ipc_state::store_mrs(size_t st, ktl::span<ipc::message_register_type> mrs)
+{
+	lock::lock_guard g{ parent_->lock };
+	store_mrs_locked(st, mrs);
+}
+
+void task::ipc_state::copy_mrs(thread* another, size_t st, size_t cnt)
+{
+	lock::lock_guard g{ parent_->lock };
+	copy_mrs_to_locked(another, st, cnt);
+}
+
+void task::ipc_state::set_message_tag(const ipc::message_tag* tag) noexcept
+{
+	lock::lock_guard g{ parent_->lock };
+	set_message_tag_locked(tag);
 }

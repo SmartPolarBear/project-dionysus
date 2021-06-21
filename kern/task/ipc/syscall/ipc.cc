@@ -26,12 +26,10 @@ error_code sys_ipc_load_message(const syscall_regs* regs)
 		return -ERROR_INVALID;
 	}
 
-	lock::lock_guard g{ cur_thread->get_ipc_state()->lock_ };
-
 	auto tag = msg->get_tag();
-	cur_thread->get_ipc_state()->set_message_tag_locked(&tag);
+	cur_thread->get_ipc_state()->set_message_tag(&tag);
 
-	cur_thread->get_ipc_state()->load_mrs_locked(1, msg->get_items_span());
+	cur_thread->get_ipc_state()->load_mrs(1, msg->get_items_span());
 
 	return ERROR_SUCCESS;
 }
@@ -50,9 +48,9 @@ error_code sys_ipc_send(const syscall_regs* regs)
 	{
 		auto target = get_result(ret);
 
-		lock::lock_guard g{ global_thread_lock };
+		global_thread_lock.assert_not_held();
 
-		auto err = cur_thread->get_ipc_state()->send_locked(target, deadline::after(timeout));
+		auto err = cur_thread->get_ipc_state()->send(target, deadline::after(timeout));
 		if (err != ERROR_SUCCESS)
 		{
 			KDEBUG_GERNERALPANIC_CODE(err);
@@ -78,9 +76,9 @@ error_code sys_ipc_receive(const syscall_regs* regs)
 	{
 		auto from = get_result(ret);
 
-		lock::lock_guard g{ global_thread_lock };
+		global_thread_lock.assert_not_held();
 
-		auto err = cur_thread->get_ipc_state()->receive_locked(from, deadline::after(timeout));
+		auto err = cur_thread->get_ipc_state()->receive(from, deadline::after(timeout));
 		if (err != ERROR_SUCCESS)
 		{
 			KDEBUG_GERNERALPANIC_CODE(err);
@@ -101,11 +99,10 @@ error_code sys_ipc_store(const syscall_regs* regs)
 		return -ERROR_INVALID;
 	}
 
-	lock::lock_guard g{ cur_thread->get_ipc_state()->lock_ };
 
 	msg->set_tag(cur_thread->get_ipc_state()->get_message_tag());
 
-	cur_thread->get_ipc_state()->store_mrs_locked(1,
+	cur_thread->get_ipc_state()->store_mrs(1,
 		msg->get_items_span(cur_thread->get_ipc_state()->get_message_tag()));
 
 	return ERROR_SUCCESS;

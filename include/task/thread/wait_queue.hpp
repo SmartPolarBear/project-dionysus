@@ -109,5 +109,4 @@ class wait_queue
 	wait_queue_list_type block_list_;
 };
 
-
 }

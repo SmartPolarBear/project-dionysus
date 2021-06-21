@@ -82,9 +82,15 @@ class ipc_state
 	ipc_state(const ipc_state&) = delete;
 	ipc_state& operator=(const ipc_state&) = delete;
 
-	error_code receive_locked([[maybe_unused]]thread* from, const deadline& ddl) TA_REQ(global_thread_lock);
+	error_code receive([[maybe_unused]]thread* from, const deadline& ddl) TA_REQ(!global_thread_lock);
 
-	error_code send_locked(thread* to, const deadline& ddl) TA_REQ(global_thread_lock);
+	error_code send(thread* to, const deadline& ddl) TA_REQ(!global_thread_lock);
+
+	void load_mrs(size_t start, ktl::span<ipc::message_register_type> mrs);
+
+	void store_mrs(size_t st, ktl::span<ipc::message_register_type> mrs);
+
+	void copy_mrs(thread* another, size_t st, size_t cnt);
 
 	template<typename T>
 	T get_typed_item(size_t index)
@@ -112,25 +118,29 @@ class ipc_state
 		br_[index] = value;
 	}
 
-	void load_mrs_locked(size_t start, ktl::span<ipc::message_register_type> mrs);
-
-	void store_mrs_locked(size_t st, ktl::span<ipc::message_register_type> mrs);
-
-	void copy_mrs_to_locked(thread* another, size_t st, size_t cnt);
-
 	[[nodiscard]] ipc::message_tag get_message_tag();
 
 	[[nodiscard]] ipc::message_acceptor get_acceptor();
 
 	/// \brief set the message tag to mrs. will reset mr_count_, which influence exist items
 	/// \param tag
-	void set_message_tag_locked(const ipc::message_tag* tag) noexcept;
+	void set_message_tag(const ipc::message_tag* tag) noexcept;
 
 	/// \brief set acceptor to brs. will reset mr_count_, which influence exist items
 	/// \param acc
 	void set_acceptor(const ipc::message_acceptor* acc) noexcept;
 
  private:
+	void load_mrs_locked(size_t start, ktl::span<ipc::message_register_type> mrs);
+
+	void store_mrs_locked(size_t st, ktl::span<ipc::message_register_type> mrs);
+
+	void copy_mrs_to_locked(thread* another, size_t st, size_t cnt);
+
+	/// \brief set the message tag to mrs. will reset mr_count_, which influence exist items
+	/// \param tag
+	void set_message_tag_locked(const ipc::message_tag* tag) noexcept;
+
 	/// \brief handle extended items like strings and map/grant items
 	/// \param to which thread to send extended items
 	/// \return

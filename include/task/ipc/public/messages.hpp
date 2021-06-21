@@ -221,7 +221,7 @@ class message_tag final
 
 static_assert(_internals::SingleMessageItem<message_tag>);
 
-/// \brief A message acceptor constraint how to receive_locked the messages
+/// \brief A message acceptor constraint how to receive the messages
 class message_acceptor final
 {
  public:
