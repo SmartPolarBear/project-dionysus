@@ -7,7 +7,6 @@
 
 #include "memory/fpage.hpp"
 
-
 #if defined(_DIONYSUS_KERNEL_)
 #include "ktl/concepts.hpp"
 #include "ktl/span.hpp"
@@ -321,48 +320,57 @@ static_assert(_internals::SingleMessageItem<message_acceptor>);
 
 enum class message_item_types : uint8_t
 {
-	/*STRING, */MAP = 1, GRANT
+	STRING, MAP = 1, GRANT
 };
 
-// We will not support string
-//class string_item final
-//{
-// public:
-//	friend class message;
-//
-//	static constexpr size_t STRING_ITEM_STR_LEN_BITS = sizeof(message_register_type) * 8 - 10;
-//
-// public:
-//
-//	constexpr string_item() : type_{ static_cast<uint64_t>(message_item_types::STRING) }
-//	{
-//	}
-//
-//	[[nodiscard]] message_item_types type() const
-//	{
-//		return (message_item_types)type_;
-//	}
-//
-//	message_span raw() const
-//	{
-//		return message_span{ raws_, 2 };
-//	}
-//
-// private:
-//	union
-//	{
-//		struct
-//		{
-//			uint64_t type_: 4;
-//			uint64_t res0_: 6;
-//			uint64_t string_len_: STRING_ITEM_STR_LEN_BITS;
-//			uint64_t string_ptr;
-//		}__attribute__((packed));
-//		mutable uint64_t raws_[2]{ 0, 0 };
-//	};
-//}__attribute__((packed));
-//
-//static_assert(_internals::DoubleMessageItem<string_item>);
+class string_item final
+{
+ public:
+	friend class message;
+
+	static constexpr size_t STRING_ITEM_STR_LEN_BITS = sizeof(message_register_type) * 8 - 10;
+
+ public:
+
+	constexpr string_item() : type_{ static_cast<uint64_t>(message_item_types::STRING) }
+	{
+	}
+
+	[[nodiscard]] message_item_types type() const
+	{
+		return (message_item_types)type_;
+	}
+
+	[[nodiscard]] size_t length() const
+	{
+		return string_len_;
+	}
+
+	[[nodiscard]] uintptr_t address() const
+	{
+		return string_ptr;
+	}
+
+	message_span raw() const
+	{
+		return message_span{ raws_, 2 };
+	}
+
+ private:
+	union
+	{
+		struct
+		{
+			uint64_t type_: 4;
+			uint64_t res0_: 6;
+			uint64_t string_len_: STRING_ITEM_STR_LEN_BITS;
+			uint64_t string_ptr;
+		}__attribute__((packed));
+		mutable uint64_t raws_[2]{ 0, 0 };
+	};
+}__attribute__((packed));
+
+static_assert(_internals::DoubleMessageItem<string_item>);
 
 ///// \brief map item share the page with threads
 class map_item final

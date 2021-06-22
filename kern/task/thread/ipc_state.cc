@@ -18,6 +18,7 @@
 #include <gsl/util>
 
 #include <utility>
+#include <task/thread/ipc_state.hpp>
 
 using namespace task;
 using namespace lock;
@@ -66,6 +67,36 @@ void task::ipc_state::load_mrs_locked(size_t start, ktl::span<ipc::message_regis
 
 }
 
+error_code ipc_state::copy_string_locked(thread* from_t, uintptr_t from, thread* to_t, uintptr_t to, size_t len) TA_REQ(
+	lock_)
+{
+	lock_guard g{ to_t->ipc_state_.lock_ };
+
+	if (!VALID_USER_PTR(from))
+	{
+		return -ERROR_INVALID_ACCESS;
+	}
+
+	if (!VALID_USER_PTR(to))
+	{
+		return -ERROR_INVALID_ACCESS;
+	}
+
+	if (!VALID_USER_PTR(from + len - sizeof(uint8_t)))
+	{
+		return -ERROR_INVALID_ACCESS;
+	}
+
+	if (!VALID_USER_PTR(to + len - sizeof(uint8_t)))
+	{
+		return -ERROR_INVALID_ACCESS;
+	}
+
+	memmove((void*)to, (void*)from, len);
+
+	return ERROR_SUCCESS;
+}
+
 void task::ipc_state::store_mrs_locked(size_t start, ktl::span<ipc::message_register_type> mrs)
 {
 	auto mr = mr_ + start;
@@ -103,6 +134,8 @@ error_code task::ipc_state::send_extended_items(thread* to)
 
 	auto from = cur_thread.get();
 	auto tag = from->ipc_state_.get_message_tag();
+
+	uint64_t br_index = 1;
 
 	for (size_t idx = tag.untyped_count() + 1; idx < tag.typed_count();)
 	{
@@ -142,6 +175,47 @@ error_code task::ipc_state::send_extended_items(thread* to)
 				return get_error_code(ret);
 
 			}
+		}
+		else if (static_cast<ipc::message_item_types>(mr & 0xF) == ipc::message_item_types::STRING)
+		{
+			if (!acceptor.allow_string())
+			{
+				return -ERROR_INVALID;
+			}
+
+			auto src_item = from->ipc_state_.get_typed_item<ipc::string_item>(idx);
+
+			{
+				lock_guard g{ lock_ };
+
+				auto dst_br = get_br(br_index);
+				br_index += 2;
+
+				if (static_cast<ipc::message_item_types>(get_br(br_index + 1) & 0xF) != ipc::message_item_types::STRING)
+				{
+					return -ERROR_INVALID;
+				}
+
+				if (static_cast<size_t>(get_br(br_index + 1) >> 10ull) < src_item.length())
+				{
+					return -ERROR_INVALID;
+				}
+
+				if (auto err = copy_string_locked(from, src_item.address(), to, (uintptr_t)dst_br, src_item.length());
+					err != ERROR_SUCCESS)
+				{
+					return err;
+				}
+
+				decltype(get_br(br_index + 1)) new_br = src_item.length() << 10ull;
+				new_br |= (get_br(br_index + 1) & 0x3FF);
+
+				set_br(br_index + 1, new_br);
+			}
+		}
+		else
+		{
+			return -ERROR_INVALID;
 		}
 	}
 
@@ -213,4 +287,5 @@ void task::ipc_state::store_message(message* msg)
 
 	e_.signal(); // allow next sender to send
 }
+
 

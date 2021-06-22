@@ -89,7 +89,7 @@ class ipc_state
 	/// \brief set acceptor to brs. will reset mr_count_, which influence exist items
 	/// \param acc
 	void set_acceptor(const ipc::message_acceptor* acc) noexcept;
-	
+
 	template<typename T>
 	T get_typed_item(size_t index)
 	{
@@ -126,6 +126,12 @@ class ipc_state
 	void store_mrs_locked(size_t st, ktl::span<ipc::message_register_type> mrs) TA_REQ(lock_);
 
 	void copy_mrs_to_locked(thread* another, size_t st, size_t cnt) TA_REQ(lock_);
+
+	error_code copy_string_locked([[maybe_unused]] thread* from_t,
+		uintptr_t from,
+		[[maybe_unused]] thread* to_t,
+		uintptr_t to,
+		size_t len)TA_REQ(lock_);
 
 	/// \brief set the message tag to mrs. will reset mr_count_, which influence exist items
 	/// \param tag
