@@ -288,4 +288,23 @@ void task::ipc_state::store_message(message* msg)
 	e_.signal(); // allow next sender to send
 }
 
+error_code ipc_state::wait(const deadline& ddl) TA_REQ(!global_thread_lock)
+{
+	if (auto err = f_.wait(ddl);err != ERROR_SUCCESS)
+	{
+		KDEBUG_GERNERALPANIC_CODE(err);
+	}
+
+	{
+		lock_guard g{ lock_ };
+
+		KDEBUG_ASSERT_MSG(this->get_message_tag().typed_count() != 0 || this->get_message_tag().untyped_count() != 0,
+			"Empty message isn't valid");
+	}
+
+	// do not call 	e_.signal(); to avoid multiple sender overwrite the buffer
+
+	return ERROR_SUCCESS;
+}
+
 
