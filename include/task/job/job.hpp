@@ -78,7 +78,7 @@ class job final
 
 	[[nodiscard]] job_status get_status() const
 	{
-		lock::lock_guard g{ this->lock };
+		lock::lock_guard g{ this->lock_ };
 		return status_;
 	}
 
@@ -87,7 +87,7 @@ class job final
 		const std::shared_ptr<job>& parent,
 		job_policy policy);
 
-	void remove_from_job_trees() TA_EXCL(lock);
+	void remove_from_job_trees() TA_EXCL(lock_);
 
 	bool add_child_job(job* child);
 	void remove_child_job(job* job);
@@ -95,11 +95,11 @@ class job final
 	void add_child_process(process* proc);
 	void remove_child_process(process* proc);
 
-	bool is_ready_for_dead_transition_locked()TA_REQ(lock);
-	bool finish_dead_transition_unlocked()TA_REQ(!lock);
+	bool is_ready_for_dead_transition_locked()TA_REQ(lock_);
+	bool finish_dead_transition_unlocked()TA_REQ(!lock_);
 
 	template<typename T>
-	[[nodiscard]]size_t get_count_locked() TA_REQ(lock);
+	[[nodiscard]]size_t get_count_locked() TA_REQ(lock_);
 
  private:
 	kbl::canary<kbl::magic(" job")> canary_;
@@ -112,7 +112,7 @@ class job final
 
 	task_return_code ret_code_;
 
-	job_status status_ TA_GUARDED(lock);
+	job_status status_ TA_GUARDED(lock_);
 
 	link_type job_link{ this };
 	using job_list_type = kbl::intrusive_list_with_default_trait<job,

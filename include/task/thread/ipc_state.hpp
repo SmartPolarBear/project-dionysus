@@ -69,22 +69,26 @@ class ipc_state
 	static constexpr size_t MR_SIZE = 64;
 	static constexpr size_t BR_SIZE = 33;
 
-	friend class wait_queue;
-	friend class thread;
-
-	friend error_code (::sys_ipc_load_message(const syscall::syscall_regs* regs));
-	friend error_code (::sys_ipc_store(const syscall::syscall_regs* regs));
-
 	ipc_state() = delete;
+
 	explicit ipc_state(thread* parent) : parent_(parent)
 	{
 	}
+
 	ipc_state(const ipc_state&) = delete;
 	ipc_state& operator=(const ipc_state&) = delete;
 
-	error_code receive_locked([[maybe_unused]]thread* from, const deadline& ddl) TA_REQ(global_thread_lock);
+	error_code receive([[maybe_unused]]thread* from, const deadline& ddl) TA_REQ(!global_thread_lock);
 
-	error_code send_locked(thread* to, const deadline& ddl) TA_REQ(global_thread_lock);
+	error_code send(thread* to, const deadline& ddl) TA_REQ(!global_thread_lock);
+
+	void load_message(ipc::message* msg)TA_REQ(!global_thread_lock);
+
+	void store_message(ipc::message* msg) TA_REQ(!global_thread_lock);
+
+	/// \brief set acceptor to brs. will reset mr_count_, which influence exist items
+	/// \param acc
+	void set_acceptor(const ipc::message_acceptor* acc) noexcept;
 
 	template<typename T>
 	T get_typed_item(size_t index)
@@ -112,27 +116,29 @@ class ipc_state
 		br_[index] = value;
 	}
 
-	void load_mrs_locked(size_t start, ktl::span<ipc::message_register_type> mrs);
-
-	void store_mrs_locked(size_t st, ktl::span<ipc::message_register_type> mrs);
-
-	void copy_mrs_to_locked(thread* another, size_t st, size_t cnt);
-
 	[[nodiscard]] ipc::message_tag get_message_tag();
 
 	[[nodiscard]] ipc::message_acceptor get_acceptor();
 
+ private:
+	void load_mrs_locked(size_t start, ktl::span<ipc::message_register_type> mrs) TA_REQ(lock_);
+
+	void store_mrs_locked(size_t st, ktl::span<ipc::message_register_type> mrs) TA_REQ(lock_);
+
+	void copy_mrs_to_locked(thread* another, size_t st, size_t cnt) TA_REQ(lock_);
+
+	error_code copy_string_locked([[maybe_unused]] thread* from_t,
+		uintptr_t from,
+		[[maybe_unused]] thread* to_t,
+		uintptr_t to,
+		size_t len)TA_REQ(lock_);
+
 	/// \brief set the message tag to mrs. will reset mr_count_, which influence exist items
 	/// \param tag
-	void set_message_tag_locked(const ipc::message_tag* tag) noexcept;
+	void set_message_tag_locked(const ipc::message_tag* tag) noexcept  TA_REQ(lock_);
 
-	/// \brief set acceptor to brs. will reset mr_count_, which influence exist items
-	/// \param acc
-	void set_acceptor(const ipc::message_acceptor* acc) noexcept;
-
- private:
 	/// \brief handle extended items like strings and map/grant items
-	/// \param to
+	/// \param to which thread to send extended items
 	/// \return
 	error_code send_extended_items(thread* to);
 
@@ -146,15 +152,11 @@ class ipc_state
 
 	size_t br_count_{ 0 };
 
-	thread* parent_{ nullptr };
+	[[maybe_unused]]thread* parent_{ nullptr };
 
 	kbl::semaphore f_{ 0 }; // indicate that if items has been written but not yet read
 
 	kbl::semaphore e_{ 1 }; // indicate that if there's room to write
-
-	wait_queue sender_wait_queue_{};
-
-	wait_queue receiver_wait_queue_{};
 
 	mutable lock::spinlock lock_{ "ipc_state" };
 };

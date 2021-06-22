@@ -74,7 +74,7 @@ task::job::~job()
 	remove_from_job_trees();
 }
 
-void task::job::remove_from_job_trees() TA_EXCL(this->lock)
+void task::job::remove_from_job_trees() TA_EXCL(this->lock_)
 {
 	auto parent = parent_.lock();
 	parent->remove_child_job(this);
@@ -90,7 +90,7 @@ void task::job::apply_basic_policy(std::span<policy_item> policies) noexcept
 
 task::job_policy task::job::get_policy() const
 {
-	lock::lock_guard guard{ lock };
+	lock::lock_guard guard{ lock_ };
 	return policy_;
 }
 
@@ -98,7 +98,7 @@ bool task::job::add_child_job(job* child)
 {
 	canary_.assert();
 
-	lock_guard g{ lock };
+	lock_guard g{ lock_ };
 
 	if (status_ != job_status::READY)
 		return false;
@@ -116,7 +116,7 @@ void task::job::remove_child_job(task::job* jb)
 
 	// lock scope
 	{
-		lock_guard guard{ lock };
+		lock_guard guard{ lock_ };
 
 		auto iter = ktl::find_if(child_jobs_.begin(), child_jobs_.end(), [jb](auto& ele)
 		{
@@ -138,7 +138,7 @@ void task::job::remove_child_job(task::job* jb)
 	}
 }
 
-bool task::job::is_ready_for_dead_transition_locked() TA_REQ(lock)
+bool task::job::is_ready_for_dead_transition_locked() TA_REQ(lock_)
 {
 	return status_ == job_status::KILLING && child_jobs_.empty() && child_processes_.empty();
 }
@@ -153,7 +153,7 @@ bool task::job::finish_dead_transition_unlocked()
 
 	// locked scope
 	{
-		lock::lock_guard guard{ lock };
+		lock::lock_guard guard{ lock_ };
 		status_ = job_status::DEAD;
 	}
 
@@ -168,7 +168,7 @@ bool task::job::kill(task_return_code code) noexcept
 
 	bool should_die = false;
 	{
-		lock_guard g{ lock };
+		lock_guard g{ lock_ };
 
 		if (status_ != job_status::READY)
 			return false;
@@ -204,20 +204,20 @@ bool task::job::kill(task_return_code code) noexcept
 }
 
 template<>
-size_t task::job::get_count_locked<task::job>() TA_REQ(lock)
+size_t task::job::get_count_locked<task::job>() TA_REQ(lock_)
 {
 	return this->child_jobs_.size();
 }
 
 template<>
-size_t task::job::get_count_locked<task::process>() TA_REQ(lock)
+size_t task::job::get_count_locked<task::process>() TA_REQ(lock_)
 {
 	return this->child_processes_.size();
 }
 
 void task::job::add_child_process(process* proc)
 {
-	lock::lock_guard guard{ lock };
+	lock::lock_guard guard{ lock_ };
 
 	this->child_processes_.insert(child_processes_.begin(), proc);
 }
@@ -226,7 +226,7 @@ void task::job::remove_child_process(task::process* proc)
 {
 	bool should_die = false;
 	{
-		lock_guard guard{ lock };
+		lock_guard guard{ lock_ };
 
 		auto iter = ktl::find_if(child_processes_.begin(), child_processes_.end(), [proc](auto& p)
 		{

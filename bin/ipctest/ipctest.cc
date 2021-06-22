@@ -21,7 +21,7 @@ handle_type get_receiver()
 	write_format("receiver handle : %lld \n", thread);
 	return thread;
 error:
-	write_format("ERROR %d getting this process", err);
+	write_format("ERROR %d getting receiver", err);
 	while (true);
 }
 

@@ -12,7 +12,7 @@ namespace kbl
 class semaphore final
 {
  public:
-	semaphore() = default;
+	[[nodiscard]] semaphore() = default;
 	explicit semaphore(uint64_t init_count) : count_(init_count)
 	{
 	}
@@ -24,59 +24,41 @@ class semaphore final
 
 	/// \brief P operation, or sleep, down
 	/// \return
-	error_code wait_locked() TA_REQ(task::global_thread_lock)
-	{
-		return wait_locked(deadline::infinite());
-	}
+	[[nodiscard]] error_code wait() TA_REQ(!task::global_thread_lock);
+
+	/// \brief Try to do a P operation.
+	/// \return true if P op is really done.
+	[[nodiscard]]bool try_wait() TA_REQ(!task::global_thread_lock);
 
 	/// \brief P operation, or sleep, down
 	/// \return
-	error_code wait_locked(const deadline& ddl) TA_REQ(task::global_thread_lock);
+	[[nodiscard]] error_code wait(const deadline& ddl) TA_REQ(!task::global_thread_lock);
+
+	/// \brief V operation, or wakeup, up
+	void signal() TA_REQ(!task::global_thread_lock);
+
+	[[nodiscard]] size_t waiter_count() const TA_REQ(!task::global_thread_lock);
+
+	[[nodiscard]] uint64_t count() const
+	{
+		return count_.load(ktl::memory_order_acquire);
+	}
+
+ private:
+	/// \brief Try to do a P operation.
+	/// \return true if P op is really done.
+	[[nodiscard]] bool try_wait_locked() TA_REQ(task::global_thread_lock);
 
 	/// \brief P operation, or sleep, down
 	/// \return
-	error_code wait() TA_REQ(!task::global_thread_lock)
-	{
-		lock::lock_guard g{ task::global_thread_lock };
-		return wait_locked();
-	}
-
-	/// \brief P operation, or sleep, down
-	/// \return
-	error_code wait(const deadline& ddl) TA_REQ(!task::global_thread_lock)
-	{
-		lock::lock_guard g{ task::global_thread_lock };
-		return wait_locked(ddl);
-	}
+	[[nodiscard]] error_code wait_locked(const deadline& ddl) TA_REQ(task::global_thread_lock);
 
 	/// \brief V operation, or wakeup, up
 	void signal_locked() TA_REQ(task::global_thread_lock);
 
-	/// \brief V operation, or wakeup, up
-	void signal() TA_REQ(!task::global_thread_lock)
-	{
-		lock::lock_guard g{ task::global_thread_lock };
-		signal_locked();
-	}
-
-	uint64_t count() const
-	{
-		lock::lock_guard g{ lock_ };
-		return count_.load(ktl::memory_order_acquire);
-	}
-
-	size_t waiter_count() const
-	{
-		lock::lock_guard g{ task::global_thread_lock };
-
-		return wait_queue_.size();
-	}
-
- private:
 	task::wait_queue wait_queue_{};
 
 	ktl::atomic<uint64_t> count_{ 0 };
 
-	mutable lock::spinlock lock_{ "semaphore" };
 };
 }

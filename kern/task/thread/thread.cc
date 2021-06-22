@@ -199,13 +199,13 @@ void thread::default_trampoline() TA_NO_THREAD_SAFETY_ANALYSIS
 	// will return to thread_entry
 }
 
-void thread::switch_to(interrupt_saved_state_type state_to_restore) TA_REQ(global_thread_lock, !lock)
+void thread::switch_to(interrupt_saved_state_type state_to_restore) TA_REQ(global_thread_lock, !lock_)
 {
 	KDEBUG_ASSERT(arch_ints_disabled());
 	KDEBUG_ASSERT(this->state == thread_states::READY);
 
 	global_thread_lock.assert_held();
-	lock.assert_not_held();
+	lock_.assert_not_held();
 
 	auto _ = gsl::finally([&state_to_restore]()
 	{
@@ -213,7 +213,7 @@ void thread::switch_to(interrupt_saved_state_type state_to_restore) TA_REQ(globa
 	});
 
 	{
-		lock_guard g{ lock };
+		lock_guard g{ lock_ };
 		state = thread_states::RUNNING;
 	}
 

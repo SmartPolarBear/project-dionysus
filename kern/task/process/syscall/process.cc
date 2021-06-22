@@ -56,6 +56,11 @@ error_code sys_get_current_process(const syscall_regs* regs)
 
 	*out = cur_proc->handle_table_.add_handle(handle_entry::duplicate(handle));
 
+	if (*out == INVALID_HANDLE_VALUE)
+	{
+		return -ERROR_INVALID;
+	}
+
 	return ERROR_SUCCESS;
 }
 
@@ -91,6 +96,11 @@ error_code sys_get_process_by_id(const syscall_regs* regs)
 	else
 	{
 		*out = cur_proc->handle_table_.entry_to_handle(local_handle);
+	}
+
+	if (*out == INVALID_HANDLE_VALUE)
+	{
+		return -ERROR_INVALID;
 	}
 
 	return ERROR_SUCCESS;
@@ -134,6 +144,11 @@ error_code sys_get_process_by_name(const syscall_regs* regs)
 	else
 	{
 		*out = cur_proc->handle_table_.entry_to_handle(local_handle);
+	}
+
+	if (*out == INVALID_HANDLE_VALUE)
+	{
+		return -ERROR_INVALID;
 	}
 
 	return ERROR_SUCCESS;

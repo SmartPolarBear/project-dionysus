@@ -83,7 +83,7 @@ handle_type get_sender()
 	write_format("sender handle : %lld \n", thread);
 	return thread;
 error:
-	write_format("ERROR %d getting this process", err);
+	write_format("ERROR %d getting sender", err);
 	while (true);
 }
 

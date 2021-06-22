@@ -189,13 +189,13 @@ class process final
 
 	/// \brief  status transition, must be called with held lock
 	/// \param st the new status
-	void set_status_locked(Status st) noexcept TA_REQ(lock);
+	void set_status_locked(Status st) noexcept TA_REQ(lock_);
 
-	void kill_all_threads_locked() noexcept TA_REQ(lock, !global_thread_lock);
+	void kill_all_threads_locked() noexcept TA_REQ(lock_, !global_thread_lock);
 
-	void add_child_thread(thread* t) noexcept TA_EXCL(lock);
+	void add_child_thread(thread* t) noexcept TA_EXCL(lock_);
 
-	error_code setup_address_space() TA_REQ(lock);
+	error_code setup_address_space() TA_REQ(lock_);
 
 	Status status_;
 
@@ -208,11 +208,11 @@ class process final
 
 	kbl::name<PROC_MAX_NAME_LEN> name_;
 
-	thread::process_list_type threads_ TA_GUARDED(lock){};
+	thread::process_list_type threads_ TA_GUARDED(lock_){};
 
 	process_user_stack_state user_stack_state_{ this };
 
-	int64_t suspend_count_ TA_GUARDED(lock) { 0 };
+	int64_t suspend_count_ TA_GUARDED(lock_) { 0 };
 
 	task_return_code ret_code_;
 
