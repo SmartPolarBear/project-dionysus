@@ -39,5 +39,6 @@ DEF_SYSCALL_HANDLE(sys_ipc_load_message);
 DEF_SYSCALL_HANDLE(sys_ipc_send);
 DEF_SYSCALL_HANDLE(sys_ipc_receive);
 DEF_SYSCALL_HANDLE(sys_ipc_store);
+DEF_SYSCALL_HANDLE(sys_ipc_accept);
 
 #undef DEF_SYSCALL_HANDLE

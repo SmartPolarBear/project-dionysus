@@ -27,7 +27,7 @@ error_code sys_ipc_load_message(const syscall_regs* regs)
 	}
 
 	global_thread_lock.assert_not_held();
-	
+
 	cur_thread->get_ipc_state()->load_message(msg);
 
 	return ERROR_SUCCESS;
@@ -101,6 +101,20 @@ error_code sys_ipc_store(const syscall_regs* regs)
 	global_thread_lock.assert_not_held();
 
 	cur_thread->get_ipc_state()->store_message(msg);
+
+	return ERROR_SUCCESS;
+}
+
+error_code sys_ipc_accept(const syscall_regs* regs)
+{
+	auto acceptor = syscall::args_get<task::ipc::message_acceptor*, 0>(regs);
+
+	if (!VALID_USER_PTR(reinterpret_cast<uintptr_t>(acceptor)))
+	{
+		return -ERROR_INVALID;
+	}
+
+	cur_thread->get_ipc_state()->set_acceptor(acceptor);
 
 	return ERROR_SUCCESS;
 }

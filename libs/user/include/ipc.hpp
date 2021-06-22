@@ -17,3 +17,6 @@ DIONYSUS_API error_code ipc_send(object::handle_type target, time_type timeout);
 DIONYSUS_API error_code ipc_receive(object::handle_type from, time_type timeout);
 
 DIONYSUS_API error_code ipc_store(task::ipc::message* msg);
+
+DIONYSUS_API error_code ipc_accept(task::ipc::message_acceptor* acc);
+
