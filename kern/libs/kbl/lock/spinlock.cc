@@ -124,13 +124,11 @@ bool lock::spinlock::holding() noexcept
 {
 	if (cpu.is_valid())
 	{
-//		return spinlock_.locked && spinlock_.cpu == cpu.get();
 		return spinlock_.value != 0 && arch_spinlock_cpu(&spinlock_) == cpu->id;
 	}
-	else
+	else // if not valid, we should on CPU 0
 	{
-//		return spinlock_.locked;
-		return spinlock_.value;
+		return spinlock_.value != 0 && arch_spinlock_cpu(&spinlock_) == 0;
 	}
 }
 
