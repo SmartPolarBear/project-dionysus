@@ -28,7 +28,7 @@ class semaphore final
 
 	/// \brief Try to do a P operation.
 	/// \return true if P op is really done.
-	[[nodiscard]]bool try_wait();
+	[[nodiscard]]bool try_wait() TA_REQ(!task::global_thread_lock);
 
 	/// \brief P operation, or sleep, down
 	/// \return
@@ -36,7 +36,7 @@ class semaphore final
 
 	/// \brief V operation, or wakeup, up
 	void signal() TA_REQ(!task::global_thread_lock);
-	
+
 	[[nodiscard]] size_t waiter_count() const TA_REQ(!task::global_thread_lock);
 
 	[[nodiscard]] uint64_t count() const
@@ -45,6 +45,9 @@ class semaphore final
 	}
 
  private:
+	/// \brief Try to do a P operation.
+	/// \return true if P op is really done.
+	[[nodiscard]] bool try_wait_locked() TA_REQ(task::global_thread_lock);
 
 	/// \brief P operation, or sleep, down
 	/// \return

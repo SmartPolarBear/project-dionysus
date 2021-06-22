@@ -6,17 +6,12 @@ using namespace task;
 
 bool kbl::semaphore::try_wait()
 {
-	if (count_ > 0)
-	{
-		--count_;
-		return true;
-	}
-	return false;
+	lock::lock_guard g{ task::global_thread_lock };
+	return try_wait_locked();
 }
 
 error_code kbl::semaphore::wait_locked(const deadline& ddl)
 {
-//	lock::lock_guard g{ task::global_thread_lock };
 	global_thread_lock.assert_held();
 	KDEBUG_ASSERT(count_ == 0 || wait_queue_.empty());
 
@@ -31,7 +26,6 @@ error_code kbl::semaphore::wait_locked(const deadline& ddl)
 
 void kbl::semaphore::signal_locked()
 {
-//	lock::lock_guard g{ task::global_thread_lock };
 	global_thread_lock.assert_held();
 
 	KDEBUG_ASSERT(count_ == 0 || wait_queue_.empty());
@@ -67,6 +61,18 @@ void kbl::semaphore::signal() TA_REQ(!task::global_thread_lock)
 {
 	lock::lock_guard g{ task::global_thread_lock };
 	signal_locked();
+}
+
+bool kbl::semaphore::try_wait_locked()
+{
+	global_thread_lock.assert_held();
+
+	if (count_ > 0)
+	{
+		--count_;
+		return true;
+	}
+	return false;
 }
 
 
