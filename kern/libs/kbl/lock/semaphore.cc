@@ -48,6 +48,7 @@ void kbl::semaphore::signal_locked()
 size_t kbl::semaphore::waiter_count() const TA_REQ(!task::global_thread_lock)
 {
 	lock::lock_guard g{ task::global_thread_lock };
-	return waiter_count_locked();
+	return wait_queue_.size();
 }
+
 

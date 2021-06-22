@@ -27,7 +27,7 @@ class semaphore final
 	[[nodiscard]] error_code wait() TA_REQ(!task::global_thread_lock)
 	{
 		lock::lock_guard g{ task::global_thread_lock };
-		return wait_locked();
+		return wait_locked(deadline::infinite());
 	}
 
 	/// \brief Try to do a P operation.
@@ -57,12 +57,6 @@ class semaphore final
 	[[nodiscard]] size_t waiter_count() const TA_REQ(!task::global_thread_lock);
 
  private:
-	/// \brief P operation, or sleep, down
-	/// \return
-	[[nodiscard]] error_code wait_locked() TA_REQ(task::global_thread_lock)
-	{
-		return wait_locked(deadline::infinite());
-	}
 
 	/// \brief P operation, or sleep, down
 	/// \return
@@ -70,11 +64,6 @@ class semaphore final
 
 	/// \brief V operation, or wakeup, up
 	void signal_locked() TA_REQ(task::global_thread_lock);
-
-	[[nodiscard]] size_t waiter_count_locked() const TA_REQ(task::global_thread_lock)
-	{
-		return wait_queue_.size();
-	}
 
 	task::wait_queue wait_queue_{};
 
