@@ -20,8 +20,7 @@
 #include <utility>
 
 using namespace task;
-
-using lock::lock_guard;
+using namespace lock;
 
 #ifdef  IPC_MRCOPY_USE_SIMD
 #error "IPC_MRCOPY_USE_SIMD can't be defined"
@@ -114,8 +113,11 @@ error_code task::ipc_state::send_extended_items(thread* to)
 			auto map = from->ipc_state_.get_typed_item<ipc::map_item>(idx);
 			auto[send, receive] = acceptor.get_send_receive_region(map.page(), map.base());
 
-			copy_mrs_to_locked(to, idx++, 1);
-			copy_mrs_to_locked(to, idx++, 1);
+			{
+				lock::lock_guard g{ lock_ };
+				copy_mrs_to_locked(to, idx++, 1);
+				copy_mrs_to_locked(to, idx++, 1);
+			}
 
 			auto ret = from->address_space()->fpage_grant(to->address_space(), send, receive);
 			if (has_error(ret))
@@ -128,8 +130,11 @@ error_code task::ipc_state::send_extended_items(thread* to)
 			auto grant = from->ipc_state_.get_typed_item<ipc::grant_item>(idx);
 			auto[send, receive] = acceptor.get_send_receive_region(grant.page(), grant.base());
 
-			copy_mrs_to_locked(to, idx++, 1);
-			copy_mrs_to_locked(to, idx++, 1);
+			{
+				lock::lock_guard g{ lock_ };
+				copy_mrs_to_locked(to, idx++, 1);
+				copy_mrs_to_locked(to, idx++, 1);
+			}
 
 			auto ret = from->address_space()->fpage_grant(to->address_space(), send, receive);
 			if (has_error(ret))
@@ -151,7 +156,7 @@ error_code task::ipc_state::send(thread* to, const deadline& ddl)
 	}
 
 	{
-		lock::lock_guard g{lock_};
+		lock::lock_guard g{ lock_ };
 
 		copy_mrs_to_locked(to, 0, task::ipc_state::MR_SIZE);
 
@@ -174,7 +179,7 @@ error_code task::ipc_state::receive(thread* from, const deadline& ddl)
 	}
 
 	{
-		lock::lock_guard g{lock_};
+		lock::lock_guard g{ lock_ };
 
 		KDEBUG_ASSERT_MSG(this->get_message_tag().typed_count() != 0 || this->get_message_tag().untyped_count() != 0,
 			"Empty message isn't valid");

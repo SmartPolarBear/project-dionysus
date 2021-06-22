@@ -69,16 +69,12 @@ class ipc_state
 	static constexpr size_t MR_SIZE = 64;
 	static constexpr size_t BR_SIZE = 33;
 
-	friend class wait_queue;
-	friend class thread;
-
-	friend error_code (::sys_ipc_load_message(const syscall::syscall_regs* regs));
-	friend error_code (::sys_ipc_store(const syscall::syscall_regs* regs));
-
 	ipc_state() = delete;
+
 	explicit ipc_state(thread* parent) : parent_(parent)
 	{
 	}
+
 	ipc_state(const ipc_state&) = delete;
 	ipc_state& operator=(const ipc_state&) = delete;
 
@@ -156,7 +152,7 @@ class ipc_state
 
 	size_t br_count_{ 0 };
 
-	thread* parent_{ nullptr };
+	[[maybe_unused]]thread* parent_{ nullptr };
 
 	kbl::semaphore f_{ 0 }; // indicate that if items has been written but not yet read
 
