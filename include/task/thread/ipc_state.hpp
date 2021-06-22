@@ -82,9 +82,9 @@ class ipc_state
 
 	error_code send(thread* to, const deadline& ddl) TA_REQ(!global_thread_lock);
 
-	void load_mrs(size_t start, ktl::span<ipc::message_register_type> mrs);
+	void load_message(ipc::message* msg)TA_REQ(!global_thread_lock);
 
-	void store_mrs(size_t st, ktl::span<ipc::message_register_type> mrs);
+	void store_message(ipc::message* msg) TA_REQ(!global_thread_lock);
 
 	void copy_mrs(thread* another, size_t st, size_t cnt);
 

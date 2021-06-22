@@ -179,26 +179,39 @@ error_code task::ipc_state::receive(thread* from, const deadline& ddl)
 	}
 
 	{
-		lock::lock_guard g{ lock_ };
+		lock_guard g{ lock_ };
 
 		KDEBUG_ASSERT_MSG(this->get_message_tag().typed_count() != 0 || this->get_message_tag().untyped_count() != 0,
 			"Empty message isn't valid");
 	}
 
-	e_.signal();
+	// do not call 	e_.signal(); to avoid multiple sender overwrite the buffer
 
 	return ERROR_SUCCESS;
 }
 
-void task::ipc_state::load_mrs(size_t start, ktl::span<ipc::message_register_type> mrs)
+void task::ipc_state::load_message(ipc::message* msg)
 {
+	auto tag = msg->get_tag();
+
 	lock::lock_guard g{ lock_ };
-	load_mrs_locked(start, mrs);
+
+	set_message_tag_locked(&tag);
+
+	load_mrs_locked(1, msg->get_items_span());
 }
-void task::ipc_state::store_mrs(size_t st, ktl::span<ipc::message_register_type> mrs)
+
+void task::ipc_state::store_message(message* msg)
 {
-	lock::lock_guard g{ lock_ };
-	store_mrs_locked(st, mrs);
+	{
+		lock_guard g{ lock_ };
+
+		msg->set_tag(parent_->get_ipc_state()->get_message_tag());
+
+		store_mrs_locked(1, msg->get_items_span(parent_->get_ipc_state()->get_message_tag()));
+	}
+
+	e_.signal(); // allow next sender to send
 }
 
 void task::ipc_state::copy_mrs(thread* another, size_t st, size_t cnt)

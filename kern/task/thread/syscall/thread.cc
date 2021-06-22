@@ -42,6 +42,11 @@ error_code sys_get_current_thread(const syscall_regs* regs)
 
 	*out = cur_proc->handle_table_.add_handle(std::move(handle));
 
+	if (*out == INVALID_HANDLE_VALUE)
+	{
+		return -ERROR_INVALID;
+	}
+
 	return ERROR_SUCCESS;
 }
 
@@ -75,6 +80,11 @@ error_code sys_get_thread_by_id(const syscall_regs* regs)
 	else
 	{
 		*out = cur_proc->handle_table_.entry_to_handle(local_handle);
+	}
+
+	if (*out == INVALID_HANDLE_VALUE)
+	{
+		return -ERROR_INVALID;
 	}
 
 	return ERROR_SUCCESS;
@@ -116,6 +126,11 @@ error_code sys_get_thread_by_name(const syscall_regs* regs)
 	else
 	{
 		*out = cur_proc->handle_table_.entry_to_handle(local_handle);
+	}
+
+	if (*out == INVALID_HANDLE_VALUE)
+	{
+		return -ERROR_INVALID;
 	}
 
 	return ERROR_SUCCESS;
