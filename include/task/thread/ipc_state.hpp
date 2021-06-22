@@ -86,8 +86,10 @@ class ipc_state
 
 	void store_message(ipc::message* msg) TA_REQ(!global_thread_lock);
 
-	void copy_mrs(thread* another, size_t st, size_t cnt);
-
+	/// \brief set acceptor to brs. will reset mr_count_, which influence exist items
+	/// \param acc
+	void set_acceptor(const ipc::message_acceptor* acc) noexcept;
+	
 	template<typename T>
 	T get_typed_item(size_t index)
 	{
@@ -117,14 +119,6 @@ class ipc_state
 	[[nodiscard]] ipc::message_tag get_message_tag();
 
 	[[nodiscard]] ipc::message_acceptor get_acceptor();
-
-	/// \brief set the message tag to mrs. will reset mr_count_, which influence exist items
-	/// \param tag
-	void set_message_tag(const ipc::message_tag* tag) noexcept;
-
-	/// \brief set acceptor to brs. will reset mr_count_, which influence exist items
-	/// \param acc
-	void set_acceptor(const ipc::message_acceptor* acc) noexcept;
 
  private:
 	void load_mrs_locked(size_t start, ktl::span<ipc::message_register_type> mrs) TA_REQ(lock_);

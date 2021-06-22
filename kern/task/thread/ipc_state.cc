@@ -214,14 +214,3 @@ void task::ipc_state::store_message(message* msg)
 	e_.signal(); // allow next sender to send
 }
 
-void task::ipc_state::copy_mrs(thread* another, size_t st, size_t cnt)
-{
-	lock::lock_guard g{ lock_ };
-	copy_mrs_to_locked(another, st, cnt);
-}
-
-void task::ipc_state::set_message_tag(const ipc::message_tag* tag) noexcept
-{
-	lock::lock_guard g{ lock_ };
-	set_message_tag_locked(tag);
-}
