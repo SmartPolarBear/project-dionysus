@@ -51,4 +51,22 @@ size_t kbl::semaphore::waiter_count() const TA_REQ(!task::global_thread_lock)
 	return wait_queue_.size();
 }
 
+error_code kbl::semaphore::wait() TA_REQ(!task::global_thread_lock)
+{
+	lock::lock_guard g{ task::global_thread_lock };
+	return wait_locked(deadline::infinite());
+}
+
+error_code kbl::semaphore::wait(const deadline& ddl) TA_REQ(!task::global_thread_lock)
+{
+	lock::lock_guard g{ task::global_thread_lock };
+	return wait_locked(ddl);
+}
+
+void kbl::semaphore::signal() TA_REQ(!task::global_thread_lock)
+{
+	lock::lock_guard g{ task::global_thread_lock };
+	signal_locked();
+}
+
 

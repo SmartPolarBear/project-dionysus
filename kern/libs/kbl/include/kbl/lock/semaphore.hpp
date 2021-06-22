@@ -24,11 +24,7 @@ class semaphore final
 
 	/// \brief P operation, or sleep, down
 	/// \return
-	[[nodiscard]] error_code wait() TA_REQ(!task::global_thread_lock)
-	{
-		lock::lock_guard g{ task::global_thread_lock };
-		return wait_locked(deadline::infinite());
-	}
+	[[nodiscard]] error_code wait() TA_REQ(!task::global_thread_lock);
 
 	/// \brief Try to do a P operation.
 	/// \return true if P op is really done.
@@ -36,25 +32,17 @@ class semaphore final
 
 	/// \brief P operation, or sleep, down
 	/// \return
-	[[nodiscard]] error_code wait(const deadline& ddl) TA_REQ(!task::global_thread_lock)
-	{
-		lock::lock_guard g{ task::global_thread_lock };
-		return wait_locked(ddl);
-	}
+	[[nodiscard]] error_code wait(const deadline& ddl) TA_REQ(!task::global_thread_lock);
 
 	/// \brief V operation, or wakeup, up
-	void signal() TA_REQ(!task::global_thread_lock)
-	{
-		lock::lock_guard g{ task::global_thread_lock };
-		signal_locked();
-	}
+	void signal() TA_REQ(!task::global_thread_lock);
+	
+	[[nodiscard]] size_t waiter_count() const TA_REQ(!task::global_thread_lock);
 
 	[[nodiscard]] uint64_t count() const
 	{
 		return count_.load(ktl::memory_order_acquire);
 	}
-
-	[[nodiscard]] size_t waiter_count() const TA_REQ(!task::global_thread_lock);
 
  private:
 
