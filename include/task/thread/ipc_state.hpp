@@ -89,7 +89,7 @@ class ipc_state
 	/// \brief receive message from any thread
 	/// \param ddl if wait until ddl and still no message, this method return with a error code
 	/// \return error code indicating if it succeeded
-	error_code wait( const deadline& ddl)  TA_REQ(!global_thread_lock);
+	error_code wait(const deadline& ddl)  TA_REQ(!global_thread_lock);
 
 	void load_message(ipc::message* msg)TA_REQ(!global_thread_lock);
 
@@ -162,6 +162,8 @@ class ipc_state
 	size_t br_count_{ 0 };
 
 	[[maybe_unused]]thread* parent_{ nullptr };
+
+	thread* sender_{};
 
 	kbl::semaphore f_{ 0 }; // indicate that if items has been written but not yet read
 

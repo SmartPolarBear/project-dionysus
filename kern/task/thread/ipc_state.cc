@@ -232,6 +232,8 @@ error_code task::ipc_state::send(thread* to, const deadline& ddl)
 	{
 		lock::lock_guard g{ lock_ };
 
+		to->ipc_state_.sender_ = parent_;
+
 		copy_mrs_to_locked(to, 0, task::ipc_state::MR_SIZE);
 
 		if (auto err = send_extended_items(to);err != ERROR_SUCCESS)
@@ -254,6 +256,8 @@ error_code task::ipc_state::receive(thread* from, const deadline& ddl)
 
 	{
 		lock_guard g{ lock_ };
+
+		if (sender_ != from)return -ERROR_IPC_NO_SENDER;
 
 		KDEBUG_ASSERT_MSG(this->get_message_tag().typed_count() != 0 || this->get_message_tag().untyped_count() != 0,
 			"Empty message isn't valid");
