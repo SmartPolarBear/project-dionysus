@@ -47,11 +47,14 @@ add_subdirectory(kern)
 # external projects
 add_subdirectory(external)
 
+# tools
+add_subdirectory(tools)
+
 # custom targets
 
 add_custom_target(disk.img ALL
         COMMAND python3 "${DISK_IMG_PATH}" ${DISK_IMG_ARGS}
-        DEPENDS kernel ap_boot.elf hello ipctest #monitor fs
+        DEPENDS mkramdisk kernel ap_boot.elf hello ipctest #monitor fs
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         )
 
