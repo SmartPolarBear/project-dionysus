@@ -78,9 +78,18 @@ class ipc_state
 	ipc_state(const ipc_state&) = delete;
 	ipc_state& operator=(const ipc_state&) = delete;
 
-	error_code receive([[maybe_unused]]thread* from, const deadline& ddl) TA_REQ(!global_thread_lock);
+	/// \brief receive message from a specified thread
+	/// \param from the thread to receive from
+	/// \param ddl if wait until ddl and still no message, this method return with a error code
+	/// \return error code indicating if it succeeded
+	error_code receive(thread* from, const deadline& ddl) TA_REQ(!global_thread_lock);
 
 	error_code send(thread* to, const deadline& ddl) TA_REQ(!global_thread_lock);
+
+	/// \brief receive message from any thread
+	/// \param ddl if wait until ddl and still no message, this method return with a error code
+	/// \return error code indicating if it succeeded
+	error_code wait(const deadline& ddl)  TA_REQ(!global_thread_lock);
 
 	void load_message(ipc::message* msg)TA_REQ(!global_thread_lock);
 
@@ -153,6 +162,8 @@ class ipc_state
 	size_t br_count_{ 0 };
 
 	[[maybe_unused]]thread* parent_{ nullptr };
+
+	thread* sender_{};
 
 	kbl::semaphore f_{ 0 }; // indicate that if items has been written but not yet read
 

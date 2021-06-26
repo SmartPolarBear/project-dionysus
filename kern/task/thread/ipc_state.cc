@@ -232,6 +232,8 @@ error_code task::ipc_state::send(thread* to, const deadline& ddl)
 	{
 		lock::lock_guard g{ lock_ };
 
+		to->ipc_state_.sender_ = parent_;
+
 		copy_mrs_to_locked(to, 0, task::ipc_state::MR_SIZE);
 
 		if (auto err = send_extended_items(to);err != ERROR_SUCCESS)
@@ -257,6 +259,8 @@ error_code task::ipc_state::receive(thread* from, const deadline& ddl)
 
 		KDEBUG_ASSERT_MSG(this->get_message_tag().typed_count() != 0 || this->get_message_tag().untyped_count() != 0,
 			"Empty message isn't valid");
+
+		if (sender_ != from)return -ERROR_IPC_NOT_THE_SENDER;
 	}
 
 	// do not call 	e_.signal(); to avoid multiple sender overwrite the buffer
@@ -286,6 +290,25 @@ void task::ipc_state::store_message(message* msg)
 	}
 
 	e_.signal(); // allow next sender to send
+}
+
+error_code ipc_state::wait(const deadline& ddl) TA_REQ(!global_thread_lock)
+{
+	if (auto err = f_.wait(ddl);err != ERROR_SUCCESS)
+	{
+		KDEBUG_GERNERALPANIC_CODE(err);
+	}
+
+	{
+		lock_guard g{ lock_ };
+
+		KDEBUG_ASSERT_MSG(this->get_message_tag().typed_count() != 0 || this->get_message_tag().untyped_count() != 0,
+			"Empty message isn't valid");
+	}
+
+	// do not call 	e_.signal(); to avoid multiple sender overwrite the buffer
+
+	return ERROR_SUCCESS;
 }
 
 
