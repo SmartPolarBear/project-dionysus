@@ -257,10 +257,10 @@ error_code task::ipc_state::receive(thread* from, const deadline& ddl)
 	{
 		lock_guard g{ lock_ };
 
-		if (sender_ != from)return -ERROR_IPC_NO_SENDER;
-
 		KDEBUG_ASSERT_MSG(this->get_message_tag().typed_count() != 0 || this->get_message_tag().untyped_count() != 0,
 			"Empty message isn't valid");
+
+		if (sender_ != from)return -ERROR_IPC_NOT_THE_SENDER;
 	}
 
 	// do not call 	e_.signal(); to avoid multiple sender overwrite the buffer

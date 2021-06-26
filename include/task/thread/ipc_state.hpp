@@ -82,7 +82,7 @@ class ipc_state
 	/// \param from the thread to receive from
 	/// \param ddl if wait until ddl and still no message, this method return with a error code
 	/// \return error code indicating if it succeeded
-	error_code receive([[maybe_unused]]thread* from, const deadline& ddl) TA_REQ(!global_thread_lock);
+	error_code receive(thread* from, const deadline& ddl) TA_REQ(!global_thread_lock);
 
 	error_code send(thread* to, const deadline& ddl) TA_REQ(!global_thread_lock);
 
