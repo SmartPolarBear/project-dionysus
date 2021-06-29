@@ -5,3 +5,5 @@ project(mkramdisk)
 set(CMAKE_CXX_STANDARD 20)
 
 add_executable(mkramdisk main.cc)
+
+target_link_libraries(mkramdisk ramdisk)

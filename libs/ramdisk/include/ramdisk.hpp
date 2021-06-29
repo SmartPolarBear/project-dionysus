@@ -19,15 +19,36 @@
 // SOFTWARE.
 
 //
-// Created by bear on 6/26/21.
+// Created by bear on 6/29/21.
 //
 
-#include <ramdisk.hpp>
+#pragma once
 
-#include <iostream>
+#ifndef __cplusplus
+#error "This file is only for C++"
+#endif
 
-int main(int argc, char* argv[])
+#include <cstdint>
+
+enum [[clang::enum_extensibility(closed)]] ramdisk_architecture : uint64_t
+{
+	ARCH_AMD64
+};
+
+struct ramdisk_item
 {
 
-	return 0;
-}
+};
+
+struct ramdisk_header
+{
+	uint64_t magic;
+	ramdisk_architecture architecture;
+	char name[16];
+	uint64_t checksum;
+	uint64_t size;
+	uint64_t count;
+
+	ramdisk_item items[0];
+};
+
