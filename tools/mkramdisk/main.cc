@@ -25,9 +25,44 @@
 #include <ramdisk.hpp>
 
 #include <iostream>
+#include <filesystem>
+#include <span>
+#include <string>
+#include <string_view>
+
+#include <cstring>
+
+#include <sysexits.h>
+
+using namespace std;
 
 int main(int argc, char* argv[])
 {
+	if (argc < 2)
+	{
+		cout << "Usage: mkramdisk -o <ramdisk file>  <files...>";
+	}
+
+	span<char*> args{ argv, static_cast<std::size_t>(argc) };
+
+	// get the output file name
+	string_view out_name;
+	auto out_pos = args.begin();
+	for (auto iter = args.begin(); iter != args.end(); iter++)
+	{
+		if (strncmp(*iter, "-o", 2) == 0)
+		{
+			out_name = *(iter + 1);
+			out_pos = iter;
+			break;
+		}
+	}
+
+	if (out_name.empty())
+	{
+		cout << "Usage: mkramdisk -o <ramdisk file>  <files...>";
+		return EX_USAGE;
+	}
 
 	return 0;
 }

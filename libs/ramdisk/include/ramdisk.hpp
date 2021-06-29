@@ -37,8 +37,9 @@ enum [[clang::enum_extensibility(closed)]] ramdisk_architecture : uint64_t
 
 struct ramdisk_item
 {
-
-};
+	char name[16];
+	uint64_t offset;
+}__attribute__((packed));
 
 struct ramdisk_header
 {
@@ -48,7 +49,6 @@ struct ramdisk_header
 	uint64_t checksum;
 	uint64_t size;
 	uint64_t count;
-
 	ramdisk_item items[0];
-};
+}__attribute__((packed));
 
