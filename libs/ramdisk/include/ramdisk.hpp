@@ -35,6 +35,8 @@ enum [[clang::enum_extensibility(closed)]] ramdisk_architecture : uint64_t
 	ARCH_AMD64
 };
 
+static inline constexpr uint64_t RAMDISK_HEADER_MAGIC = 0x20011204;
+
 struct ramdisk_item
 {
 	char name[16];
