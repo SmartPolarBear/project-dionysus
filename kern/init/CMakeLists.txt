@@ -61,6 +61,7 @@ target_compile_options(ap_boot.elf BEFORE
 
 target_link_options(ap_boot.elf
         PRIVATE -fuse-ld=${LLD_NAME}
+        PRIVATE -z max-page-size=0x1000
         PRIVATE -ffreestanding
         PRIVATE -nostartfiles
         PRIVATE -static

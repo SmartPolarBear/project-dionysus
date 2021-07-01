@@ -48,11 +48,17 @@ using namespace std::filesystem;
 bool check_update_time(string_view out_name, span<string_view> items)
 {
 	path out_path{ out_name };
+	if (!exists(out_path))
+	{
+		return true;
+	}
+
 	auto out_md = last_write_time(out_path);
 
 	for (const auto& i:items)
 	{
-		if (last_write_time(path{ i }) > out_md)
+		path p{ i };
+		if (last_write_time(p) > out_md)
 		{
 			return true;
 		}
@@ -98,6 +104,12 @@ int main(int argc, char* argv[])
 		{
 			if (iter != out_pos && iter != out_pos + 1)
 			{
+				path p{ *iter };
+				if (!exists(p))
+				{
+					cout << *iter << " not exist!" << endl;
+					return EX_IOERR;
+				}
 				content[counter++] = *iter;
 			}
 		}
