@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
 		cout << "Usage: mkramdisk -o <ramdisk file>  <files...>";
 	}
 
-	span<char*> args{ argv, static_cast<std::size_t>(argc) };
+	span<char*> args{ argv + 1, static_cast<std::size_t>(argc - 1) };
 
 	// get the output file name
 	string_view out_name;
@@ -94,6 +94,8 @@ int main(int argc, char* argv[])
 		cout << "Usage: mkramdisk -o <ramdisk file>  <files...>";
 		return EX_USAGE;
 	}
+
+	cout << "Target: " << out_name << endl;
 
 	auto item_count = argc - 3;
 
