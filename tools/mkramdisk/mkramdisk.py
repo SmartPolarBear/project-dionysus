@@ -21,3 +21,24 @@
 # The wrapper script for better configuration for mkramdisk.
 # To avoid getting involved with json and things in C++
 
+import subprocess
+import os.path
+import json
+import argparse
+import pathlib
+import logging
+import errno
+import getpass
+import datetime
+
+import time
+
+
+def main():
+    pass
+
+
+if __name__ == "__main__":
+    formatter = logging.Formatter('%(message)s')
+    logging.getLogger('').setLevel(logging.DEBUG)
+    main()
