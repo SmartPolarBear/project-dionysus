@@ -23,7 +23,9 @@
 //
 
 #include <ramdisk.hpp>
-#include <argparse.hpp>
+
+#include <nlohmann/json.hpp>
+#include <argparse/argparse.hpp>
 
 #include <iostream>
 #include <filesystem>
@@ -40,6 +42,7 @@
 #include <sysexits.h>
 
 using namespace argparse;
+using namespace nlohmann;
 
 using namespace std;
 using namespace std::filesystem;
@@ -97,7 +100,9 @@ int main(int argc, char* argv[])
 		exit(EX_IOERR);
 	}
 
-
+	std::ifstream iconf(pth.string());
+	json config{ };
+	iconf>>config;
 
 	span<char*> args{ argv + 1, static_cast<std::size_t>(argc - 1) };
 

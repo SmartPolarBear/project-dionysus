@@ -19,3 +19,6 @@
 [submodule "external/argparse/argparse"]
 	path = external/argparse/argparse
 	url = https://github.com/p-ranav/argparse
+[submodule "external/json/json"]
+	path = external/json/json
+	url = https://github.com/nlohmann/json
