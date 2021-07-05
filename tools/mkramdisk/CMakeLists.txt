@@ -4,7 +4,11 @@ project(mkramdisk)
 
 set(CMAKE_CXX_STANDARD 20)
 
+find_package(nlohmann_json 3.2.0 REQUIRED)
+
 add_executable(mkramdisk main.cc)
+
+target_include_directories(mkramdisk PRIVATE include)
 
 target_compile_options(mkramdisk PUBLIC -stdlib=libc++)
 

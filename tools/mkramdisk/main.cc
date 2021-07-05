@@ -23,6 +23,7 @@
 //
 
 #include <ramdisk.hpp>
+#include <argparse.hpp>
 
 #include <iostream>
 #include <filesystem>
@@ -37,6 +38,8 @@
 #include <gsl/gsl>
 
 #include <sysexits.h>
+
+using namespace argparse;
 
 using namespace std;
 using namespace std::filesystem;
@@ -69,10 +72,32 @@ bool check_update_time(string_view out_name, span<string_view> items)
 
 int main(int argc, char* argv[])
 {
-	if (argc < 2)
+	argparse::ArgumentParser argparse{ "mkramdisk" };
+
+	argparse.add_argument("config")
+		.help("the configuration file for mkramdisk")
+		.action([](const string& p)
+		{ return path{ p }; });
+
+	try
 	{
-		cout << "Usage: mkramdisk -o <ramdisk file>  <files...>";
+		argparse.parse_args(argc, argv);
 	}
+	catch (const std::runtime_error& err)
+	{
+		cout << err.what() << endl;
+		cout << argparse;
+		exit(EX_USAGE);
+	}
+
+	auto pth = argparse.get<path>("config");
+	if (!exists(pth))
+	{
+		cout << "Configuration file does not exist!" << endl;
+		exit(EX_IOERR);
+	}
+
+
 
 	span<char*> args{ argv + 1, static_cast<std::size_t>(argc - 1) };
 

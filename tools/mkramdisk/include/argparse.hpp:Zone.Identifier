@@ -1,0 +1,4 @@
+[ZoneTransfer]
+ZoneId=3
+ReferrerUrl=https://github.com/p-ranav/argparse/releases/tag/v2.0
+HostUrl=https://github-releases.githubusercontent.com/178617839/48944a00-0d3f-11ea-8089-0c726d668ed8?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIWNJYAX4CSVEH53A%2F20210705%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20210705T144417Z&X-Amz-Expires=300&X-Amz-Signature=ca4d240cdf1ad37b982240e03ccd907182c92d347bce2a4bf6226dab1feafe24&X-Amz-SignedHeaders=host&actor_id=17068633&key_id=0&repo_id=178617839&response-content-disposition=attachment%3B%20filename%3Dargparse.hpp&response-content-type=application%2Foctet-stream
