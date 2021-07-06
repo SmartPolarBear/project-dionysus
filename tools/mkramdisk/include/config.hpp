@@ -24,10 +24,75 @@
 
 #pragma once
 
+#include <nlohmann/json.hpp>
+
+#include <string>
+#include <vector>
+#include <utility>
+
 namespace mkramdisk::configuration
 {
-class config final
+class item final
 {
+ public:
 
+	item() = default;
+	~item() = default;
+
+	item(const item& another) : id_(another.id_), path_(another.path_)
+	{
+		deps_.clear();
+		for (const auto& dep:another.deps_)
+		{
+			deps_.push_back(dep);
+		}
+	}
+
+	const item& operator=(const item& another) const
+	{
+		id_ = another.id_;
+		path_ = another.path_;
+
+		deps_.clear();
+		for (const auto& dep:another.deps_)
+		{
+			deps_.push_back(dep);
+		}
+
+		return *this;
+	}
+
+	item(item&& another) noexcept: id_(std::exchange(another.id_, 0)),
+	                               path_(std::exchange(another.path_, ""))
+	{
+		deps_.clear();
+		for (const auto& dep:another.deps_)
+		{
+			deps_.push_back(dep);
+		}
+		another.deps_.clear();
+	}
+
+	[[nodiscard]] int32_t id() const
+	{
+		return id_;
+	}
+
+	[[nodiscard]] std::string path() const
+	{
+		return path_;
+	}
+
+	[[nodiscard]] std::vector<int32_t> deps() const
+	{
+		return deps_;
+	}
+
+	NLOHMANN_DEFINE_TYPE_INTRUSIVE(item, id_, path_, deps_);
+
+ private:
+	mutable int32_t id_{ 0 };
+	mutable std::string path_{};
+	mutable std::vector<int32_t> deps_{};
 };
 }
