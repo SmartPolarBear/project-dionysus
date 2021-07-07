@@ -4,7 +4,7 @@ project(mkramdisk)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(mkramdisk main.cc config.cc create.cc check.cc dependency.cc)
+add_executable(mkramdisk main.cc config.cc create.cc check.cc dependency.cc copy.cc)
 
 target_include_directories(mkramdisk PRIVATE include)
 

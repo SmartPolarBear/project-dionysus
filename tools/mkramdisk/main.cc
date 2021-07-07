@@ -28,6 +28,7 @@
 #include "check.hpp"
 #include "create.hpp"
 #include "dependency.hpp"
+#include "copy.hpp"
 
 #include <nlohmann/json.hpp>
 #include <argparse/argparse.hpp>
@@ -35,13 +36,9 @@
 #include <iostream>
 #include <filesystem>
 #include <span>
-#include <string>
 #include <tuple>
 #include <queue>
-#include <string_view>
-#include <filesystem>
 #include <fstream>
-#include <iostream>
 
 #include <cstring>
 
@@ -151,92 +148,30 @@ int main(int argc, char* argv[])
 
 	header->magic = RAMDISK_HEADER_MAGIC;
 	header->architecture = ARCH_AMD64;
+	header->size = size_total;
+	header->count = paths.size();
 	header->checksum = ~static_cast<uint64_t>(pre_checksum) + 1ull;
 	memmove(header->name, name.data(), name.size());
 
-	cout << "Writing " << size_total << " bytes. The checksum is " << header->checksum << ". " << endl;
+	try
+	{
+		ofstream of{ target, ios::binary | ios::app };
+		auto _ = gsl::finally([&of]
+		{
+		  if (of.is_open())
+		  { of.close(); }
+		});
 
-//	cout << "Creating metadata." << endl;
-//
-//	auto buf = make_unique<char[]>(sizeof(ramdisk_header) + sizeof(ramdisk_item) * item_count);
-//
-//	// construct the header
-//	auto header = reinterpret_cast<ramdisk_header*>(buf.get());
-//	span<ramdisk_item> item_span
-//		{ reinterpret_cast<ramdisk_item*>(buf.get() + sizeof(ramdisk_header)), static_cast<size_t>(item_count) };
-//
-//	header->magic = RAMDISK_HEADER_MAGIC;
-//	header->architecture = ARCH_AMD64;
-//	strncpy(header->name, "RAMDISK", 8);
-//	header->count = item_count;
-//	header->size = sizeof(ramdisk_header) + sizeof(ramdisk_item) * item_count;
-//
-//	// construct item info
-//	ofstream out_file{ out_name.data(), ios::binary | ios::app };
-//	auto _ = gsl::finally([&out_file]
-//	{
-//	  if (out_file.is_open())
-//	  { out_file.close(); }
-//	});
-//
-//	{
-//		auto item_iter = item_span.begin();
-//		for (const auto& i:content_span)
-//		{
-//			auto p = path{ i };
-//			auto fsize = file_size(p);
-//
-//			{
-//				auto sname = p.filename().string();
-//				strncpy(item_iter->name, sname.data(), sname.length());
-//			}
-//
-//			item_iter->offset = header->size;
-//			header->size += fsize;
-//		}
-//	}
-//
-//	out_file.write(buf.get(), sizeof(ramdisk_header) + sizeof(ramdisk_item) * item_count);
-//	if (!out_file)
-//	{
-//		cout << "Error writing metadata." << endl;
-//		return EX_IOERR;
-//	}
-//
-//	for (const auto& i:content_span)
-//	{
-//		cout << i << endl;
-//
-//		auto p = path{ i };
-//		auto fsize = file_size(p);
-//
-//		auto fbuf = make_unique<uint8_t[]>(fsize);
-//
-//		ifstream ifs{ i.data(), ios::binary };
-//
-//		auto ___ = gsl::finally([&ifs]
-//		{
-//		  if (ifs.is_open())
-//		  {
-//			  ifs.close();
-//		  }
-//		});
-//
-//		ifs.read(reinterpret_cast<char*>(fbuf.get()), fsize);
-//		if (!ifs)
-//		{
-//			cout << "Error reading " << i << endl;
-//			return EX_IOERR;
-//		}
-//
-//		out_file.write(reinterpret_cast<char*>(fbuf.get()), fsize);
-//		if (!out_file)
-//		{
-//			cout << "Error reading " << i << endl;
-//			return EX_IOERR;
-//		}
-//
-//	}
+		of.write(buf.get(), sizeof(ramdisk_header) + sizeof(ramdisk_item) * paths.size());
+	}
+	catch (const std::exception& e)
+	{
+		cout << e.what() << endl;
+		exit(EX_IOERR);
+	}
 
-	return 0;
+	cout << "Written metadata. The checksum is " << header->checksum << ". " << endl;
+
+	return copy_items(target, paths);
+
 }

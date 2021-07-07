@@ -22,71 +22,77 @@
 // Created by bear on 7/7/21.
 //
 
-#include <ramdisk.hpp>
 
-#include "create.hpp"
-#include "config.hpp"
+#include "copy.hpp"
 
-#include <filesystem>
-#include <span>
-#include <tuple>
-#include <queue>
 #include <fstream>
 #include <iostream>
 
 #include <gsl/gsl>
 
+#include <sysexits.h>
+
 using namespace std;
 using namespace std::filesystem;
 
-using namespace mkramdisk;
-using namespace mkramdisk::configuration;
+using namespace gsl;
 
-
-std::optional<tuple<ramdisk_header*, size_t, uint64_t>> mkramdisk::create_ramdisk(const shared_ptr<char[]>& buf,
-	const vector<path>& items)
+int mkramdisk::copy_items(const std::filesystem::path& target, const std::vector<std::filesystem::path>& paths)
 {
-	size_t size_total{ 0 };
-	uint64_t sum{ 0 };
-
-	auto header = reinterpret_cast<ramdisk_header*>(buf.get());
-	auto rditems = reinterpret_cast<ramdisk_item*>(buf.get() + sizeof(ramdisk_header));
-
-	for (const auto& item : items)
+	ofstream of{ target, ios::binary | ios::app };
+	auto _ = gsl::finally([&of]
 	{
-		cout << "Proceeding " << item.string() << endl;
-
-		auto fsize = file_size(item);
-
-		strncpy(rditems->name, item.filename().c_str(), item.filename().string().size());
-
-		rditems->offset = size_total;
-		size_total += fsize;
-	}
-
-	return make_tuple(header, size_total, sum);
-}
-
-[[nodiscard]]bool mkramdisk::clear_target(const path& p)
-{
-	ofstream out_file{ p, ios::binary };
-	auto _ = gsl::finally([&out_file]
-	{
-	  if (out_file.is_open())
-	  { out_file.close(); }
+	  if (of.is_open())
+	  { of.close(); }
 	});
 
-	try
+	for (const auto& i:paths)
 	{
-		out_file << 0;
-	}
-	catch (const std::exception& e)
-	{
-		cout << e.what() << endl;
-		return false;
-	}
+		cout << "Copy " << i << endl;
 
-	return !out_file.fail();
+		auto fsize = file_size(i);
+		auto fbuf = make_unique<uint8_t[]>(fsize);
+
+		ifstream ifs{ i, ios::binary };
+
+		auto _2 = gsl::finally([&ifs]
+		{
+		  if (ifs.is_open())
+		  {
+			  ifs.close();
+		  }
+		});
+
+		try
+		{
+			ifs.read(reinterpret_cast<char*>(fbuf.get()), fsize);
+			if (!ifs)
+			{
+				cout << "Error reading " << i << endl;
+				return EX_IOERR;
+			}
+		}
+		catch (const std::exception& e)
+		{
+			cout << e.what() << endl;
+			return EX_IOERR;
+		}
+
+		try
+		{
+			of.write(reinterpret_cast<char*>(fbuf.get()), fsize);
+			if (!of)
+			{
+				cout << "Error reading " << i << endl;
+				return EX_IOERR;
+			}
+		}
+		catch (const std::exception& e)
+		{
+			cout << e.what() << endl;
+			return EX_IOERR;
+		}
+
+	}
+	return 0;
 }
-
-
