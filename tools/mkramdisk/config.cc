@@ -24,6 +24,8 @@
 
 #include <config.hpp>
 
+using namespace mkramdisk::configuration;
+
 const mkramdisk::configuration::item& mkramdisk::configuration::item::operator=(const mkramdisk::configuration::item& another) const
 {
 	id_ = another.id_;
@@ -36,4 +38,16 @@ const mkramdisk::configuration::item& mkramdisk::configuration::item::operator=(
 	}
 
 	return *this;
+}
+
+void mkramdisk::configuration::to_json(nlohmann::json& j, const item& p)
+{
+	j = nlohmann::json{{ "id", p.id_ }, { "path", p.path_ }, { "deps_", p.deps_ }};
+}
+
+void mkramdisk::configuration::from_json(const nlohmann::json& j, item& p)
+{
+	j.at("id").get_to(p.id_);
+	j.at("path").get_to(p.path_);
+	j.at("deps").get_to(p.deps_);
 }

@@ -59,13 +59,13 @@ int main(int argc, char* argv[])
 {
 	argparse::ArgumentParser argparse{ "mkramdisk" };
 
-	argparse.add_argument("config")
+	argparse.add_argument("-c", "--config")
 		.help("the configuration file for mkramdisk")
 		.required()
 		.action([](const string& p)
 		{ return path{ p }; });
 
-	argparse.add_argument("target")
+	argparse.add_argument("-t", "--target")
 		.help("the result ramdisk file")
 		.required()
 		.action([](const string& p)
@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
 		exit(EX_USAGE);
 	}
 
-	auto pth = argparse.get<path>("config");
+	auto pth = argparse.get<path>("--config");
 
 	if (!exists(pth))
 	{
@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
 		exit(EX_IOERR);
 	}
 
-	auto target = argparse.get<path>("target");
+	auto target = argparse.get<path>("--target");
 
 	std::ifstream iconf(pth.string());
 	json config{};

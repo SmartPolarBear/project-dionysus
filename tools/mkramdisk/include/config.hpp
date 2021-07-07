@@ -32,8 +32,12 @@
 
 namespace mkramdisk::configuration
 {
+
 class item final
 {
+ public:
+	friend void from_json(const nlohmann::json& j, item& p);
+	friend void to_json(nlohmann::json& j, const item& p);
  public:
 
 	item() = default;
@@ -49,7 +53,6 @@ class item final
 	}
 
 	const item& operator=(const item& another) const;
-
 
 	item(item&& another) noexcept: id_(std::exchange(another.id_, 0)),
 	                               path_(std::exchange(another.path_, ""))
@@ -77,11 +80,14 @@ class item final
 		return deps_;
 	}
 
-	NLOHMANN_DEFINE_TYPE_INTRUSIVE(item, id_, path_, deps_);
-
  private:
 	mutable int32_t id_{ 0 };
 	mutable std::string path_{};
 	mutable std::vector<int32_t> deps_{};
 };
+
+void to_json(nlohmann::json& j, const item& p);
+
+void from_json(const nlohmann::json& j, item& p);
+
 }
