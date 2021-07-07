@@ -32,7 +32,7 @@
 
 namespace mkramdisk
 {
-/// \brief
+/// \brief check if a update is needed
 /// \param out_name
 /// \param items
 /// \return if update is needed for ramdisk

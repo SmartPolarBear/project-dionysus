@@ -31,5 +31,8 @@
 
 namespace mkramdisk
 {
+/// \brief sort the items to fulfill the dependency relationships (top sort)
+/// \param items
+/// \return
 std::optional<std::vector<std::filesystem::path>> sort_by_dependency(const std::vector<configuration::item>& items);
 }

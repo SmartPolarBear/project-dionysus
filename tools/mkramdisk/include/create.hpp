@@ -32,6 +32,10 @@
 
 namespace mkramdisk
 {
+/// \brief Create the file
+/// \param buf
+/// \param items
+/// \return
 std::optional<std::tuple<ramdisk_header*, size_t, uint64_t>> create_ramdisk(const std::shared_ptr<char[]>& buf,
 	const std::vector<std::filesystem::path>& items);
 
