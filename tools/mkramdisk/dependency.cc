@@ -74,6 +74,8 @@ std::optional<std::vector<path>> mkramdisk::sort_by_dependency(const vector<item
 
 		ret.emplace_back(n.path());
 
+		if (g[n.id()].empty())continue;
+
 		auto e_remove = g[n.id()].back();
 		in_deg[e_remove]--;
 		g[n.id()].pop_back();

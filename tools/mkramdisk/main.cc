@@ -55,6 +55,19 @@ using namespace std::filesystem;
 using namespace mkramdisk;
 using namespace mkramdisk::configuration;
 
+template<typename T>
+static inline constexpr T rounddown(T val, T n)
+{
+	return val - val % n;
+}
+
+// round up to the nearest multiple of n
+template<typename T>
+static inline constexpr T roundup(T val, T n)
+{
+	return rounddown(val + n - 1, n);
+}
+
 int main(int argc, char* argv[])
 {
 	argparse::ArgumentParser argparse{ "mkramdisk" };
@@ -130,7 +143,7 @@ int main(int argc, char* argv[])
 	auto paths = sort_ret.value();
 
 	// clear the target file
-	if (auto ret = clear_target(target);ret)
+	if (auto ret = clear_target(target);!ret)
 	{
 		cout << "Can't write to target file " << target.string() << endl;
 		exit(EX_IOERR);
@@ -148,7 +161,7 @@ int main(int argc, char* argv[])
 
 	header->magic = RAMDISK_HEADER_MAGIC;
 	header->architecture = ARCH_AMD64;
-	header->size = size_total;
+	header->size = roundup(size_total, sizeof(uint64_t));
 	header->count = paths.size();
 	header->checksum = ~static_cast<uint64_t>(pre_checksum) + 1ull;
 	memmove(header->name, name.data(), name.size());
@@ -170,8 +183,36 @@ int main(int argc, char* argv[])
 		exit(EX_IOERR);
 	}
 
-	cout << "Written metadata. The checksum is " << header->checksum << ". " << endl;
+	cout << "Written metadata." << endl;
 
-	return copy_items(target, paths);
+	auto ret = copy_items(target, paths);
+	if (ret != 0)
+	{
+		return ret;
+	}
 
+	auto align_bytes = header->size - size_total;
+
+	try
+	{
+		ofstream of{ target, ios::binary | ios::app };
+		auto _ = gsl::finally([&of]
+		{
+		  if (of.is_open())
+		  { of.close(); }
+		});
+
+		auto align_buf = make_unique<char[]>(align_bytes);
+		memset(align_buf.get(), 0xFF, align_bytes);
+		of.write(align_buf.get(), align_bytes);
+	}
+	catch (const std::exception& e)
+	{
+		cout << e.what() << endl;
+		exit(EX_IOERR);
+	}
+
+	cout << "Written " << align_bytes << " byte(s) for alignment." << endl;
+
+	return 0;
 }

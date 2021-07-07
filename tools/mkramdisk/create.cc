@@ -42,11 +42,10 @@ using namespace std::filesystem;
 using namespace mkramdisk;
 using namespace mkramdisk::configuration;
 
-
 std::optional<tuple<ramdisk_header*, size_t, uint64_t>> mkramdisk::create_ramdisk(const shared_ptr<char[]>& buf,
 	const vector<path>& items)
 {
-	size_t size_total{ 0 };
+	size_t size_total{ sizeof(ramdisk_header) + sizeof(ramdisk_item) * items.size() };
 	uint64_t sum{ 0 };
 
 	auto header = reinterpret_cast<ramdisk_header*>(buf.get());
@@ -62,6 +61,7 @@ std::optional<tuple<ramdisk_header*, size_t, uint64_t>> mkramdisk::create_ramdis
 
 		rditems->offset = size_total;
 		size_total += fsize;
+
 	}
 
 	return make_tuple(header, size_total, sum);
