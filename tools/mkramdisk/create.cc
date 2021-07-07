@@ -26,6 +26,7 @@
 
 #include "create.hpp"
 #include "config.hpp"
+#include "round.hpp"
 
 #include <filesystem>
 #include <span>
@@ -60,8 +61,52 @@ std::optional<tuple<ramdisk_header*, size_t, uint64_t>> mkramdisk::create_ramdis
 		strncpy(rditems->name, item.filename().c_str(), item.filename().string().size());
 
 		rditems->offset = size_total;
-		size_total += fsize;
+		size_total += roundup(fsize, sizeof(uint64_t));
+	}
 
+	span<uint64_t> header_qwords{ (uint64_t*)buf.get(), sizeof(ramdisk_header) + sizeof(ramdisk_item) * items.size() };
+
+	for (const auto& qw:header_qwords)
+	{
+		sum += qw;
+	}
+
+	for (const auto& p:items)
+	{
+		auto size = file_size(p);
+		auto rbuf = make_unique<char[]>(roundup(size, sizeof(uint64_t)));
+
+		ifstream ifs{ p, ios::binary };
+
+		auto _2 = gsl::finally([&ifs]
+		{
+		  if (ifs.is_open())
+		  {
+			  ifs.close();
+		  }
+		});
+
+		try
+		{
+			ifs.read(reinterpret_cast<char*>(rbuf.get()), size);
+
+			span<uint64_t> fqwords{ (uint64_t*)rbuf.get(), roundup(size, sizeof(uint64_t)) / sizeof(uint64_t) };
+			for (const auto& qw:fqwords)
+			{
+				sum += qw;
+			}
+
+			if (!ifs)
+			{
+				cout << "Error reading " << p << endl;
+				return std::nullopt;
+			}
+		}
+		catch (const std::exception& e)
+		{
+			cout << e.what() << endl;
+			return std::nullopt;
+		}
 	}
 
 	return make_tuple(header, size_total, sum);

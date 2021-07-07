@@ -24,9 +24,11 @@
 
 
 #include "copy.hpp"
+#include "round.hpp"
 
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 
 #include <gsl/gsl>
 
@@ -48,10 +50,10 @@ int mkramdisk::copy_items(const std::filesystem::path& target, const std::vector
 
 	for (const auto& i:paths)
 	{
-		cout << "Copy " << i << endl;
+		cout << "Copy " << i;
 
 		auto fsize = file_size(i);
-		auto fbuf = make_unique<uint8_t[]>(fsize);
+		auto fbuf = make_unique<uint8_t[]>(roundup(fsize, sizeof(uint64_t)));
 
 		ifstream ifs{ i, ios::binary };
 
@@ -68,7 +70,7 @@ int mkramdisk::copy_items(const std::filesystem::path& target, const std::vector
 			ifs.read(reinterpret_cast<char*>(fbuf.get()), fsize);
 			if (!ifs)
 			{
-				cout << "Error reading " << i << endl;
+				cout << endl << "Error reading " << i << endl;
 				return EX_IOERR;
 			}
 		}
@@ -80,10 +82,13 @@ int mkramdisk::copy_items(const std::filesystem::path& target, const std::vector
 
 		try
 		{
-			of.write(reinterpret_cast<char*>(fbuf.get()), fsize);
+			of.write(reinterpret_cast<char*>(fbuf.get()), roundup(fsize, sizeof(uint64_t)));
+			cout << " ," << "add " << hex << roundup(fsize, sizeof(uint64_t)) - fsize << " bytes for alignment."
+			     << endl;
+
 			if (!of)
 			{
-				cout << "Error reading " << i << endl;
+				cout << endl << "Error reading " << i << endl;
 				return EX_IOERR;
 			}
 		}

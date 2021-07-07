@@ -19,42 +19,23 @@
 // SOFTWARE.
 
 //
-// Created by bear on 6/29/21.
+// Created by bear on 7/7/21.
 //
 
 #pragma once
 
-#ifndef __cplusplus
-#error "This file is only for C++"
-#endif
-
-#include <cstdint>
-
-enum [[clang::enum_extensibility(closed)]] ramdisk_architecture : uint64_t
+namespace mkramdisk
 {
-	ARCH_AMD64
-};
-
-static inline constexpr uint64_t RAMDISK_HEADER_MAGIC = 0x20011204;
-
-struct ramdisk_item
+template<typename T>
+static inline constexpr T rounddown(T val, T n)
 {
-	char name[16];
-	uint64_t offset;
-}__attribute__((packed));
+	return val - val % n;
+}
 
-static_assert(sizeof(ramdisk_item) % sizeof(uint64_t) == 0);
-
-
-struct ramdisk_header
+// round up to the nearest multiple of n
+template<typename T>
+static inline constexpr T roundup(T val, T n)
 {
-	uint64_t magic;
-	ramdisk_architecture architecture;
-	char name[16];
-	uint64_t checksum;
-	uint64_t size;
-	uint64_t count;
-	ramdisk_item items[0];
-}__attribute__((packed));
-
-static_assert(sizeof(ramdisk_header) % sizeof(uint64_t) == 0);
+	return rounddown(val + n - 1, n);
+}
+}

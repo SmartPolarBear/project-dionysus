@@ -29,6 +29,7 @@
 #include "create.hpp"
 #include "dependency.hpp"
 #include "copy.hpp"
+#include "round.hpp"
 
 #include <nlohmann/json.hpp>
 #include <argparse/argparse.hpp>
@@ -38,6 +39,7 @@
 #include <span>
 #include <tuple>
 #include <queue>
+#include <iomanip>
 #include <fstream>
 
 #include <cstring>
@@ -55,18 +57,7 @@ using namespace std::filesystem;
 using namespace mkramdisk;
 using namespace mkramdisk::configuration;
 
-template<typename T>
-static inline constexpr T rounddown(T val, T n)
-{
-	return val - val % n;
-}
 
-// round up to the nearest multiple of n
-template<typename T>
-static inline constexpr T roundup(T val, T n)
-{
-	return rounddown(val + n - 1, n);
-}
 
 int main(int argc, char* argv[])
 {
@@ -183,7 +174,7 @@ int main(int argc, char* argv[])
 		exit(EX_IOERR);
 	}
 
-	cout << "Written metadata." << endl;
+	cout << "Written metadata. Checksum is " << hex << header->checksum << endl;
 
 	auto ret = copy_items(target, paths);
 	if (ret != 0)
@@ -203,7 +194,8 @@ int main(int argc, char* argv[])
 		});
 
 		auto align_buf = make_unique<char[]>(align_bytes);
-		memset(align_buf.get(), 0xFF, align_bytes);
+		memset(align_buf.get(), 0, align_bytes);
+
 		of.write(align_buf.get(), align_bytes);
 	}
 	catch (const std::exception& e)
