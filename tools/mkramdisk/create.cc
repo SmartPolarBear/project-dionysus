@@ -19,21 +19,57 @@
 // SOFTWARE.
 
 //
-// Created by bear on 7/5/21.
+// Created by bear on 7/7/21.
 //
 
-#include <config.hpp>
+#include <ramdisk.hpp>
 
-const mkramdisk::configuration::item& mkramdisk::configuration::item::operator=(const mkramdisk::configuration::item& another) const
+#include "create.hpp"
+#include "config.hpp"
+
+#include <filesystem>
+#include <span>
+#include <tuple>
+#include <queue>
+#include <fstream>
+#include <iostream>
+
+#include <gsl/gsl>
+
+using namespace std;
+using namespace std::filesystem;
+
+using namespace mkramdisk;
+using namespace mkramdisk::configuration;
+
+std::optional<tuple<ramdisk_header*, size_t, uint64_t>> mkramdisk::create_ramdisk(const shared_ptr<char[]>& buf,
+	const vector<path>& items)
 {
-	id_ = another.id_;
-	path_ = another.path_;
+	size_t size_total{ 0 };
+	uint64_t sum{ 0 };
+	return make_tuple(reinterpret_cast<ramdisk_header*>(buf.get()), size_total, sum);
+}
 
-	deps_.clear();
-	for (const auto& dep:another.deps_)
+[[nodiscard]]bool mkramdisk::clear_target(const path& p)
+{
+	ofstream out_file{ p, ios::binary };
+	auto _ = gsl::finally([&out_file]
 	{
-		deps_.push_back(dep);
+	  if (out_file.is_open())
+	  { out_file.close(); }
+	});
+
+	try
+	{
+		out_file << 0;
+	}
+	catch (const std::exception& e)
+	{
+		cout << e.what() << endl;
+		return false;
 	}
 
-	return *this;
+	return !out_file.fail();
 }
+
+

@@ -19,21 +19,22 @@
 // SOFTWARE.
 
 //
-// Created by bear on 7/5/21.
+// Created by bear on 7/7/21.
 //
+#pragma once
 
-#include <config.hpp>
+#include <ramdisk.hpp>
 
-const mkramdisk::configuration::item& mkramdisk::configuration::item::operator=(const mkramdisk::configuration::item& another) const
+#include "config.hpp"
+
+#include <filesystem>
+#include <vector>
+
+namespace mkramdisk
 {
-	id_ = another.id_;
-	path_ = another.path_;
-
-	deps_.clear();
-	for (const auto& dep:another.deps_)
-	{
-		deps_.push_back(dep);
-	}
-
-	return *this;
+/// \brief
+/// \param out_name
+/// \param items
+/// \return if update is needed for ramdisk
+bool check_update_time(const std::filesystem::path& p, const std::vector<configuration::item>& items);
 }

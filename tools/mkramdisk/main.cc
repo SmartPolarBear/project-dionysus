@@ -23,7 +23,11 @@
 //
 
 #include <ramdisk.hpp>
-#include <config.hpp>
+
+#include "config.hpp"
+#include "check.hpp"
+#include "create.hpp"
+#include "dependency.hpp"
 
 #include <nlohmann/json.hpp>
 #include <argparse/argparse.hpp>
@@ -32,10 +36,12 @@
 #include <filesystem>
 #include <span>
 #include <string>
+#include <tuple>
 #include <queue>
 #include <string_view>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 
 #include <cstring>
 
@@ -49,88 +55,8 @@ using namespace nlohmann;
 using namespace std;
 using namespace std::filesystem;
 
+using namespace mkramdisk;
 using namespace mkramdisk::configuration;
-
-/// \brief
-/// \param out_name
-/// \param items
-/// \return if update is needed for ramdisk
-bool check_update_time(string_view out_name, const vector<item> items)
-{
-	path out_path{ out_name };
-	if (!exists(out_path))
-	{
-		return true;
-	}
-
-	auto out_md = last_write_time(out_path);
-
-	for (const auto& i:items)
-	{
-		path p{ i.path() };
-		if (last_write_time(p) > out_md)
-		{
-			return true;
-		}
-	}
-
-	return false;
-}
-
-std::optional<std::vector<path>> sort_by_dependency(const vector<item>& items)
-{
-	sort(items.begin(), items.end(), [](const item& a, const item& b)
-	{
-	  return a.id() < b.id();
-	});
-
-	vector<vector<int>> g(items.size(), vector<int>{});
-
-	vector<int64_t> in_deg(items.size(), 0);
-	for (const auto& item:items)
-	{
-		for (const auto& dep:item.deps())
-		{
-			in_deg[dep]++;
-			g[item.id()].push_back(dep);
-		}
-	}
-
-	queue<item> q;
-	for (int i = 0; i < items.size(); i++)
-	{
-		if (!in_deg[i])
-		{
-			q.push(items[i]);
-		}
-	}
-
-	vector<path> ret{};
-
-	while (!q.empty())
-	{
-		auto n = q.front();
-		q.pop();
-
-		ret.emplace_back(n.path());
-
-		auto e_remove = g[n.id()].back();
-		in_deg[e_remove]--;
-		g[n.id()].pop_back();
-
-		if (!in_deg[e_remove])
-		{
-			q.push(items[e_remove]);
-		}
-	}
-
-	for (const auto& n:g)
-	{
-		if (!n.empty())return std::nullopt;
-	}
-
-	return ret;
-}
 
 int main(int argc, char* argv[])
 {
@@ -138,8 +64,19 @@ int main(int argc, char* argv[])
 
 	argparse.add_argument("config")
 		.help("the configuration file for mkramdisk")
+		.required()
 		.action([](const string& p)
 		{ return path{ p }; });
+
+	argparse.add_argument("target")
+		.help("the result ramdisk file")
+		.required()
+		.action([](const string& p)
+		{ return path{ p }; });
+
+	// TODO: support multiple architectures
+	//argparse.add_argument("arch")
+	//	.help("the architecture of ramdisk");
 
 	try
 	{
@@ -153,22 +90,24 @@ int main(int argc, char* argv[])
 	}
 
 	auto pth = argparse.get<path>("config");
+
 	if (!exists(pth))
 	{
 		cout << "Configuration file does not exist!" << endl;
 		exit(EX_IOERR);
 	}
 
+	auto target = argparse.get<path>("target");
+
 	std::ifstream iconf(pth.string());
 	json config{};
 	iconf >> config;
 
 	auto name = config["name"].get<std::string>();
-	auto target = config["target"].get<std::string>();
 
 	auto items = config["items"].get<std::vector<mkramdisk::configuration::item>>();
 
-	for (const auto item:items)
+	for (const auto& item:items)
 	{
 		path p{ item.path() };
 		if (!exists(p))
@@ -193,60 +132,29 @@ int main(int argc, char* argv[])
 
 	auto paths = sort_ret.value();
 
-//	span<char*> args{ argv + 1, static_cast<std::size_t>(argc - 1) };
-//
-//	// get the output file name
-//	string_view out_name;
-//	auto out_pos = args.begin();
-//	for (auto iter = args.begin(); iter != args.end(); iter++)
-//	{
-//		if (strncmp(*iter, "-o", 2) == 0)
-//		{
-//			out_name = *(iter + 1);
-//			out_pos = iter;
-//			break;
-//		}
-//	}
-//
-//	auto item_count = argc - 3;
-//
-//	auto content = make_unique<string_view[]>(item_count);
-//	{
-//		size_t counter = 0;
-//		for (auto iter = args.begin(); iter != args.end(); iter++)
-//		{
-//			if (iter != out_pos && iter != out_pos + 1)
-//			{
-//				path p{ *iter };
-//				if (!exists(p))
-//				{
-//					cout << *iter << " not exist!" << endl;
-//					return EX_IOERR;
-//				}
-//				content[counter++] = *iter;
-//			}
-//		}
-//	}
-//	span<string_view> content_span{ content.get(), static_cast<size_t>(item_count) };
-//
-//	cout << "Checking modified time." << endl;
-//
-//	if (!check_update_time(out_name, content_span))
-//	{
-//		cout << "Everything up to date" << endl;
-//		return 0;
-//	}
-//	else
-//	{
-//		// clear the file
-//		ofstream out_file{ out_name.data(), ios::binary };
-//		auto _ = gsl::finally([&out_file]
-//		{
-//		  if (out_file.is_open())
-//		  { out_file.close(); }
-//		});
-//		out_file << 0;
-//	}
+	// clear the target file
+	if (auto ret = clear_target(target);ret)
+	{
+		cout << "Can't write to target file " << target.string() << endl;
+		exit(EX_IOERR);
+	}
+
+	shared_ptr<char[]> buf = make_unique<char[]>(sizeof(ramdisk_header) + sizeof(ramdisk_item) * paths.size());
+
+	auto create_ret = create_ramdisk(buf, paths);
+	if (!create_ret)
+	{
+		exit(EX_IOERR);
+	}
+
+	auto[header, size_total, pre_checksum]=create_ret.value();
+
+	header->magic = RAMDISK_HEADER_MAGIC;
+	header->architecture = ARCH_AMD64;
+	header->checksum = ~static_cast<uint64_t>(pre_checksum) + 1ull;
+	memmove(header->name, name.data(), name.size());
+
+	cout << "Writing " << size_total << " bytes. The checksum is " << header->checksum << ". " << endl;
 
 //	cout << "Creating metadata." << endl;
 //

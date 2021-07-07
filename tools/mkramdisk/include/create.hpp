@@ -19,21 +19,24 @@
 // SOFTWARE.
 
 //
-// Created by bear on 7/5/21.
+// Created by bear on 7/7/21.
 //
+#pragma once
 
-#include <config.hpp>
+#include <ramdisk.hpp>
 
-const mkramdisk::configuration::item& mkramdisk::configuration::item::operator=(const mkramdisk::configuration::item& another) const
+#include <optional>
+#include <tuple>
+#include <memory>
+#include <filesystem>
+
+namespace mkramdisk
 {
-	id_ = another.id_;
-	path_ = another.path_;
+std::optional<std::tuple<ramdisk_header*, size_t, uint64_t>> create_ramdisk(const std::shared_ptr<char[]>& buf,
+	const std::vector<std::filesystem::path>& items);
 
-	deps_.clear();
-	for (const auto& dep:another.deps_)
-	{
-		deps_.push_back(dep);
-	}
-
-	return *this;
+/// \brief Clear the target file
+/// \param p
+/// \return
+[[nodiscard]]bool clear_target(const std::filesystem::path& p);
 }

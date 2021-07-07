@@ -19,69 +19,75 @@
 // SOFTWARE.
 
 //
-// Created by bear on 7/5/21.
+// Created by bear on 7/7/21.
 //
 
-#pragma once
+#include "config.hpp"
 
-#include <nlohmann/json.hpp>
+#include "dependency.hpp"
 
-#include <string>
-#include <vector>
-#include <utility>
+#include <filesystem>
+#include <span>
+#include <tuple>
+#include <queue>
 
-namespace mkramdisk::configuration
+using namespace std;
+using namespace std::filesystem;
+
+using namespace mkramdisk;
+using namespace mkramdisk::configuration;
+
+std::optional<std::vector<path>> mkramdisk::sort_by_dependency(const vector<item>& items)
 {
-class item final
-{
- public:
-
-	item() = default;
-	~item() = default;
-
-	item(const item& another) : id_(another.id_), path_(another.path_)
+	sort(items.begin(), items.end(), [](const item& a, const item& b)
 	{
-		deps_.clear();
-		for (const auto& dep:another.deps_)
+	  return a.id() < b.id();
+	});
+
+	vector<vector<int>> g(items.size(), vector<int>{});
+
+	vector<int64_t> in_deg(items.size(), 0);
+	for (const auto& item:items)
+	{
+		for (const auto& dep:item.deps())
 		{
-			deps_.push_back(dep);
+			in_deg[dep]++;
+			g[item.id()].push_back(dep);
 		}
 	}
 
-	const item& operator=(const item& another) const;
-
-
-	item(item&& another) noexcept: id_(std::exchange(another.id_, 0)),
-	                               path_(std::exchange(another.path_, ""))
+	queue<item> q;
+	for (int i = 0; i < items.size(); i++)
 	{
-		deps_.clear();
-		for (const auto& dep:another.deps_)
+		if (!in_deg[i])
 		{
-			deps_.push_back(dep);
+			q.push(items[i]);
 		}
-		another.deps_.clear();
 	}
 
-	[[nodiscard]] int32_t id() const
+	vector<path> ret{};
+
+	while (!q.empty())
 	{
-		return id_;
+		auto n = q.front();
+		q.pop();
+
+		ret.emplace_back(n.path());
+
+		auto e_remove = g[n.id()].back();
+		in_deg[e_remove]--;
+		g[n.id()].pop_back();
+
+		if (!in_deg[e_remove])
+		{
+			q.push(items[e_remove]);
+		}
 	}
 
-	[[nodiscard]] std::string path() const
+	for (const auto& n:g)
 	{
-		return path_;
+		if (!n.empty())return std::nullopt;
 	}
 
-	[[nodiscard]] std::vector<int32_t> deps() const
-	{
-		return deps_;
-	}
-
-	NLOHMANN_DEFINE_TYPE_INTRUSIVE(item, id_, path_, deps_);
-
- private:
-	mutable int32_t id_{ 0 };
-	mutable std::string path_{};
-	mutable std::vector<int32_t> deps_{};
-};
+	return ret;
 }

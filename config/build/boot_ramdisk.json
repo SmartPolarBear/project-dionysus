@@ -1,6 +1,5 @@
 {
   "name": "dionysus-btrd",
-  "target": "build/test.bin",
   "items": [
     {
       "id": 0,

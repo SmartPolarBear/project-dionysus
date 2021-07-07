@@ -19,21 +19,17 @@
 // SOFTWARE.
 
 //
-// Created by bear on 7/5/21.
+// Created by bear on 7/7/21.
 //
+#pragma once
 
-#include <config.hpp>
+#include <vector>
+#include <filesystem>
+#include <optional>
 
-const mkramdisk::configuration::item& mkramdisk::configuration::item::operator=(const mkramdisk::configuration::item& another) const
+#include "config.hpp"
+
+namespace mkramdisk
 {
-	id_ = another.id_;
-	path_ = another.path_;
-
-	deps_.clear();
-	for (const auto& dep:another.deps_)
-	{
-		deps_.push_back(dep);
-	}
-
-	return *this;
+std::optional<std::vector<std::filesystem::path>> sort_by_dependency(const std::vector<configuration::item>& items);
 }

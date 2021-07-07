@@ -19,21 +19,43 @@
 // SOFTWARE.
 
 //
-// Created by bear on 7/5/21.
+// Created by bear on 7/7/21.
 //
 
-#include <config.hpp>
 
-const mkramdisk::configuration::item& mkramdisk::configuration::item::operator=(const mkramdisk::configuration::item& another) const
+#include <ramdisk.hpp>
+
+#include "check.hpp"
+
+#include "config.hpp"
+
+#include <filesystem>
+#include <span>
+#include <queue>
+
+using namespace std;
+using namespace std::filesystem;
+
+using namespace mkramdisk;
+using namespace mkramdisk::configuration;
+
+bool mkramdisk::check_update_time(const path& p, const vector<item>& items)
 {
-	id_ = another.id_;
-	path_ = another.path_;
-
-	deps_.clear();
-	for (const auto& dep:another.deps_)
+	if (!exists(p))
 	{
-		deps_.push_back(dep);
+		return true;
 	}
 
-	return *this;
+	auto out_md = last_write_time(p);
+
+	for (const auto& i:items)
+	{
+		path p{ i.path() };
+		if (last_write_time(p) > out_md)
+		{
+			return true;
+		}
+	}
+
+	return false;
 }
