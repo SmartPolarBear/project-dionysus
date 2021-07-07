@@ -40,6 +40,7 @@ target_compile_options(hello BEFORE
 
 
 target_link_options(hello
+        PRIVATE -z max-page-size=0x1000
         PRIVATE -no-pie
         PRIVATE -nostdlib
         PRIVATE -nostartfiles

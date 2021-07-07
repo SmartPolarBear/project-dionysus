@@ -39,6 +39,7 @@ target_compile_options(ipctest BEFORE
 target_link_libraries(ipctest user)
 
 target_link_options(ipctest
+        PRIVATE -z max-page-size=0x1000
         PRIVATE -no-pie
         PRIVATE -nostdlib
         PRIVATE -nostartfiles

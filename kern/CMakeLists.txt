@@ -117,6 +117,7 @@ if (THREAD_SAFETY_ANALYSIS)
 endif ()
 
 target_link_options(kernel
+        PRIVATE -z max-page-size=0x1000
         PRIVATE -fuse-ld=${LLD_NAME}
         PRIVATE -ffreestanding
         PRIVATE -nostartfiles

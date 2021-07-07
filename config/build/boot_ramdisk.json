@@ -1,0 +1,22 @@
+{
+  "name": "dionysus-btrd",
+  "items": [
+    {
+      "id": 0,
+      "path": "build/ap_boot",
+      "deps": []
+    },
+    {
+      "id": 1,
+      "path": "build/bin/hello/hello",
+      "deps": [
+        2
+      ]
+    },
+    {
+      "id": 2,
+      "path": "build/bin/ipctest/ipctest",
+      "deps": []
+    }
+  ]
+}
