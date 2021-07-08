@@ -29,7 +29,7 @@ The project is initially built with
 
 on Debian in WSL2.  
 
-**Note: ** Other compilers may be competent, but C++20 support for compiler is required, for C++20 features like `std::span` are massively used.  
+**Note:** Other compilers may be competent, but C++20 support for compiler is required, for C++20 features like `std::span` are massively used.  
 
 #### Third-party  
 
@@ -42,7 +42,7 @@ on Debian in WSL2.
 
 | Q3 2021 | Q1 2022 | Far Future |
 |---------|---------|-----------|
-✅ Basic OS structure <br> 🔄Kernel-mode servers <br> 🔄 Basic userland and shell | ❌ Extended OS features <br> ❌ OS security features <br> ❌ Asynchronous API <br> ❌ Graphic support  |  ❌ Window system ❌ Accessories  
+✅ Basic OS structure <br> 🔄Kernel-mode servers <br> 🔄 Basic userland and shell | ❌ Extended OS features <br> ❌ OS security features <br> ❌ Asynchronous API <br> ❌ Graphic support  |  ❌ Window system <br> ❌ Accessories  
 
 
 ✅ Supported | 🔄 In progress | ❌ In plan  
