@@ -54,6 +54,7 @@ int mkramdisk::copy_items(const std::filesystem::path& target, const std::vector
 
 		auto fsize = file_size(i);
 		auto fbuf = make_unique<uint8_t[]>(roundup(fsize, sizeof(uint64_t)));
+		memset(fbuf.get(), 0, roundup(fsize, sizeof(uint64_t)));
 
 		ifstream ifs{ i, ios::binary };
 
