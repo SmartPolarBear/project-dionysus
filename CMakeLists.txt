@@ -5,6 +5,15 @@ project(project-dionysus C CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+find_package(Python COMPONENTS Interpreter)
+
+if (!Python_FOUND)
+    message(ERROR "A python interpreter with higher version than 3.9.0 is required")
+else ()
+    message(STATUS "Use python executable ${Python_EXECUTABLE}")
+endif ()
+
+
 option(VERSION_DISKIMG "diskimg tool version" "NEW")
 set(DISK_IMG_PATH "${CMAKE_SOURCE_DIR}/tools/diskimg/diskimg2.py")
 set(DISK_IMG_ARGS "")
@@ -53,7 +62,7 @@ add_subdirectory(tools)
 # custom targets
 
 add_custom_target(disk.img ALL
-        COMMAND python3 "${DISK_IMG_PATH}" ${DISK_IMG_ARGS}
+        COMMAND ${Python_EXECUTABLE} "${DISK_IMG_PATH}" ${DISK_IMG_ARGS}
         DEPENDS mkramdisk kernel ap_boot.elf hello ipctest #monitor fs
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         )
