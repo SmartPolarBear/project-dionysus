@@ -7,6 +7,10 @@
       "to": "kernel"
     },
     {
+      "from": "bootramdisk",
+      "to": "bootramdisk"
+    },
+    {
       "from": "ap_boot",
       "to": "ap_boot"
     },
