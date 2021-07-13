@@ -61,9 +61,16 @@ add_subdirectory(tools)
 
 # custom targets
 
+add_custom_target(boot_ramdisk ALL
+        COMMAND $<TARGET_FILE:mkramdisk> -t ${CMAKE_BINARY_DIR}/bootramdisk -c ${CMAKE_CURRENT_SOURCE_DIR}/config/build/boot_ramdisk.json
+        DEPENDS ap_boot.elf hello ipctest
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Generating boot ramdisk"
+        )
+
 add_custom_target(disk.img ALL
         COMMAND ${Python_EXECUTABLE} "${DISK_IMG_PATH}" ${DISK_IMG_ARGS}
-        DEPENDS mkramdisk kernel ap_boot.elf hello ipctest #monitor fs
+        DEPENDS boot_ramdisk mkramdisk kernel ap_boot.elf hello ipctest #monitor fs
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         )
 
