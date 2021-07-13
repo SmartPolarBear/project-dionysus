@@ -163,7 +163,7 @@ add_custom_command(TARGET kernel POST_BUILD
 
 add_custom_target(
         vectors_S ALL
-        COMMAND python3 ${CMAKE_SOURCE_DIR}/tools/vectors/gvectors.py ${CMAKE_SOURCE_DIR}/config/codegen/gvectors/gvectors.json ${CMAKE_SOURCE_DIR}/kern/drv/apic/vectors.S
+        COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/vectors/gvectors.py ${CMAKE_SOURCE_DIR}/config/codegen/gvectors/gvectors.json ${CMAKE_SOURCE_DIR}/kern/drv/apic/vectors.S
         BYPRODUCTS ${CMAKE_SOURCE_DIR}/kern/drv/apic/vectors.S
         COMMENT "Generating vectors"
 )

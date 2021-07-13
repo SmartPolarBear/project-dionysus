@@ -63,9 +63,9 @@ Furthermore, you are welcomed to:
 1. [Ask a question](https://github.com/SmartPolarBear/project-dionysus/discussions/categories/q-a)   
    Also, have a look at our [FAQs]().  
 2. [Start a discussion](https://github.com/SmartPolarBear/project-dionysus/discussions/categories/general)    
-   Discussions can be about any topics or ideas related to CLOX.  
+   Discussions can be about any topics or ideas related to project-dionysus.  
 3. [Make a feature proposal](https://github.com/SmartPolarBear/project-dionysus/issues)   
-   Language features do you want to appear or not to appear in CLOX? For example, you can propose a new grammar making the lox better, or an idea for library features.   
+   Kernel features do you want to appear or not to appear in project-dionysus? For example, you can propose a new kernel server making the project-dionysus better, or an idea for userland features.   
 
 ## Credits
 The development of this project mostly refers to, and sometimes borrows some techniques, designs and codes from the following project:  
