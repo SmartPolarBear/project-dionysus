@@ -32,7 +32,32 @@
 #include "system/error.hpp"
 #include "system/multiboot.h"
 
+#include "task/job/job.hpp"
+#include "task/process/process.hpp"
+#include "task/thread/thread.hpp"
+
+#include "../libs/basic_io/include/builtin_text_io.hpp"
+
+#include "ktl/span.hpp"
+
+using namespace ktl;
+
 static inline constexpr auto RAMDISK_CMDLINE = "/bootramdisk";
+
+extern std::shared_ptr<task::job> root_job;
+
+static inline void run(string_view name, uint8_t* buf, size_t size)
+{
+	auto create_ret = task::process::create(name.data(), buf, size, root_job);
+	if (has_error(create_ret))
+	{
+		KDEBUG_GERNERALPANIC_CODE(get_error_code(create_ret));
+	}
+
+	auto proc = get_result(create_ret);
+
+	write_format("[cpu %d]load binary: %s\n", cpu->id, name);
+}
 
 static inline ramdisk_header* find_ramdisk()
 {
@@ -45,7 +70,38 @@ static inline ramdisk_header* find_ramdisk()
 	return reinterpret_cast<ramdisk_header*>(bin);
 }
 
+bool verify_checksum(const ramdisk_header* header)
+{
+	auto size = header->size;
+	uint64_t sum = 0;
+	span<const uint64_t>
+		qwords{ reinterpret_cast<const uint64_t*>(header), roundup(size, sizeof(uint64_t)) / sizeof(uint64_t) };
+
+	for (const auto& qw:qwords)
+	{
+		sum += qw;
+	}
+
+	return sum == 0;
+}
+
 error_code init::load_boot_ramdisk()
 {
+	auto header = find_ramdisk();
+
+	write_format("Load system component from ramdisk %s\n", header->name);
+	write_format("Ramdisk size: %lld, count of items: %lld. \n", header->size, header->count);
+
+	// TODO: check header parameters
+
+	KDEBUG_ASSERT_MSG(verify_checksum(header), "Invalid boot ramdisk with wrong checksum.");
+
+	span<ramdisk_item> items{ header->items, header->count };
+
+	for (const auto& item:items)
+	{
+		run(item.name, ((uint8_t*)header) + item.offset, item.size);
+	}
+
 	return ERROR_SUCCESS;
 }

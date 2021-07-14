@@ -41,6 +41,7 @@ struct ramdisk_item
 {
 	char name[16];
 	uint64_t offset;
+	uint64_t size;
 }__attribute__((packed));
 
 static_assert(sizeof(ramdisk_item) % sizeof(uint64_t) == 0);

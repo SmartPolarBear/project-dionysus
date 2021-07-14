@@ -50,21 +50,28 @@ std::optional<tuple<ramdisk_header*, size_t, uint64_t>> mkramdisk::create_ramdis
 	uint64_t sum{ 0 };
 
 	auto header = reinterpret_cast<ramdisk_header*>(buf.get());
-	auto rditems = reinterpret_cast<ramdisk_item*>(buf.get() + sizeof(ramdisk_header));
-
-	for (const auto& item : items)
+	
 	{
-		cout << "Proceeding " << item.string() << endl;
+		auto rd_item = reinterpret_cast<ramdisk_item*>(buf.get() + sizeof(ramdisk_header));
 
-		auto fsize = file_size(item);
+		for (const auto& item : items)
+		{
+			cout << "Proceeding " << item.string() << endl;
 
-		strncpy(rditems->name, item.filename().c_str(), item.filename().string().size());
+			auto fsize = file_size(item);
 
-		rditems->offset = size_total;
-		size_total += roundup(fsize, sizeof(uint64_t));
+			strncpy(rd_item->name, item.filename().c_str(), item.filename().string().size());
+
+			rd_item->offset = size_total;
+			rd_item->size = fsize;
+			size_total += roundup(fsize, sizeof(uint64_t));
+			rd_item++;
+		}
 	}
 
-	span<uint64_t> header_qwords{ (uint64_t*)buf.get(), sizeof(ramdisk_header) + sizeof(ramdisk_item) * items.size() };
+	span<uint64_t> header_qwords{ (uint64_t*)buf.get(),
+	                              roundup(sizeof(ramdisk_header) + sizeof(ramdisk_item) * items.size(),
+		                              sizeof(uint64_t)) / sizeof(uint64_t) };
 
 	for (const auto& qw:header_qwords)
 	{
