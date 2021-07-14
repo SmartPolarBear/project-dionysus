@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
 target_sources(kernel
-        PRIVATE main.cc multiboot.cc xtors.cc)
+        PRIVATE main.cc
+        PRIVATE multiboot.cc
+        PRIVATE ramdisk.cc
+        PRIVATE xtors.cc)
 
 
 # ap_boot

@@ -127,7 +127,7 @@ target_link_options(kernel
         PRIVATE -Wl,--build-id=none
         PRIVATE -Wl,--verbose)
 
-add_dependencies(kernel dbl libcxx_build libcxxabi_build newlib_build GSL)
+add_dependencies(kernel ramdisk dbl libcxx_build libcxxabi_build newlib_build GSL)
 
 target_include_directories(kernel BEFORE
         PRIVATE "${CMAKE_BINARY_DIR}/external/third_party_root/include/sys"
@@ -138,7 +138,7 @@ target_include_directories(kernel BEFORE
 
 target_link_directories(kernel BEFORE PRIVATE ${CMAKE_BINARY_DIR}/external/third_party_root/lib)
 
-target_link_libraries(kernel c g m c++abi c++ c++experimental GSL)
+target_link_libraries(kernel c g m c++abi c++ c++experimental GSL ramdisk)
 
 set_target_properties(kernel PROPERTIES LINK_DEPENS "${CMAKE_SOURCE_DIR}/config/build/kernel.ld")
 set_target_properties(kernel PROPERTIES LINK_FLAGS "-Wl,-T ${CMAKE_SOURCE_DIR}/config/build/kernel.ld")

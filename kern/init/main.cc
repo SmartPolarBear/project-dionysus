@@ -1,6 +1,8 @@
 #include "arch/amd64/cpu/x86.h"
 #include "boot/multiboot2.h"
 
+#include "include/ramdisk.hpp"
+
 #include "drivers/acpi/acpi.h"
 #include "drivers/acpi/cpu.h"
 #include "drivers/acpi/ap.hpp"
@@ -193,10 +195,9 @@ extern "C" [[noreturn]] void kmain()
 	// boot other CPU cores
 	ap::init_ap();
 
-	write_format("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
+	write_format("Codename \"Dionysus\" (built on %s %s) started.\n", __DATE__, __TIME__);
 
-	// start kernel servers in user space
-//	init_servers();
+	init::load_boot_ramdisk();
 
 	ap::all_processor_main();
 
