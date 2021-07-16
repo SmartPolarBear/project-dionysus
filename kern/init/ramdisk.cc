@@ -85,8 +85,14 @@ bool verify_checksum(const ramdisk_header* header)
 	return sum == 0;
 }
 
+enum class test
+{
+	A, B, C
+};
+
 error_code init::load_boot_ramdisk()
 {
+
 	auto header = find_ramdisk();
 
 	write_format("Load system component from ramdisk %s\n", header->name);
