@@ -63,7 +63,7 @@ std::optional<tuple<ramdisk_header*, size_t, uint64_t>> mkramdisk::create_ramdis
 			rd_item->size = fsize;
 			size_total += roundup(fsize, sizeof(uint64_t));
 
-			if (item.string() == "ap_boot")
+			if (item.filename().string().find("ap_boot") != string::npos)
 			{
 				rd_item->flags |= FLAG_AP_BOOT;
 			}

@@ -54,7 +54,7 @@ static inline void run(string_view name, uint8_t* buf, size_t size)
 		KDEBUG_GERNERALPANIC_CODE(get_error_code(create_ret));
 	}
 
-	auto proc = get_result(create_ret);
+	[[maybe_unused]]auto proc = get_result(create_ret);
 
 	write_format("[cpu %d]load binary: %s\n", cpu->id, name);
 }
@@ -111,7 +111,7 @@ error_code init::load_boot_ramdisk()
 
 		if ((item.flags & FLAG_AP_BOOT) == 0)
 		{
-			run(item.name, ((uint8_t*)header) + item.offset, item.size);
+			run(item.name, ((uint8_t*)header) + (item.offset + 0), item.size);
 		}
 	}
 
