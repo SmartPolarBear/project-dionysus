@@ -19,49 +19,12 @@
 // SOFTWARE.
 
 //
-// Created by bear on 6/29/21.
+// Created by bear on 7/14/21.
 //
 
-#pragma once
+#include "system/types.h"
 
-#ifndef __cplusplus
-#error "This file is only for C++"
-#endif
-
-#include <cstdint>
-
-enum ramdisk_flags : uint64_t
+namespace init
 {
-	FLAG_ARCH_AMD64 = 0b1,
-};
-
-enum ramdisk_item_flags : uint64_t
-{
-	FLAG_AP_BOOT = 0b1,
-};
-
-static inline constexpr uint64_t RAMDISK_HEADER_MAGIC = 0x20011204;
-
-struct ramdisk_item
-{
-	char name[16];
-	uint64_t flags;
-	uint64_t offset;
-	uint64_t size;
-}__attribute__((packed));
-
-static_assert(sizeof(ramdisk_item) == 40);
-
-
-struct ramdisk_header
-{
-	char name[16];
-	uint64_t magic;
-	uint64_t flags;
-	uint64_t checksum;
-	uint64_t size;
-	uint64_t count;
-	ramdisk_item items[0];
-}__attribute__((packed));
-
-static_assert(sizeof(ramdisk_header) == 56);
+error_code load_boot_ramdisk();
+}

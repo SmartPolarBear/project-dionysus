@@ -1,6 +1,8 @@
 #include "arch/amd64/cpu/x86.h"
 #include "boot/multiboot2.h"
 
+#include "include/ramdisk.hpp"
+
 #include "drivers/acpi/acpi.h"
 #include "drivers/acpi/cpu.h"
 #include "drivers/acpi/ap.hpp"
@@ -40,109 +42,38 @@
 
 #include "ktl/atomic.hpp"
 
-extern std::shared_ptr<task::job> root_job;
-
-static inline void run(const char* name)
-{
-	auto fuck = object::koid_allocator::instance().fetch();
-
-	uint8_t* bin = nullptr;
-	size_t size = 0;
-
-	auto ret = multiboot::find_module_by_cmdline(name, &size, &bin);
-
-	KDEBUG_ASSERT(ret == ERROR_SUCCESS);
-
-	auto create_ret = task::process::create(name, bin, size, root_job);
-	if (has_error(create_ret))
-	{
-		KDEBUG_GERNERALPANIC_CODE(get_error_code(create_ret));
-	}
-
-	auto proc = get_result(create_ret);
-//	auto create_ret = task::process::create(name_, root_job);
+//extern std::shared_ptr<task::job> root_job;
+//
+//static inline void run(const char* name)
+//{
+//
+//	uint8_t* bin = nullptr;
+//	size_t size = 0;
+//
+//	auto ret = multiboot::find_module_by_cmdline(name, &size, &bin);
+//
+//	KDEBUG_ASSERT(ret == ERROR_SUCCESS);
+//
+//	auto create_ret = task::process::create(name, bin, size, root_job);
 //	if (has_error(create_ret))
 //	{
 //		KDEBUG_GERNERALPANIC_CODE(get_error_code(create_ret));
 //	}
+//
 //	auto proc = get_result(create_ret);
 //
-//	task::process_load_binary(proc.get(), bin, size,
-//		task::BINARY_ELF,
-//		task::LOAD_BINARY_RUN_IMMEDIATELY);
+//	write_format("[cpu %d]load binary: %s\n", cpu->id, name);
+//}
+//
 
-	write_format("[cpu %d]load binary: %s\n", cpu->id, name);
-}
-
-error_code routine_a(void* arg)
+error_code init_thread_routine([[maybe_unused]]void* arg)
 {
-	uint64_t buf[3] = { 0, 1, 1 };
-	for (int i = 1; i <= 20; i++)
-	{
-		if (i >= 2)
-		{
-			buf[i % 3] = buf[(i - 1) % 3] + buf[(i - 2) % 3];
-		}
-		write_format("\n%d " + (i % 5 != 0), buf[i % 3]);
-	}
-	write_format("\n");
-	auto ret = kbl::magic("fuck");
-	return ret;
-}
-
-error_code routine_b(void* arg)
-{
-	write_format("enter routine b.\n");
-	auto t = reinterpret_cast<task::thread*>(arg);
-	error_code retcode = 0;
-	auto ret = t->join(&retcode);
-	if (ret != ERROR_SUCCESS)
-	{
-		write_format("routine b: a exit with code %lld\n", ret);
-		return ret;
-	}
-	write_format("routine b: a exit with code %lld\n", retcode);
-	return retcode;
-}
-
-error_code init_routine([[maybe_unused]]void* arg)
-{
-	write_format("%d\n", cpu->id);
-
+	write_format("Initialization routine of CPU %d\n", cpu->id);
 	if (cpu->id == 0)
 	{
-//
-//		auto ta = task::thread::create(nullptr, "a", routine_a, nullptr);
-//		if (has_error(ta))
-//		{
-//			KDEBUG_GERNERALPANIC_CODE(get_error_code(ta));
-//		}
-//
-//		auto tb = task::thread::create(nullptr, "b", routine_b, (void*)get_result(ta));
-//		if (has_error(tb))
-//		{
-//			KDEBUG_GERNERALPANIC_CODE(get_error_code(tb));
-//		}
-//
-//		{
-//			lock::lock_guard g{ task::global_thread_lock };
-//			task::scheduler::current::unblock(get_result(ta));
-//			task::scheduler::current::unblock(get_result(tb));
-//		}
+		init::load_boot_ramdisk();
 	}
-	else if (cpu->id == 1)
-	{
-		run("/ipctest");
-		run("/hello");
-	}
-
 	return ERROR_SUCCESS;
-}
-
-static inline void init_servers()
-{
-	// start monitor servers
-//	monitor::monitor_init(); //FIXME
 }
 
 // global entry of the kernel
@@ -193,10 +124,7 @@ extern "C" [[noreturn]] void kmain()
 	// boot other CPU cores
 	ap::init_ap();
 
-	write_format("Codename \"dionysus\" built on %s %s\n", __DATE__, __TIME__);
-
-	// start kernel servers in user space
-//	init_servers();
+	write_format("Codename \"Dionysus\" (built on %s %s) started.\n", __DATE__, __TIME__);
 
 	ap::all_processor_main();
 
@@ -213,7 +141,7 @@ void ap::all_processor_main()
 
 	KDEBUG_GERNERALPANIC_CODE(task::thread::create_idle());
 
-	if (auto ret = task::thread::create(nullptr, "init", init_routine, nullptr);has_error(ret))
+	if (auto ret = task::thread::create(nullptr, "init", init_thread_routine, nullptr);has_error(ret))
 	{
 		KDEBUG_GERNERALPANIC_CODE(get_error_code(ret));
 	}
