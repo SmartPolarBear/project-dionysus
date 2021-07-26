@@ -69,6 +69,10 @@
 error_code init_thread_routine([[maybe_unused]]void* arg)
 {
 	write_format("Initialization routine of CPU %d\n", cpu->id);
+	if (cpu->id == 0)
+	{
+		init::load_boot_ramdisk();
+	}
 	return ERROR_SUCCESS;
 }
 
@@ -121,8 +125,6 @@ extern "C" [[noreturn]] void kmain()
 	ap::init_ap();
 
 	write_format("Codename \"Dionysus\" (built on %s %s) started.\n", __DATE__, __TIME__);
-
-	init::load_boot_ramdisk();
 
 	ap::all_processor_main();
 

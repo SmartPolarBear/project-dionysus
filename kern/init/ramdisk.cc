@@ -85,10 +85,6 @@ bool verify_checksum(const ramdisk_header* header)
 	return sum == 0;
 }
 
-enum class test
-{
-	A, B, C
-};
 
 error_code init::load_boot_ramdisk()
 {
@@ -101,16 +97,16 @@ error_code init::load_boot_ramdisk()
 
 	// TODO: check header parameters
 
-//	KDEBUG_ASSERT_MSG(verify_checksum(header), "Invalid boot ramdisk with wrong checksum.");
+	// KDEBUG_ASSERT_MSG(verify_checksum(header), "Invalid boot ramdisk with wrong checksum.");
 
 	span<ramdisk_item> items{ header->items, header->count };
 
 	for (const auto& item:items)
 	{
-		write_format("Loading %s\n", item.name);
-
 		if ((item.flags & FLAG_AP_BOOT) == 0)
 		{
+			write_format("Loading %s\n", item.name);
+
 			run(item.name, ((uint8_t*)header) + (item.offset + 0), item.size);
 		}
 	}
