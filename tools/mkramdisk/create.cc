@@ -50,21 +50,26 @@ std::optional<tuple<ramdisk_header*, size_t, uint64_t>> mkramdisk::create_ramdis
 	uint64_t sum{ 0 };
 
 	auto header = reinterpret_cast<ramdisk_header*>(buf.get());
-	
+
 	{
 		auto rd_item = reinterpret_cast<ramdisk_item*>(buf.get() + sizeof(ramdisk_header));
 
 		for (const auto& item : items)
 		{
-			cout << "Proceeding " << item.string() << endl;
-
 			auto fsize = file_size(item);
 
 			strncpy(rd_item->name, item.filename().c_str(), item.filename().string().size());
-
 			rd_item->offset = size_total;
 			rd_item->size = fsize;
 			size_total += roundup(fsize, sizeof(uint64_t));
+
+			if (item.string() == "ap_boot")
+			{
+				rd_item->flags |= FLAG_AP_BOOT;
+			}
+
+			cout << "Proceeded " << item.string() << " offset:" << rd_item->offset << endl;
+
 			rd_item++;
 		}
 	}

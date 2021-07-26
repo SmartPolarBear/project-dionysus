@@ -57,8 +57,6 @@ using namespace std::filesystem;
 using namespace mkramdisk;
 using namespace mkramdisk::configuration;
 
-
-
 int main(int argc, char* argv[])
 {
 	argparse::ArgumentParser argparse{ "mkramdisk" };
@@ -118,11 +116,11 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	if (!check_update_time(target, items))
-	{
-		cout << "Everything up to date" << endl;
-		return 0;
-	}
+//	if (!check_update_time(target, items))
+//	{
+//		cout << "Everything up to date" << endl;
+//		return 0;
+//	}
 
 	auto sort_ret = sort_by_dependency(items);
 	if (!sort_ret)
@@ -151,7 +149,9 @@ int main(int argc, char* argv[])
 	auto[header, size_total, pre_checksum]=create_ret.value();
 
 	header->magic = RAMDISK_HEADER_MAGIC;
-	header->architecture = ARCH_AMD64;
+
+	header->flags |= FLAG_ARCH_AMD64;
+
 	header->size = roundup(size_total, sizeof(uint64_t));
 	header->count = paths.size();
 	header->checksum = ~static_cast<uint64_t>(pre_checksum) + 1ull;

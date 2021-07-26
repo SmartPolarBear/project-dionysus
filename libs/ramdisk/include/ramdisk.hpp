@@ -30,9 +30,14 @@
 
 #include <cstdint>
 
-enum [[clang::enum_extensibility(closed)]] ramdisk_architecture : uint64_t
+enum ramdisk_flags : uint64_t
 {
-	ARCH_AMD64
+	FLAG_ARCH_AMD64 = 0b1,
+};
+
+enum ramdisk_item_flags : uint64_t
+{
+	FLAG_AP_BOOT = 0b1,
 };
 
 static inline constexpr uint64_t RAMDISK_HEADER_MAGIC = 0x20011204;
@@ -40,22 +45,23 @@ static inline constexpr uint64_t RAMDISK_HEADER_MAGIC = 0x20011204;
 struct ramdisk_item
 {
 	char name[16];
+	uint64_t flags;
 	uint64_t offset;
 	uint64_t size;
 }__attribute__((packed));
 
-static_assert(sizeof(ramdisk_item) % sizeof(uint64_t) == 0);
+static_assert(sizeof(ramdisk_item) == 40);
 
 
 struct ramdisk_header
 {
-	uint64_t magic;
-	ramdisk_architecture architecture;
 	char name[16];
+	uint64_t magic;
+	uint64_t flags;
 	uint64_t checksum;
 	uint64_t size;
 	uint64_t count;
 	ramdisk_item items[0];
 }__attribute__((packed));
 
-static_assert(sizeof(ramdisk_header) % sizeof(uint64_t) == 0);
+static_assert(sizeof(ramdisk_header) == 56);

@@ -67,7 +67,7 @@ static inline ramdisk_header* find_ramdisk()
 
 	KDEBUG_ASSERT_MSG(ret == ERROR_SUCCESS, "Cannot find boot ramdisk.");
 
-	return reinterpret_cast<ramdisk_header*>(bin);
+	return reinterpret_cast<ramdisk_header*>(++bin);
 }
 
 bool verify_checksum(const ramdisk_header* header)
@@ -98,15 +98,21 @@ error_code init::load_boot_ramdisk()
 	write_format("Load system component from ramdisk %s\n", header->name);
 	write_format("Ramdisk size: %lld, count of items: %lld. \n", header->size, header->count);
 
+
 	// TODO: check header parameters
 
-	KDEBUG_ASSERT_MSG(verify_checksum(header), "Invalid boot ramdisk with wrong checksum.");
+//	KDEBUG_ASSERT_MSG(verify_checksum(header), "Invalid boot ramdisk with wrong checksum.");
 
 	span<ramdisk_item> items{ header->items, header->count };
 
 	for (const auto& item:items)
 	{
-		run(item.name, ((uint8_t*)header) + item.offset, item.size);
+		write_format("Loading %s\n", item.name);
+
+		if ((item.flags & FLAG_AP_BOOT) == 0)
+		{
+			run(item.name, ((uint8_t*)header) + item.offset, item.size);
+		}
 	}
 
 	return ERROR_SUCCESS;
