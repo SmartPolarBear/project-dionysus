@@ -67,7 +67,7 @@ static inline ramdisk_header* find_ramdisk()
 
 	KDEBUG_ASSERT_MSG(ret == ERROR_SUCCESS, "Cannot find boot ramdisk.");
 
-	return reinterpret_cast<ramdisk_header*>(++bin);
+	return reinterpret_cast<ramdisk_header*>(++bin); //FIXME
 }
 
 bool verify_checksum(const ramdisk_header* header)
