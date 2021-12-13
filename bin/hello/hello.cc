@@ -48,7 +48,7 @@ error:
 void test_get_proc_by_name()
 {
 	handle_type process = INVALID_HANDLE_VALUE;
-	auto err = get_process_by_name(&process, "/ipctest");
+	auto err = get_process_by_name(&process, "ipctest");
 	if (err != ERROR_SUCCESS)
 	{
 		goto error;
