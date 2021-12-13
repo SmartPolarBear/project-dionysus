@@ -30,6 +30,7 @@
 #include <span>
 #include <tuple>
 #include <queue>
+#include <iostream>
 
 using namespace std;
 using namespace std::filesystem;
@@ -47,12 +48,15 @@ std::optional<std::vector<path>> mkramdisk::sort_by_dependency(const vector<item
 	vector<vector<int>> g(items.size(), vector<int>{});
 
 	vector<int64_t> in_deg(items.size(), 0);
-	for (const auto& item:items)
+	for (const auto& item: items)
 	{
-		for (const auto& dep:item.deps())
+		for (const auto& dep: item.deps())
 		{
-			in_deg[dep]++;
-			g[item.id()].push_back(dep);
+//			in_deg[dep]++;
+//			g[item.id()].push_back(dep);
+			// reverse graph is needed because the one depended on needs starting first
+			in_deg[item.id()]++;
+			g[dep].push_back(item.id());
 		}
 	}
 
@@ -73,6 +77,7 @@ std::optional<std::vector<path>> mkramdisk::sort_by_dependency(const vector<item
 		q.pop();
 
 		ret.emplace_back(n.path());
+		clog << n.path() << endl;
 
 		if (g[n.id()].empty())continue;
 
@@ -86,7 +91,7 @@ std::optional<std::vector<path>> mkramdisk::sort_by_dependency(const vector<item
 		}
 	}
 
-	for (const auto& n:g)
+	for (const auto& n: g)
 	{
 		if (!n.empty())return std::nullopt;
 	}
