@@ -59,7 +59,36 @@ int main()
 
 //	for (int c = 0; c == 0; c = test())
 //	{}
-	test();
+//	test();
+
+	while (true)
+	{
+		ipc_wait(TIME_INFINITE);
+
+		message msg{};
+
+		ipc_store(&msg);
+
+		auto label = msg.get_tag().label();
+
+		auto handle = msg.at<handle_type>(0);
+		auto data = msg.at<uint64_t>(1);
+
+		message reply{};
+
+		message_tag reply_tag{};
+
+		reply_tag.set_label(0x1204);
+
+		reply.set_tag(reply_tag);
+
+		data *= label;
+		reply.append<uint64_t>(data);
+
+		ipc_load_message(&msg);
+
+		ipc_send(handle, TIME_INFINITE);
+	}
 
 	return 0;
 
