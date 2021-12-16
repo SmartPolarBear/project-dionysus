@@ -18,7 +18,7 @@ handle_type get_hello()
 		goto error;
 	}
 
-	write_format("receiver handle : %lld \n", thread);
+	write_format("hello handle : %lld \n", thread);
 	return thread;
 error:
 	write_format("ERROR %d getting hello", err);
@@ -54,7 +54,7 @@ int main()
 	auto hello_handle = get_hello();
 
 	handle_type this_handle = INVALID_HANDLE_VALUE;
-	if (get_current_process(&this_handle) != ERROR_SUCCESS)
+	if (get_current_thread(&this_handle) != ERROR_SUCCESS)
 	{
 		put_str("Error getting handle of ipctest!");
 	}
@@ -65,8 +65,12 @@ int main()
 		message_tag tag{};
 		tag.set_label(i);
 
+		msg.set_tag(tag);
+
 		msg.append(this_handle);
 		msg.append(i);
+
+		put_str("fuck");
 
 		ipc_load_message(&msg);
 
