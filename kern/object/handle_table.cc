@@ -21,6 +21,8 @@ handle_type handle_table::add_handle(handle_entry_owner owner)
 
 handle_type handle_table::add_handle_locked(handle_entry_owner owner)
 {
+	KDEBUG_ASSERT(owner);
+
 	if (local_ && cur_proc.is_valid() && cur_proc != nullptr)
 	{
 		owner->owner_process_id = cur_proc->get_koid();

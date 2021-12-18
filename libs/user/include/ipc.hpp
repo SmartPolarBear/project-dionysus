@@ -20,3 +20,5 @@ DIONYSUS_API error_code ipc_store(task::ipc::message* msg);
 
 DIONYSUS_API error_code ipc_accept(task::ipc::message_acceptor* acc);
 
+DIONYSUS_API error_code ipc_wait(time_type timeout);
+

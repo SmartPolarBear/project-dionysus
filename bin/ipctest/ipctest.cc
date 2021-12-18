@@ -4,7 +4,7 @@
 using namespace task::ipc;
 using namespace object;
 
-handle_type get_receiver()
+handle_type get_hello()
 {
 	handle_type thread = INVALID_HANDLE_VALUE;
 	auto err = get_thread_by_name(&thread, "hello");
@@ -18,10 +18,10 @@ handle_type get_receiver()
 		goto error;
 	}
 
-	write_format("receiver handle : %lld \n", thread);
+	write_format("hello handle : %lld \n", thread);
 	return thread;
 error:
-	write_format("ERROR %d getting receiver", err);
+	write_format("ERROR %d getting hello", err);
 	while (true);
 }
 
@@ -29,26 +29,59 @@ int main()
 {
 //	while(true)hello(9, 8, 7, 6);
 
-	while (true)
+//	while (true)
+//	{
+//		hello(9, 8, 7, 6);
+//
+//		message msg{};
+//
+//		message_tag tag{};
+//		uint64_t untyped1 = 12345ull;
+//
+//		tag.set_label(0x12345);
+//
+//		msg.set_tag(tag);
+//
+//		msg.append(untyped1);
+//
+//		ipc_load_message(&msg);
+//
+//		ipc_send(get_receiver(), TIME_INFINITE);
+//
+//		hello(92, 82, 72, 62);
+//	}
+
+	auto hello_handle = get_hello();
+
+	handle_type this_handle = INVALID_HANDLE_VALUE;
+	if (get_current_thread(&this_handle) != ERROR_SUCCESS)
 	{
-		hello(9, 8, 7, 6);
+		put_str("Error getting handle of ipctest!");
+	}
 
+	for (int i = 2; i <= 10; i++)
+	{
 		message msg{};
-
 		message_tag tag{};
-		uint64_t untyped1 = 12345ull;
-
-		tag.set_label(0x12345);
+		tag.set_label(i);
 
 		msg.set_tag(tag);
 
-		msg.append(untyped1);
+		msg.append(this_handle);
+		msg.append(i);
+
+		put_str("fuck");
 
 		ipc_load_message(&msg);
 
-		ipc_send(get_receiver(), TIME_INFINITE);
+		ipc_send(hello_handle, TIME_INFINITE);
 
-		hello(92, 82, 72, 62);
+		ipc_receive(hello_handle, TIME_INFINITE);
+
+		message reply{};
+		ipc_store(&reply);
+
+		hello(i, reply.at<uint64_t>(0), 0, 0);
 	}
 
 	return 0;

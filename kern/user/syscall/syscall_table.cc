@@ -63,6 +63,7 @@ extern "C" syscall_entry syscall_table[SYSCALL_COUNT_MAX + 1] = {
 	[SYS_ipc_receive] = sys_ipc_receive,
 	[SYS_ipc_accept] =sys_ipc_accept,
 	[SYS_ipc_store] = sys_ipc_store,
+	[SYS_ipc_wait]= sys_ipc_wait,
 };
 
 #pragma clang diagnostic pop

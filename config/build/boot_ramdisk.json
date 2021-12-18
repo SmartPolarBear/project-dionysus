@@ -9,14 +9,14 @@
     {
       "id": 1,
       "path": "build/bin/hello/hello",
-      "deps": [
-        2
-      ]
+      "deps": []
     },
     {
       "id": 2,
       "path": "build/bin/ipctest/ipctest",
-      "deps": []
+      "deps": [
+        1
+      ]
     }
   ]
 }

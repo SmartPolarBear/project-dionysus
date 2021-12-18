@@ -25,3 +25,8 @@ DIONYSUS_API error_code ipc_accept(task::ipc::message_acceptor* acc)
 {
 	return make_syscall(syscall::SYS_ipc_accept, acc);
 }
+
+error_code ipc_wait(time_type timeout)
+{
+	return make_syscall(syscall::SYS_ipc_wait, timeout);
+}

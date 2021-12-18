@@ -80,7 +80,7 @@ error_code sys_ipc_receive(const syscall_regs* regs)
 		auto err = cur_thread->get_ipc_state()->receive(from, deadline::after(timeout));
 		if (err != ERROR_SUCCESS)
 		{
-			KDEBUG_GERNERALPANIC_CODE(err);
+			KDEBUG_GERNERALPANIC_CODE(err); //FIXME
 		}
 
 		return err;
@@ -117,4 +117,19 @@ error_code sys_ipc_accept(const syscall_regs* regs)
 	cur_thread->get_ipc_state()->set_acceptor(acceptor);
 
 	return ERROR_SUCCESS;
+}
+
+error_code sys_ipc_wait(const syscall_regs* regs)
+{
+	auto timeout = args_get<time_type, 0>(regs);
+
+	global_thread_lock.assert_not_held();
+
+	auto err = cur_thread->get_ipc_state()->wait(deadline::after(timeout));
+	if (err != ERROR_SUCCESS)
+	{
+		KDEBUG_GERNERALPANIC_CODE(err); //FIXME
+	}
+
+	return err;
 }

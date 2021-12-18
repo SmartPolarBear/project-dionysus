@@ -8,14 +8,14 @@
     <libraryRoots>
       <file path="$PROJECT_DIR$/../external/llvm-project" />
       <file path="$PROJECT_DIR$/../external/newlib" />
-      <file path="$PROJECT_DIR$/tools/mkramdisk/include/argparse" />
-      <file path="$PROJECT_DIR$/tools/mkramdisk/include/nlohmann" />
     </libraryRoots>
     <excludeRoots>
       <file path="$PROJECT_DIR$/../.vscode" />
       <file path="$PROJECT_DIR$/../build" />
       <file path="$PROJECT_DIR$/../external" />
       <file path="$PROJECT_DIR$/external" />
+      <file path="$PROJECT_DIR$/tools/mkramdisk/include/argparse" />
+      <file path="$PROJECT_DIR$/tools/mkramdisk/include/nlohmann" />
       <file path="$PROJECT_DIR$/venv" />
     </excludeRoots>
   </component>
