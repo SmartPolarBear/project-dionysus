@@ -45,8 +45,10 @@ error_code sys_get_current_thread(const syscall_regs* regs)
 	auto id = cur_thread->get_koid();
 	auto pred = [id](const handle_entry& h)
 	{
-	  return downcast_dispatcher<task::thread>(h.object())->get_koid() == id;
+	  auto t = downcast_dispatcher<task::thread>(h.object());
+	  return t && t->get_koid() == id;
 	};
+
 
 	auto local_handle = cur_proc.is_valid() ?
 	                    cur_proc->handle_table_.query_handle(pred) : nullptr;
@@ -85,8 +87,10 @@ error_code sys_get_thread_by_id(const syscall_regs* regs)
 
 	auto pred = [id](const handle_entry& h)
 	{
-	  return downcast_dispatcher<task::thread>(h.object())->get_koid() == id;
+	  auto t = downcast_dispatcher<task::thread>(h.object());
+	  return t && t->get_koid() == id;
 	};
+
 
 	auto local_handle = cur_proc.is_valid() ?
 	                    cur_proc->handle_table_.query_handle(pred) : nullptr;
