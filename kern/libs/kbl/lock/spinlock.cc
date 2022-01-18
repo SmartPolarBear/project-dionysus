@@ -21,7 +21,7 @@ using lock::spinlock_struct;
 
 	console::console_set_color(console::CONSOLE_COLOR_BLUE, console::CONSOLE_COLOR_LIGHT_BROWN);
 
-	write_format("[cpu %d]lock %s has been held by cpu %d.\nspinlock value=%lld.\nCall stack of lock:\n",
+	write_format("[cpu %d]lock %s has been held \n holding cpu=%d, spinlock value=%lld.\nCall stack of lock:\n",
 		cpu->id,
 		lock->name,
 		arch_spinlock_cpu(lock),
@@ -34,7 +34,7 @@ using lock::spinlock_struct;
 
 	{
 		size_t counter = 0;
-		for (auto cs : lock->pcs)
+		for (auto cs: lock->pcs)
 		{
 			if (cs == 0)break;
 			write_format("%p ", cs);

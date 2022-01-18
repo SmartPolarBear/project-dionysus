@@ -38,9 +38,30 @@ error_code sys_get_current_thread(const syscall_regs* regs)
 		return -ERROR_INVALID;
 	}
 
-	auto handle = handle_entry::create("current_thread"sv, cur_thread.get());
+	auto id = cur_thread->get_koid();
+	auto pred = [id](const handle_entry& h)
+	{
+	  auto t = downcast_dispatcher<task::thread>(h.object());
+	  return t && t->get_koid() == id;
+	};
 
-	*out = cur_proc->handle_table_.add_handle(std::move(handle));
+
+	auto local_handle = cur_proc.is_valid() ?
+	                    cur_proc->handle_table_.query_handle(pred) : nullptr;
+
+	if (!local_handle)
+	{
+		auto handle = handle_table::get_global_handle_table()->query_handle(pred);
+		if (!handle)
+		{
+			return -ERROR_NOT_EXIST;
+		}
+		*out = cur_proc->handle_table_.add_handle(handle_entry::duplicate(handle));
+	}
+	else
+	{
+		*out = cur_proc->handle_table_.entry_to_handle(local_handle);
+	}
 
 	if (*out == INVALID_HANDLE_VALUE)
 	{
@@ -62,8 +83,10 @@ error_code sys_get_thread_by_id(const syscall_regs* regs)
 
 	auto pred = [id](const handle_entry& h)
 	{
-	  return downcast_dispatcher<process>(h.object())->get_koid() == id;
+	  auto t = downcast_dispatcher<task::thread>(h.object());
+	  return t && t->get_koid() == id;
 	};
+
 
 	auto local_handle = cur_proc.is_valid() ?
 	                    cur_proc->handle_table_.query_handle(pred) : nullptr;

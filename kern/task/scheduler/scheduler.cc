@@ -151,7 +151,7 @@ void task::scheduler::tick(task::thread* t)
 	// Push migrating approach to load balancing
 	cpu_struct* max_cpu = &(*valid_cpus.begin()), * min_cpu = &(*valid_cpus.begin());
 
-	for (auto& c:valid_cpus)
+	for (auto& c: valid_cpus)
 	{
 		if (c.scheduler->workload_size_locked() > max_cpu->scheduler->workload_size_locked())
 		{
@@ -192,9 +192,10 @@ void task::scheduler::reschedule_locked()
 	global_thread_lock.assert_held();
 
 	// terminate current thread
-	if (cur_thread->state == thread::thread_states::RUNNING)
+	auto cur = cur_thread.get();
+	if (cur->state == thread::thread_states::RUNNING)
 	{
-		cur_thread->state = thread::thread_states::READY;
+		cur->state = thread::thread_states::READY;
 	}
 
 	this->schedule();
@@ -261,7 +262,7 @@ error_code task::scheduler::idle(void* arg __UNUSED) TA_NO_THREAD_SAFETY_ANALYSI
 
 		cpu_struct* max_cpu = &valid_cpus[0];
 
-		for (auto& c:valid_cpus)
+		for (auto& c: valid_cpus)
 		{
 			if (c.scheduler->workload_size_locked() > max_cpu->scheduler->workload_size_locked() &&
 				this_cpu != &c)
@@ -374,17 +375,19 @@ void task::scheduler::schedule()
 
 	auto state = arch_interrupt_save();
 
-	thread* next = nullptr;
-	cur_thread->scheduler_state_.set_need_reschedule(false);
+	thread* next = nullptr, * cur = cur_thread.get();
 
-	cur_thread->scheduler_state_.on_tick();
+	cur->scheduler_state_.set_need_reschedule(false);
 
-	if (cur_thread->state == thread::thread_states::READY)
+	cur->scheduler_state_.on_tick();
+
+	if (cur->state == thread::thread_states::READY)
 	{
-		enqueue(cur_thread.get());
+		enqueue(cur);
 	}
 
 	next = fetch();
+
 	if (next != nullptr)
 	{
 		dequeue(next);
@@ -395,7 +398,7 @@ void task::scheduler::schedule()
 		next = cpu->idle;
 	}
 
-	if (next != cur_thread.get())
+	if (next != cur)
 	{
 		next->switch_to(state);
 	}

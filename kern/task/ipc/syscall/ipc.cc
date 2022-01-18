@@ -38,8 +38,10 @@ error_code sys_ipc_send(const syscall_regs* regs)
 	auto target_handle = args_get<object::handle_type, 0>(regs);
 	auto timeout = args_get<time_type, 1>(regs);
 
-	auto handle_entry = cur_proc->handle_table()->get_handle_entry(target_handle);
-	if (auto ret = cur_proc->handle_table()->object_from_handle<thread>(handle_entry);has_error(ret))
+	auto proc = cur_proc.get();
+
+	auto handle_entry = proc->handle_table()->get_handle_entry(target_handle);
+	if (auto ret = proc->handle_table()->object_from_handle<thread>(handle_entry);has_error(ret))
 	{
 		return get_error_code(ret);
 	}
@@ -66,8 +68,10 @@ error_code sys_ipc_receive(const syscall_regs* regs)
 	auto from_handle = args_get<object::handle_type, 0>(regs);
 	auto timeout = args_get<time_type, 1>(regs);
 
-	auto handle_entry = cur_proc->handle_table()->get_handle_entry(from_handle);
-	if (auto ret = cur_proc->handle_table()->object_from_handle<thread>(handle_entry);has_error(ret))
+	auto proc = cur_proc.get();
+
+	auto handle_entry = proc->handle_table()->get_handle_entry(from_handle);
+	if (auto ret = proc->handle_table()->object_from_handle<thread>(handle_entry);has_error(ret))
 	{
 		return get_error_code(ret);
 	}
