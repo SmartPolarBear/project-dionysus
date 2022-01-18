@@ -25,15 +25,36 @@ struct global_handle_table_tag
 
 static inline constexpr global_handle_table_tag create_global_handle_table;
 
+union handle
+{
+	handle_type handle_value;
+	struct
+	{
+		uint64_t l4: 8;
+		uint64_t l3: 8;
+		uint64_t l2: 8;
+		uint64_t l1: 8;
+		uint64_t flags: 8;
+	};
+};
+
+static_assert(sizeof(handle) == sizeof(handle_type));
+
 class handle_table final
 {
  public:
 	friend class handle_entry;
 	friend struct handle_entry_deleter;
 
-	static constexpr size_t MAX_HANDLE_PER_TABLE = UINT32_MAX;
+	static constexpr size_t MAX_HANDLE_PER_TABLE = 512;
 
 	static handle_table* get_global_handle_table();
+
+	struct table
+	{
+		size_t count;
+		uintptr_t next[MAX_HANDLE_PER_TABLE];
+	};
 
 	handle_table() : local_{ true }, parent_{ nullptr }
 	{
@@ -63,7 +84,7 @@ class handle_table final
 
 	handle_type add_handle(handle_entry_owner owner);
 	handle_type add_handle_locked(handle_entry_owner owner)TA_REQ(lock_);
-	handle_type entry_to_handle(handle_entry *h) const;
+	handle_type entry_to_handle(handle_entry* h) const;
 
 	handle_entry_owner remove_handle(handle_type h);
 	handle_entry_owner remove_handle(handle_entry* e);
@@ -123,14 +144,22 @@ class handle_table final
 
 	dispatcher* parent_{ nullptr };
 
+	table root_{};
+
+	struct
+	{
+		size_t l1, l2, l3, l4;
+	} next_{ 0, 0, 0, 0 };
+
+	mutable lock::spinlock lock_;
+
+	static handle_table global_handle_table_;
+
 	kbl::intrusive_list<handle_entry,
 	                    lock::spinlock,
 	                    handle_entry::node_trait,
 	                    true> handles_{};
 
-	mutable lock::spinlock lock_;
-
-	static handle_table global_handle_table_;
 };
 
 template<typename T>
@@ -143,7 +172,7 @@ handle_entry* handle_table::query_handle(T&& pred)
 template<typename T>
 handle_entry* handle_table::query_handle_locked(T&& pred) TA_REQ(lock_)
 {
-	for (auto& handle:handles_)
+	for (auto& handle: handles_)
 	{
 		if (pred(handle))
 		{
