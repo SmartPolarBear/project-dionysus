@@ -70,13 +70,15 @@ int main()
 		msg.append(this_handle);
 		msg.append(i);
 
-		put_str("fuck");
-
 		ipc_load_message(&msg);
 
 		ipc_send(hello_handle, TIME_INFINITE);
 
+		put_str("fuck1");
+
 		ipc_receive(hello_handle, TIME_INFINITE);
+
+		put_str("fuck2");
 
 		message reply{};
 		ipc_store(&reply);

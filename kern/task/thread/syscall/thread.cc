@@ -37,10 +37,6 @@ error_code sys_get_current_thread(const syscall_regs* regs)
 	{
 		return -ERROR_INVALID;
 	}
-//
-//	auto handle = handle_entry::create("current_thread"sv, cur_thread.get());
-//
-//	*out = cur_proc->handle_table_.add_handle(std::move(handle));
 
 	auto id = cur_thread->get_koid();
 	auto pred = [id](const handle_entry& h)

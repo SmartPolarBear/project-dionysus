@@ -12,7 +12,6 @@ handle_table* handle_table::get_global_handle_table()
 	return &global_handle_table_;
 }
 
-
 handle_type handle_table::add_handle(handle_entry_owner owner)
 {
 	lock::lock_guard g{ lock_ };
@@ -111,13 +110,16 @@ handle_entry* handle_table::get_handle_entry_locked(handle_type h)
 
 	if ((attr & HATTR_GLOBAL) && local_)return nullptr;
 
-	auto link_ptr = *reinterpret_cast<decltype(handles_)::head_type*>(INDEX_TO_ADDR(idx));
-	return link_ptr.parent_;
+	auto link_ptr = reinterpret_cast<decltype(handles_)::head_type*>(INDEX_TO_ADDR(idx));
+
+	KDEBUG_ASSERT(link_ptr);
+
+	return link_ptr->parent_;
 }
 
 bool handle_table::local_exist_locked(handle_entry* owner) TA_REQ(lock_)
 {
-	for (auto& handle:handles_)
+	for (auto& handle: handles_)
 	{
 		if (handle.ptr_ == owner->ptr_)return true;
 	}
@@ -127,7 +129,7 @@ bool handle_table::local_exist_locked(handle_entry* owner) TA_REQ(lock_)
 
 void handle_table::clear()
 {
-	for (auto& handle:handles_)
+	for (auto& handle: handles_)
 	{
 		handle_entry_owner discard{ &handle };
 		// the deleter is called
@@ -144,7 +146,7 @@ handle_entry* handle_table::query_handle_by_name(ktl::string_view name)
 
 handle_entry* handle_table::query_handle_by_name_locked(ktl::string_view name) TA_REQ(lock_)
 {
-	for (auto& handle:handles_)
+	for (auto& handle: handles_)
 	{
 		if (name.compare(handle.name_.data()) == 0)
 		{
