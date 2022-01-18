@@ -35,8 +35,8 @@ union handle
 		uint64_t l2: 8;
 		uint64_t l1: 8;
 		uint64_t flags: 8;
-	};
-};
+	} __attribute__ ((__packed__));
+} __attribute__ ((__packed__));
 
 static_assert(sizeof(handle) == sizeof(handle_type));
 
@@ -53,16 +53,16 @@ class handle_table final
 	struct table
 	{
 		size_t count;
-		uintptr_t next[MAX_HANDLE_PER_TABLE];
-	};
+		union
+		{
+			table* next[MAX_HANDLE_PER_TABLE];
+			void* entry[MAX_HANDLE_PER_TABLE];
+		} __attribute__ ((__packed__));
+	} __attribute__ ((__packed__));
 
-	handle_table() : local_{ true }, parent_{ nullptr }
-	{
-	}
+	handle_table();
 
-	handle_table(dispatcher* parent) : local_{ true }, parent_{ parent }
-	{
-	}
+	handle_table(dispatcher* parent);
 
 	~handle_table() = default;
 
@@ -108,6 +108,9 @@ class handle_table final
 	void clear();
 
  private:
+	[[nodiscard]] static std::tuple<int, int> increase_next_cur(size_t value);
+	[[nodiscard]] error_code increase_next();
+
 	explicit handle_table(global_handle_table_tag) : local_{ false }, parent_{ nullptr }
 	{
 	}
@@ -145,6 +148,8 @@ class handle_table final
 	dispatcher* parent_{ nullptr };
 
 	table root_{};
+
+	memory::kmem::kmem_cache* table_cache_{ nullptr };
 
 	struct
 	{

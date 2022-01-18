@@ -50,6 +50,7 @@ enum error_code_values : error_code
 	ERROR_INTERNAL_INTR_KILLED,
 	ERROR_INTERNAL_INTR_RETRY,
 	ERROR_IPC_NOT_THE_SENDER,
+	ERROR_TOO_MANY_HANDLES,
 
 	// max element index
 	ERROR_CODE_COUNT,

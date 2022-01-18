@@ -7,6 +7,26 @@ using namespace lock;
 
 handle_table handle_table::global_handle_table_{ create_global_handle_table };
 
+handle_table::handle_table() : local_{ true }, parent_{ nullptr }
+{
+	table_cache_ = memory::kmem::kmem_cache_create("handle_table", sizeof(table));
+	root_.next[0] = new(memory::kmem::kmem_cache_alloc(table_cache_)) table{};
+	root_.next[0]->next[0] = new(memory::kmem::kmem_cache_alloc(table_cache_)) table{};
+	root_.next[0]->next[0]->entry[0] = nullptr;
+
+	memset(&next_, 0, sizeof(next_));
+}
+
+handle_table::handle_table(dispatcher* parent) : local_{ true }, parent_{ parent }
+{
+	table_cache_ = memory::kmem::kmem_cache_create("handle_table", sizeof(table));
+	root_.next[0] = new(memory::kmem::kmem_cache_alloc(table_cache_)) table{};
+	root_.next[0]->next[0] = new(memory::kmem::kmem_cache_alloc(table_cache_)) table{};
+	root_.next[0]->next[0]->entry[0] = nullptr;
+
+	memset(&next_, 0, sizeof(next_));
+}
+
 handle_table* handle_table::get_global_handle_table()
 {
 	return &global_handle_table_;
@@ -154,6 +174,31 @@ handle_entry* handle_table::query_handle_by_name_locked(ktl::string_view name) T
 		}
 	}
 	return nullptr;
+}
+
+std::tuple<int, int> handle_table::increase_next_cur(size_t value)
+{
+	auto new_value = value + 1;
+	return { new_value >= MAX_HANDLE_PER_TABLE, new_value % MAX_HANDLE_PER_TABLE };
+}
+
+error_code handle_table::increase_next()
+{
+	if (auto[c4, v4] = increase_next_cur(next_.l4);c4)
+	{
+		if (auto[c3, v3]=increase_next_cur(next_.l3);c3)
+		{
+			if (auto[c2, v2]=increase_next_cur(next_.l2);c2)
+			{
+				if (auto[c1, v1]=increase_next_cur(next_.l1);c1)
+				{
+					return -ERROR_TOO_MANY_HANDLES;
+				}
+			}
+		}
+	}
+
+	return ERROR_SUCCESS;
 }
 
 
