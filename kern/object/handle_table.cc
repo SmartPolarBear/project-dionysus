@@ -10,21 +10,52 @@ handle_table handle_table::global_handle_table_{ create_global_handle_table };
 handle_table::handle_table() : local_{ true }, parent_{ nullptr }
 {
 	table_cache_ = memory::kmem::kmem_cache_create("handle_table", sizeof(table));
-	root_.next[0] = new(memory::kmem::kmem_cache_alloc(table_cache_)) table{};
-	root_.next[0]->next[0] = new(memory::kmem::kmem_cache_alloc(table_cache_)) table{};
-	root_.next[0]->next[0]->entry[0] = nullptr;
 
-	memset(&next_, 0, sizeof(next_));
+	initialize_table();
 }
 
 handle_table::handle_table(dispatcher* parent) : local_{ true }, parent_{ parent }
 {
 	table_cache_ = memory::kmem::kmem_cache_create("handle_table", sizeof(table));
+
+	initialize_table();
+}
+
+void handle_table::initialize_table()
+{
 	root_.next[0] = new(memory::kmem::kmem_cache_alloc(table_cache_)) table{};
 	root_.next[0]->next[0] = new(memory::kmem::kmem_cache_alloc(table_cache_)) table{};
-	root_.next[0]->next[0]->entry[0] = nullptr;
+	root_.next[0]->next[0]->next[0] = new(memory::kmem::kmem_cache_alloc(table_cache_)) table{};
+	root_.next[0]->next[0]->next[0]->entry[0] = nullptr;
 
 	memset(&next_, 0, sizeof(next_));
+}
+
+error_code_with_result<std::tuple<size_t, size_t, size_t, size_t>> handle_table::first_free()
+{
+	for (size_t l1 = 0; l1 < next_.l1; l1++)
+	{
+		for (size_t l2 = 0; l2 < next_.l2; l2++)
+		{
+			for (size_t l3 = 0; l3 < next_.l3; l3++)
+			{
+				for (size_t l4 = 0; l4 < next_.l4; l4++)
+				{
+					if (!root_.next[l1]->next[l2]->next[l3]->entry[l4])
+					{
+						return std::make_tuple(l1, l2, l3, l4);
+					}
+				}
+			}
+		}
+	}
+	auto[l1, l2, l3, l4]=next_;
+	if (auto err = increase_next();err != ERROR_SUCCESS)
+	{
+		return err;
+	}
+
+	return std::make_tuple(l1, l2, l3, l4);
 }
 
 handle_table* handle_table::get_global_handle_table()
@@ -59,25 +90,36 @@ handle_type handle_table::add_handle_locked(handle_entry_owner owner)
 	else attr |= HATTR_GLOBAL;
 
 	handle_entry* ptr = nullptr;
-	if (!local_exist_locked(owner.get()))
+	if (auto local_value = local_get_locked(owner.get());!local_value)
 	{
-		handles_.push_back(ptr = owner.release());
+		ptr = owner.release();
+		if (auto find_res = first_free();!has_error(find_res))
+		{
+			auto[l1, l2, l3, l4]= get_result(find_res);
+			root_.next[l1]->next[l2]->next[l3]->entry[l4] = ptr = owner.release();
+			ptr->value_ = MAKE_HANDLE(attr, l1, l2, l3, l4);
+		}
+		else
+		{
+			KDEBUG_GERNERALPANIC_CODE(get_error_code(find_res));
+		}
 	}
 	else
 	{
 		ptr = owner.release();
 	}
 
-	return MAKE_HANDLE(attr, (uintptr_t)&ptr->link_);
+	return ptr->value_;
 }
 
 handle_type handle_table::entry_to_handle(handle_entry* ptr) const
 {
-	uint16_t attr = 0;
-
-	if (local_)attr |= HATTR_LOCAL_PROC;
-	else attr |= HATTR_GLOBAL;
-	return MAKE_HANDLE(attr, (uintptr_t)&ptr->link_);
+//	uint16_t attr = 0;
+//
+//	if (local_)attr |= HATTR_LOCAL_PROC;
+//	else attr |= HATTR_GLOBAL;
+//	return MAKE_HANDLE(attr, (uintptr_t)&ptr->link_);
+	return ptr->value_;
 }
 
 handle_entry_owner handle_table::remove_handle(handle_type h)
@@ -105,12 +147,33 @@ handle_entry_owner handle_table::remove_handle_locked(handle_type h)
 
 handle_entry_owner handle_table::remove_handle_locked(handle_entry* e)
 {
-	if (e->link_.is_empty_or_detached())
+
+
+	if (!local_exist_locked(e))
 	{
 		return handle_entry_owner(e);
 	}
 
-	handles_.remove(e);
+	for (size_t l1 = 0; l1 < next_.l1; l1++)
+	{
+		for (size_t l2 = 0; l2 < next_.l2; l2++)
+		{
+			for (size_t l3 = 0; l3 < next_.l3; l3++)
+			{
+				for (size_t l4 = 0; l4 < next_.l4; l4++)
+				{
+					auto slot = root_.next[l1]->next[l2]->next[l3]->entry[l4];
+					if (slot && slot->ptr_ == e->ptr_)
+					{
+						root_.next[l1]->next[l2]->next[l3]->entry[l4] = nullptr;
+					}
+				}
+			}
+		}
+	}
+
+//	handles_.remove(e);
+
 	e->owner_process_id = -1;
 	e->parent_ = nullptr;
 
@@ -126,36 +189,89 @@ handle_entry* handle_table::get_handle_entry(handle_type h)
 
 handle_entry* handle_table::get_handle_entry_locked(handle_type h)
 {
-	auto[attr, idx] = PARSE_HANDLE(h);
+	auto[attr, l1, l2, l3, l4] = DISASSEMBLE_HANDLE(h);
 
 	if ((attr & HATTR_GLOBAL) && local_)return nullptr;
 
-	auto link_ptr = reinterpret_cast<decltype(handles_)::head_type*>(INDEX_TO_ADDR(idx));
 
-	KDEBUG_ASSERT(link_ptr);
+	KDEBUG_ASSERT(l1 <= next_.l1);
+	KDEBUG_ASSERT(l2 <= next_.l2);
+	KDEBUG_ASSERT(l3 <= next_.l3);
+	KDEBUG_ASSERT(l4 <= next_.l4);
 
-	return link_ptr->parent_;
+	return root_.next[l1]->next[l2]->next[l3]->entry[l4];
 }
 
 bool handle_table::local_exist_locked(handle_entry* owner) TA_REQ(lock_)
 {
-	for (auto& handle: handles_)
+	for (size_t l1 = 0; l1 < next_.l1; l1++)
 	{
-		if (handle.ptr_ == owner->ptr_)return true;
+		for (size_t l2 = 0; l2 < next_.l2; l2++)
+		{
+			for (size_t l3 = 0; l3 < next_.l3; l3++)
+			{
+				for (size_t l4 = 0; l4 < next_.l4; l4++)
+				{
+					auto slot = root_.next[l1]->next[l2]->next[l3]->entry[l4];
+					if (slot && slot->ptr_ == owner->ptr_)
+					{
+						return true;
+					}
+				}
+			}
+		}
 	}
 
 	return false;
 }
 
-void handle_table::clear()
+std::optional<std::tuple<size_t, size_t, size_t, size_t>> handle_table::local_get_locked(handle_entry* owner) TA_REQ(
+	lock_)
 {
-	for (auto& handle: handles_)
+	for (size_t l1 = 0; l1 < next_.l1; l1++)
 	{
-		handle_entry_owner discard{ &handle };
-		// the deleter is called
+		for (size_t l2 = 0; l2 < next_.l2; l2++)
+		{
+			for (size_t l3 = 0; l3 < next_.l3; l3++)
+			{
+				for (size_t l4 = 0; l4 < next_.l4; l4++)
+				{
+					auto slot = root_.next[l1]->next[l2]->next[l3]->entry[l4];
+					if (slot && slot->ptr_ == owner->ptr_)
+					{
+						return std::make_tuple(l1, l2, l3, l4);
+					}
+				}
+			}
+		}
 	}
 
-	handles_.clear();
+	return std::nullopt;
+}
+
+void handle_table::clear()
+{
+
+	for (size_t l1 = 0; l1 < next_.l1; l1++)
+	{
+		for (size_t l2 = 0; l2 < next_.l2; l2++)
+		{
+			for (size_t l3 = 0; l3 < next_.l3; l3++)
+			{
+				for (size_t l4 = 0; l4 < next_.l4; l4++)
+				{
+					auto slot = root_.next[l1]->next[l2]->next[l3]->entry[l4];
+					handle_entry_owner discard{ slot };
+					// the deleter is called
+				}
+				memory::kmem::kmem_cache_free(table_cache_, root_.next[l1]->next[l2]->next[l3]);
+			}
+			memory::kmem::kmem_cache_free(table_cache_, root_.next[l1]->next[l2]);
+		}
+		memory::kmem::kmem_cache_free(table_cache_, root_.next[l1]);
+	}
+
+	initialize_table(); // reinitialize the first slot
 }
 
 handle_entry* handle_table::query_handle_by_name(ktl::string_view name)
@@ -166,13 +282,25 @@ handle_entry* handle_table::query_handle_by_name(ktl::string_view name)
 
 handle_entry* handle_table::query_handle_by_name_locked(ktl::string_view name) TA_REQ(lock_)
 {
-	for (auto& handle: handles_)
+
+	for (size_t l1 = 0; l1 < next_.l1; l1++)
 	{
-		if (name.compare(handle.name_.data()) == 0)
+		for (size_t l2 = 0; l2 < next_.l2; l2++)
 		{
-			return &handle;
+			for (size_t l3 = 0; l3 < next_.l3; l3++)
+			{
+				for (size_t l4 = 0; l4 < next_.l4; l4++)
+				{
+					auto slot = root_.next[l1]->next[l2]->next[l3]->entry[l4];
+					if (slot && name.compare(slot->name_.data()) == 0)
+					{
+						return slot;
+					}
+				}
+			}
 		}
 	}
+
 	return nullptr;
 }
 

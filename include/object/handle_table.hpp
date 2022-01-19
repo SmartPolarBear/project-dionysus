@@ -10,6 +10,8 @@
 
 #include "object/public/handle_type.hpp"
 
+#include <optional>
+
 namespace object
 {
 
@@ -56,7 +58,7 @@ class handle_table final
 		union
 		{
 			table* next[MAX_HANDLE_PER_TABLE];
-			void* entry[MAX_HANDLE_PER_TABLE];
+			handle_entry* entry[MAX_HANDLE_PER_TABLE];
 		} __attribute__ ((__packed__));
 	} __attribute__ ((__packed__));
 
@@ -111,36 +113,27 @@ class handle_table final
 	[[nodiscard]] static std::tuple<int, int> increase_next_cur(size_t value);
 	[[nodiscard]] error_code increase_next();
 
+	void initialize_table();
+
+	error_code_with_result<std::tuple<size_t, size_t, size_t, size_t>> first_free();
+
 	explicit handle_table(global_handle_table_tag) : local_{ false }, parent_{ nullptr }
 	{
 	}
 
 	bool local_exist_locked(handle_entry* owner) TA_REQ(lock_);
 
-	static constexpr uint64_t INDEX_OF_HANDLE(handle_type h)
+	std::optional<std::tuple<size_t, size_t, size_t, size_t>> local_get_locked(handle_entry* owner) TA_REQ(lock_);
+
+	static constexpr handle_type MAKE_HANDLE(uint16_t attr, size_t l1, size_t l2, size_t l3, size_t l4)
 	{
-		return h & 0xFFFF'FFFF'FFFFull;
+		return ((uint64_t)attr) << 32u | ((uint64_t)l1) << 24 | ((uint64_t)l2) << 16 | ((uint64_t)l3) << 8
+			| ((uint64_t)l4);
 	}
 
-	static constexpr uintptr_t INDEX_TO_ADDR(uint64_t idx)
+	static constexpr auto DISASSEMBLE_HANDLE(handle_type h)
 	{
-		return idx | 0xFFFF'0000'0000'0000ull;
-	}
-
-	static constexpr uint16_t ATTR_OF_HANDLE(handle_type h)
-	{
-		return h >> 48u;
-	}
-
-	static constexpr auto PARSE_HANDLE(handle_type h)
-	{
-		return std::make_tuple(ATTR_OF_HANDLE(h), INDEX_OF_HANDLE(h));
-	}
-
-	static constexpr handle_type MAKE_HANDLE(uint16_t attr, uintptr_t addr)
-	{
-		addr &= 0x0000'FFFF'FFFF'FFFFull;
-		return ((uint64_t)attr << 48ull) | addr;
+		return std::make_tuple(h >> 32, (h >> 24) & 0xFF, (h >> 16) & 0xFF, (h >> 8) & 0xFF, h & 0xFF);
 	}
 
 	bool local_{ true };
@@ -159,12 +152,6 @@ class handle_table final
 	mutable lock::spinlock lock_;
 
 	static handle_table global_handle_table_;
-
-	kbl::intrusive_list<handle_entry,
-	                    lock::spinlock,
-	                    handle_entry::node_trait,
-	                    true> handles_{};
-
 };
 
 template<typename T>
@@ -177,13 +164,24 @@ handle_entry* handle_table::query_handle(T&& pred)
 template<typename T>
 handle_entry* handle_table::query_handle_locked(T&& pred) TA_REQ(lock_)
 {
-	for (auto& handle: handles_)
+	for (size_t l1 = 0; l1 < next_.l1; l1++)
 	{
-		if (pred(handle))
+		for (size_t l2 = 0; l2 < next_.l2; l2++)
 		{
-			return &handle;
+			for (size_t l3 = 0; l3 < next_.l3; l3++)
+			{
+				for (size_t l4 = 0; l4 < next_.l4; l4++)
+				{
+					auto slot = root_.next[l1]->next[l2]->next[l3]->entry[l4];
+					if (slot && pred(*slot))
+					{
+						return slot;
+					}
+				}
+			}
 		}
 	}
+
 	return nullptr;
 }
 
