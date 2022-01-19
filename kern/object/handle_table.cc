@@ -87,15 +87,17 @@ handle_type handle_table::add_handle_locked(handle_entry_owner owner)
 
 	if (local_)attr |= HATTR_LOCAL_PROC;
 	else attr |= HATTR_GLOBAL;
+	KDEBUG_ASSERT(owner.get());
 
 	handle_entry* ptr = nullptr;
 	if (auto local_value = local_get_locked(owner.get());!local_value)
 	{
 		ptr = owner.release();
+
 		if (auto find_res = first_free();!has_error(find_res))
 		{
 			auto[l1, l2, l3, l4]= get_result(find_res);
-			root_.next[l1]->next[l2]->next[l3]->entry[l4] = ptr = owner.release();
+			root_.next[l1]->next[l2]->next[l3]->entry[l4] = ptr;
 			ptr->value_ = MAKE_HANDLE(attr, l1, l2, l3, l4);
 		}
 		else
