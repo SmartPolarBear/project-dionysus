@@ -5,9 +5,13 @@
 using namespace object;
 using namespace lock;
 
-handle_table handle_table::global_handle_table_{ create_global_handle_table };
-
 handle_table::handle_table() : local_{ true }, parent_{ nullptr }
+{
+
+}
+
+handle_table::handle_table(global_handle_table_tag)
+	: local_{ false }, parent_{ nullptr }
 {
 	table_cache_ = memory::kmem::kmem_cache_create("handle_table", sizeof(table));
 
@@ -56,11 +60,6 @@ error_code_with_result<std::tuple<size_t, size_t, size_t, size_t>> handle_table:
 	}
 
 	return std::make_tuple(l1, l2, l3, l4);
-}
-
-handle_table* handle_table::get_global_handle_table()
-{
-	return &global_handle_table_;
 }
 
 handle_type handle_table::add_handle(handle_entry_owner owner)
@@ -148,7 +147,6 @@ handle_entry_owner handle_table::remove_handle_locked(handle_type h)
 handle_entry_owner handle_table::remove_handle_locked(handle_entry* e)
 {
 
-
 	if (!local_exist_locked(e))
 	{
 		return handle_entry_owner(e);
@@ -192,7 +190,6 @@ handle_entry* handle_table::get_handle_entry_locked(handle_type h)
 	auto[attr, l1, l2, l3, l4] = DISASSEMBLE_HANDLE(h);
 
 	if ((attr & HATTR_GLOBAL) && local_)return nullptr;
-
 
 	KDEBUG_ASSERT(l1 <= next_.l1);
 	KDEBUG_ASSERT(l2 <= next_.l2);
@@ -328,5 +325,6 @@ error_code handle_table::increase_next()
 
 	return ERROR_SUCCESS;
 }
+
 
 

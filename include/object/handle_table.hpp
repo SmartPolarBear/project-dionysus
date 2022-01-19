@@ -42,15 +42,17 @@ union handle
 
 static_assert(sizeof(handle) == sizeof(handle_type));
 
+void init_object_manager(); // in object_manager.cc
+
 class handle_table final
 {
  public:
 	friend class handle_entry;
 	friend struct handle_entry_deleter;
 
-	static constexpr size_t MAX_HANDLE_PER_TABLE = 512;
+	friend void object::init_object_manager();
 
-	static handle_table* get_global_handle_table();
+	static constexpr size_t MAX_HANDLE_PER_TABLE = 512;
 
 	struct table
 	{
@@ -117,9 +119,7 @@ class handle_table final
 
 	error_code_with_result<std::tuple<size_t, size_t, size_t, size_t>> first_free();
 
-	explicit handle_table(global_handle_table_tag) : local_{ false }, parent_{ nullptr }
-	{
-	}
+	explicit handle_table(global_handle_table_tag);
 
 	bool local_exist_locked(handle_entry* owner) TA_REQ(lock_);
 
@@ -151,7 +151,6 @@ class handle_table final
 
 	mutable lock::spinlock lock_;
 
-	static handle_table global_handle_table_;
 };
 
 template<typename T>

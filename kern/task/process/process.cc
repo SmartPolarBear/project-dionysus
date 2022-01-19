@@ -31,6 +31,8 @@
 #include "task/job/job.hpp"
 #include "task/process/process.hpp"
 
+#include "object/object_manager.hpp"
+
 #include <utility>
 
 using namespace kbl;
@@ -38,6 +40,7 @@ using namespace lock;
 using namespace memory;
 using namespace vmm;
 using namespace task;
+using namespace object;
 
 using namespace task;
 
@@ -294,7 +297,7 @@ task::process::process(std::span<char> name,
 		auto mm_handle = object::handle_entry::create("mm", mm);
 		auto local_mm_handle = object::handle_entry::duplicate(mm_handle.get());
 
-		object::handle_table::get_global_handle_table()->add_handle(std::move(mm_handle));
+		object_manager::global_handles()->add_handle(std::move(mm_handle));
 		address_space_handle_ = handle_table_.add_handle(std::move(local_mm_handle));
 	}
 
@@ -302,7 +305,7 @@ task::process::process(std::span<char> name,
 		auto this_handle = object::handle_entry::create(name_.data(), this);
 		auto local_handle = object::handle_entry::duplicate(this_handle.get());
 
-		object::handle_table::get_global_handle_table()->add_handle(std::move(this_handle));
+		object_manager::global_handles()->add_handle(std::move(this_handle));
 		this_handle_ = handle_table_.add_handle(std::move(local_handle));
 	}
 
