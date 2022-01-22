@@ -27,6 +27,8 @@
 #include "system/kernel_layout.hpp"
 #include "system/vmm.h"
 
+#include "object/object_manager.hpp"
+
 #include "task/scheduler/scheduler.hpp"
 
 #include "fs/fs.hpp"
@@ -90,6 +92,9 @@ extern "C" [[noreturn]] void kmain()
 
 	// initialize the console
 	console::console_init();
+
+	// initialize object manager
+	object::init_object_manager();
 
 	// initialize ACPI
 	acpi::init_acpi();

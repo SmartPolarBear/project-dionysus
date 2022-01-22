@@ -21,7 +21,7 @@ handle_type get_hello()
 	write_format("hello handle : %lld \n", thread);
 	return thread;
 error:
-	write_format("ERROR %d getting hello", err);
+	write_format("ERROR %d getting hello", -err);
 	while (true);
 }
 

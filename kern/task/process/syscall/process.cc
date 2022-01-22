@@ -14,6 +14,8 @@
 
 #include "task/process/process.hpp"
 
+#include "object/object_manager.hpp"
+
 #include "builtin_text_io.hpp"
 
 using namespace syscall;
@@ -49,9 +51,10 @@ error_code sys_get_current_process(const syscall_regs* regs)
 		return -ERROR_INVALID;
 	}
 
-	auto handle = handle_table::get_global_handle_table()->query_handle([](const handle_entry& h)
+	auto handle = object_manager::global_handles()->query_handle([](const handle_entry& h)
 	{
-	  return downcast_dispatcher<process>(h.object())->get_koid() == cur_proc->get_koid();
+	  auto proc = downcast_dispatcher<process>(h.object());
+	  return proc && proc->get_koid() == cur_proc->get_koid();
 	});
 
 	*out = cur_proc->handle_table_.add_handle(handle_entry::duplicate(handle));
@@ -76,7 +79,8 @@ error_code sys_get_process_by_id(const syscall_regs* regs)
 
 	auto pred = [id = pid](const handle_entry& h)
 	{
-	  return downcast_dispatcher<process>(h.object())->get_koid() == id;
+	  auto proc = downcast_dispatcher<process>(h.object());
+	  return proc && proc->get_koid() == id;
 	};
 
 	auto local_handle = cur_proc.is_valid() ?
@@ -84,7 +88,7 @@ error_code sys_get_process_by_id(const syscall_regs* regs)
 
 	if (!local_handle)
 	{
-		auto handle = handle_table::get_global_handle_table()->query_handle(pred);
+		auto handle =object_manager::global_handles()->query_handle(pred);
 
 		if (!handle)
 		{
@@ -124,7 +128,7 @@ error_code sys_get_process_by_name(const syscall_regs* regs)
 	auto pred = [n = const_cast<const char*>(name)](const handle_entry& h)
 	{
 	  auto obj = downcast_dispatcher<process>(h.object());
-	  return obj ? obj->get_name().compare(n) == 0 : false;
+	  return obj && obj->get_name().compare(n) == 0;
 	};
 
 	auto local_handle = cur_proc.is_valid() ?
@@ -132,7 +136,7 @@ error_code sys_get_process_by_name(const syscall_regs* regs)
 
 	if (!local_handle)
 	{
-		auto handle = handle_table::get_global_handle_table()->query_handle(pred);
+		auto handle = object_manager::global_handles()->query_handle(pred);
 
 		if (!handle)
 		{

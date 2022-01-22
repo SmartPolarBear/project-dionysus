@@ -13,6 +13,9 @@
 #include "system/vmm.h"
 #include "system/scheduler.h"
 
+#include "object/public/handle_type.hpp"
+#include "object/handle_entry.hpp"
+
 #include "memory/pmm.hpp"
 
 #include "drivers/apic/traps.h"
@@ -31,6 +34,8 @@
 #include "task/job/job.hpp"
 #include "task/process/process.hpp"
 
+#include "object/object_manager.hpp"
+
 #include <utility>
 
 using namespace kbl;
@@ -38,6 +43,7 @@ using namespace lock;
 using namespace memory;
 using namespace vmm;
 using namespace task;
+using namespace object;
 
 using namespace task;
 
@@ -190,7 +196,7 @@ void task::process_init()
 		root_job = get_result(create_ret);
 	}
 
-	for (auto& cpu:valid_cpus)
+	for (auto& cpu: valid_cpus)
 	{
 		allocate_checker ck{};
 		cpu.scheduler = new(&ck) scheduler{ &cpu };
@@ -294,7 +300,7 @@ task::process::process(std::span<char> name,
 		auto mm_handle = object::handle_entry::create("mm", mm);
 		auto local_mm_handle = object::handle_entry::duplicate(mm_handle.get());
 
-		object::handle_table::get_global_handle_table()->add_handle(std::move(mm_handle));
+		object_manager::global_handles()->add_handle(std::move(mm_handle));
 		address_space_handle_ = handle_table_.add_handle(std::move(local_mm_handle));
 	}
 
@@ -302,7 +308,7 @@ task::process::process(std::span<char> name,
 		auto this_handle = object::handle_entry::create(name_.data(), this);
 		auto local_handle = object::handle_entry::duplicate(this_handle.get());
 
-		object::handle_table::get_global_handle_table()->add_handle(std::move(this_handle));
+		object_manager::global_handles()->add_handle(std::move(this_handle));
 		this_handle_ = handle_table_.add_handle(std::move(local_handle));
 	}
 
@@ -437,7 +443,7 @@ void process::set_status_locked(process::Status st) noexcept TA_REQ(lock_)
 
 void process::kill_all_threads_locked() noexcept
 {
-	for (auto& t:threads_)
+	for (auto& t: threads_)
 	{
 		t.kill();
 	}
@@ -551,7 +557,7 @@ error_code process::suspend()
 	++suspend_count_;
 	if (suspend_count_ == 1)
 	{
-		for (auto& thread:threads_)
+		for (auto& thread: threads_)
 		{
 			error_code err = thread.suspend();
 			KDEBUG_ASSERT(err == ERROR_SUCCESS
@@ -577,7 +583,7 @@ void process::resume()
 	--suspend_count_;
 	if (suspend_count_ == 0)
 	{
-		for (auto& thread:threads_)
+		for (auto& thread: threads_)
 		{
 			thread.resume();
 		}
@@ -595,6 +601,8 @@ address_space* process::address_space()
 	}
 
 	auto handle = handle_table_.get_handle_entry(address_space_handle_);
-	return downcast_dispatcher<memory::address_space>(handle->object());
+	auto ret = downcast_dispatcher<memory::address_space>(handle->object());
+	KDEBUG_ASSERT(ret);
+	return ret;
 }
 

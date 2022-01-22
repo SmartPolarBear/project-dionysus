@@ -10,6 +10,8 @@
 
 #include "object/public/handle_type.hpp"
 
+#include <optional>
+
 namespace object
 {
 
@@ -25,23 +27,46 @@ struct global_handle_table_tag
 
 static inline constexpr global_handle_table_tag create_global_handle_table;
 
+union handle
+{
+	handle_type handle_value;
+	struct
+	{
+		uint64_t l4: 8;
+		uint64_t l3: 8;
+		uint64_t l2: 8;
+		uint64_t l1: 8;
+		uint64_t flags: 8;
+	} __attribute__ ((__packed__));
+} __attribute__ ((__packed__));
+
+static_assert(sizeof(handle) == sizeof(handle_type));
+
+void init_object_manager(); // in object_manager.cc
+
 class handle_table final
 {
  public:
 	friend class handle_entry;
 	friend struct handle_entry_deleter;
 
-	static constexpr size_t MAX_HANDLE_PER_TABLE = UINT32_MAX;
+	friend void object::init_object_manager();
 
-	static handle_table* get_global_handle_table();
+	static constexpr size_t MAX_HANDLE_PER_TABLE = 512;
 
-	handle_table() : local_{ true }, parent_{ nullptr }
+	struct table
 	{
-	}
+		size_t count;
+		union
+		{
+			table* next[MAX_HANDLE_PER_TABLE];
+			handle_entry* entry[MAX_HANDLE_PER_TABLE];
+		} __attribute__ ((__packed__));
+	} __attribute__ ((__packed__));
 
-	handle_table(dispatcher* parent) : local_{ true }, parent_{ parent }
-	{
-	}
+	handle_table();
+
+	handle_table(dispatcher* parent);
 
 	~handle_table() = default;
 
@@ -63,7 +88,7 @@ class handle_table final
 
 	handle_type add_handle(handle_entry_owner owner);
 	handle_type add_handle_locked(handle_entry_owner owner)TA_REQ(lock_);
-	handle_type entry_to_handle(handle_entry *h) const;
+	handle_type entry_to_handle(handle_entry* h) const;
 
 	handle_entry_owner remove_handle(handle_type h);
 	handle_entry_owner remove_handle(handle_entry* e);
@@ -87,50 +112,47 @@ class handle_table final
 	void clear();
 
  private:
-	explicit handle_table(global_handle_table_tag) : local_{ false }, parent_{ nullptr }
-	{
-	}
+	[[nodiscard]] static std::tuple<int, int> increase_next_cur(size_t value);
+	[[nodiscard]] error_code increase_next();
+
+	void initialize_table();
+
+	error_code_with_result<std::tuple<size_t, size_t, size_t, size_t>> allocate_slot();
+
+	error_code_with_result<std::tuple<size_t, size_t, size_t, size_t>> first_free();
+
+	explicit handle_table(global_handle_table_tag);
 
 	bool local_exist_locked(handle_entry* owner) TA_REQ(lock_);
 
-	static constexpr uint64_t INDEX_OF_HANDLE(handle_type h)
+	std::optional<std::tuple<size_t, size_t, size_t, size_t>> local_get_locked(handle_entry* owner) TA_REQ(lock_);
+
+	static constexpr handle_type MAKE_HANDLE(uint16_t attr, size_t l1, size_t l2, size_t l3, size_t l4)
 	{
-		return h & 0xFFFF'FFFF'FFFFull;
+		return ((uint64_t)attr) << 32u | ((uint64_t)l1) << 24 | ((uint64_t)l2) << 16 | ((uint64_t)l3) << 8
+			| ((uint64_t)l4);
 	}
 
-	static constexpr uintptr_t INDEX_TO_ADDR(uint64_t idx)
+	static constexpr auto DISASSEMBLE_HANDLE(handle_type h)
 	{
-		return idx | 0xFFFF'0000'0000'0000ull;
-	}
-
-	static constexpr uint16_t ATTR_OF_HANDLE(handle_type h)
-	{
-		return h >> 48u;
-	}
-
-	static constexpr auto PARSE_HANDLE(handle_type h)
-	{
-		return std::make_tuple(ATTR_OF_HANDLE(h), INDEX_OF_HANDLE(h));
-	}
-
-	static constexpr handle_type MAKE_HANDLE(uint16_t attr, uintptr_t addr)
-	{
-		addr &= 0x0000'FFFF'FFFF'FFFFull;
-		return ((uint64_t)attr << 48ull) | addr;
+		return std::make_tuple(h >> 32, (h >> 24) & 0xFF, (h >> 16) & 0xFF, (h >> 8) & 0xFF, h & 0xFF);
 	}
 
 	bool local_{ true };
 
 	dispatcher* parent_{ nullptr };
 
-	kbl::intrusive_list<handle_entry,
-	                    lock::spinlock,
-	                    handle_entry::node_trait,
-	                    true> handles_{};
+	table root_{};
+
+	memory::kmem::kmem_cache* table_cache_{ nullptr };
+
+	struct
+	{
+		size_t l1, l2, l3, l4;
+	} next_{ 0, 0, 0, 0 };
 
 	mutable lock::spinlock lock_;
 
-	static handle_table global_handle_table_;
 };
 
 template<typename T>
@@ -143,13 +165,24 @@ handle_entry* handle_table::query_handle(T&& pred)
 template<typename T>
 handle_entry* handle_table::query_handle_locked(T&& pred) TA_REQ(lock_)
 {
-	for (auto& handle:handles_)
+	for (size_t l1 = 0; l1 <= next_.l1; l1++)
 	{
-		if (pred(handle))
+		for (size_t l2 = 0; l2 <= next_.l2; l2++)
 		{
-			return &handle;
+			for (size_t l3 = 0; l3 <= next_.l3; l3++)
+			{
+				for (size_t l4 = 0; l4 < next_.l4; l4++)
+				{
+					auto slot = root_.next[l1]->next[l2]->next[l3]->entry[l4];
+					if (slot && pred(*slot))
+					{
+						return slot;
+					}
+				}
+			}
 		}
 	}
+
 	return nullptr;
 }
 

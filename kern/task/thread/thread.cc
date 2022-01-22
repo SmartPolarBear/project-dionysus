@@ -11,6 +11,8 @@
 #include "system/scheduler.h"
 #include "system/deadline.hpp"
 
+#include "object/object_manager.hpp"
+
 #include "drivers/acpi/cpu.h"
 
 #include "kbl/lock/lock_guard.hpp"
@@ -20,6 +22,7 @@
 #include <utility>
 
 using namespace task;
+using namespace object;
 
 using lock::lock_guard;
 
@@ -275,7 +278,7 @@ thread::thread(process* prt, ktl::string_view nm, cpu_affinity aff)
 
 	scheduler_state_.affinity_ = aff;
 
-	object::handle_table::get_global_handle_table()->add_handle(std::move(this_handle));
+	object_manager::global_handles()->add_handle(std::move(this_handle));
 }
 
 thread::~thread()
@@ -287,7 +290,7 @@ thread::~thread()
 	};
 
 	{
-		auto global_handle = object::handle_table::get_global_handle_table()->query_handle(pred);
+		auto global_handle = object_manager::global_handles()->query_handle(pred);
 
 		KDEBUG_ASSERT_MSG(global_handle != nullptr, "~thread: global_handle can't be null");
 

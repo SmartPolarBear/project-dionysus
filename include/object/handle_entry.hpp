@@ -8,6 +8,7 @@
 
 #include "object/ref_counted.hpp"
 #include "object/dispatcher.hpp"
+#include "object/public/handle_type.hpp"
 
 #include "ktl/shared_ptr.hpp"
 
@@ -40,36 +41,6 @@ class handle_entry final
 	friend class handle_table;
 	friend struct handle_entry_deleter;
 
-	using link_type = kbl::list_link<handle_entry, lock::spinlock>;
-
-	struct node_trait
-	{
-		using reference_type = handle_entry&;
-		using pointer_type = handle_entry*;
-		using reference_return_type = handle_entry::link_type&;
-		using pointer_return_type = handle_entry::link_type*;
-
-		static reference_return_type node_link(reference_type element)
-		{
-			return element.link_;
-		}
-
-		static reference_return_type node_link(pointer_type NONNULL element)
-		{
-			return element->link_;
-		}
-
-		static pointer_return_type NONNULL node_link_ptr(reference_type element)
-		{
-			return &node_link(element);
-		}
-
-		static pointer_return_type NONNULL node_link_ptr(pointer_type NONNULL element)
-		{
-			return &node_link(element);
-		}
-	};
-
 	handle_entry() = delete;
 
 	~handle_entry()
@@ -90,6 +61,17 @@ class handle_entry final
 	[[nodiscard]] dispatcher* object() const
 	{
 		return ptr_;
+	}
+
+
+	bool operator==(const handle_entry& another) const
+	{
+		return ptr_ == another.ptr_;
+	}
+
+	bool operator!=(const handle_entry& another) const
+	{
+		return !operator==(another);
 	}
  private:
 	static void release(handle_entry* h);
@@ -118,6 +100,7 @@ class handle_entry final
 	kbl::canary<kbl::magic("HENT")> canary_{};
 
 	dispatcher* ptr_{ nullptr };
+
 	handle_table* parent_{ nullptr };
 
 	kbl::name<NAME_LEN> name_{};
@@ -126,18 +109,7 @@ class handle_entry final
 
 	koid_type owner_process_id{ -1 };
 
-	link_type link_{ this };
-
-	bool operator==(const handle_entry& another) const
-	{
-		return ptr_ == another.ptr_;
-	}
-
-	bool operator!=(const handle_entry& another) const
-	{
-		return !operator==(another);
-	}
-
+	handle_type value_{ INVALID_HANDLE_VALUE };
 };
 
 }

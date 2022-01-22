@@ -19,6 +19,7 @@
 
 #include "object/handle_table.hpp"
 #include "object/handle_entry.hpp"
+#include "object/object_manager.hpp"
 
 using namespace task;
 using namespace syscall;
@@ -51,7 +52,7 @@ error_code sys_get_current_thread(const syscall_regs* regs)
 
 	if (!local_handle)
 	{
-		auto handle = handle_table::get_global_handle_table()->query_handle(pred);
+		auto handle = object_manager::global_handles()->query_handle(pred);
 		if (!handle)
 		{
 			return -ERROR_NOT_EXIST;
@@ -93,7 +94,7 @@ error_code sys_get_thread_by_id(const syscall_regs* regs)
 
 	if (!local_handle)
 	{
-		auto handle = handle_table::get_global_handle_table()->query_handle(pred);
+		auto handle = object_manager::global_handles()->query_handle(pred);
 		if (!handle)
 		{
 			return -ERROR_NOT_EXIST;
@@ -139,7 +140,7 @@ error_code sys_get_thread_by_name(const syscall_regs* regs)
 
 	if (!local_handle)
 	{
-		auto handle = handle_table::get_global_handle_table()->query_handle(pred);
+		auto handle = object_manager::global_handles()->query_handle(pred);
 		if (!handle)
 		{
 			return -ERROR_NOT_EXIST;
