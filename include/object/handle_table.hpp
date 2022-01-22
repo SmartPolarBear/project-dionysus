@@ -165,11 +165,11 @@ handle_entry* handle_table::query_handle(T&& pred)
 template<typename T>
 handle_entry* handle_table::query_handle_locked(T&& pred) TA_REQ(lock_)
 {
-	for (size_t l1 = 0; l1 < next_.l1; l1++)
+	for (size_t l1 = 0; l1 <= next_.l1; l1++)
 	{
-		for (size_t l2 = 0; l2 < next_.l2; l2++)
+		for (size_t l2 = 0; l2 <= next_.l2; l2++)
 		{
-			for (size_t l3 = 0; l3 < next_.l3; l3++)
+			for (size_t l3 = 0; l3 <= next_.l3; l3++)
 			{
 				for (size_t l4 = 0; l4 < next_.l4; l4++)
 				{

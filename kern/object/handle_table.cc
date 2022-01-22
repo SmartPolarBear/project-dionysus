@@ -37,11 +37,11 @@ void handle_table::initialize_table()
 
 error_code_with_result<std::tuple<size_t, size_t, size_t, size_t>> handle_table::first_free()
 {
-	for (size_t l1 = 0; l1 < next_.l1; l1++)
+	for (size_t l1 = 0; l1 <= next_.l1; l1++)
 	{
-		for (size_t l2 = 0; l2 < next_.l2; l2++)
+		for (size_t l2 = 0; l2 <= next_.l2; l2++)
 		{
-			for (size_t l3 = 0; l3 < next_.l3; l3++)
+			for (size_t l3 = 0; l3 <= next_.l3; l3++)
 			{
 				for (size_t l4 = 0; l4 < next_.l4; l4++)
 				{
@@ -154,11 +154,11 @@ handle_entry_owner handle_table::remove_handle_locked(handle_entry* e)
 		return handle_entry_owner(e);
 	}
 
-	for (size_t l1 = 0; l1 < next_.l1; l1++)
+	for (size_t l1 = 0; l1 <= next_.l1; l1++)
 	{
-		for (size_t l2 = 0; l2 < next_.l2; l2++)
+		for (size_t l2 = 0; l2 <= next_.l2; l2++)
 		{
-			for (size_t l3 = 0; l3 < next_.l3; l3++)
+			for (size_t l3 = 0; l3 <= next_.l3; l3++)
 			{
 				for (size_t l4 = 0; l4 < next_.l4; l4++)
 				{
@@ -203,11 +203,11 @@ handle_entry* handle_table::get_handle_entry_locked(handle_type h)
 
 bool handle_table::local_exist_locked(handle_entry* owner) TA_REQ(lock_)
 {
-	for (size_t l1 = 0; l1 < next_.l1; l1++)
+	for (size_t l1 = 0; l1 <= next_.l1; l1++)
 	{
-		for (size_t l2 = 0; l2 < next_.l2; l2++)
+		for (size_t l2 = 0; l2 <= next_.l2; l2++)
 		{
-			for (size_t l3 = 0; l3 < next_.l3; l3++)
+			for (size_t l3 = 0; l3 <= next_.l3; l3++)
 			{
 				for (size_t l4 = 0; l4 < next_.l4; l4++)
 				{
@@ -227,11 +227,11 @@ bool handle_table::local_exist_locked(handle_entry* owner) TA_REQ(lock_)
 std::optional<std::tuple<size_t, size_t, size_t, size_t>> handle_table::local_get_locked(handle_entry* owner) TA_REQ(
 	lock_)
 {
-	for (size_t l1 = 0; l1 < next_.l1; l1++)
+	for (size_t l1 = 0; l1 <= next_.l1; l1++)
 	{
-		for (size_t l2 = 0; l2 < next_.l2; l2++)
+		for (size_t l2 = 0; l2 <= next_.l2; l2++)
 		{
-			for (size_t l3 = 0; l3 < next_.l3; l3++)
+			for (size_t l3 = 0; l3 <= next_.l3; l3++)
 			{
 				for (size_t l4 = 0; l4 < next_.l4; l4++)
 				{
@@ -251,11 +251,11 @@ std::optional<std::tuple<size_t, size_t, size_t, size_t>> handle_table::local_ge
 void handle_table::clear()
 {
 
-	for (size_t l1 = 0; l1 < next_.l1; l1++)
+	for (size_t l1 = 0; l1 <= next_.l1; l1++)
 	{
-		for (size_t l2 = 0; l2 < next_.l2; l2++)
+		for (size_t l2 = 0; l2 <= next_.l2; l2++)
 		{
-			for (size_t l3 = 0; l3 < next_.l3; l3++)
+			for (size_t l3 = 0; l3 <= next_.l3; l3++)
 			{
 				for (size_t l4 = 0; l4 < next_.l4; l4++)
 				{
@@ -282,11 +282,11 @@ handle_entry* handle_table::query_handle_by_name(ktl::string_view name)
 handle_entry* handle_table::query_handle_by_name_locked(ktl::string_view name) TA_REQ(lock_)
 {
 
-	for (size_t l1 = 0; l1 < next_.l1; l1++)
+	for (size_t l1 = 0; l1 <= next_.l1; l1++)
 	{
-		for (size_t l2 = 0; l2 < next_.l2; l2++)
+		for (size_t l2 = 0; l2 <= next_.l2; l2++)
 		{
-			for (size_t l3 = 0; l3 < next_.l3; l3++)
+			for (size_t l3 = 0; l3 <= next_.l3; l3++)
 			{
 				for (size_t l4 = 0; l4 < next_.l4; l4++)
 				{
