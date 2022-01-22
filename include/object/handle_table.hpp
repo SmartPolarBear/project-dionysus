@@ -117,6 +117,8 @@ class handle_table final
 
 	void initialize_table();
 
+	error_code_with_result<std::tuple<size_t, size_t, size_t, size_t>> allocate_slot();
+
 	error_code_with_result<std::tuple<size_t, size_t, size_t, size_t>> first_free();
 
 	explicit handle_table(global_handle_table_tag);

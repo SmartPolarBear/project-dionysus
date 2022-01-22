@@ -13,6 +13,9 @@
 #include "system/vmm.h"
 #include "system/scheduler.h"
 
+#include "object/public/handle_type.hpp"
+#include "object/handle_entry.hpp"
+
 #include "memory/pmm.hpp"
 
 #include "drivers/apic/traps.h"
@@ -193,7 +196,7 @@ void task::process_init()
 		root_job = get_result(create_ret);
 	}
 
-	for (auto& cpu:valid_cpus)
+	for (auto& cpu: valid_cpus)
 	{
 		allocate_checker ck{};
 		cpu.scheduler = new(&ck) scheduler{ &cpu };
@@ -440,7 +443,7 @@ void process::set_status_locked(process::Status st) noexcept TA_REQ(lock_)
 
 void process::kill_all_threads_locked() noexcept
 {
-	for (auto& t:threads_)
+	for (auto& t: threads_)
 	{
 		t.kill();
 	}
@@ -554,7 +557,7 @@ error_code process::suspend()
 	++suspend_count_;
 	if (suspend_count_ == 1)
 	{
-		for (auto& thread:threads_)
+		for (auto& thread: threads_)
 		{
 			error_code err = thread.suspend();
 			KDEBUG_ASSERT(err == ERROR_SUCCESS
@@ -580,7 +583,7 @@ void process::resume()
 	--suspend_count_;
 	if (suspend_count_ == 0)
 	{
-		for (auto& thread:threads_)
+		for (auto& thread: threads_)
 		{
 			thread.resume();
 		}
@@ -598,6 +601,8 @@ address_space* process::address_space()
 	}
 
 	auto handle = handle_table_.get_handle_entry(address_space_handle_);
-	return downcast_dispatcher<memory::address_space>(handle->object());
+	auto ret = downcast_dispatcher<memory::address_space>(handle->object());
+	KDEBUG_ASSERT(ret);
+	return ret;
 }
 

@@ -94,7 +94,7 @@ handle_type handle_table::add_handle_locked(handle_entry_owner owner)
 	{
 		ptr = owner.release();
 
-		if (auto find_res = first_free();!has_error(find_res))
+		if (auto find_res = allocate_slot();!has_error(find_res))
 		{
 			auto[l1, l2, l3, l4]= get_result(find_res);
 			root_.next[l1]->next[l2]->next[l3]->entry[l4] = ptr;
@@ -319,13 +319,48 @@ error_code handle_table::increase_next()
 			{
 				if (auto[c1, v1]=increase_next_cur(next_.l1);c1)
 				{
+					next_.l1 = v1;
 					return -ERROR_TOO_MANY_HANDLES;
 				}
+				else
+				{
+					next_.l1 = v1;
+				}
+				next_.l2 = v2;
 			}
+			else
+			{
+				next_.l2 = v2;
+			}
+			next_.l3 = v3;
 		}
+		else
+		{
+			next_.l3 = v3;
+		}
+		next_.l4 = v4;
+	}
+	else
+	{
+		next_.l4 = v4;
 	}
 
 	return ERROR_SUCCESS;
+}
+error_code_with_result<std::tuple<size_t, size_t, size_t, size_t>> handle_table::allocate_slot()
+{
+	auto free = first_free();
+	if (has_error(free))
+	{
+		return free;
+	}
+
+	if (auto err = increase_next();err != ERROR_SUCCESS)
+	{
+		return err;
+	}
+
+	return free;
 }
 
 
