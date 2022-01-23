@@ -36,16 +36,24 @@ void object::init_object_manager()
 
 handle_type object_manager::get_global_handle(handle_type local)
 {
-	if (!(local & HATTR_LOCAL_PROC))
+	if (!HANDLE_HAS_ATTRIBUTE(local, HATTR_LOCAL_PROC))
 	{
 		return local;
 	}
 
 	auto entry = cur_proc->handle_table()->get_handle_entry(local);
 
+	if (!entry)
+	{
+		int a = 0;
+		a = 10;
+	}
+
+	KDEBUG_ASSERT(entry);
+
 	if (auto query_ret = global_handle_table_->query_handle([&entry](const handle_entry& h)
 		{
-		  return h.object()->get_koid() == entry->object()->get_koid();
+		  return h.object() && entry->object() && h.object()->get_koid() == entry->object()->get_koid();
 		});query_ret)
 	{
 		return global_handle_table_->entry_to_handle(query_ret);
@@ -56,7 +64,7 @@ handle_type object_manager::get_global_handle(handle_type local)
 
 handle_entry* object_manager::get_handle_entry(handle_type handle)
 {
-	if (!(handle & HATTR_LOCAL_PROC))
+	if (!HANDLE_HAS_ATTRIBUTE(handle, HATTR_LOCAL_PROC))
 	{
 		return cur_proc->handle_table()->get_handle_entry(handle);
 	}
