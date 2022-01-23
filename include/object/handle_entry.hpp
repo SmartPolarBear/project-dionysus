@@ -39,6 +39,7 @@ class handle_entry final
 	static constexpr size_t NAME_LEN = 16;
 
 	friend class handle_table;
+	friend class object_manager;
 	friend struct handle_entry_deleter;
 
 	handle_entry() = delete;

@@ -46,7 +46,6 @@ error_code sys_get_current_thread(const syscall_regs* regs)
 	  return t && t->get_koid() == id;
 	};
 
-
 	auto local_handle = cur_proc.is_valid() ?
 	                    cur_proc->handle_table_.query_handle(pred) : nullptr;
 
@@ -63,6 +62,8 @@ error_code sys_get_current_thread(const syscall_regs* regs)
 	{
 		*out = cur_proc->handle_table_.entry_to_handle(local_handle);
 	}
+
+	*out = object_manager::get_global_handle(*out);
 
 	if (*out == INVALID_HANDLE_VALUE)
 	{
@@ -88,7 +89,6 @@ error_code sys_get_thread_by_id(const syscall_regs* regs)
 	  return t && t->get_koid() == id;
 	};
 
-
 	auto local_handle = cur_proc.is_valid() ?
 	                    cur_proc->handle_table_.query_handle(pred) : nullptr;
 
@@ -105,6 +105,8 @@ error_code sys_get_thread_by_id(const syscall_regs* regs)
 	{
 		*out = cur_proc->handle_table_.entry_to_handle(local_handle);
 	}
+
+	*out = object_manager::get_global_handle(*out);
 
 	if (*out == INVALID_HANDLE_VALUE)
 	{
@@ -151,6 +153,8 @@ error_code sys_get_thread_by_name(const syscall_regs* regs)
 	{
 		*out = cur_proc->handle_table_.entry_to_handle(local_handle);
 	}
+
+	*out = object_manager::get_global_handle(*out);
 
 	if (*out == INVALID_HANDLE_VALUE)
 	{
