@@ -74,6 +74,8 @@ int main()
 		auto handle = msg.at<handle_type>(0);
 		auto data = msg.at<uint64_t>(1);
 
+//		write_format("reply to ipctest %lld with %d\n", handle, data);
+
 		message reply{};
 
 		message_tag reply_tag{};

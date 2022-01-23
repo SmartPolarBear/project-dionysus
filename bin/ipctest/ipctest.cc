@@ -56,8 +56,10 @@ int main()
 	handle_type this_handle = INVALID_HANDLE_VALUE;
 	if (get_current_thread(&this_handle) != ERROR_SUCCESS)
 	{
-		put_str("Error getting handle of ipctest!");
+		put_str("Error getting handle of this!");
 	}
+
+	write_format("hello %lld, this %lld", hello_handle, this_handle);
 
 	for (int i = 2; i <= 10; i++)
 	{
@@ -74,11 +76,9 @@ int main()
 
 		ipc_send(hello_handle, TIME_INFINITE);
 
-		put_str("fuck1");
+		write_format("send to hello %lld with %d\n", hello_handle, i);
 
 		ipc_receive(hello_handle, TIME_INFINITE);
-
-		put_str("fuck2");
 
 		message reply{};
 		ipc_store(&reply);

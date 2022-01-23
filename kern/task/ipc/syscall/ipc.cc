@@ -39,6 +39,7 @@ error_code sys_ipc_send(const syscall_regs* regs)
 	auto timeout = args_get<time_type, 1>(regs);
 
 	auto proc = cur_proc.get();
+	auto thrd = cur_thread.get();
 
 	auto handle_entry = proc->handle_table()->get_handle_entry(target_handle);
 	if (auto ret = proc->handle_table()->object_from_handle<thread>(handle_entry);has_error(ret))
@@ -51,7 +52,7 @@ error_code sys_ipc_send(const syscall_regs* regs)
 
 		global_thread_lock.assert_not_held();
 
-		auto err = cur_thread->get_ipc_state()->send(target, deadline::after(timeout));
+		auto err = thrd->get_ipc_state()->send(target, deadline::after(timeout));
 		if (err != ERROR_SUCCESS)
 		{
 			KDEBUG_GERNERALPANIC_CODE(err);
