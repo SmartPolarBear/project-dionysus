@@ -15,6 +15,8 @@
 #include "task/thread/thread.hpp"
 #include "task/ipc/message.hpp"
 
+#include "object/object_manager.hpp"
+
 using namespace task;
 using namespace syscall;
 
@@ -39,9 +41,11 @@ error_code sys_ipc_send(const syscall_regs* regs)
 	auto timeout = args_get<time_type, 1>(regs);
 
 	auto proc = cur_proc.get();
+	auto thrd = cur_thread.get();
 
-	auto handle_entry = proc->handle_table()->get_handle_entry(target_handle);
-	if (auto ret = proc->handle_table()->object_from_handle<thread>(handle_entry);has_error(ret))
+	auto handle_entry = object::object_manager::get_global_handle_entry(target_handle);
+
+	if (auto ret = object::object_manager::object_from_handle<thread>(handle_entry);has_error(ret))
 	{
 		return get_error_code(ret);
 	}
@@ -49,9 +53,11 @@ error_code sys_ipc_send(const syscall_regs* regs)
 	{
 		auto target = get_result(ret);
 
+		KDEBUG_ASSERT(target->get_koid() != thrd->get_koid());
+
 		global_thread_lock.assert_not_held();
 
-		auto err = cur_thread->get_ipc_state()->send(target, deadline::after(timeout));
+		auto err = thrd->get_ipc_state()->send(target, deadline::after(timeout));
 		if (err != ERROR_SUCCESS)
 		{
 			KDEBUG_GERNERALPANIC_CODE(err);
@@ -70,8 +76,8 @@ error_code sys_ipc_receive(const syscall_regs* regs)
 
 	auto proc = cur_proc.get();
 
-	auto handle_entry = proc->handle_table()->get_handle_entry(from_handle);
-	if (auto ret = proc->handle_table()->object_from_handle<thread>(handle_entry);has_error(ret))
+	auto handle_entry = object::object_manager::get_global_handle_entry(from_handle);
+	if (auto ret = object::object_manager::object_from_handle<thread>(handle_entry);has_error(ret))
 	{
 		return get_error_code(ret);
 	}

@@ -36,6 +36,25 @@ class object_manager final
 	friend void object::init_object_manager();
 
 	static handle_table* global_handles();
+
+	static handle_type get_global_handle(handle_type local);
+
+	static handle_entry* get_handle_entry(handle_type handle);
+
+	static handle_entry* get_global_handle_entry(handle_type handle);
+
+	template<std::derived_from<dispatcher> T>
+	static inline error_code_with_result<T*> object_from_handle(const handle_entry& h)
+	{
+		return downcast_dispatcher<T>(h.ptr_);
+	}
+
+	template<std::derived_from<dispatcher> T>
+	static inline error_code_with_result<T*> object_from_handle(handle_entry* h)
+	{
+		return downcast_dispatcher<T>(h->ptr_);
+	}
+
  private:
 	static handle_table* global_handle_table_;
 };

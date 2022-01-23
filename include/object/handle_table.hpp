@@ -74,17 +74,6 @@ class handle_table final
 	handle_table(handle_table&&) = delete;
 	handle_table& operator=(const handle_table&) = delete;
 
-	template<std::derived_from<dispatcher> T>
-	error_code_with_result<T*> object_from_handle(const handle_entry& h)
-	{
-		return downcast_dispatcher<T>(h.ptr_);
-	}
-
-	template<std::derived_from<dispatcher> T>
-	error_code_with_result<T*> object_from_handle(handle_entry* h)
-	{
-		return downcast_dispatcher<T>(h->ptr_);
-	}
 
 	handle_type add_handle(handle_entry_owner owner);
 	handle_type add_handle_locked(handle_entry_owner owner)TA_REQ(lock_);

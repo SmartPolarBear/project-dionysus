@@ -27,7 +27,7 @@ using namespace lock;
 #error "IPC_MRCOPY_USE_SIMD can't be defined"
 #endif
 
-#define IPC_MRCOPY_USE_SIMD
+//#define IPC_MRCOPY_USE_SIMD
 
 using namespace ipc;
 
@@ -44,7 +44,7 @@ void task::ipc_state::copy_mrs_to_locked(thread* another, size_t st, size_t cnt)
 	"c"(cnt), "S"(&mr_[st]),
 	"D"(&another->ipc_state_.mr_[st]));
 #else
-	memmove(&another->ipc_state_.mr_[st], &mr_[st], sizeof(message_register_type[cnt]));
+	memmove(&another->ipc_state_.mr_[st], &mr_[st], sizeof(message_register_type) * cnt);
 #endif
 
 }
@@ -62,7 +62,7 @@ void task::ipc_state::load_mrs_locked(size_t start, ktl::span<ipc::message_regis
 	"c"(mrs.size()), "S"(mrs.data()),
 	"D"(&mr_[start]));
 #else
-	memmove(mrs.data(), &mr_[start], sizeof(message_register_type[mrs.size()]));
+	memmove(&mr_[start], mrs.data(), sizeof(message_register_type) * mrs.size());
 #endif
 
 }
@@ -100,7 +100,7 @@ error_code ipc_state::copy_string_locked(thread* from_t, uintptr_t from, thread*
 void task::ipc_state::store_mrs_locked(size_t start, ktl::span<ipc::message_register_type> mrs)
 {
 	auto mr = mr_ + start;
-	for (auto& m:mrs)
+	for (auto& m: mrs)
 	{
 		m = *mr++;
 	}
@@ -260,7 +260,10 @@ error_code task::ipc_state::receive(thread* from, const deadline& ddl)
 		KDEBUG_ASSERT_MSG(this->get_message_tag().typed_count() != 0 || this->get_message_tag().untyped_count() != 0,
 			"Empty message isn't valid");
 
-		if (sender_ != from)return -ERROR_IPC_NOT_THE_SENDER;
+		if (sender_ != from)
+		{
+			return -ERROR_IPC_NOT_THE_SENDER;
+		}
 	}
 
 	// do not call 	e_.signal(); to avoid multiple sender overwrite the buffer
@@ -284,9 +287,9 @@ void task::ipc_state::store_message(message* msg)
 	{
 		lock_guard g{ lock_ };
 
-		msg->set_tag(parent_->get_ipc_state()->get_message_tag());
+		msg->set_tag(get_message_tag());
 
-		store_mrs_locked(1, msg->get_items_span(parent_->get_ipc_state()->get_message_tag()));
+		store_mrs_locked(1, msg->get_items_span(get_message_tag()));
 	}
 
 	e_.signal(); // allow next sender to send

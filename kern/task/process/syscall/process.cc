@@ -58,6 +58,7 @@ error_code sys_get_current_process(const syscall_regs* regs)
 	});
 
 	*out = cur_proc->handle_table_.add_handle(handle_entry::duplicate(handle));
+	*out = object_manager::get_global_handle(*out);
 
 	if (*out == INVALID_HANDLE_VALUE)
 	{
@@ -101,6 +102,7 @@ error_code sys_get_process_by_id(const syscall_regs* regs)
 	{
 		*out = cur_proc->handle_table_.entry_to_handle(local_handle);
 	}
+	*out = object_manager::get_global_handle(*out);
 
 	if (*out == INVALID_HANDLE_VALUE)
 	{
@@ -149,6 +151,7 @@ error_code sys_get_process_by_name(const syscall_regs* regs)
 	{
 		*out = cur_proc->handle_table_.entry_to_handle(local_handle);
 	}
+	*out = object_manager::get_global_handle(*out);
 
 	if (*out == INVALID_HANDLE_VALUE)
 	{

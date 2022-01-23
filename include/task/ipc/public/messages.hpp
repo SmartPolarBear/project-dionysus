@@ -523,7 +523,7 @@ class message final
 	template<_internals::UntypedMessageItem T>
 	T at(size_t index)
 	{
-		return static_cast<T>(regs_[tag_.u_ + index]);
+		return static_cast<T>(regs_[1 + index]);
 	}
 
 	template<_internals::SingleMessageItem T>
