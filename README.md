@@ -1,5 +1,5 @@
 ## Project "Dionysus"  
-The project "Dionysus" aims at applying theories and practices concerning operation systems to a hybrid kernel in modern C++. In the long run, It aims at creating an effective microkernel with acceptable performance overhead.  
+The project "Dionysus" aims at applying theories and practices concerning operation systems to a hybrid kernel in modern C++.  
 
 [![issues](https://img.shields.io/github/issues/SmartPolarBear/project-dionysus)](https://github.com/SmartPolarBear/project-dionysus/issues)
 [![forks](https://img.shields.io/github/forks/SmartPolarBear/project-dionysus)](https://github.com/SmartPolarBear/project-dionysus/fork)
@@ -8,42 +8,35 @@ The project "Dionysus" aims at applying theories and practices concerning operat
 [![twitter](https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Ftwitter.com%2F___zirconium___)](https://twitter.com/___zirconium___)
 
 
-### Motivation  
-
-The techniques used and concepts of programming and design of operation system have changed over time. That's why I want to adapt the advanced and exciting ones in a project as an attempt to do further researches in this field.  
-
-### Features and goals  
-
-- Multi-server microkernel approach  
-- Asynchronous OS API  
-- Written in modern C++  
-
 ### Built With  
 
 #### Environment  
 
-The project is initially built with  
+The project is initially built on Debian in WSL2 with: 
 
 - clang/ LLVM 13  
 - CMAKE, 3.19 and above.  
 
-on Debian in WSL2.  
 
 **Note:** Other compilers may be competent, but C++20 support for compiler is required, for C++20 features like `std::span` are massively used.  
 
-#### Third-party  
+#### Third-party libraries
 
 - [newlib-cygwin](https://sourceware.org/git/gitweb.cgi?p=newlib-cygwin.git)  
 - [microsoft/GSL](https://github.com/microsoft/GSL.git)  
 - [llvm/llvm-project](https://github.com/llvm/llvm-project)    
 
+### Features and goals
+
+- Multi-server microkernel
+- Asynchronous API
+- Written in modern C++
 
 ## Roadmap  
 
-| Q3 2021 | Q1 2022 | Far Future |
-|---------|---------|-----------|
-✅ Basic OS structure <br> 🔄Kernel-mode servers <br> 🔄 Basic userland and shell | ❌ Extended OS features <br> ❌ OS security features <br> ❌ Asynchronous API <br> ❌ Graphic support  |  ❌ Window system <br> ❌ Accessories  
-
+| Q3 2021                                                                          | Q1 2022                                                                                           | Far Future                         |
+|----------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|------------------------------------|
+| ✅ Basic OS structure <br> 🔄Kernel-mode servers <br> 🔄 Basic userland and shell | ❌ Extended OS features <br> ❌ OS security features <br> ❌ Asynchronous API <br> ❌ Graphic support | ❌ Window system <br> ❌ Accessories |
 
 ✅ Supported | 🔄 In progress | ❌ In plan  
 
