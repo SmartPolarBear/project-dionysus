@@ -23,48 +23,16 @@
 using namespace task;
 using namespace lock;
 
-#ifdef  IPC_MRCOPY_USE_SIMD
-#error "IPC_MRCOPY_USE_SIMD can't be defined"
-#endif
-
-//#define IPC_MRCOPY_USE_SIMD
-
 using namespace ipc;
 
 void task::ipc_state::copy_mrs_to_locked(thread* another, size_t st, size_t cnt)
 {
-
-#ifdef IPC_MRCOPY_USE_SIMD
-	register_t dummy = 0xdeadbeaf;
-	asm volatile (
-	"repnz movsq (%%rsi), (%%rdi)\n"
-	: /* output */
-	"=S"(dummy), "=D"(dummy), "=c"(dummy)
-	: /* input */
-	"c"(cnt), "S"(&mr_[st]),
-	"D"(&another->ipc_state_.mr_[st]));
-#else
 	memmove(&another->ipc_state_.mr_[st], &mr_[st], sizeof(message_register_type) * cnt);
-#endif
-
 }
 
 void task::ipc_state::load_mrs_locked(size_t start, ktl::span<ipc::message_register_type> mrs)
 {
-
-#ifdef IPC_MRCOPY_USE_SIMD
-	register_t dummy = 0xdeadbeaf;
-	asm volatile (
-	"repnz movsq (%%rsi), (%%rdi)\n"
-	: /* output */
-	"=S"(dummy), "=D"(dummy), "=c"(dummy)
-	: /* input */
-	"c"(mrs.size()), "S"(mrs.data()),
-	"D"(&mr_[start]));
-#else
 	memmove(&mr_[start], mrs.data(), sizeof(message_register_type) * mrs.size());
-#endif
-
 }
 
 error_code ipc_state::copy_string_locked(thread* from_t, uintptr_t from, thread* to_t, uintptr_t to, size_t len) TA_REQ(
