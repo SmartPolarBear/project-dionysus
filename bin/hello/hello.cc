@@ -74,8 +74,6 @@ int main()
 		auto handle = msg.at<handle_type>(0);
 		auto data = msg.at<uint64_t>(1);
 
-		write_format("reply to ipctest %lld with %d\n", handle, data);
-
 		message reply{};
 
 		message_tag reply_tag{};
@@ -87,7 +85,9 @@ int main()
 		data *= label;
 		reply.append<uint64_t>(data);
 
-		ipc_load_message(&msg);
+//		write_format("reply to ipctest %lld with %d\n", handle, data);
+
+		ipc_load_message(&reply);
 
 		ipc_send(handle, TIME_INFINITE);
 	}
