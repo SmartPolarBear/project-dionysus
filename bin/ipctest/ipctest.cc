@@ -59,7 +59,6 @@ int main()
 		put_str("Error getting handle of this!");
 	}
 
-	write_format("hello %lld, this %lld", hello_handle, this_handle);
 
 	for (int i = 2; i <= 10; i++)
 	{
@@ -76,7 +75,7 @@ int main()
 
 		ipc_send(hello_handle, TIME_INFINITE);
 
-		write_format("send to hello %lld with %d\n", hello_handle, i);
+//		write_format("send to hello %lld with %d\n", hello_handle, i);
 
 		ipc_receive(hello_handle, TIME_INFINITE);
 
