@@ -21,8 +21,12 @@
 
 #include "task/process/process.hpp"
 
+#include "object/object_manager.hpp"
+
 #include "../../libs/basic_io/include/builtin_text_io.hpp"
 #include <cstring>
+
+#include <gsl/gsl>
 
 using namespace trap;
 using namespace apic;
@@ -34,7 +38,17 @@ constexpr size_t IDT_SIZE = 4_KB;
 #pragma clang diagnostic ignored "-Wc99-designator"
 #pragma clang diagnostic ignored "-Winitializer-overrides"
 
-struct handle_table_struct
+struct irq_listener
+{
+	using link_type = kbl::list_link<irq_listener, lock::spinlock>;
+
+	object::handle_entry_owner listener_thread;
+	uint32_t irq_number;
+
+	link_type link;
+};
+
+struct trap_table_struct
 {
 	lock::spinlock_struct lock{};
 
@@ -50,7 +64,10 @@ struct handle_table_struct
 				.enable = true
 			},
 		};
-} handle_table;
+
+	kbl::intrusive_list_with_default_trait<irq_listener, lock::spinlock, &irq_listener::link, true> listeners;
+
+} trap_table;
 
 #pragma clang diagnostic pop;
 
@@ -63,6 +80,35 @@ error_code default_trap_handle([[maybe_unused]] trap::trap_frame info)
 		info.trap_num);
 
 	trap::print_trap_frame(&info);
+
+	return ERROR_SUCCESS;
+}
+
+error_code irq_notify_thread_routine(void* arg)
+{
+	auto frame = reinterpret_cast<trap_frame*>(arg);
+	auto _ = gsl::finally([frame]
+	{
+	  memory::kfree(frame);// should be responsible to free it
+	});
+
+	for (const auto& item: trap_table.listeners)
+	{
+		if (item.irq_number == frame->trap_num)
+		{
+			if (auto ret = object::object_manager::object_from_handle<task::thread>(item.listener_thread.get());
+				has_error(ret))
+			{
+				KDEBUG_GERNERALPANIC_CODE(get_error_code(ret));
+			}
+			else
+			{
+				auto listener = get_result(ret);
+
+
+			}
+		}
+	}
 
 	return ERROR_SUCCESS;
 }
@@ -141,7 +187,7 @@ PANIC void trap::init_trap()
 
 	load_idt(desc);
 
-	spinlock_initialize_lock(&handle_table.lock, "traphandles");
+	spinlock_initialize_lock(&trap_table.lock, "traphandles");
 
 	trap_handle_register(trap::IRQ_TO_TRAPNUM(IRQ_SPURIOUS), trap_handle{
 		.handle = spurious_trap_handle,
@@ -164,24 +210,24 @@ PANIC void trap::init_trap()
 // returns the old handle
 PANIC trap_handle trap::trap_handle_register(size_t trapnumber, trap_handle handle)
 {
-	spinlock_acquire(&handle_table.lock);
+	spinlock_acquire(&trap_table.lock);
 
-	trap_handle old = trap_handle{ handle_table.trap_handles[trapnumber] };
-	handle_table.trap_handles[trapnumber] = handle;
+	trap_handle old = trap_handle{ trap_table.trap_handles[trapnumber] };
+	trap_table.trap_handles[trapnumber] = handle;
 
-	spinlock_release(&handle_table.lock);
+	spinlock_release(&trap_table.lock);
 
 	return old;
 }
 
 PANIC bool trap::trap_handle_enable(size_t number, bool enable)
 {
-	spinlock_acquire(&handle_table.lock);
+	spinlock_acquire(&trap_table.lock);
 
-	bool old = handle_table.trap_handles[number].enable;
-	handle_table.trap_handles[number].enable = enable;
+	bool old = trap_table.trap_handles[number].enable;
+	trap_table.trap_handles[number].enable = enable;
 
-	spinlock_release(&handle_table.lock);
+	spinlock_release(&trap_table.lock);
 
 	return old;
 }
@@ -196,18 +242,36 @@ extern "C" void trap_body(trap::trap_frame info)
 	}
 
 	// it should be assigned with the default handle when initialized
-	KDEBUG_ASSERT(handle_table.trap_handles[info.trap_num].handle != nullptr);
+	KDEBUG_ASSERT(trap_table.trap_handles[info.trap_num].handle != nullptr);
 
 	error_code error = ERROR_SUCCESS;
 
 	// call the handle
-	if (handle_table.trap_handles[info.trap_num].enable)
+	if (trap_table.trap_handles[info.trap_num].enable)
 	{
-		error = handle_table.trap_handles[info.trap_num].handle(info);
+		error = trap_table.trap_handles[info.trap_num].handle(info);
 	}
 	else
 	{
 		error = default_trap_handle(info);
+	}
+
+	if (!IS_EXCEPTION(info.trap_num))
+	{
+		auto tf_copy = memory::kmalloc(sizeof(trap_frame), 0);
+		memmove(tf_copy, &info, sizeof(info));
+
+		if (auto ret = task::thread::create(nullptr, "irq", irq_notify_thread_routine, tf_copy);has_error(ret))
+		{
+			KDEBUG_GERNERALPANIC_CODE(get_error_code(ret));
+		}
+		else
+		{
+			auto irq_thread = get_result(ret);
+
+			lock::lock_guard g{ task::global_thread_lock };
+			task::scheduler::current::unblock(irq_thread);
+		}
 	}
 
 	// finish the trap handle

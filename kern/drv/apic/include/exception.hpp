@@ -43,7 +43,7 @@ error_code exception_security([[maybe_unused]] trap::trap_frame info);
 
 void install_exception_handles();
 
-static inline constexpr bool is_exception(size_t trapnum)
+static inline constexpr bool IS_EXCEPTION(size_t trapnum)
 {
 	return (trapnum >= 0 && trapnum <= 20) || trapnum == 30;
 }
